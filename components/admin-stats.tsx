@@ -20,6 +20,7 @@ interface AdminStatsProps {
 
 export function AdminStats({ members, attendance }: AdminStatsProps) {
   const totalMembers = members.length
+  const servantMembers = members.filter((m) => m.rank === "S-Servant").length
   const chosenMembers = members.filter((m) => m.rank === "A-Chosen").length
   const calledMembers = members.filter((m) => m.rank === "B-Called").length
   const multitudeMembers = members.filter((m) => m.rank === "C-Multitude" || !m.rank).length
@@ -70,9 +71,9 @@ export function AdminStats({ members, attendance }: AdminStatsProps) {
           </svg>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{chosenMembers}</div>
+          <div className="text-2xl font-bold">{servantMembers}</div>
           <p className="text-xs text-muted-foreground">
-            A-Chosen: {chosenMembers}, B-Called: {calledMembers}, C-Multitude: {multitudeMembers}
+            S-Servant: {servantMembers}, A-Chosen: {chosenMembers}, B-Called: {calledMembers}, C-Multitude: {multitudeMembers}
           </p>
         </CardContent>
       </Card>

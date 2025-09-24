@@ -15,6 +15,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/server"
 import { MembersTable } from "@/components/members-table"
 import { AdminStats } from "@/components/admin-stats"
+import { AdminCleanup } from "@/components/admin-cleanup"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -111,6 +112,11 @@ export default async function AdminPage() {
         {/* Stats Overview */}
         <div className="mb-8">
           <AdminStats members={members || []} attendance={attendanceStats || []} />
+        </div>
+
+        {/* System Cleanup */}
+        <div className="mb-8">
+          <AdminCleanup />
         </div>
 
         {/* Members Management */}

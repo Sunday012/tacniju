@@ -53,6 +53,8 @@ export default function LandingPage() {
             <Image
               src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" 
               alt="Community worship" 
+              width={2070}
+              height={1380}
               className="w-full h-full object-cover mix-blend-overlay"
             />
           </div>
@@ -112,11 +114,12 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="order-2 lg:order-1">
-              <Image
-                src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
-                alt="Youth fellowship" 
-                className="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-2xl shadow-2xl"
-              />
+              {/* <Image
+                src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                alt="Youth fellowship"
+                height={384}
+                className="object-cover rounded-2xl shadow-2xl"
+              /> */}
             </div>
             <div className="order-1 lg:order-2 text-center lg:text-left">
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
@@ -248,11 +251,11 @@ export default function LandingPage() {
               </div>
             </div>
             <div>
-              <Image
+              {/* <Image
                 src="https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
                 alt="Community activism and outreach" 
                 className="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-2xl shadow-2xl"
-              />
+              /> */}
             </div>
           </div>
         </div>

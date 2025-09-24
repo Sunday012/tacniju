@@ -28,6 +28,7 @@ export function RankManagementDashboard({ members }: RankManagementDashboardProp
   const router = useRouter()
 
   const rankStats = {
+    "S-Servant": members.filter((m) => m.rank === "S-Servant").length,
     "A-Chosen": members.filter((m) => m.rank === "A-Chosen").length,
     "B-Called": members.filter((m) => m.rank === "B-Called").length,
     "C-Multitude": members.filter((m) => m.rank === "C-Multitude" || !m.rank).length,
@@ -148,7 +149,16 @@ export function RankManagementDashboard({ members }: RankManagementDashboardProp
   return (
     <div className="space-y-6">
       {/* Rank Statistics */}
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">S-Servant</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-600">{rankStats["S-Servant"]}</div>
+            <p className="text-xs text-muted-foreground">Highest rank</p>
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">A-Chosen</CardTitle>
@@ -202,6 +212,7 @@ export function RankManagementDashboard({ members }: RankManagementDashboardProp
                   <SelectValue placeholder="Select rank" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="S-Servant">S-Servant</SelectItem>
                   <SelectItem value="A-Chosen">A-Chosen</SelectItem>
                   <SelectItem value="B-Called">B-Called</SelectItem>
                   <SelectItem value="C-Multitude">C-Multitude</SelectItem>
@@ -261,7 +272,9 @@ export function RankManagementDashboard({ members }: RankManagementDashboardProp
                   <Badge
                     variant="secondary"
                     className={`text-xs ${
-                      member.rank === "A-Chosen"
+                      member.rank === "S-Servant"
+                        ? "bg-purple-100 text-purple-800"
+                        : member.rank === "A-Chosen"
                         ? "bg-yellow-100 text-yellow-800"
                         : member.rank === "B-Called"
                           ? "bg-blue-100 text-blue-800"

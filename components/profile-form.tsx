@@ -190,7 +190,16 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="family">Family</Label>
-            <Input id="family" value={formData.family} onChange={(e) => handleInputChange("family", e.target.value)} />
+            <Select value={formData.family} onValueChange={(value) => handleInputChange("family", value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select family" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Eden">Eden</SelectItem>
+                <SelectItem value="Taberah">Taberah</SelectItem>
+                <SelectItem value="Bethel">Bethel</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -214,11 +223,12 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="reservation_number">Reservation Number</Label>
+          <Label htmlFor="reservation_number">Reservation Number *</Label>
           <Input
             id="reservation_number"
             value={formData.reservation_number}
             onChange={(e) => handleInputChange("reservation_number", e.target.value)}
+            required
           />
         </div>
 

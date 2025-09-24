@@ -27,7 +27,7 @@ export default function RegisterPage() {
     phoneNo: "",
     dateOfBirth: "",
     sex: "",
-    departments: [] as string[],
+    department: "",
   })
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -77,10 +77,10 @@ export default function RegisterPage() {
     }
   }
 
-  const handleDepartmentChange = (department: string, checked: boolean) => {
+  const handleDepartmentChange = (department: string) => {
     setFormData((prev) => ({
       ...prev,
-      departments: checked ? [...prev.departments, department] : prev.departments.filter((d) => d !== department),
+      department: department,
     }))
   }
 
@@ -115,6 +115,18 @@ export default function RegisterPage() {
       return
     }
 
+    if (!formData.reservationNumber) {
+      setError("Reservation number is required")
+      setIsLoading(false)
+      return
+    }
+
+    if (!formData.family) {
+      setError("Family selection is required")
+      setIsLoading(false)
+      return
+    }
+
     // Check username availability one more time before registration
     if (usernameAvailable === false) {
       setError("Username is already taken")
@@ -145,40 +157,79 @@ export default function RegisterPage() {
             date_of_birth: formData.dateOfBirth,
             sex: formData.sex,
             rank: "C-Multitude",
-            department: formData.departments.join(", "),
+            department: formData.department,
             email: formData.email || null,
           },
         },
       })
       
-      if (error) throw error
+      if (error) {
+        // Handle specific error cases
+        if (error.message.includes('User already registered')) {
+          throw new Error('This username or email is already registered. Please try a different one.')
+        }
+        throw error
+      }
       
       // 👇 after signUp, insert into profiles
       if (data.user) {
-        const { error: profileError } = await supabase.from("profiles").insert([
-          {
-            id: data.user.id,  // important: must match auth.users.id
-            email: formData.email || null,
-            full_name: formData.fullName,
-            district: formData.district,
-            assembly: formData.assembly,
-            address: formData.address,
-            office_position: formData.positionOffice || null,
-            family: formData.family || null,
-            guardian_spouse_number: formData.guardianSpouseNo || null,
-            reservation_number: formData.reservationNumber || null,
-            phone_number: formData.phoneNo,
-            date_of_birth: formData.dateOfBirth,
-            sex: formData.sex,
-            rank: "C-Multitude",
-            department: formData.departments.length > 0 ? formData.departments.join(", ") : null,
-            username: formData.username.toLowerCase(),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-        ])
-      
-        if (profileError) throw profileError
+        try {
+          const { error: profileError } = await supabase.from("profiles").insert([
+            {
+              id: data.user.id,  // important: must match auth.users.id
+              email: formData.email || null,
+              full_name: formData.fullName,
+              district: formData.district,
+              assembly: formData.assembly,
+              address: formData.address,
+              office_position: formData.positionOffice || null,
+              family: formData.family,
+              guardian_spouse_number: formData.guardianSpouseNo || null,
+              reservation_number: formData.reservationNumber,
+              phone_number: formData.phoneNo,
+              date_of_birth: formData.dateOfBirth,
+              sex: formData.sex,
+              rank: "C-Multitude",
+              department: formData.department || null,
+              username: formData.username.toLowerCase(),
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+          ])
+        
+          if (profileError) {
+            // If profile creation fails, clean up the auth user
+            console.error('Profile creation failed, cleaning up auth user:', profileError)
+            
+            // Try to delete the auth user that was just created
+            try {
+              await supabase.auth.admin.deleteUser(data.user.id)
+            } catch (cleanupError) {
+              console.error('Failed to cleanup auth user:', cleanupError)
+            }
+            
+            // Throw a user-friendly error
+            if (profileError.message.includes('duplicate key')) {
+              throw new Error('This username is already taken. Please choose a different username.')
+            } else if (profileError.message.includes('reservation_number')) {
+              throw new Error('This reservation number is already in use. Please check your reservation number.')
+            } else {
+              throw new Error('Registration failed. Please try again or contact support.')
+            }
+          }
+        } catch (profileError) {
+          // If profile creation fails, clean up the auth user
+          console.error('Profile creation failed, cleaning up auth user:', profileError)
+          
+          // Try to delete the auth user that was just created
+          try {
+            await supabase.auth.admin.deleteUser(data.user.id)
+          } catch (cleanupError) {
+            console.error('Failed to cleanup auth user:', cleanupError)
+          }
+          
+          throw profileError
+        }
       }
       
 
@@ -250,15 +301,16 @@ export default function RegisterPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="reservationNumber" className="text-sm font-semibold text-gray-700">
-                    Reservation Number
+                    Reservation Number *
                   </Label>
                   <Input
                     id="reservationNumber"
                     type="text"
+                    required
                     value={formData.reservationNumber}
                     onChange={(e) => handleInputChange("reservationNumber", e.target.value)}
                     className="h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg"
-                    placeholder="Optional"
+                    placeholder="Enter your reservation number"
                   />
                 </div>
               </div>
@@ -367,16 +419,18 @@ export default function RegisterPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="family" className="text-sm font-semibold text-gray-700">
-                    Family
+                    Family *
                   </Label>
-                  <Input
-                    id="family"
-                    type="text"
-                    value={formData.family}
-                    onChange={(e) => handleInputChange("family", e.target.value)}
-                    className="h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg"
-                    placeholder="Optional"
-                  />
+                  <Select value={formData.family} onValueChange={(value) => handleInputChange("family", value)}>
+                    <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg">
+                      <SelectValue placeholder="Select your family" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Eden">Eden</SelectItem>
+                      <SelectItem value="Taberah">Taberah</SelectItem>
+                      <SelectItem value="Bethel">Bethel</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -402,8 +456,8 @@ export default function RegisterPage() {
                           type="radio"
                           id={dept}
                           name="department"
-                          checked={formData.departments[0] === dept}
-                          onChange={() => handleDepartmentChange(dept, true)}
+                          checked={formData.department === dept}
+                          onChange={() => handleDepartmentChange(dept)}
                           className="border-2 border-gray-300 accent-indigo-600"
                         />
                         <Label htmlFor={dept} className="text-sm font-medium text-gray-700">

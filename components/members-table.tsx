@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
-import { Download, Users, Search, Filter, Eye, UserCog, FileText } from "lucide-react"
+import { Download, Users, Search, Filter, Eye, UserCog, FileText, Trash2 } from "lucide-react"
 // ============================================================================
 // INTERFACES (Keep your existing interfaces - no changes)
 // ============================================================================
@@ -46,8 +46,11 @@ export function MembersTable({ members }: MembersTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterDepartment, setFilterDepartment] = useState("all")
   const [filterRank, setFilterRank] = useState("all")
+  const [filterFamily, setFilterFamily] = useState("all")
   const [selectedMember, setSelectedMember] = useState<Profile | null>(null)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [memberToDelete, setMemberToDelete] = useState<Profile | null>(null)
   const [viewMode, setViewMode] = useState<"table" | "cards">("cards") // NEW: View mode toggle
   const router = useRouter()
   console.log("member", selectedMember)
@@ -57,7 +60,29 @@ export function MembersTable({ members }: MembersTableProps) {
       member.email.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesDepartment = filterDepartment === "all" || member.department === filterDepartment
     const matchesRank = filterRank === "all" || member.rank === filterRank
-    return matchesSearch && matchesDepartment && matchesRank
+    const matchesFamily = filterFamily === "all" || member.family === filterFamily
+    return matchesSearch && matchesDepartment && matchesRank && matchesFamily
+  })
+
+  // Sort members by district, assembly, rank, and family
+  const sortedMembers = filteredMembers.sort((a, b) => {
+    // First sort by district
+    if (a.district !== b.district) {
+      return (a.district || '').localeCompare(b.district || '')
+    }
+    // Then by assembly
+    if (a.assembly !== b.assembly) {
+      return (a.assembly || '').localeCompare(b.assembly || '')
+    }
+    // Then by rank (S-Servant first, then A-Chosen, B-Called, C-Multitude)
+    const rankOrder = { 'S-Servant': 0, 'A-Chosen': 1, 'B-Called': 2, 'C-Multitude': 3 }
+    const aRank = rankOrder[a.rank as keyof typeof rankOrder] ?? 3
+    const bRank = rankOrder[b.rank as keyof typeof rankOrder] ?? 3
+    if (aRank !== bRank) {
+      return aRank - bRank
+    }
+    // Finally by family
+    return (a.family || '').localeCompare(b.family || '')
   })
   const updateMemberRank = async (memberId: string, newRank: string) => {
     setIsUpdating(true)
@@ -88,591 +113,388 @@ export function MembersTable({ members }: MembersTableProps) {
       console.error("Error adding attendance:", error)
     }
   }
+
+  const deleteMember = async (memberId: string) => {
+    setIsDeleting(true)
+    const supabase = createClient()
+    try {
+      // First delete attendance records
+      const { error: attendanceError } = await supabase
+        .from("attendance")
+        .delete()
+        .eq("user_id", memberId)
+      
+      if (attendanceError) throw attendanceError
+
+      // Then delete the profile (this will also delete the auth user due to cascade)
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", memberId)
+      
+      if (profileError) throw profileError
+
+      setMemberToDelete(null)
+      router.refresh()
+    } catch (error) {
+      console.error("Error deleting member:", error)
+      alert("Failed to delete member. Please try again.")
+    } finally {
+      setIsDeleting(false)
+    }
+  }
   // ============================================================================
   // NEW FUNCTION: Individual Member PDF Generation
   // ============================================================================
-  const generateIndividualPDF = (member: Profile) => {
-    const printWindow = window.open('', '_blank')
-    if (!printWindow) return
-    const currentDate = new Date().toLocaleDateString()
-    const joinDate = new Date(member.created_at).toLocaleDateString()
-    
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${member.full_name} - Member Profile</title>
-          <style>
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            
-            body {
-              font-family: Arial, sans-serif;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              min-height: 100vh;
-              padding: 20px;
-            }
-            
-            .container {
-              background: white;
-              border-radius: 15px;
-              box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-              overflow: hidden;
-              max-width: 600px;
-              margin: 0 auto;
-            }
-            
-            .header {
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              color: white;
-              padding: 30px;
-              text-align: center;
-              position: relative;
-            }
-            
-            .header::before {
-              content: '';
-              position: absolute;
-              top: -50%;
-              left: -50%;
-              width: 200%;
-              height: 200%;
-              background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-              animation: float 6s ease-in-out infinite;
-            }
-            
-            @keyframes float {
-              0%, 100% { transform: translateY(0px) rotate(0deg); }
-              50% { transform: translateY(-20px) rotate(180deg); }
-            }
-            
-            .logo {
-              width: 80px;
-              height: 80px;
-              background: rgba(255,255,255,0.2);
-              border-radius: 50%;
-              margin: 0 auto 20px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 36px;
-              backdrop-filter: blur(10px);
-            }
-            
-            .church-name {
-              font-size: 18px;
-              font-weight: bold;
-              margin-bottom: 5px;
-              text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            }
-            
-            .form-title {
-              font-size: 16px;
-              opacity: 0.9;
-              margin-bottom: 10px;
-            }
-            
-            .date-generated {
-              font-size: 12px;
-              opacity: 0.8;
-              margin-top: 10px;
-            }
-            
-            .content {
-              padding: 40px;
-            }
-            
-            .member-profile {
-              text-align: center;
-              margin-bottom: 40px;
-            }
-            
-            .profile-avatar {
-              width: 120px;
-              height: 120px;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              border-radius: 50%;
-              margin: 0 auto 20px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: white;
-              font-size: 48px;
-              font-weight: bold;
-              box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            }
-            
-            .member-name {
-              font-size: 28px;
-              font-weight: bold;
-              color: #333;
-              margin-bottom: 8px;
-            }
-            
-            .member-email {
-              font-size: 16px;
-              color: #666;
-              margin-bottom: 15px;
-            }
-            
-            .rank-badge {
-              display: inline-block;
-              padding: 8px 20px;
-              border-radius: 25px;
-              font-weight: bold;
-              font-size: 14px;
-              text-transform: uppercase;
-              letter-spacing: 1px;
-              ${member.rank === "A-Chosen" 
-                ? "background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;" 
-                : member.rank === "B-Called" 
-                ? "background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white;" 
-                : "background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #333;"
-              }
-            }
-            
-            .details-grid {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 20px;
-              margin-top: 30px;
-            }
-            
-            .detail-card {
-              background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-              padding: 20px;
-              border-radius: 12px;
-              border-left: 4px solid #667eea;
-              box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            }
-            
-            .detail-label {
-              font-size: 12px;
-              font-weight: bold;
-              text-transform: uppercase;
-              color: #667eea;
-              margin-bottom: 5px;
-              letter-spacing: 0.5px;
-            }
-            
-            .detail-value {
-              font-size: 16px;
-              font-weight: 600;
-              color: #333;
-            }
-            
-            .footer {
-              background: #f8f9fa;
-              padding: 20px;
-              text-align: center;
-              border-top: 1px solid #e9ecef;
-              color: #666;
-              font-size: 12px;
-            }
-            
-            @media print {
-              body { background: white !important; padding: 0 !important; }
-              .container { box-shadow: none !important; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <div class="logo">✝</div>
-              <div class="church-name">THE APOSTOLIC CHURCH NIGERIA</div>
-              <div class="church-name">CT FIELD, IJU-STATION AREA</div>
-              <div class="form-title">AREA YOUTH MOVEMENT</div>
-              <div class="form-title">Member Profile</div>
-              <div class="date-generated">Generated on: ${currentDate}</div>
-            </div>
-            
-            <div class="content">
-              <div class="member-profile">
-                <div class="profile-avatar">${member.full_name.charAt(0).toUpperCase()}</div>
-                <div class="member-name">${member.full_name}</div>
-                <div class="member-email">${member.email}</div>
-                <div class="rank-badge">${member.rank || 'C-Multitude'}</div>
-              </div>
-              
-              <div class="details-grid">
-                <div class="detail-card">
-                  <div class="detail-label">Phone Number</div>
-                  <div class="detail-value">${member.phone_number || 'Not provided'}</div>
-                </div>
-                
-                <div class="detail-card">
-                  <div class="detail-label">Gender</div>
-                  <div class="detail-value">${member.sex || 'Not specified'}</div>
-                </div>
-                
-                <div class="detail-card">
-                  <div class="detail-label">District</div>
-                  <div class="detail-value">${member.district || 'Not specified'}</div>
-                </div>
-                
-                <div class="detail-card">
-                  <div class="detail-label">Assembly</div>
-                  <div class="detail-value">${member.assembly || 'Not specified'}</div>
-                </div>
-                
-                <div class="detail-card">
-                  <div class="detail-label">Department</div>
-                  <div class="detail-value">${member.department || 'Not assigned'}</div>
-                </div>
-                
-                <div class="detail-card">
-                  <div class="detail-label">Office Position</div>
-                  <div class="detail-value">${member.office_position || 'Member'}</div>
-                </div>
-                
-                <div class="detail-card">
-                  <div class="detail-label">Address</div>
-                  <div class="detail-value">${member.address || 'Not provided'}</div>
-                </div>
-                
-                <div class="detail-card">
-                  <div class="detail-label">Date of Birth</div>
-                  <div class="detail-value">${member.date_of_birth ? new Date(member.date_of_birth).toLocaleDateString() : 'Not provided'}</div>
-                </div>
-                
-                <div class="detail-card">
-                  <div class="detail-label">Family</div>
-                  <div class="detail-value">${member.family || 'Not specified'}</div>
-                </div>
-                
-                <div class="detail-card">
-                  <div class="detail-label">Guardian/Spouse Number</div>
-                  <div class="detail-value">${member.guardian_spouse_number || 'Not provided'}</div>
-                </div>
-                
-                <div class="detail-card">
-                  <div class="detail-label">Reservation Number</div>
-                  <div class="detail-value">${member.reservation_number || 'Not assigned'}</div>
-                </div>
-                
-                <div class="detail-card">
-                  <div class="detail-label">Member Since</div>
-                  <div class="detail-value">${joinDate}</div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="footer">
-              <p>This document contains confidential member information. Please handle with care.</p>
-              <p>© ${new Date().getFullYear()} The Apostolic Church Nigeria - CT Field, Iju-Station Area</p>
-            </div>
-          </div>
-        </body>
-      </html>
-    `)
-    
-    printWindow.document.close()
-    
-    setTimeout(() => {
-      printWindow.print()
-      printWindow.close()
-    }, 500)
-  }
+// Replace the generateIndividualPDF function in your code with this:
 
-  // ============================================================================
-  // NEW FUNCTION: PDF GENERATION (Colorful Church-Style PDF)
-  // ============================================================================
-  const generatePDF = () => {
-    const printWindow = window.open('', '_blank')
-    if (!printWindow) return
-    const currentDate = new Date().toLocaleDateString()
-    
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Church Youth Members Registry</title>
-          <style>
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            
-            body {
-              font-family: Arial, sans-serif;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              min-height: 100vh;
-              padding: 20px;
-            }
-            
-            .container {
-              background: white;
-              border-radius: 15px;
-              box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-              overflow: hidden;
-              max-width: 800px;
-              margin: 0 auto;
-            }
-            
-            .header {
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              color: white;
-              padding: 30px;
-              text-align: center;
-              position: relative;
-            }
-            
-            .header::before {
-              content: '';
-              position: absolute;
-              top: -50%;
-              left: -50%;
-              width: 200%;
-              height: 200%;
-              background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-              animation: float 6s ease-in-out infinite;
-            }
-            
-            @keyframes float {
-              0%, 100% { transform: translateY(0px) rotate(0deg); }
-              50% { transform: translateY(-20px) rotate(180deg); }
-            }
-            
-            .logo {
-              width: 80px;
-              height: 80px;
-              background: rgba(255,255,255,0.2);
-              border-radius: 50%;
-              margin: 0 auto 20px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 36px;
-              backdrop-filter: blur(10px);
-            }
-            
-            .church-name {
-              font-size: 18px;
-              font-weight: bold;
-              margin-bottom: 5px;
-              text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            }
-            
-            .form-title {
-              font-size: 16px;
-              opacity: 0.9;
-              margin-bottom: 10px;
-            }
-            
-            .date-generated {
-              font-size: 12px;
-              opacity: 0.8;
-              margin-top: 10px;
-            }
-            
-            .content {
-              padding: 30px;
-            }
-            
-            .stats-grid {
-              display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-              gap: 20px;
-              margin-bottom: 30px;
-            }
-            
-            .stat-card {
-              background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-              color: white;
-              padding: 20px;
-              border-radius: 15px;
-              text-align: center;
-              box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-            }
-            
-            .stat-number {
-              font-size: 32px;
-              font-weight: bold;
-              margin-bottom: 5px;
-            }
-            
-            .stat-label {
-              font-size: 14px;
-              opacity: 0.9;
-            }
-            
-            .members-grid {
-              display: grid;
-              grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-              gap: 20px;
-              margin-top: 20px;
-            }
-            
-            .member-card {
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              color: white;
-              padding: 25px;
-              border-radius: 15px;
-              box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-              position: relative;
-              overflow: hidden;
-            }
-            
-            .member-card::before {
-              content: '';
-              position: absolute;
-              top: 0;
-              right: 0;
-              width: 100px;
-              height: 100px;
-              background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-              border-radius: 0 15px 0 100px;
-            }
-            
-            .member-header {
-              display: flex;
-              justify-content: space-between;
-              align-items: flex-start;
-              margin-bottom: 15px;
-            }
-            
-            .member-name {
-              font-size: 18px;
-              font-weight: bold;
-              margin-bottom: 5px;
-            }
-            
-            .member-email {
-              font-size: 12px;
-              opacity: 0.8;
-            }
-            
-            .member-rank {
-              background: rgba(255,255,255,0.2);
-              padding: 5px 12px;
-              border-radius: 20px;
-              font-size: 12px;
-              font-weight: bold;
-              backdrop-filter: blur(10px);
-            }
-            
-            .member-details {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 10px;
-              font-size: 14px;
-            }
-            
-            .detail-item {
-              background: rgba(255,255,255,0.1);
-              padding: 8px 12px;
-              border-radius: 8px;
-              backdrop-filter: blur(10px);
-            }
-            
-            .detail-label {
-              font-weight: bold;
-              margin-bottom: 2px;
-            }
-            
-            .detail-value {
-              opacity: 0.9;
-            }
-            
-            @media print {
-              body { background: white !important; padding: 0 !important; }
-              .container { box-shadow: none !important; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <div class="logo">✝</div>
-              <div class="church-name">THE APOSTOLIC CHURCH NIGERIA</div>
-              <div class="church-name">CT FIELD, IJU-STATION AREA</div>
-              <div class="form-title">AREA YOUTH MOVEMENT</div>
-              <div class="form-title">Members Registry</div>
-              <div class="date-generated">Generated on: ${currentDate}</div>
+const generateIndividualPDF = (member: Profile) => {
+  const printWindow = window.open('', '_blank')
+  if (!printWindow) return
+
+  const currentDate = new Date().toLocaleDateString()
+  
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Registration Form - ${member.full_name}</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
+          body {
+            font-family: Arial, sans-serif;
+            background: white;
+            padding: 20px;
+            font-size: 14px;
+            line-height: 1.4;
+          }
+          
+          .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 2px solid #000;
+            background: white;
+          }
+          
+          .header {
+            text-align: center;
+            padding: 15px;
+            border-bottom: 2px solid #000;
+            background: white;
+          }
+          
+          .church-logo {
+            width: 60px;
+            height: 80px;
+            background: #f0f0f0;
+            border: 2px solid #000;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+          }
+          
+          .church-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+          }
+          
+          .area-name {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-decoration: underline;
+          }
+          
+          .form-title {
+            font-size: 14px;
+            font-weight: bold;
+            border: 2px solid #000;
+            padding: 8px;
+            margin-top: 10px;
+            background: #f8f8f8;
+          }
+          
+          .signature-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            border-bottom: 2px solid #000;
+            background: #f8f8f8;
+          }
+          
+          .signature-box {
+            border-right: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: bold;
+            min-height: 40px;
+          }
+          
+          .signature-box:last-child {
+            border-right: none;
+          }
+          
+          .form-content {
+            padding: 0;
+          }
+          
+          .form-row {
+            display: flex;
+            border-bottom: 1px solid #000;
+            min-height: 35px;
+          }
+          
+          .form-row:last-child {
+            border-bottom: none;
+          }
+          
+          .form-field {
+            border-right: 1px solid #000;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+          }
+          
+          .form-field:last-child {
+            border-right: none;
+          }
+          
+          .field-label {
+            font-weight: bold;
+            margin-right: 10px;
+            min-width: 80px;
+          }
+          
+          .field-value {
+            flex: 1;
+            border-bottom: 1px dotted #666;
+            min-height: 20px;
+            padding-bottom: 2px;
+          }
+          
+          .ranks-section {
+            flex: 1;
+            padding: 8px;
+            border-right: 1px solid #000;
+          }
+          
+          .departments-section {
+            flex: 1;
+            padding: 8px;
+          }
+          
+          .rank-item, .dept-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 3px;
+            font-size: 12px;
+          }
+          
+          .checkbox {
+            width: 12px;
+            height: 12px;
+            border: 1px solid #000;
+            margin-right: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+          }
+          
+          .checkbox.checked {
+            background: #000;
+            color: white;
+          }
+          
+          .signature-area {
+            min-height: 150px;
+            padding: 20px;
+            border-top: 1px solid #000;
+          }
+          
+          .signature-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+          }
+          
+          @media print {
+            body { padding: 0; }
+            .form-container { border: 2px solid #000; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="form-container">
+          <!-- Header Section -->
+          <div class="header">
+            <div class="church-logo">✝</div>
+            <div class="church-name">The Apostolic Church Nigeria</div>
+            <div class="church-name">CT Field, Iju-Station Area</div>
+            <div class="area-name">Area Youth Movement</div>
+            <div class="form-title">Registration Form</div>
+          </div>
+          
+          <!-- Signature Section -->
+          <div class="signature-section">
+            <div class="signature-box">
+              <div>Signature</div>
             </div>
-            
-            <div class="content">
-              <div class="stats-grid">
-                <div class="stat-card">
-                  <div class="stat-number">${filteredMembers.length}</div>
-                  <div class="stat-label">Total Members</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-number">${filteredMembers.filter(m => m.rank === 'A-Chosen').length}</div>
-                  <div class="stat-label">A-Chosen</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-number">${filteredMembers.filter(m => m.rank === 'B-Called').length}</div>
-                  <div class="stat-label">B-Called</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-number">${filteredMembers.filter(m => !m.rank || m.rank === 'C-Multitude').length}</div>
-                  <div class="stat-label">C-Multitude</div>
-                </div>
-              </div>
-              
-              <div class="members-grid">
-                ${filteredMembers.map(member => `
-                  <div class="member-card">
-                    <div class="member-header">
-                      <div>
-                        <div class="member-name">${member.full_name}</div>
-                        <div class="member-email">${member.email}</div>
-                      </div>
-                      <div class="member-rank">${member.rank || 'C-Multitude'}</div>
-                    </div>
-                    <div class="member-details">
-                      <div class="detail-item">
-                        <div class="detail-label">District</div>
-                        <div class="detail-value">${member.district || 'Not specified'}</div>
-                      </div>
-                      <div class="detail-item">
-                        <div class="detail-label">Assembly</div>
-                        <div class="detail-value">${member.assembly || 'Not specified'}</div>
-                      </div>
-                      <div class="detail-item">
-                        <div class="detail-label">Department</div>
-                        <div class="detail-value">${member.department || 'Not assigned'}</div>
-                      </div>
-                      <div class="detail-item">
-                        <div class="detail-label">Position</div>
-                        <div class="detail-value">${member.office_position || 'Member'}</div>
-                      </div>
-                      <div class="detail-item">
-                        <div class="detail-label">Phone</div>
-                        <div class="detail-value">${member.phone_number || 'Not provided'}</div>
-                      </div>
-                      <div class="detail-item">
-                        <div class="detail-label">Sex</div>
-                        <div class="detail-value">${member.sex || 'Not specified'}</div>
-                      </div>
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
+            <div class="signature-box">
+              <div>Youth Leader</div>
+              <div style="margin-top: 15px;">_____________</div>
+            </div>
+            <div class="signature-box">
+              <div>Deputy Youth Leader</div>
+              <div style="margin-top: 15px;">_____________</div>
+            </div>
+            <div class="signature-box">
+              <div>Youth Secretary</div>
+              <div style="margin-top: 15px;">_____________</div>
             </div>
           </div>
-        </body>
-      </html>
-    `)
-    
-    printWindow.document.close()
-    
-    setTimeout(() => {
-      printWindow.print()
-      printWindow.close()
-    }, 500)
-  }
-  // ============================================================================
-  // NEW COMPONENT: Mobile Card View
-  // ============================================================================
-  // The card is not fully responsive because the layout uses fixed paddings and flex/grid that don't adapt well to small screens.
-  // Make the card and its content responsive with width, padding, and flex/grid tweaks.
+          
+          <!-- Form Content -->
+          <div class="form-content">
+            <!-- Name and Reservation Number Row -->
+            <div class="form-row">
+              <div class="form-field" style="flex: 2;">
+                <span class="field-label">Name:</span>
+                <span class="field-value">${member.full_name}</span>
+              </div>
+              <div class="form-field" style="flex: 1;">
+                <span class="field-label">Reservation Number:</span>
+                <span class="field-value">${member.reservation_number || ''}</span>
+              </div>
+            </div>
+            
+            <!-- District and Phone Row -->
+            <div class="form-row">
+              <div class="form-field" style="flex: 1;">
+                <span class="field-label">District:</span>
+                <span class="field-value">${member.district || ''}</span>
+              </div>
+              <div class="form-field" style="flex: 1;">
+                <span class="field-label">Phone No:</span>
+                <span class="field-value">${member.phone_number || ''}</span>
+              </div>
+            </div>
+            
+            <!-- Assembly Row -->
+            <div class="form-row">
+              <div class="form-field" style="flex: 2;">
+                <span class="field-label">Assembly:</span>
+                <span class="field-value">${member.assembly || ''}</span>
+              </div>
+              <div class="form-field" style="flex: 1;">
+                <span class="field-label">Date of Birth:</span>
+                <span class="field-value">${member.date_of_birth ? new Date(member.date_of_birth).toLocaleDateString() : ''}</span>
+              </div>
+              <div class="form-field" style="flex: 1;">
+                <span class="field-label">Sex:</span>
+                <span class="field-value">${member.sex || ''}</span>
+              </div>
+            </div>
+            
+            <!-- Address Row -->
+            <div class="form-row">
+              <div class="form-field" style="flex: 2;">
+                <span class="field-label">Address:</span>
+                <span class="field-value">${member.address || ''}</span>
+              </div>
+              <div class="form-field" style="flex: 1;">
+                <span class="field-label">Position/Office:</span>
+                <span class="field-value">${member.office_position || ''}</span>
+              </div>
+            </div>
+            
+            <!-- Ranks and Departments Row -->
+            <div class="form-row" style="min-height: 120px; align-items: stretch;">
+              <div class="ranks-section">
+                <div class="field-label" style="margin-bottom: 10px;">Ranks</div>
+                <div class="rank-item">
+                  <div class="checkbox ${member.rank === 'A-Chosen' ? 'checked' : ''}">${member.rank === 'A-Chosen' ? '✓' : ''}</div>
+                  <span>A-Chosen</span>
+                </div>
+                <div class="rank-item">
+                  <div class="checkbox ${member.rank === 'B-Called' ? 'checked' : ''}">${member.rank === 'B-Called' ? '✓' : ''}</div>
+                  <span>B-Called</span>
+                </div>
+                <div class="rank-item">
+                  <div class="checkbox ${member.rank === 'C-Multitude' || !member.rank ? 'checked' : ''}">${member.rank === 'C-Multitude' || !member.rank ? '✓' : ''}</div>
+                  <span>C-Multitude</span>
+                </div>
+              </div>
+              <div class="departments-section">
+                <div class="field-label" style="margin-bottom: 10px;">Departments</div>
+                <div class="dept-item">
+                  <div class="checkbox ${member.department === 'Music' ? 'checked' : ''}">${member.department === 'Music' ? '✓' : ''}</div>
+                  <span>Music</span>
+                </div>
+                <div class="dept-item">
+                  <div class="checkbox ${member.department === 'Ushering' ? 'checked' : ''}">${member.department === 'Ushering' ? '✓' : ''}</div>
+                  <span>Ushering</span>
+                </div>
+                <div class="dept-item">
+                  <div class="checkbox ${member.department === 'Drama' ? 'checked' : ''}">${member.department === 'Drama' ? '✓' : ''}</div>
+                  <span>Drama</span>
+                </div>
+                <div class="dept-item">
+                  <div class="checkbox ${member.department === 'Clean Up' ? 'checked' : ''}">${member.department === 'Clean Up' ? '✓' : ''}</div>
+                  <span>Clean Up</span>
+                </div>
+                <div class="dept-item">
+                  <div class="checkbox ${member.department === 'Intercessory' ? 'checked' : ''}">${member.department === 'Intercessory' ? '✓' : ''}</div>
+                  <span>Intercessory</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Family and Guardian Row -->
+            <div class="form-row">
+              <div class="form-field" style="flex: 1;">
+                <span class="field-label">Family:</span>
+                <span class="field-value">${member.family || ''}</span>
+              </div>
+              <div class="form-field" style="flex: 1;">
+                <span class="field-label">Guardian/Spouse No:</span>
+                <span class="field-value">${member.guardian_spouse_number || ''}</span>
+              </div>
+            </div>
+            
+            <!-- Signature Area -->
+            <div class="signature-area">
+              <div class="signature-label">Signature</div>
+              <div style="border-bottom: 1px solid #000; width: 200px; margin-top: 80px;"></div>
+            </div>
+          </div>
+        </div>
+        
+        <script>
+          // Auto-print when page loads
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+              window.close();
+            }, 500);
+          }
+        </script>
+      </body>
+    </html>
+  `)
+  
+  printWindow.document.close()
+}
 
   const MemberCard = ({ member }: { member: Profile }) => (
     <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-l-4 border-l-indigo-500 hover:shadow-lg transition-all duration-300 w-full max-w-md mx-auto sm:max-w-full">
@@ -686,7 +508,9 @@ export function MembersTable({ members }: MembersTableProps) {
             <Badge
               variant="secondary"
               className={`${
-                member.rank === "A-Chosen"
+                member.rank === "S-Servant"
+                  ? "bg-purple-100 text-purple-800 border-purple-300"
+                  : member.rank === "A-Chosen"
                   ? "bg-yellow-100 text-yellow-800 border-yellow-300"
                   : member.rank === "B-Called"
                   ? "bg-blue-100 text-blue-800 border-blue-300"
@@ -750,6 +574,7 @@ export function MembersTable({ members }: MembersTableProps) {
                       <SelectValue placeholder="Select rank" />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
+                      <SelectItem value="S-Servant">S-Servant</SelectItem>
                       <SelectItem value="A-Chosen">A-Chosen</SelectItem>
                       <SelectItem value="B-Called">B-Called</SelectItem>
                       <SelectItem value="C-Multitude">C-Multitude</SelectItem>
@@ -782,6 +607,53 @@ export function MembersTable({ members }: MembersTableProps) {
           >
             <FileText className="w-4 h-4" />
           </Button>
+          
+          {/* Delete Button */}
+          <Dialog
+            open={memberToDelete?.id === member.id}
+            onOpenChange={(open) => {
+              if (open) setMemberToDelete(member)
+              else setMemberToDelete(null)
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button 
+                variant="outline" 
+                className="text-red-600 hover:text-red-700 h-[48px] hover:bg-red-50 flex-1 sm:flex-none cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md bg-white rounded-2xl">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-red-600">
+                  <Trash2 className="w-5 h-5" />
+                  Delete Member
+                </DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete <strong>{member.full_name}</strong>? This action cannot be undone and will remove all their data including attendance records.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex gap-3 mt-6">
+                <Button
+                  variant="outline"
+                  onClick={() => setMemberToDelete(null)}
+                  className="flex-1"
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => deleteMember(member.id)}
+                  className="flex-1"
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Deleting..." : "Delete Member"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </CardContent>
     </Card>
@@ -794,15 +666,27 @@ export function MembersTable({ members }: MembersTableProps) {
       {/* ============================================================================ */}
       {/* NEW SECTION: Statistics Overview Cards */}
       {/* ============================================================================ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-sm">Total Members</p>
-                <p className="text-2xl font-bold">{filteredMembers.length}</p>
+                <p className="text-2xl font-bold">{sortedMembers.length}</p>
               </div>
               <Users className="w-8 h-8 text-blue-200" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-100 text-sm">S-Servant</p>
+                <p className="text-2xl font-bold">{sortedMembers.filter(m => m.rank === 'S-Servant').length}</p>
+              </div>
+              <div className="w-8 h-8 bg-purple-400 rounded-full flex items-center justify-center text-purple-800 font-bold">S</div>
             </div>
           </CardContent>
         </Card>
@@ -812,7 +696,7 @@ export function MembersTable({ members }: MembersTableProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-yellow-100 text-sm">A-Chosen</p>
-                <p className="text-2xl font-bold">{filteredMembers.filter(m => m.rank === 'A-Chosen').length}</p>
+                <p className="text-2xl font-bold">{sortedMembers.filter(m => m.rank === 'A-Chosen').length}</p>
               </div>
               <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-yellow-800 font-bold">A</div>
             </div>
@@ -824,7 +708,7 @@ export function MembersTable({ members }: MembersTableProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-indigo-100 text-sm">B-Called</p>
-                <p className="text-2xl font-bold">{filteredMembers.filter(m => m.rank === 'B-Called').length}</p>
+                <p className="text-2xl font-bold">{sortedMembers.filter(m => m.rank === 'B-Called').length}</p>
               </div>
               <div className="w-8 h-8 bg-indigo-400 rounded-full flex items-center justify-center text-indigo-800 font-bold">B</div>
             </div>
@@ -836,7 +720,7 @@ export function MembersTable({ members }: MembersTableProps) {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-100 text-sm">C-Multitude</p>
-                <p className="text-2xl font-bold">{filteredMembers.filter(m => !m.rank || m.rank === 'C-Multitude').length}</p>
+                <p className="text-2xl font-bold">{sortedMembers.filter(m => !m.rank || m.rank === 'C-Multitude').length}</p>
               </div>
               <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-gray-800 font-bold">C</div>
             </div>
@@ -881,9 +765,22 @@ export function MembersTable({ members }: MembersTableProps) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Ranks</SelectItem>
+                  <SelectItem value="S-Servant">S-Servant</SelectItem>
                   <SelectItem value="A-Chosen">A-Chosen</SelectItem>
                   <SelectItem value="B-Called">B-Called</SelectItem>
                   <SelectItem value="C-Multitude">C-Multitude</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={filterFamily} onValueChange={setFilterFamily}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <SelectValue placeholder="Family" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Families</SelectItem>
+                  <SelectItem value="Eden">Eden</SelectItem>
+                  <SelectItem value="Taberah">Taberah</SelectItem>
+                  <SelectItem value="Bethel">Bethel</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -911,10 +808,10 @@ export function MembersTable({ members }: MembersTableProps) {
             </div>
             
             {/* NEW: PDF Download Button */}
-            <Button onClick={generatePDF} className="bg-green-600 hover:bg-green-700">
+            {/* <Button onClick={generatePDF} className="bg-green-600 hover:bg-green-700">
               <Download className="w-4 h-4 mr-2" />
               Download PDF
-            </Button>
+            </Button> */}
           </div>
         </CardContent>
       </Card>
@@ -937,7 +834,7 @@ export function MembersTable({ members }: MembersTableProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredMembers.map((member) => (
+                {sortedMembers.map((member) => (
                   <TableRow key={member.id} className="hover:bg-gray-50/50">
                     <TableCell className="font-medium">{member.full_name}</TableCell>
                     <TableCell className="text-gray-600">{member.email}</TableCell>
@@ -954,7 +851,9 @@ export function MembersTable({ members }: MembersTableProps) {
                       <Badge
                         variant="secondary"
                         className={`${
-                          member.rank === "A-Chosen"
+                          member.rank === "S-Servant"
+                            ? "bg-purple-100 text-purple-800 border-purple-300"
+                            : member.rank === "A-Chosen"
                             ? "bg-yellow-100 text-yellow-800 border-yellow-300"
                             : member.rank === "B-Called"
                             ? "bg-blue-100 text-blue-800 border-blue-300"
@@ -1055,6 +954,55 @@ export function MembersTable({ members }: MembersTableProps) {
                         >
                           <FileText className="w-4 h-4" />
                         </Button>
+                        
+                        {/* Delete Button for Table View */}
+                        <Dialog
+                          open={memberToDelete?.id === member.id}
+                          onOpenChange={(open) => {
+                            if (open) setMemberToDelete(member)
+                            else setMemberToDelete(null)
+                          }}
+                        >
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              title={`Delete ${member.full_name}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-md bg-white rounded-2xl">
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center gap-2 text-red-600">
+                                <Trash2 className="w-5 h-5" />
+                                Delete Member
+                              </DialogTitle>
+                              <DialogDescription>
+                                Are you sure you want to delete <strong>{member.full_name}</strong>? This action cannot be undone and will remove all their data including attendance records.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="flex gap-3 mt-6">
+                              <Button
+                                variant="outline"
+                                onClick={() => setMemberToDelete(null)}
+                                className="flex-1"
+                                disabled={isDeleting}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                onClick={() => deleteMember(member.id)}
+                                className="flex-1"
+                                disabled={isDeleting}
+                              >
+                                {isDeleting ? "Deleting..." : "Delete Member"}
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -1066,7 +1014,7 @@ export function MembersTable({ members }: MembersTableProps) {
       ) : (
         // MOBILE CARD VIEW (New responsive cards)
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredMembers.map((member) => (
+          {sortedMembers.map((member) => (
             <MemberCard key={member.id} member={member} />
           ))}
         </div>
