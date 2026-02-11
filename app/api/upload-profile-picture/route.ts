@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get current profile to delete old picture if exists
-    const { data: profile } = await supabase.from("profiles").select("profile_picture_url").eq("id", user.id).single()
+    const { data: profile } = await supabase.from("profiles").select("profile_picture_url").eq("id", user.id).maybeSingle()
 
     // Delete old profile picture if exists
     if (profile?.profile_picture_url) {

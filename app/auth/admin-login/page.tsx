@@ -29,7 +29,7 @@ export default function AdminLoginPage() {
         email,
         password,
       })
-      
+
       if (error) throw error
 
       // Check if user is admin after successful login
@@ -37,7 +37,9 @@ export default function AdminLoginPage() {
         .from("profiles")
         .select("is_admin")
         .eq("id", data.user.id)
-        .single()
+        .maybeSingle()
+
+      console.log("Admin Login Debug:", { userId: data.user.id, profile, profileError })
 
       if (profileError) {
         console.error("Profile error:", profileError)
@@ -51,6 +53,9 @@ export default function AdminLoginPage() {
         setIsLoading(false)
         return
       }
+
+      // Set explicit login mode cookie for middleware
+      document.cookie = "login_mode=admin; path=/; max-age=2592000; SameSite=Lax" // 30 days
 
       // Redirect to admin dashboard
       router.push("/admin")

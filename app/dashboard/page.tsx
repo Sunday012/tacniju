@@ -23,7 +23,7 @@ export default async function DashboardPage() {
     redirect("/auth/login")
   }
 
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
 
   // Get recent attendance
   const { data: attendance } = await supabase
@@ -109,13 +109,12 @@ export default async function DashboardPage() {
               {profile?.rank && (
                 <Badge
                   variant="secondary"
-                  className={`px-4 py-2 text-base font-semibold rounded-full shadow-sm ${
-                    profile.rank === "A-Chosen"
+                  className={`px-4 py-2 text-base font-semibold rounded-full shadow-sm ${profile.rank === "A-Chosen"
                       ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
                       : profile.rank === "B-Called"
                         ? "bg-blue-100 text-blue-800 border border-blue-200"
                         : "bg-gray-100 text-gray-800 border border-gray-200"
-                  }`}
+                    }`}
                 >
                   {profile.rank}
                 </Badge>
@@ -165,13 +164,12 @@ export default async function DashboardPage() {
                   <span className="text-sm text-gray-500">Current Rank</span>
                   <Badge
                     variant="secondary"
-                    className={`rounded-full px-3 py-1 text-sm font-semibold shadow ${
-                      profile?.rank === "A-Chosen"
+                    className={`rounded-full px-3 py-1 text-sm font-semibold shadow ${profile?.rank === "A-Chosen"
                         ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
                         : profile?.rank === "B-Called"
                           ? "bg-blue-100 text-blue-800 border border-blue-200"
                           : "bg-gray-100 text-gray-800 border border-gray-200"
-                    }`}
+                      }`}
                   >
                     {profile?.rank || "C-Multitude"}
                   </Badge>
