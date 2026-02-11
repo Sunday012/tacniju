@@ -36,7 +36,7 @@ interface Profile {
   office_position?: string
   rank?: string
   reservation_number?: string
-  is_admin: boolean
+  is_admin?: boolean
   created_at: string
 }
 interface MembersTableProps {
@@ -123,7 +123,7 @@ export function MembersTable({ members }: MembersTableProps) {
         .from("attendance")
         .delete()
         .eq("user_id", memberId)
-      
+
       if (attendanceError) throw attendanceError
 
       // Then delete the profile (this will also delete the auth user due to cascade)
@@ -131,7 +131,7 @@ export function MembersTable({ members }: MembersTableProps) {
         .from("profiles")
         .delete()
         .eq("id", memberId)
-      
+
       if (profileError) throw profileError
 
       setMemberToDelete(null)
@@ -146,15 +146,15 @@ export function MembersTable({ members }: MembersTableProps) {
   // ============================================================================
   // NEW FUNCTION: Individual Member PDF Generation
   // ============================================================================
-// Replace the generateIndividualPDF function in your code with this:
+  // Replace the generateIndividualPDF function in your code with this:
 
-const generateIndividualPDF = (member: Profile) => {
-  const printWindow = window.open('', '_blank')
-  if (!printWindow) return
+  const generateIndividualPDF = (member: Profile) => {
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) return
 
-  const currentDate = new Date().toLocaleDateString()
-  
-  printWindow.document.write(`
+    const currentDate = new Date().toLocaleDateString()
+
+    printWindow.document.write(`
     <!DOCTYPE html>
     <html>
       <head>
@@ -423,6 +423,10 @@ const generateIndividualPDF = (member: Profile) => {
               <div class="ranks-section">
                 <div class="field-label" style="margin-bottom: 10px;">Ranks</div>
                 <div class="rank-item">
+                  <div class="checkbox ${member.rank === 'S-Servant' ? 'checked' : ''}">${member.rank === 'S-Servant' ? '✓' : ''}</div>
+                  <span>S-Servant</span>
+                </div>
+                <div class="rank-item">
                   <div class="checkbox ${member.rank === 'A-Chosen' ? 'checked' : ''}">${member.rank === 'A-Chosen' ? '✓' : ''}</div>
                   <span>A-Chosen</span>
                 </div>
@@ -492,9 +496,9 @@ const generateIndividualPDF = (member: Profile) => {
       </body>
     </html>
   `)
-  
-  printWindow.document.close()
-}
+
+    printWindow.document.close()
+  }
 
   const MemberCard = ({ member }: { member: Profile }) => (
     <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-l-4 border-l-indigo-500 hover:shadow-lg transition-all duration-300 w-full max-w-md mx-auto sm:max-w-full">
@@ -507,21 +511,20 @@ const generateIndividualPDF = (member: Profile) => {
           <div className="mt-2 sm:mt-0 flex-shrink-0">
             <Badge
               variant="secondary"
-              className={`${
-                member.rank === "S-Servant"
-                  ? "bg-purple-100 text-purple-800 border-purple-300"
-                  : member.rank === "A-Chosen"
+              className={`${member.rank === "S-Servant"
+                ? "bg-purple-100 text-purple-800 border-purple-300"
+                : member.rank === "A-Chosen"
                   ? "bg-yellow-100 text-yellow-800 border-yellow-300"
                   : member.rank === "B-Called"
-                  ? "bg-blue-100 text-blue-800 border-blue-300"
-                  : "bg-gray-100 text-gray-800 border-gray-300"
-              }`}
+                    ? "bg-blue-100 text-blue-800 border-blue-300"
+                    : "bg-gray-100 text-gray-800 border-gray-300"
+                }`}
             >
               {member.rank || "C-Multitude"}
             </Badge>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 mb-4">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-500">Department:</span>
@@ -536,7 +539,7 @@ const generateIndividualPDF = (member: Profile) => {
             <span className="text-sm text-gray-700">{member.assembly || "Not specified"}</span>
           </div>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-2">
           <Dialog
             open={selectedMember?.id === member.id}
@@ -546,8 +549,8 @@ const generateIndividualPDF = (member: Profile) => {
             }}
           >
             <DialogTrigger asChild>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="flex-1 h-[48px] cursor-pointer"
               >
                 <UserCog className="w-4 h-4 mr-1" />
@@ -598,16 +601,26 @@ const generateIndividualPDF = (member: Profile) => {
               </div>
             </DialogContent>
           </Dialog>
-          
-          {/* Individual PDF Download Button */}
-          <Button 
-            variant="outline" 
+
+          <Button
+            variant="outline"
             onClick={() => generateIndividualPDF(member)}
             className="text-green-600 hover:text-green-700 h-[48px] hover:bg-green-50 flex-1 sm:flex-none cursor-pointer"
           >
             <FileText className="w-4 h-4" />
           </Button>
-          
+
+          {/* ID Card Button */}
+          <Button
+            variant="outline"
+            onClick={() => window.open(`/id-card/${member.id}`, '_blank')}
+            className="text-indigo-600 hover:text-indigo-700 h-[48px] hover:bg-indigo-50 flex-1 sm:flex-none cursor-pointer"
+          >
+            <span className="sr-only">View ID Card</span>
+            <Users className="w-4 h-4" />
+            {/* Using Users icon for ID card for now, or maybe Fingerprint/Scan? Users works as "Member ID" */}
+          </Button>
+
           {/* Delete Button */}
           <Dialog
             open={memberToDelete?.id === member.id}
@@ -617,8 +630,8 @@ const generateIndividualPDF = (member: Profile) => {
             }}
           >
             <DialogTrigger asChild>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="text-red-600 hover:text-red-700 h-[48px] hover:bg-red-50 flex-1 sm:flex-none cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
@@ -678,7 +691,7 @@ const generateIndividualPDF = (member: Profile) => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -690,7 +703,7 @@ const generateIndividualPDF = (member: Profile) => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -702,7 +715,7 @@ const generateIndividualPDF = (member: Profile) => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -714,7 +727,7 @@ const generateIndividualPDF = (member: Profile) => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="bg-gradient-to-r from-gray-500 to-gray-600 text-white">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -742,7 +755,7 @@ const generateIndividualPDF = (member: Profile) => {
                 className="pl-10"
               />
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-2">
               <Select value={filterDepartment} onValueChange={setFilterDepartment}>
                 <SelectTrigger className="w-full sm:w-48">
@@ -758,7 +771,7 @@ const generateIndividualPDF = (member: Profile) => {
                   <SelectItem value="Intercessory">Intercessory</SelectItem>
                 </SelectContent>
               </Select>
-              
+
               <Select value={filterRank} onValueChange={setFilterRank}>
                 <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="Rank" />
@@ -771,7 +784,7 @@ const generateIndividualPDF = (member: Profile) => {
                   <SelectItem value="C-Multitude">C-Multitude</SelectItem>
                 </SelectContent>
               </Select>
-              
+
               <Select value={filterFamily} onValueChange={setFilterFamily}>
                 <SelectTrigger className="w-full sm:w-48">
                   <SelectValue placeholder="Family" />
@@ -785,7 +798,7 @@ const generateIndividualPDF = (member: Profile) => {
               </Select>
             </div>
           </div>
-          
+
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-2">
               <Button
@@ -806,7 +819,7 @@ const generateIndividualPDF = (member: Profile) => {
                 Card View
               </Button>
             </div>
-            
+
             {/* NEW: PDF Download Button */}
             {/* <Button onClick={generatePDF} className="bg-green-600 hover:bg-green-700">
               <Download className="w-4 h-4 mr-2" />
@@ -850,15 +863,14 @@ const generateIndividualPDF = (member: Profile) => {
                     <TableCell>
                       <Badge
                         variant="secondary"
-                        className={`${
-                          member.rank === "S-Servant"
-                            ? "bg-purple-100 text-purple-800 border-purple-300"
-                            : member.rank === "A-Chosen"
+                        className={`${member.rank === "S-Servant"
+                          ? "bg-purple-100 text-purple-800 border-purple-300"
+                          : member.rank === "A-Chosen"
                             ? "bg-yellow-100 text-yellow-800 border-yellow-300"
                             : member.rank === "B-Called"
-                            ? "bg-blue-100 text-blue-800 border-blue-300"
-                            : "bg-gray-100 text-gray-800 border-gray-300"
-                        }`}
+                              ? "bg-blue-100 text-blue-800 border-blue-300"
+                              : "bg-gray-100 text-gray-800 border-gray-300"
+                          }`}
                       >
                         {member.rank || "C-Multitude"}
                       </Badge>
@@ -869,9 +881,9 @@ const generateIndividualPDF = (member: Profile) => {
                         {/* ENHANCED MANAGE DIALOG (Same as your original but with better styling) */}
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => setSelectedMember(member)}
                             >
                               <UserCog className="w-4 h-4 mr-1" />
@@ -943,18 +955,18 @@ const generateIndividualPDF = (member: Profile) => {
                             </div>
                           </DialogContent>
                         </Dialog>
-                        
+
                         {/* NEW: Individual PDF Download Button for Table View */}
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => generateIndividualPDF(member)}
                           className="text-green-600 hover:text-green-700 hover:bg-green-50"
                           title={`Download PDF for ${member.full_name}`}
                         >
                           <FileText className="w-4 h-4" />
                         </Button>
-                        
+
                         {/* Delete Button for Table View */}
                         <Dialog
                           open={memberToDelete?.id === member.id}
@@ -964,9 +976,9 @@ const generateIndividualPDF = (member: Profile) => {
                           }}
                         >
                           <DialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              variant="outline"
+                              size="sm"
                               className="text-red-600 hover:text-red-700 hover:bg-red-50"
                               title={`Delete ${member.full_name}`}
                             >

@@ -24,8 +24,10 @@ export default function LoginPage() {
 
     try {
       // Convert username to fake email format
-      const fakeEmail = `${username}@yourapp.local`
-      
+      // Replace underscores with hyphens to ensure valid email format
+      const sanitizedUsername = username.toLowerCase().replace(/_/g, '-')
+      const fakeEmail = `${sanitizedUsername}@example.com`
+
       const { error } = await supabase.auth.signInWithPassword({
         email: fakeEmail,  // Use fake email internally
         password,
@@ -38,6 +40,9 @@ export default function LoginPage() {
         }
         throw error
       }
+
+      // Set explicit login mode cookie for middleware
+      document.cookie = "login_mode=member; path=/; max-age=2592000; SameSite=Lax" // 30 days
 
       router.push("/dashboard")
     } catch (error: unknown) {

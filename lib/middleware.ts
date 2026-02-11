@@ -49,6 +49,19 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Handle Root Redirect based on Login Mode
+  if (request.nextUrl.pathname === "/" && user) {
+    const loginMode = request.cookies.get("login_mode")?.value
+    const url = request.nextUrl.clone()
+
+    if (loginMode === "admin") {
+      url.pathname = "/admin"
+    } else {
+      url.pathname = "/dashboard"
+    }
+    return NextResponse.redirect(url)
+  }
+
   // Special handling for admin routes - redirect to admin login if not authenticated
   if (
     request.nextUrl.pathname.startsWith("/admin") &&

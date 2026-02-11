@@ -37,7 +37,7 @@ export default function RegisterPage() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
-    
+
     // Reset username availability when username changes
     if (field === "username") {
       setUsernameAvailable(null)
@@ -47,21 +47,21 @@ export default function RegisterPage() {
   // Check username availability
   const checkUsernameAvailability = async (username: string) => {
     if (!username || username.length < 3) return
-    
+
     setUsernameChecking(true)
     const supabase = createClient()
-    
+
     try {
       const { data, error } = await supabase.rpc('check_username_exists', {
         username_to_check: username.toLowerCase()
       })
-      
+
       if (error) {
         console.error('Error checking username:', error)
         setUsernameAvailable(null)
         return
       }
-      
+
       setUsernameAvailable(!data) // true if username is available (doesn't exist)
     } catch (error) {
       console.error('Error checking username:', error)
@@ -136,8 +136,9 @@ export default function RegisterPage() {
 
     try {
       // Use fake email for username-only accounts, real email if provided
-      const authEmail = formData.email || `${formData.username.toLowerCase()}@yourapp.local`
-      
+      const sanitizedUsername = formData.username.toLowerCase().replace(/_/g, '-')
+      const authEmail = formData.email || `${sanitizedUsername}@example.com`
+
       const { data, error } = await supabase.auth.signUp({
         email: authEmail,
         password: formData.password,
@@ -162,7 +163,7 @@ export default function RegisterPage() {
           },
         },
       })
-      
+
       if (error) {
         // Handle specific error cases
         if (error.message.includes('User already registered')) {
@@ -170,68 +171,52 @@ export default function RegisterPage() {
         }
         throw error
       }
-      
+
       // 👇 after signUp, insert into profiles
+      // The database trigger will handle the initial creation using metadata.
+      // We attempt an update here just in case, but if it fails due to RLS (no session),
+      // we can safely ignore it because the trigger works as Security Definer.
       if (data.user) {
         try {
-          const { error: profileError } = await supabase.from("profiles").insert([
-            {
-              id: data.user.id,  // important: must match auth.users.id
-              email: formData.email || null,
-              full_name: formData.fullName,
-              district: formData.district,
-              assembly: formData.assembly,
-              address: formData.address,
-              office_position: formData.positionOffice || null,
-              family: formData.family,
-              guardian_spouse_number: formData.guardianSpouseNo || null,
-              reservation_number: formData.reservationNumber,
-              phone_number: formData.phoneNo,
-              date_of_birth: formData.dateOfBirth,
-              sex: formData.sex,
-              rank: "C-Multitude",
-              department: formData.department || null,
-              username: formData.username.toLowerCase(),
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            },
-          ])
-        
+          const { error: profileError } = await supabase.from("profiles").upsert({
+            id: data.user.id,
+            email: formData.email || null,
+            full_name: formData.fullName,
+            district: formData.district,
+            assembly: formData.assembly,
+            address: formData.address,
+            office_position: formData.positionOffice || null,
+            family: formData.family,
+            guardian_spouse_number: formData.guardianSpouseNo || null,
+            reservation_number: formData.reservationNumber,
+            phone_number: formData.phoneNo,
+            date_of_birth: formData.dateOfBirth,
+            sex: formData.sex,
+            rank: "C-Multitude",
+            department: formData.department || null,
+            username: formData.username.toLowerCase(),
+            updated_at: new Date().toISOString(),
+          })
+
           if (profileError) {
-            // If profile creation fails, clean up the auth user
-            console.error('Profile creation failed, cleaning up auth user:', profileError)
-            
-            // Try to delete the auth user that was just created
-            try {
-              await supabase.auth.admin.deleteUser(data.user.id)
-            } catch (cleanupError) {
-              console.error('Failed to cleanup auth user:', cleanupError)
-            }
-            
-            // Throw a user-friendly error
-            if (profileError.message.includes('duplicate key')) {
-              throw new Error('This username is already taken. Please choose a different username.')
-            } else if (profileError.message.includes('reservation_number')) {
-              throw new Error('This reservation number is already in use. Please check your reservation number.')
+            // If RLS error (42501), it means user isn't logged in yet (email confirm pending),
+            // but the TRIGGER has already saved the data from metadata. Safe to ignore.
+            if (profileError.code === '42501') {
+              console.warn('Profile upsert blocked by RLS (expected if email not verified). Trigger should have handled it.', profileError)
             } else {
-              throw new Error('Registration failed. Please try again or contact support.')
+              console.error('Profile upsert failed:', profileError)
+              // Only throw if it's NOT an RLS error
+              throw profileError
             }
           }
-        } catch (profileError) {
-          // If profile creation fails, clean up the auth user
-          console.error('Profile creation failed, cleaning up auth user:', profileError)
-          
-          // Try to delete the auth user that was just created
-          try {
-            await supabase.auth.admin.deleteUser(data.user.id)
-          } catch (cleanupError) {
-            console.error('Failed to cleanup auth user:', cleanupError)
+        } catch (profileError: any) {
+          if (profileError?.code !== '42501') {
+            console.error('Profile creation/update failed:', profileError)
+            throw profileError
           }
-          
-          throw profileError
         }
       }
-      
+
 
       // if (error) {
       //   const errMsg = (typeof error === "object" && error !== null && "message" in error && typeof (error as any).message === "string")
@@ -489,11 +474,10 @@ export default function RegisterPage() {
                         value={formData.username}
                         onChange={(e) => handleInputChange("username", e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                         onBlur={handleUsernameBlur}
-                        className={`h-12 border-2 focus:border-indigo-500 rounded-lg bg-white pr-10 ${
-                          usernameAvailable === true ? 'border-green-500' : 
-                          usernameAvailable === false ? 'border-red-500' : 
-                          'border-gray-200'
-                        }`}
+                        className={`h-12 border-2 focus:border-indigo-500 rounded-lg bg-white pr-10 ${usernameAvailable === true ? 'border-green-500' :
+                          usernameAvailable === false ? 'border-red-500' :
+                            'border-gray-200'
+                          }`}
                         placeholder="Choose a username (min 3 chars)"
                       />
                       {usernameChecking && (

@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).single()
+    const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
 
     if (!profile?.is_admin) {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 })

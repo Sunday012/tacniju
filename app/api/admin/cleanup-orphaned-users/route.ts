@@ -7,7 +7,7 @@ export async function POST() {
   try {
     // Check if user is admin
     const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
+
     if (userError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -16,7 +16,7 @@ export async function POST() {
       .from("profiles")
       .select("is_admin")
       .eq("id", user.id)
-      .single()
+      .maybeSingle()
 
     if (!profile?.is_admin) {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 })
@@ -24,7 +24,7 @@ export async function POST() {
 
     // Find auth users that don't have corresponding profiles
     const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers()
-    
+
     if (authError) {
       throw authError
     }
@@ -32,7 +32,7 @@ export async function POST() {
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
       .select("id")
-    
+
     if (profilesError) {
       throw profilesError
     }
@@ -51,11 +51,11 @@ export async function POST() {
           deletionResults.push({ id: orphanedUser.id, email: orphanedUser.email, success: true })
         }
       } catch (error) {
-        deletionResults.push({ 
-          id: orphanedUser.id, 
-          email: orphanedUser.email, 
-          success: false, 
-          error: error instanceof Error ? error.message : 'Unknown error' 
+        deletionResults.push({
+          id: orphanedUser.id,
+          email: orphanedUser.email,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
         })
       }
     }
