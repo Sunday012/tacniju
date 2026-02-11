@@ -501,7 +501,7 @@ export function MembersTable({ members }: MembersTableProps) {
   }
 
   const MemberCard = ({ member }: { member: Profile }) => (
-    <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-l-4 border-l-indigo-500 hover:shadow-lg transition-all duration-300 w-full max-w-md mx-auto sm:max-w-full">
+    <Card className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 w-full max-w-md mx-auto sm:max-w-full group">
       <CardContent className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4">
           <div>
@@ -680,62 +680,64 @@ export function MembersTable({ members }: MembersTableProps) {
       {/* NEW SECTION: Statistics Overview Cards */}
       {/* ============================================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+        <Card className="bg-white border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-all">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-100 text-sm">Total Members</p>
-                <p className="text-2xl font-bold">{sortedMembers.length}</p>
+                <p className="text-gray-500 text-sm font-medium">Total Members</p>
+                <p className="text-2xl font-bold text-gray-900">{sortedMembers.length}</p>
               </div>
-              <Users className="w-8 h-8 text-blue-200" />
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <Users className="w-6 h-6 text-blue-600" />
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+        <Card className="bg-white border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-all">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100 text-sm">S-Servant</p>
-                <p className="text-2xl font-bold">{sortedMembers.filter(m => m.rank === 'S-Servant').length}</p>
+                <p className="text-gray-500 text-sm font-medium">S-Servant</p>
+                <p className="text-2xl font-bold text-gray-900">{sortedMembers.filter(m => m.rank === 'S-Servant').length}</p>
               </div>
-              <div className="w-8 h-8 bg-purple-400 rounded-full flex items-center justify-center text-purple-800 font-bold">S</div>
+              <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center text-purple-700 font-bold">S</div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
+        <Card className="bg-white border-l-4 border-l-yellow-500 shadow-sm hover:shadow-md transition-all">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-yellow-100 text-sm">A-Chosen</p>
-                <p className="text-2xl font-bold">{sortedMembers.filter(m => m.rank === 'A-Chosen').length}</p>
+                <p className="text-gray-500 text-sm font-medium">A-Chosen</p>
+                <p className="text-2xl font-bold text-gray-900">{sortedMembers.filter(m => m.rank === 'A-Chosen').length}</p>
               </div>
-              <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-yellow-800 font-bold">A</div>
+              <div className="w-10 h-10 bg-yellow-50 rounded-lg flex items-center justify-center text-yellow-700 font-bold">A</div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white">
+        <Card className="bg-white border-l-4 border-l-indigo-500 shadow-sm hover:shadow-md transition-all">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-indigo-100 text-sm">B-Called</p>
-                <p className="text-2xl font-bold">{sortedMembers.filter(m => m.rank === 'B-Called').length}</p>
+                <p className="text-gray-500 text-sm font-medium">B-Called</p>
+                <p className="text-2xl font-bold text-gray-900">{sortedMembers.filter(m => m.rank === 'B-Called').length}</p>
               </div>
-              <div className="w-8 h-8 bg-indigo-400 rounded-full flex items-center justify-center text-indigo-800 font-bold">B</div>
+              <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-700 font-bold">B</div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-gray-500 to-gray-600 text-white">
+        <Card className="bg-white border-l-4 border-l-gray-500 shadow-sm hover:shadow-md transition-all">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-100 text-sm">C-Multitude</p>
-                <p className="text-2xl font-bold">{sortedMembers.filter(m => !m.rank || m.rank === 'C-Multitude').length}</p>
+                <p className="text-gray-500 text-sm font-medium">C-Multitude</p>
+                <p className="text-2xl font-bold text-gray-900">{sortedMembers.filter(m => !m.rank || m.rank === 'C-Multitude').length}</p>
               </div>
-              <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-gray-800 font-bold">C</div>
+              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-700 font-bold">C</div>
             </div>
           </CardContent>
         </Card>
