@@ -26,7 +26,7 @@ export default function LoginPage() {
       // Convert username to fake email format
       // Replace underscores with hyphens to ensure valid email format
       const sanitizedUsername = username.toLowerCase().replace(/_/g, '-')
-      const fakeEmail = `${sanitizedUsername}@example.com`
+      const fakeEmail = `${sanitizedUsername}@user.tacniju.org`
 
       const { error } = await supabase.auth.signInWithPassword({
         email: fakeEmail,  // Use fake email internally

@@ -51,7 +51,7 @@ export function MembersTable({ members }: MembersTableProps) {
   const [isUpdating, setIsUpdating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [memberToDelete, setMemberToDelete] = useState<Profile | null>(null)
-  const [viewMode, setViewMode] = useState<"table" | "cards">("cards") // NEW: View mode toggle
+  const [viewMode, setViewMode] = useState<"table" | "cards">("table") // NEW: View mode toggle
   const router = useRouter()
   console.log("member", selectedMember)
   const filteredMembers = members.filter((member) => {
@@ -680,64 +680,64 @@ export function MembersTable({ members }: MembersTableProps) {
       {/* NEW SECTION: Statistics Overview Cards */}
       {/* ============================================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card className="bg-white border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-all">
+        <Card className="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 border border-blue-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm font-medium">Total Members</p>
-                <p className="text-2xl font-bold text-gray-900">{sortedMembers.length}</p>
+                <p className="text-blue-700/80 text-xs font-bold uppercase tracking-wider mb-1">Total</p>
+                <p className="text-3xl font-black text-blue-950">{sortedMembers.length}</p>
               </div>
-              <div className="p-2 bg-blue-50 rounded-lg">
-                <Users className="w-6 h-6 text-blue-600" />
+              <div className="p-2.5 bg-white text-blue-600 rounded-[10px] shadow-sm border border-blue-100">
+                <Users className="w-5 h-5" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-all">
+        <Card className="bg-gradient-to-br from-purple-50/80 to-fuchsia-50/50 border border-purple-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm font-medium">S-Servant</p>
-                <p className="text-2xl font-bold text-gray-900">{sortedMembers.filter(m => m.rank === 'S-Servant').length}</p>
+                <p className="text-purple-700/80 text-xs font-bold uppercase tracking-wider mb-1">S-Servant</p>
+                <p className="text-3xl font-black text-purple-950">{sortedMembers.filter(m => m.rank === 'S-Servant').length}</p>
               </div>
-              <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center text-purple-700 font-bold">S</div>
+              <div className="w-10 h-10 bg-white shadow-sm border border-purple-100 rounded-[10px] flex items-center justify-center text-purple-600 font-bold text-lg">S</div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-l-4 border-l-yellow-500 shadow-sm hover:shadow-md transition-all">
+        <Card className="bg-gradient-to-br from-amber-50/80 to-yellow-50/50 border border-amber-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm font-medium">A-Chosen</p>
-                <p className="text-2xl font-bold text-gray-900">{sortedMembers.filter(m => m.rank === 'A-Chosen').length}</p>
+                <p className="text-amber-700/80 text-xs font-bold uppercase tracking-wider mb-1">A-Chosen</p>
+                <p className="text-3xl font-black text-amber-950">{sortedMembers.filter(m => m.rank === 'A-Chosen').length}</p>
               </div>
-              <div className="w-10 h-10 bg-yellow-50 rounded-lg flex items-center justify-center text-yellow-700 font-bold">A</div>
+              <div className="w-10 h-10 bg-white shadow-sm border border-amber-100 rounded-[10px] flex items-center justify-center text-amber-500 font-bold text-lg">A</div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-l-4 border-l-indigo-500 shadow-sm hover:shadow-md transition-all">
+        <Card className="bg-gradient-to-br from-emerald-50/80 to-teal-50/50 border border-emerald-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm font-medium">B-Called</p>
-                <p className="text-2xl font-bold text-gray-900">{sortedMembers.filter(m => m.rank === 'B-Called').length}</p>
+                <p className="text-emerald-700/80 text-xs font-bold uppercase tracking-wider mb-1">B-Called</p>
+                <p className="text-3xl font-black text-emerald-950">{sortedMembers.filter(m => m.rank === 'B-Called').length}</p>
               </div>
-              <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-700 font-bold">B</div>
+              <div className="w-10 h-10 bg-white shadow-sm border border-emerald-100 rounded-[10px] flex items-center justify-center text-emerald-600 font-bold text-lg">B</div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-l-4 border-l-gray-500 shadow-sm hover:shadow-md transition-all">
+        <Card className="bg-gradient-to-br from-slate-100/80 to-gray-50/50 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm font-medium">C-Multitude</p>
-                <p className="text-2xl font-bold text-gray-900">{sortedMembers.filter(m => !m.rank || m.rank === 'C-Multitude').length}</p>
+                <p className="text-slate-600/80 text-xs font-bold uppercase tracking-wider mb-1">C-Mult</p>
+                <p className="text-3xl font-black text-slate-900">{sortedMembers.filter(m => !m.rank || m.rank === 'C-Multitude').length}</p>
               </div>
-              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-gray-700 font-bold">C</div>
+              <div className="w-10 h-10 bg-white shadow-sm border border-slate-200 rounded-[10px] flex items-center justify-center text-slate-600 font-bold text-lg">C</div>
             </div>
           </CardContent>
         </Card>

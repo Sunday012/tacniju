@@ -1,11 +1,18 @@
 import { createClient } from "@/lib/server"
+import { createClient as createSupabaseAdmin } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 
 export async function POST() {
   const supabase = await createClient()
 
+  // Initialize admin client to bypass RLS and access auth.admin methods
+  const supabaseAdmin = createSupabaseAdmin(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ""
+  )
+
   try {
-    // Check if user is admin
+    // Check if user is admin using normal client context
     const { data: { user }, error: userError } = await supabase.auth.getUser()
 
     if (userError || !user) {
@@ -22,14 +29,18 @@ export async function POST() {
       return NextResponse.json({ error: "Admin access required" }, { status: 403 })
     }
 
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json({ error: "SUPABASE_SERVICE_ROLE_KEY is perfectly missing in your .env file." }, { status: 500 })
+    }
+
     // Find auth users that don't have corresponding profiles
-    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers()
+    const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers()
 
     if (authError) {
       throw authError
     }
 
-    const { data: profiles, error: profilesError } = await supabase
+    const { data: profiles, error: profilesError } = await supabaseAdmin
       .from("profiles")
       .select("id")
 
@@ -44,7 +55,7 @@ export async function POST() {
     const deletionResults = []
     for (const orphanedUser of orphanedUsers) {
       try {
-        const { error: deleteError } = await supabase.auth.admin.deleteUser(orphanedUser.id)
+        const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(orphanedUser.id)
         if (deleteError) {
           deletionResults.push({ id: orphanedUser.id, email: orphanedUser.email, success: false, error: deleteError.message })
         } else {

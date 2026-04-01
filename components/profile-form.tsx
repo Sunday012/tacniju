@@ -28,7 +28,7 @@ interface Profile {
   office_position?: string
   rank?: string
   reservation_number?: string
-  profile_picture_url?: string
+  avatar_url?: string
 }
 
 interface ProfileFormProps {
@@ -56,7 +56,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   const router = useRouter()
 
   const handleProfilePictureUpload = (url: string) => {
-    setFormData((prev) => ({ ...prev, profile_picture_url: url }))
+    setFormData((prev) => ({ ...prev, avatar_url: url }))
     router.refresh() // Refresh to show new profile picture
   }
 
@@ -92,7 +92,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
     <div className="space-y-8">
       <div className="flex justify-center">
         <ProfilePictureUpload
-          currentImageUrl={profile?.profile_picture_url}
+          currentImageUrl={profile?.avatar_url}
           userName={profile?.full_name || "User"}
           onUploadComplete={handleProfilePictureUpload}
         />
@@ -244,7 +244,7 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           </div>
         )}
 
-        <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700" disabled={isLoading}>
+        <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium" disabled={isLoading}>
           {isLoading ? "Updating..." : "Update Profile"}
         </Button>
       </form>
