@@ -1,15 +1,28 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { Html5QrcodeScanner } from "html5-qrcode"
 import { markAttendance } from "@/app/actions"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import Link from "next/link"
-import { CheckCircle2, ArrowLeft, AlertCircle, RefreshCw } from "lucide-react"
+import { CheckCircle2, ArrowLeft, AlertCircle, RefreshCw, CalendarDays } from "lucide-react"
 
 export default function ScannerPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Loading scanner...</div>}>
+            <ScannerContent />
+        </Suspense>
+    )
+}
+
+function ScannerContent() {
+    const searchParams = useSearchParams()
+    const eventId = searchParams.get("eventId") || ""
+    const eventName = searchParams.get("eventName") || "Attendance Scan"
+
     const [lastScanned, setLastScanned] = useState<string | null>(null)
     const [status, setStatus] = useState<"idle" | "success" | "error" | "processing">("idle")
     const [statusMessage, setStatusMessage] = useState("Ready to scan")
@@ -17,7 +30,6 @@ export default function ScannerPage() {
     const scannerRef = useRef<Html5QrcodeScanner | null>(null)
 
     useEffect(() => {
-        // Timeout to ensure DOM is ready and avoid hydration mismatch issues with the scanner library
         const timer = setTimeout(() => {
             if (scannerRef.current) return
 
@@ -53,14 +65,8 @@ export default function ScannerPage() {
         setStatus("processing")
         setStatusMessage("Verifying member...")
 
-        // Pause scanner visual feedback if possible, or just ignore inputs
-        // scannerRef.current?.pause() 
-
         try {
-            // Default event name. In future, make this selectable via a dropdown?
-            const eventName = "Camp Meeting"
-
-            const result = await markAttendance(decodedText, eventName)
+            const result = await markAttendance(decodedText, eventId, eventName)
 
             if (result.success) {
                 setStatus("success")
@@ -76,18 +82,14 @@ export default function ScannerPage() {
             setStatusMessage("Network error. Try again.")
         }
 
-        // Reset loop
         setTimeout(() => {
             setLastScanned(null)
             setStatus("idle")
             setStatusMessage("Ready to scan next")
-            // scannerRef.current?.resume()
         }, 3000)
     }
 
-    function onScanFailure(error: any) {
-        // console.warn(`Code scan error = ${error}`);
-    }
+    function onScanFailure(error: any) {}
 
     function manualReset() {
         setLastScanned(null)
@@ -99,17 +101,33 @@ export default function ScannerPage() {
         <div className="min-h-screen bg-slate-950 text-white p-4 flex flex-col items-center">
             <div className="w-full max-w-md space-y-6">
                 <header className="flex items-center gap-4">
-                    <Link href="/admin">
+                    <Link href="/admin/events">
                         <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
                             <ArrowLeft className="w-5 h-5" />
                         </Button>
                     </Link>
-                    <h1 className="text-xl font-bold">Attendance Scanner</h1>
+                    <div>
+                        <h1 className="text-xl font-bold">Attendance Scanner</h1>
+                        {eventId && (
+                            <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+                                <CalendarDays className="w-3 h-3" />
+                                {eventName}
+                            </p>
+                        )}
+                    </div>
                 </header>
+
+                {!eventId && (
+                    <Card className="bg-amber-950/30 border-amber-700/50">
+                        <CardContent className="p-4 text-sm text-amber-300">
+                            ⚠️ No event selected. <Link href="/admin/events" className="underline font-semibold">Go back and pick an event</Link> before scanning.
+                        </CardContent>
+                    </Card>
+                )}
 
                 <Card className="bg-slate-900 border-slate-800 shadow-xl">
                     <CardHeader className="pb-2">
-                        <CardTitle className="text-center text-slate-200">Camp Meeting Scanner</CardTitle>
+                        <CardTitle className="text-center text-slate-200">{eventName}</CardTitle>
                         <CardDescription className="text-center text-slate-500">
                             {scannerReady ? "Point camera at ID Card QR Code" : "Initializing camera..."}
                         </CardDescription>

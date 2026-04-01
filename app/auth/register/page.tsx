@@ -137,7 +137,7 @@ export default function RegisterPage() {
     try {
       // Use fake email for username-only accounts, real email if provided
       const sanitizedUsername = formData.username.toLowerCase().replace(/_/g, '-')
-      const authEmail = formData.email || `${sanitizedUsername}@example.com`
+      const authEmail = formData.email || `${sanitizedUsername}@user.tacniju.org`
 
       const { data, error } = await supabase.auth.signUp({
         email: authEmail,
@@ -159,7 +159,8 @@ export default function RegisterPage() {
             sex: formData.sex,
             rank: "C-Multitude",
             department: formData.department,
-            email: formData.email || null,
+            email: authEmail,
+            avatar_url: "",
           },
         },
       })
@@ -180,7 +181,7 @@ export default function RegisterPage() {
         try {
           const { error: profileError } = await supabase.from("profiles").upsert({
             id: data.user.id,
-            email: formData.email || null,
+            email: authEmail,
             full_name: formData.fullName,
             district: formData.district,
             assembly: formData.assembly,
@@ -195,6 +196,7 @@ export default function RegisterPage() {
             rank: "C-Multitude",
             department: formData.department || null,
             username: formData.username.toLowerCase(),
+            avatar_url: "",
             updated_at: new Date().toISOString(),
           })
 

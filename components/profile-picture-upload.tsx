@@ -50,9 +50,8 @@ export function ProfilePictureUpload({
 
     } catch (error) {
       console.error("Upload error:", error)
-      toast(
-        "Upload Failed"
-      )
+      toast("Upload Failed")
+    } finally {
       setIsUploading(false)
     }
   }

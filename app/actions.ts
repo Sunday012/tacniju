@@ -4,7 +4,7 @@ import { createClient } from "@/lib/server"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
-export async function markAttendance(userId: string, eventName: string) {
+export async function markAttendance(userId: string, eventId: string, eventName: string) {
     const supabase = await createClient()
 
     // Verify Admin
@@ -16,7 +16,6 @@ export async function markAttendance(userId: string, eventName: string) {
     // Check if admin
     const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
     if (!profile?.is_admin) {
-        // Allow implicit admin via email fallback just in case
         if (user.email !== "sundayfavour997@gmail.com") {
             return { success: false, message: "Access denied. Admins only." }
         }
@@ -33,29 +32,42 @@ export async function markAttendance(userId: string, eventName: string) {
         return { success: false, message: "Invalid QR Code. User not found." }
     }
 
-    // Check for duplicate attendance today
+    // Check for duplicate attendance for this same event
     const today = new Date().toISOString().split("T")[0]
-    const { data: existing } = await supabase
+    const duplicateQuery = supabase
         .from("attendance")
         .select("id")
         .eq("user_id", userId)
         .eq("event_date", today)
-        .eq("event_name", eventName)
-        .maybeSingle()
+
+    // Check by event_id if provided, otherwise by event_name for backwards compat
+    if (eventId) {
+        duplicateQuery.eq("event_id", eventId)
+    } else {
+        duplicateQuery.eq("event_name", eventName)
+    }
+
+    const { data: existing } = await duplicateQuery.maybeSingle()
 
     if (existing) {
         return { success: false, message: `${targetUser.full_name} is already marked present!` }
     }
 
     // Mark Attendance
+    const insertPayload: Record<string, any> = {
+        user_id: userId,
+        event_name: eventName,
+        event_date: today,
+        attended: true,
+    }
+
+    if (eventId) {
+        insertPayload.event_id = eventId
+    }
+
     const { error: insertError } = await supabase
         .from("attendance")
-        .insert({
-            user_id: userId,
-            event_name: eventName,
-            event_date: today,
-            attended: true
-        })
+        .insert(insertPayload)
 
     if (insertError) {
         console.error(insertError)
