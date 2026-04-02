@@ -78,7 +78,7 @@ export function AccountingClient({ profile, orgName, groups, ledgers, customFiel
                             <button onClick={() => setActiveTab("gateway")} className="text-sm bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded transition font-medium">Esc: Back to Gateway</button>
                         </div>
                         <div className="grid gap-8 md:grid-cols-2">
-                            <div><GroupsManager groups={groups} /></div>
+                            <div><GroupsManager groups={groups} ledgers={ledgers} /></div>
                             {/* <div><LedgersManager ledgers={ledgers} groups={groups} customFields={customFields} /></div> */}
                         </div>
                     </div>

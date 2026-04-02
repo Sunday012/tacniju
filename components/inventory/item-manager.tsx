@@ -7,8 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { createItem, Item } from "@/app/inventory/actions"
+import { createItem, deleteItem, Item } from "@/app/inventory/actions"
 import { useRouter } from "next/navigation"
+import { Trash2 } from "lucide-react"
+import { toast } from "sonner"
 
 export function ItemManager({ items }: { items: Item[] }) {
     const [isOpen, setIsOpen] = useState(false)
@@ -48,6 +50,22 @@ export function ItemManager({ items }: { items: Item[] }) {
             router.refresh()
         } catch (error) {
             console.error("Failed to create item", error)
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
+    async function handleDelete(item: Item) {
+        if (!confirm(`Are you sure you want to delete "${item.name}"?`)) return
+
+        setIsSubmitting(true)
+        try {
+            await deleteItem(item.id)
+            toast.success("Item deleted")
+            router.refresh()
+        } catch (error: any) {
+            toast.error(error?.message || "Failed to delete item")
+            console.error("Failed to delete item", error)
         } finally {
             setIsSubmitting(false)
         }
@@ -123,12 +141,13 @@ export function ItemManager({ items }: { items: Item[] }) {
                             <TableHead className="text-slate-500 text-right">Cost</TableHead>
                             <TableHead className="text-slate-500 text-right">Price</TableHead>
                             <TableHead className="text-slate-500 text-right">Stock</TableHead>
+                            <TableHead className="text-right text-slate-500">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {items.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center text-slate-500 py-6">No items in inventory.</TableCell>
+                                <TableCell colSpan={6} className="text-center text-slate-500 py-6">No items in inventory.</TableCell>
                             </TableRow>
                         ) : (
                             items.map(item => (
@@ -144,6 +163,18 @@ export function ItemManager({ items }: { items: Item[] }) {
                                         <span className={(item.current_stock || 0) <= item.reorder_level && item.reorder_level > 0 ? "text-red-400" : ""}>
                                             {item.current_stock}
                                         </span>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleDelete(item)}
+                                            disabled={isSubmitting}
+                                            className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                            title={`Delete ${item.name}`}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
                                     </TableCell>
                                 </TableRow>
                             ))

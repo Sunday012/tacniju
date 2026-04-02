@@ -19,7 +19,7 @@ export default async function ManagementPage() {
 
                 <div className="grid gap-8 md:grid-cols-2">
                     <div>
-                        <GroupsManager groups={groups} />
+                        <GroupsManager groups={groups} ledgers={ledgers} />
                     </div>
                     <div>
                         {/* <LedgersManager ledgers={ledgers} groups={groups} customFields={customFields} /> */}

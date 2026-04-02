@@ -116,29 +116,27 @@ export function MembersTable({ members }: MembersTableProps) {
 
   const deleteMember = async (memberId: string) => {
     setIsDeleting(true)
-    const supabase = createClient()
     try {
-      // First delete attendance records
-      const { error: attendanceError } = await supabase
-        .from("attendance")
-        .delete()
-        .eq("user_id", memberId)
+      const response = await fetch("/api/admin/delete-member", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ memberId }),
+      })
 
-      if (attendanceError) throw attendanceError
+      const result = await response.json()
 
-      // Then delete the profile (this will also delete the auth user due to cascade)
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", memberId)
-
-      if (profileError) throw profileError
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to delete member")
+      }
 
       setMemberToDelete(null)
+      setSelectedMember(null)
       router.refresh()
     } catch (error) {
       console.error("Error deleting member:", error)
-      alert("Failed to delete member. Please try again.")
+      alert(error instanceof Error ? error.message : "Failed to delete member. Please try again.")
     } finally {
       setIsDeleting(false)
     }
@@ -675,11 +673,11 @@ export function MembersTable({ members }: MembersTableProps) {
   // MAIN RENDER (Enhanced UI with responsive design)
   // ============================================================================
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 ">
       {/* ============================================================================ */}
       {/* NEW SECTION: Statistics Overview Cards */}
       {/* ============================================================================ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 ">
         <Card className="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 border border-blue-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">

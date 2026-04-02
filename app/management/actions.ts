@@ -51,6 +51,7 @@ export async function createAccountGroup(payload: Omit<AccountGroup, "id">) {
 
     if (error) throw error
     revalidatePath("/management")
+    revalidatePath("/accounting")
     return data
 }
 
@@ -68,7 +69,66 @@ export async function updateAccountGroup(id: string, payload: Partial<Omit<Accou
 
     if (error) throw error
     revalidatePath("/management")
+    revalidatePath("/accounting")
     return data
+}
+
+export async function deleteAccountGroup(id: string) {
+    const supabase = await createClient()
+    const orgId = await getOrgId()
+
+    const [{ data: linkedLedger }, { data: childGroup }] = await Promise.all([
+        supabase
+            .from("ledgers")
+            .select("id, name")
+            .eq("org_id", orgId)
+            .eq("group_id", id)
+            .limit(1)
+            .maybeSingle(),
+        supabase
+            .from("account_groups")
+            .select("id, name")
+            .eq("org_id", orgId)
+            .eq("parent_id", id)
+            .limit(1)
+            .maybeSingle()
+    ])
+
+    if (linkedLedger) {
+        return {
+            success: false,
+            error: `You can't delete this group yet because ledger "${linkedLedger.name}" is still assigned to it.`,
+        }
+    }
+
+    if (childGroup) {
+        return {
+            success: false,
+            error: `You can't delete this group yet because child group "${childGroup.name}" still belongs to it.`,
+        }
+    }
+
+    const { error } = await supabase
+        .from("account_groups")
+        .delete()
+        .eq("id", id)
+        .eq("org_id", orgId)
+
+    if (error) {
+        if ((error as { code?: string }).code === "23503") {
+            return {
+                success: false,
+                error: "This group is still linked to other records and cannot be deleted yet.",
+            }
+        }
+
+        throw error
+    }
+
+    revalidatePath("/management")
+    revalidatePath("/accounting")
+
+    return { success: true }
 }
 
 export type CustomFieldDef = {
@@ -153,6 +213,7 @@ export async function createLedger(payload: Omit<Ledger, "id">) {
 
     if (error) throw error
     revalidatePath("/management")
+    revalidatePath("/accounting")
 }
 
 export async function updateLedger(id: string, payload: Partial<Omit<Ledger, "id">>) {
@@ -167,6 +228,7 @@ export async function updateLedger(id: string, payload: Partial<Omit<Ledger, "id
 
     if (error) throw error
     revalidatePath("/management")
+    revalidatePath("/accounting")
 }
 
 export async function seedDefaultGroups() {
@@ -194,4 +256,5 @@ export async function seedDefaultGroups() {
         }
     }
     revalidatePath("/management")
+    revalidatePath("/accounting")
 }

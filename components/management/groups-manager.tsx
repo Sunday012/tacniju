@@ -8,10 +8,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { createAccountGroup, updateAccountGroup, AccountGroup, seedDefaultGroups } from "@/app/management/actions"
+import { createAccountGroup, updateAccountGroup, deleteAccountGroup, AccountGroup, Ledger, seedDefaultGroups } from "@/app/management/actions"
 import { useRouter } from "next/navigation"
+import { Trash2 } from "lucide-react"
+import { toast } from "sonner"
 
-export function GroupsManager({ groups }: { groups: AccountGroup[] }) {
+export function GroupsManager({ groups, ledgers = [] }: { groups: AccountGroup[], ledgers?: Ledger[] }) {
     const [isOpen, setIsOpen] = useState(false)
     const [editId, setEditId] = useState<string | null>(null)
     const [name, setName] = useState("")
@@ -72,6 +74,50 @@ export function GroupsManager({ groups }: { groups: AccountGroup[] }) {
         } finally {
             setIsSubmitting(false)
         }
+    }
+
+    async function handleDelete(group: AccountGroup) {
+        const hasChildren = groups.some((item) => item.parent_id === group.id)
+        const linkedLedgers = ledgers.filter((ledger) => ledger.group_id === group.id)
+
+        if (hasChildren) {
+            toast.error(`Delete blocked: "${group.name}" still has child groups.`)
+            return
+        }
+
+        if (linkedLedgers.length > 0) {
+            const label = linkedLedgers.length === 1 ? "ledger" : "ledgers"
+            toast.error(`Delete blocked: "${group.name}" still has ${linkedLedgers.length} ${label} assigned.`)
+            return
+        }
+
+        if (!confirm(`Are you sure you want to delete "${group.name}"?`)) return
+
+        setIsSubmitting(true)
+        try {
+            const result = await deleteAccountGroup(group.id)
+
+            if (!result.success) {
+                toast.error(result.error)
+                return
+            }
+
+            toast.success("Account group deleted")
+            router.refresh()
+        } catch (error: any) {
+            toast.error(error?.message || "Failed to delete account group")
+            console.error("Failed to delete group", error)
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
+    function getLinkedLedgersCount(groupId: string) {
+        return ledgers.filter((ledger) => ledger.group_id === groupId).length
+    }
+
+    function getHasChildren(groupId: string) {
+        return groups.some((item) => item.parent_id === groupId)
     }
 
     return (
@@ -163,7 +209,17 @@ export function GroupsManager({ groups }: { groups: AccountGroup[] }) {
                                 <TableCell colSpan={4} className="text-center text-slate-500 py-6">No groups found.</TableCell>
                             </TableRow>
                         ) : (
-                            groups.map(group => (
+                            groups.map(group => {
+                                const linkedLedgersCount = getLinkedLedgersCount(group.id)
+                                const hasChildren = getHasChildren(group.id)
+                                const cannotDelete = hasChildren || linkedLedgersCount > 0
+                                const deleteTitle = hasChildren
+                                    ? `Can't delete ${group.name} while it has child groups`
+                                    : linkedLedgersCount > 0
+                                        ? `Can't delete ${group.name} while ledgers are assigned to it`
+                                        : `Delete ${group.name}`
+
+                                return (
                                 <TableRow key={group.id} className="border-slate-200">
                                     <TableCell className="font-medium text-slate-800">{group.name}</TableCell>
                                     <TableCell className="text-slate-500">{group.nature}</TableCell>
@@ -171,10 +227,23 @@ export function GroupsManager({ groups }: { groups: AccountGroup[] }) {
                                         {group.parent_id ? groups.find(g => g.id === group.parent_id)?.name || "Unknown" : "-"}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="sm" onClick={() => openEdit(group)} className="h-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50">Edit</Button>
+                                        <div className="flex items-center justify-end gap-1">
+                                            <Button variant="ghost" size="sm" onClick={() => openEdit(group)} className="h-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50">Edit</Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleDelete(group)}
+                                                disabled={isSubmitting || cannotDelete}
+                                                className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                title={deleteTitle}
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
-                            ))
+                                )
+                            })
                         )}
                     </TableBody>
                 </Table>

@@ -82,4 +82,21 @@ export async function createItem(payload: Omit<Item, "id" | "current_stock" | "a
 
     if (error) throw error
     revalidatePath("/inventory")
+    revalidatePath("/accounting")
+}
+
+export async function deleteItem(id: string) {
+    const supabase = await createClient()
+    const orgId = await getOrgId()
+
+    const { error } = await supabase
+        .from("items")
+        .delete()
+        .eq("id", id)
+        .eq("org_id", orgId)
+
+    if (error) throw error
+
+    revalidatePath("/inventory")
+    revalidatePath("/accounting")
 }

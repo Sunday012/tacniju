@@ -65,6 +65,7 @@ export async function saveAttendance(payload: AttendanceFormPayload) {
     }
 
     revalidatePath("/attendance")
+    revalidatePath("/accounting")
 }
 
 export async function getAttendanceList() {
@@ -82,4 +83,23 @@ export async function getAttendanceList() {
         return []
     }
     return data
+}
+
+export async function deleteAttendance(id: string) {
+    const supabase = await createClient()
+    const orgId = await getOrgId()
+
+    const { error } = await supabase
+        .from("attendance")
+        .delete()
+        .eq("id", id)
+        .eq("org_id", orgId)
+
+    if (error) {
+        console.error("Attendance Delete Error:", error)
+        throw new Error(error.message)
+    }
+
+    revalidatePath("/attendance")
+    revalidatePath("/accounting")
 }

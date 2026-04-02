@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { saveAttendance, AttendanceFormPayload } from "@/app/attendance/actions"
+import { saveAttendance, deleteAttendance } from "@/app/attendance/actions"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { Trash2 } from "lucide-react"
 
 export function AttendanceManager({ data }: { data: any[] }) {
     const [isOpen, setIsOpen] = useState(false)
@@ -46,6 +47,23 @@ export function AttendanceManager({ data }: { data: any[] }) {
             router.refresh()
         } catch (error: any) {
             toast.error(error.message || "Failed to save attendance")
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
+    async function handleDelete(record: any) {
+        if (!confirm(`Are you sure you want to delete the ${record.service_name} attendance record for ${new Date(record.date).toLocaleDateString()}?`)) {
+            return
+        }
+
+        setIsSubmitting(true)
+        try {
+            await deleteAttendance(record.id)
+            toast.success("Attendance record deleted")
+            router.refresh()
+        } catch (error: any) {
+            toast.error(error.message || "Failed to delete attendance")
         } finally {
             setIsSubmitting(false)
         }
@@ -116,12 +134,13 @@ export function AttendanceManager({ data }: { data: any[] }) {
                             <TableHead className="text-slate-500 text-center">Women</TableHead>
                             <TableHead className="text-slate-500 text-center">Children</TableHead>
                             <TableHead className="text-slate-500 text-right font-bold">Total</TableHead>
+                            <TableHead className="text-right text-slate-500">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {data.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center text-slate-500 py-6">No attendance records found.</TableCell>
+                                <TableCell colSpan={7} className="text-center text-slate-500 py-6">No attendance records found.</TableCell>
                             </TableRow>
                         ) : (
                             data.map((record) => (
@@ -133,6 +152,18 @@ export function AttendanceManager({ data }: { data: any[] }) {
                                     <TableCell className="text-center text-slate-500">{record.children_count || 0}</TableCell>
                                     <TableCell className="text-right font-bold text-emerald-400">
                                         {record.total_count || ((record.men_count || 0) + (record.women_count || 0) + (record.children_count || 0))}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleDelete(record)}
+                                            disabled={isSubmitting}
+                                            className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                            title={`Delete ${record.service_name}`}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
                                     </TableCell>
                                 </TableRow>
                             ))

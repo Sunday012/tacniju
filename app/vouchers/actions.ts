@@ -110,6 +110,7 @@ export async function saveVoucher(payload: VoucherFormPayload) {
 
     revalidatePath("/vouchers")
     revalidatePath("/inventory")
+    revalidatePath("/accounting")
     return header
 }
 
@@ -137,4 +138,21 @@ export async function getRecentVouchers() {
         return []
     }
     return data
+}
+
+export async function deleteVoucher(id: string) {
+    const supabase = await createClient()
+    const orgId = await getOrgId()
+
+    const { error } = await supabase
+        .from("vouchers")
+        .delete()
+        .eq("id", id)
+        .eq("org_id", orgId)
+
+    if (error) throw error
+
+    revalidatePath("/vouchers")
+    revalidatePath("/inventory")
+    revalidatePath("/accounting")
 }
