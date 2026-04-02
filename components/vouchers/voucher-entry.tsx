@@ -229,22 +229,30 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
     const invisibleInputClass = "w-full bg-transparent border-transparent hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-md px-2 h-8 text-right transition-colors"
     const invisibleSelectClass = "w-full bg-transparent border-transparent hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 h-8 shadow-none"
 
-    // If single entry, top account dropdown list
-    const topAccountLedgers = ledgers.filter(l => voucherType === 'Contra' ? l.is_cash_bank : true) // usually filtered for cash/bank on payment/receipt too, but let's allow all just in case or filter later
-    const ledgerOptions = ledgers.map((ledger) => {
+    const buildLedgerLabel = (ledger: LedgerWithGroup) => {
         const groupName = ledger.account_groups?.name
-        return {
-            value: ledger.id,
-            label: groupName ? `${ledger.name} (${groupName})` : ledger.name,
-        }
-    })
-    const topAccountOptions = topAccountLedgers.map((ledger) => {
-        const groupName = ledger.account_groups?.name
-        return {
-            value: ledger.id,
-            label: groupName ? `${ledger.name} (${groupName})` : ledger.name,
-        }
-    })
+        const kind = ledger.is_cash_bank ? "Cash/Bank" : "Ledger"
+        return groupName ? `${kind}: ${ledger.name} (${groupName})` : `${kind}: ${ledger.name}`
+    }
+
+    const cashBankLedgers = ledgers.filter((ledger) => ledger.is_cash_bank)
+    const regularLedgers = ledgers.filter((ledger) => !ledger.is_cash_bank)
+    const topAccountOptions = cashBankLedgers.map((ledger) => ({
+        value: ledger.id,
+        label: buildLedgerLabel(ledger),
+    }))
+    const detailLedgerCandidates = !isSingleEntry
+        ? ledgers
+        : voucherType === "Contra"
+            ? cashBankLedgers.filter((ledger) => ledger.id !== masterLedgerId)
+            : (regularLedgers.length > 0 ? regularLedgers : ledgers.filter((ledger) => ledger.id !== masterLedgerId))
+    const detailLedgerOptions = detailLedgerCandidates.map((ledger) => ({
+        value: ledger.id,
+        label: buildLedgerLabel(ledger),
+    }))
+    const requiresCashBankMaster = isSingleEntry
+    const hasCashBankMasterOptions = topAccountOptions.length > 0
+    const detailPlaceholder = voucherType === "Contra" ? "Type receiving/paying cash-bank ledger..." : "Type expense, income, party, or other ledger..."
 
     return (
         <div className="w-full">
@@ -283,15 +291,22 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
                     {isSingleEntry && (
                         <div className="mt-6 flex items-center bg-emerald-50/50 p-2 rounded-md border border-emerald-100">
                             <Label className="w-24 font-bold text-slate-700">Account :</Label>
-                            <div className="flex-1">
+                            <div className="flex-1 space-y-1">
                                 <ComboboxInput
                                     value={masterLedgerId}
                                     onChange={(val) => setMasterLedgerId(val)}
                                     options={topAccountOptions}
-                                    placeholder={topAccountOptions.length > 0 ? "Type ledger or group name..." : "No ledgers found. Create one in Accounts Info."}
+                                    placeholder={topAccountOptions.length > 0 ? "Type cash/bank ledger or group name..." : "No cash/bank ledger found. Create or edit one in Accounts Info."}
                                     className="h-10 border-slate-300 font-semibold shadow-sm bg-white rounded-md"
                                     inputClassName="bg-transparent border-none focus-visible:ring-0 shadow-none font-semibold text-slate-800"
                                 />
+                                {requiresCashBankMaster && (
+                                    <p className={`text-xs ${hasCashBankMasterOptions ? "text-emerald-700" : "text-red-600"}`}>
+                                        {hasCashBankMasterOptions
+                                            ? "Top account accepts Cash/Bank ledgers only."
+                                            : "Payment, Receipt, and Contra need at least one ledger marked as Cash/Bank."}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     )}
@@ -369,8 +384,8 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
                                                 <ComboboxInput
                                                     value={sl.ledger_id}
                                                     onChange={(val) => updateLedger(idx, 'ledger_id', val)}
-                                                    options={ledgerOptions}
-                                                    placeholder={ledgerOptions.length > 0 ? "Type ledger or group name..." : "No ledgers found"}
+                                                    options={detailLedgerOptions}
+                                                    placeholder={detailLedgerOptions.length > 0 ? detailPlaceholder : "No matching ledgers found for this voucher type"}
                                                     className="h-8"
                                                     inputClassName="bg-transparent border-transparent hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-none h-8 px-2"
                                                 />

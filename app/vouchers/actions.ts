@@ -37,6 +37,13 @@ export type VoucherFormPayload = {
     ledger_entries: VoucherLedgerEntry[]
 }
 
+async function cleanupVoucherOnFailure(supabase: Awaited<ReturnType<typeof createClient>>, voucherId: string) {
+    await supabase
+        .from("vouchers")
+        .delete()
+        .eq("id", voucherId)
+}
+
 export async function saveVoucher(payload: VoucherFormPayload) {
     const supabase = await createClient()
     const orgId = await getOrgId()
@@ -83,15 +90,14 @@ export async function saveVoucher(payload: VoucherFormPayload) {
         ledger_id: e.ledger_id,
         debit_amount: e.debit_amount || 0,
         credit_amount: e.credit_amount || 0,
-        custom_data: { 
-            adjustment_method: e.adjustment_method,
-            adjustment_reference: e.adjustment_reference 
-        }
     }))
 
     const { error: lineErr } = await supabase.from("voucher_entries").insert(entries)
 
-    if (lineErr) throw lineErr
+    if (lineErr) {
+        await cleanupVoucherOnFailure(supabase, header.id)
+        throw lineErr
+    }
 
     // 5. Insert Inventory Items (if any)
     if (payload.items && payload.items.length > 0) {
@@ -105,7 +111,10 @@ export async function saveVoucher(payload: VoucherFormPayload) {
             movement_type: movementType
         }))
         const { error: itemErr } = await supabase.from("voucher_items").insert(voucherItems)
-        if (itemErr) throw itemErr
+        if (itemErr) {
+            await cleanupVoucherOnFailure(supabase, header.id)
+            throw itemErr
+        }
     }
 
     revalidatePath("/vouchers")

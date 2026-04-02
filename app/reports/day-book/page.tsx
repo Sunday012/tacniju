@@ -8,6 +8,16 @@ export default async function DayBookPage({ searchParams }: { searchParams: { da
     const targetDate = searchParams.date || new Date().toISOString().slice(0, 10)
     const data = await getDayBook(targetDate)
 
+    function getEntryTotals(entries: any[] = []) {
+        return entries.reduce(
+            (totals, entry) => ({
+                debit: totals.debit + Number(entry.debit_amount || 0),
+                credit: totals.credit + Number(entry.credit_amount || 0),
+            }),
+            { debit: 0, credit: 0 }
+        )
+    }
+
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-50 p-4 md:p-8">
             <div className="max-w-6xl mx-auto space-y-6">
@@ -59,7 +69,11 @@ export default async function DayBookPage({ searchParams }: { searchParams: { da
                                         <TableCell colSpan={6} className="text-center text-slate-500 py-6">No transactions recorded on this date.</TableCell>
                                     </TableRow>
                                 ) : (
-                                    data.map(v => (
+                                    data.map(v => {
+                                        const entries = v.voucher_entries || []
+                                        const totals = getEntryTotals(entries)
+
+                                        return (
                                         <TableRow key={v.id} className="border-slate-200 align-top">
                                             <TableCell className="text-slate-500 whitespace-nowrap">
                                                 {new Date(v.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -77,7 +91,9 @@ export default async function DayBookPage({ searchParams }: { searchParams: { da
                                             <TableCell>
                                                 <div className="font-medium text-slate-800 mb-2 italic">"{v.narration}"</div>
                                                 <div className="space-y-1">
-                                                    {v.voucher_entries?.map((e: any, i: number) => (
+                                                    {entries.length === 0 ? (
+                                                        <div className="text-xs text-red-600">No ledger entries were saved for this voucher.</div>
+                                                    ) : entries.map((e: any, i: number) => (
                                                         <div key={i} className={`flex justify-between ${e.debit_amount > 0 ? 'text-emerald-400/80' : 'text-red-400/80'}`}>
                                                             <span>{e.debit_amount > 0 ? 'Dr' : 'Cr'} {e.ledgers?.name}</span>
                                                         </div>
@@ -86,16 +102,17 @@ export default async function DayBookPage({ searchParams }: { searchParams: { da
                                             </TableCell>
                                             <TableCell className="text-right font-mono">
                                                 <div className="mt-8">
-                                                    {v.voucher_entries?.find((e: any) => e.debit_amount > 0)?.debit_amount.toLocaleString(undefined, { minimumFractionDigits: 2 }) || '-'}
+                                                    {totals.debit > 0 ? totals.debit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right font-mono">
                                                 <div className="mt-8">
-                                                    {v.voucher_entries?.find((e: any) => e.credit_amount > 0)?.credit_amount.toLocaleString(undefined, { minimumFractionDigits: 2 }) || '-'}
+                                                    {totals.credit > 0 ? totals.credit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
-                                    ))
+                                        )
+                                    })
                                 )}
                             </TableBody>
                         </Table>

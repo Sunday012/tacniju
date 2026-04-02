@@ -10,6 +10,16 @@ export function DayBookView({ data, onBack }: { data: any[], onBack: () => void 
     const searchParams = useSearchParams()
     const targetDate = searchParams.get("date") || new Date().toISOString().slice(0, 10)
 
+    function getEntryTotals(entries: any[] = []) {
+        return entries.reduce(
+            (totals, entry) => ({
+                debit: totals.debit + Number(entry.debit_amount || 0),
+                credit: totals.credit + Number(entry.credit_amount || 0),
+            }),
+            { debit: 0, credit: 0 }
+        )
+    }
+
     function handleDateSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
         const formData = new FormData(e.currentTarget)
@@ -65,7 +75,11 @@ export function DayBookView({ data, onBack }: { data: any[], onBack: () => void 
                                     <TableCell colSpan={6} className="text-center text-slate-500 py-6">No transactions recorded on this date.</TableCell>
                                 </TableRow>
                             ) : (
-                                data.map(v => (
+                                data.map(v => {
+                                    const entries = v.voucher_entries || []
+                                    const totals = getEntryTotals(entries)
+
+                                    return (
                                     <TableRow key={v.id} className="border-slate-200 align-top hover:bg-slate-50">
                                         <TableCell className="text-slate-500 whitespace-nowrap">
                                             {new Date(v.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -83,7 +97,9 @@ export function DayBookView({ data, onBack }: { data: any[], onBack: () => void 
                                         <TableCell>
                                             <div className="font-medium text-slate-800 mb-2 italic">"{v.narration}"</div>
                                             <div className="space-y-1">
-                                                {v.voucher_entries?.map((e: any, i: number) => (
+                                                {entries.length === 0 ? (
+                                                    <div className="text-xs text-red-600">No ledger entries were saved for this voucher.</div>
+                                                ) : entries.map((e: any, i: number) => (
                                                     <div key={i} className={`flex justify-between ${e.debit_amount > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                                                         <span>{e.debit_amount > 0 ? 'Dr' : 'Cr'} {e.ledgers?.name}</span>
                                                     </div>
@@ -92,16 +108,17 @@ export function DayBookView({ data, onBack }: { data: any[], onBack: () => void 
                                         </TableCell>
                                         <TableCell className="text-right font-mono">
                                             <div className="mt-8">
-                                                {v.voucher_entries?.find((e: any) => e.debit_amount > 0)?.debit_amount.toLocaleString(undefined, { minimumFractionDigits: 2 }) || '-'}
+                                                {totals.debit > 0 ? totals.debit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-right font-mono">
                                             <div className="mt-8">
-                                                {v.voucher_entries?.find((e: any) => e.credit_amount > 0)?.credit_amount.toLocaleString(undefined, { minimumFractionDigits: 2 }) || '-'}
+                                                {totals.credit > 0 ? totals.credit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
                                             </div>
                                         </TableCell>
                                     </TableRow>
-                                ))
+                                    )
+                                })
                             )}
                         </TableBody>
                     </Table>
