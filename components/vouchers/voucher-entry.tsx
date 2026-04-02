@@ -15,7 +15,13 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { Trash2 } from "lucide-react"
 
-export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledger[], recentVouchers: any[], items: Item[] }) {
+type LedgerWithGroup = Ledger & {
+    account_groups?: {
+        name?: string
+    } | null
+}
+
+export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: LedgerWithGroup[], recentVouchers: any[], items: Item[] }) {
     const [voucherType, setVoucherType] = useState<VoucherType>("Payment")
     const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
     const [narration, setNarration] = useState("")
@@ -225,6 +231,20 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
 
     // If single entry, top account dropdown list
     const topAccountLedgers = ledgers.filter(l => voucherType === 'Contra' ? l.is_cash_bank : true) // usually filtered for cash/bank on payment/receipt too, but let's allow all just in case or filter later
+    const ledgerOptions = ledgers.map((ledger) => {
+        const groupName = ledger.account_groups?.name
+        return {
+            value: ledger.id,
+            label: groupName ? `${ledger.name} (${groupName})` : ledger.name,
+        }
+    })
+    const topAccountOptions = topAccountLedgers.map((ledger) => {
+        const groupName = ledger.account_groups?.name
+        return {
+            value: ledger.id,
+            label: groupName ? `${ledger.name} (${groupName})` : ledger.name,
+        }
+    })
 
     return (
         <div className="w-full">
@@ -267,8 +287,8 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
                                 <ComboboxInput
                                     value={masterLedgerId}
                                     onChange={(val) => setMasterLedgerId(val)}
-                                    options={ledgers.map(l => ({ value: l.id, label: l.name }))}
-                                    placeholder="Type to select Account..."
+                                    options={topAccountOptions}
+                                    placeholder={topAccountOptions.length > 0 ? "Type ledger or group name..." : "No ledgers found. Create one in Accounts Info."}
                                     className="h-10 border-slate-300 font-semibold shadow-sm bg-white rounded-md"
                                     inputClassName="bg-transparent border-none focus-visible:ring-0 shadow-none font-semibold text-slate-800"
                                 />
@@ -349,8 +369,8 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
                                                 <ComboboxInput
                                                     value={sl.ledger_id}
                                                     onChange={(val) => updateLedger(idx, 'ledger_id', val)}
-                                                    options={ledgers.map(l => ({ value: l.id, label: l.name }))}
-                                                    placeholder="Type ledger..."
+                                                    options={ledgerOptions}
+                                                    placeholder={ledgerOptions.length > 0 ? "Type ledger or group name..." : "No ledgers found"}
                                                     className="h-8"
                                                     inputClassName="bg-transparent border-transparent hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-none h-8 px-2"
                                                 />

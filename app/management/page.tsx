@@ -1,6 +1,6 @@
 import { getAccountGroups, getLedgers, getCustomFields } from "./actions"
 import { GroupsManager } from "@/components/management/groups-manager"
-// import { LedgersManager } from "@/components/management/ledgers-manager"
+import { LedgersManager } from "@/components/management/ledgers-manager"
 
 export default async function ManagementPage() {
     const [groups, ledgers, customFields] = await Promise.all([
@@ -22,7 +22,7 @@ export default async function ManagementPage() {
                         <GroupsManager groups={groups} ledgers={ledgers} />
                     </div>
                     <div>
-                        {/* <LedgersManager ledgers={ledgers} groups={groups} customFields={customFields} /> */}
+                        <LedgersManager ledgers={ledgers} groups={groups} />
                     </div>
                 </div>
             </div>

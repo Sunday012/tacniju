@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { GroupsManager } from "@/components/management/groups-manager"
-// import { LedgersManager } from "@/components/management/ledgers-manager"
+import { LedgersManager } from "@/components/management/ledgers-manager"
 import { VoucherEntry } from "@/components/vouchers/voucher-entry"
 import { ItemManager } from "@/components/inventory/item-manager"
 import { AttendanceManager } from "@/components/attendance/attendance-manager"
@@ -91,7 +91,7 @@ export function AccountingClient({ profile, orgName, groups, ledgers, customFiel
                         </div>
                         <div className="grid gap-8 md:grid-cols-2">
                             <div><GroupsManager groups={groups} ledgers={ledgers} /></div>
-                            {/* <div><LedgersManager ledgers={ledgers} groups={groups} customFields={customFields} /></div> */}
+                            <div><LedgersManager ledgers={ledgers} groups={groups} /></div>
                         </div>
                     </div>
                 )

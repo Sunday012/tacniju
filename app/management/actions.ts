@@ -231,6 +231,34 @@ export async function updateLedger(id: string, payload: Partial<Omit<Ledger, "id
     revalidatePath("/accounting")
 }
 
+export async function deleteLedger(id: string) {
+    const supabase = await createClient()
+    const orgId = await getOrgId()
+
+    const { error } = await supabase
+        .from("ledgers")
+        .delete()
+        .eq("id", id)
+        .eq("org_id", orgId)
+
+    if (error) {
+        if ((error as { code?: string }).code === "23503") {
+            return {
+                success: false,
+                error: "You can't delete this ledger because it is already used in vouchers or other records.",
+            }
+        }
+
+        throw error
+    }
+
+    revalidatePath("/management")
+    revalidatePath("/accounting")
+    revalidatePath("/vouchers")
+
+    return { success: true }
+}
+
 export async function seedDefaultGroups() {
     const supabase = await createClient()
     const orgId = await getOrgId()
