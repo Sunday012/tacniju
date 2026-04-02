@@ -40,7 +40,7 @@ export function AdminStats({ members, attendance }: AdminStatsProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <Card className="bg-gradient-to-br from-indigo-50/80 to-blue-50/50 border border-indigo-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+      <Card className="bg-indigo-50 border border-indigo-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-bold text-indigo-800">Total Members</CardTitle>
           <div className="h-9 w-9 rounded-[10px] bg-white text-indigo-600 shadow-sm border border-indigo-100 flex items-center justify-center">
@@ -55,7 +55,7 @@ export function AdminStats({ members, attendance }: AdminStatsProps) {
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-amber-50/80 to-yellow-50/50 border border-amber-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+      <Card className="bg-amber-50 border border-amber-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-bold text-amber-800">Rank Distribution</CardTitle>
           <div className="h-9 w-9 rounded-[10px] bg-white text-amber-500 shadow-sm border border-amber-100 flex items-center justify-center">
@@ -72,7 +72,7 @@ export function AdminStats({ members, attendance }: AdminStatsProps) {
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-purple-50/80 to-fuchsia-50/50 border border-purple-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+      <Card className="bg-purple-50 border border-purple-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-bold text-purple-800">Active Departments</CardTitle>
           <div className="h-9 w-9 rounded-[10px] bg-white text-purple-600 shadow-sm border border-purple-100 flex items-center justify-center">
@@ -92,7 +92,7 @@ export function AdminStats({ members, attendance }: AdminStatsProps) {
         </CardContent>
       </Card>
 
-      <Card className="bg-gradient-to-br from-emerald-50/80 to-teal-50/50 border border-emerald-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+      <Card className="bg-emerald-50 border border-emerald-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-bold text-emerald-800">Attendance Rate</CardTitle>
           <div className="h-9 w-9 rounded-[10px] bg-white text-emerald-600 shadow-sm border border-emerald-100 flex items-center justify-center">

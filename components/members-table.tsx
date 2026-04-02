@@ -678,64 +678,74 @@ export function MembersTable({ members }: MembersTableProps) {
       {/* NEW SECTION: Statistics Overview Cards */}
       {/* ============================================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 ">
-        <Card className="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 border border-blue-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-          <CardContent className="p-4">
+        <Card className="relative overflow-hidden bg-[#3952c4] border border-[#4f69dc] shadow-[0_10px_30px_rgba(37,56,120,0.14)] hover:shadow-[0_14px_36px_rgba(37,56,120,0.18)] transition-all duration-300 transform hover:-translate-y-1">
+          <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white/20 via-white/10 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 top-0 h-px bg-white/45 pointer-events-none" />
+          <CardContent className="relative z-10 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-700/80 text-xs font-bold uppercase tracking-wider mb-1">Total</p>
-                <p className="text-3xl font-black text-blue-950">{sortedMembers.length}</p>
+                <p className="text-white/85 text-xs font-bold uppercase tracking-wider mb-1">Total</p>
+                <p className="text-3xl font-black text-white">{sortedMembers.length}</p>
               </div>
-              <div className="p-2.5 bg-white text-blue-600 rounded-[10px] shadow-sm border border-blue-100">
+              <div className="p-2.5 bg-white/14 text-white rounded-[10px] shadow-sm border border-white/20 backdrop-blur-sm">
                 <Users className="w-5 h-5" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50/80 to-fuchsia-50/50 border border-purple-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-          <CardContent className="p-4">
+        <Card className="relative overflow-hidden bg-[#7645c7] border border-[#8f5fe0] shadow-[0_10px_30px_rgba(86,46,146,0.14)] hover:shadow-[0_14px_36px_rgba(86,46,146,0.18)] transition-all duration-300 transform hover:-translate-y-1">
+          <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white/20 via-white/10 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 top-0 h-px bg-white/45 pointer-events-none" />
+          <CardContent className="relative z-10 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-700/80 text-xs font-bold uppercase tracking-wider mb-1">S-Servant</p>
-                <p className="text-3xl font-black text-purple-950">{sortedMembers.filter(m => m.rank === 'S-Servant').length}</p>
+                <p className="text-white/85 text-xs font-bold uppercase tracking-wider mb-1">S-Servant</p>
+                <p className="text-3xl font-black text-white">{sortedMembers.filter(m => m.rank === 'S-Servant').length}</p>
               </div>
-              <div className="w-10 h-10 bg-white shadow-sm border border-purple-100 rounded-[10px] flex items-center justify-center text-purple-600 font-bold text-lg">S</div>
+              <div className="w-10 h-10 bg-white/14 shadow-sm border border-white/20 rounded-[10px] flex items-center justify-center text-white font-bold text-lg backdrop-blur-sm">S</div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-amber-50/80 to-yellow-50/50 border border-amber-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-          <CardContent className="p-4">
+        <Card className="relative overflow-hidden bg-[#b47a1f] border border-[#d0912d] shadow-[0_10px_30px_rgba(128,87,24,0.14)] hover:shadow-[0_14px_36px_rgba(128,87,24,0.18)] transition-all duration-300 transform hover:-translate-y-1">
+          <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white/20 via-white/10 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 top-0 h-px bg-white/45 pointer-events-none" />
+          <CardContent className="relative z-10 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-amber-700/80 text-xs font-bold uppercase tracking-wider mb-1">A-Chosen</p>
-                <p className="text-3xl font-black text-amber-950">{sortedMembers.filter(m => m.rank === 'A-Chosen').length}</p>
+                <p className="text-white/85 text-xs font-bold uppercase tracking-wider mb-1">A-Chosen</p>
+                <p className="text-3xl font-black text-white">{sortedMembers.filter(m => m.rank === 'A-Chosen').length}</p>
               </div>
-              <div className="w-10 h-10 bg-white shadow-sm border border-amber-100 rounded-[10px] flex items-center justify-center text-amber-500 font-bold text-lg">A</div>
+              <div className="w-10 h-10 bg-white/14 shadow-sm border border-white/20 rounded-[10px] flex items-center justify-center text-white font-bold text-lg backdrop-blur-sm">A</div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-emerald-50/80 to-teal-50/50 border border-emerald-100 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-          <CardContent className="p-4">
+        <Card className="relative overflow-hidden bg-[#1f8a79] border border-[#2aa08d] shadow-[0_10px_30px_rgba(22,103,88,0.14)] hover:shadow-[0_14px_36px_rgba(22,103,88,0.18)] transition-all duration-300 transform hover:-translate-y-1">
+          <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white/20 via-white/10 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 top-0 h-px bg-white/45 pointer-events-none" />
+          <CardContent className="relative z-10 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-emerald-700/80 text-xs font-bold uppercase tracking-wider mb-1">B-Called</p>
-                <p className="text-3xl font-black text-emerald-950">{sortedMembers.filter(m => m.rank === 'B-Called').length}</p>
+                <p className="text-white/85 text-xs font-bold uppercase tracking-wider mb-1">B-Called</p>
+                <p className="text-3xl font-black text-white">{sortedMembers.filter(m => m.rank === 'B-Called').length}</p>
               </div>
-              <div className="w-10 h-10 bg-white shadow-sm border border-emerald-100 rounded-[10px] flex items-center justify-center text-emerald-600 font-bold text-lg">B</div>
+              <div className="w-10 h-10 bg-white/14 shadow-sm border border-white/20 rounded-[10px] flex items-center justify-center text-white font-bold text-lg backdrop-blur-sm">B</div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-slate-100/80 to-gray-50/50 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
-          <CardContent className="p-4">
+        <Card className="relative overflow-hidden bg-[#5b6b96] border border-[#7282ad] shadow-[0_10px_30px_rgba(62,72,98,0.14)] hover:shadow-[0_14px_36px_rgba(62,72,98,0.18)] transition-all duration-300 transform hover:-translate-y-1">
+          <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white/20 via-white/10 to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 top-0 h-px bg-white/45 pointer-events-none" />
+          <CardContent className="relative z-10 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-600/80 text-xs font-bold uppercase tracking-wider mb-1">C-Mult</p>
-                <p className="text-3xl font-black text-slate-900">{sortedMembers.filter(m => !m.rank || m.rank === 'C-Multitude').length}</p>
+                <p className="text-white/85 text-xs font-bold uppercase tracking-wider mb-1">C-Mult</p>
+                <p className="text-3xl font-black text-white">{sortedMembers.filter(m => !m.rank || m.rank === 'C-Multitude').length}</p>
               </div>
-              <div className="w-10 h-10 bg-white shadow-sm border border-slate-200 rounded-[10px] flex items-center justify-center text-slate-600 font-bold text-lg">C</div>
+              <div className="w-10 h-10 bg-white/14 shadow-sm border border-white/20 rounded-[10px] flex items-center justify-center text-white font-bold text-lg backdrop-blur-sm">C</div>
             </div>
           </CardContent>
         </Card>

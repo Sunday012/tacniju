@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { GroupsManager } from "@/components/management/groups-manager"
 // import { LedgersManager } from "@/components/management/ledgers-manager"
 import { VoucherEntry } from "@/components/vouchers/voucher-entry"
@@ -26,13 +27,24 @@ type AccountingClientProps = {
 
 export function AccountingClient({ profile, orgName, groups, ledgers, customFields, vouchers, items, attendance, dayBook, trialBalance }: AccountingClientProps) {
     const [activeTab, setActiveTab] = useState<"gateway" | "management" | "vouchers" | "inventory" | "attendance" | "reports" | "day-book" | "trial-balance">("gateway")
+    const router = useRouter()
 
     const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
     const currentPeriod = `1-Jan-${new Date().getFullYear()} to 31-Dec-${new Date().getFullYear()}`
 
+    const goToSelectChurch = () => {
+        router.push("/select-church")
+    }
+
     // Global keyboard shortcuts for Gateway
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "F1") {
+                e.preventDefault()
+                goToSelectChurch()
+                return
+            }
+
             // Don't trigger shortcuts if user is typing in an input field using those raw keys
             const target = e.target as HTMLElement
             const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
@@ -293,7 +305,13 @@ export function AccountingClient({ profile, orgName, groups, ledgers, customFiel
                 {/* Vertical Right Deep Blue Strip Menu - Horizontal on Mobile */}
                 <div className="w-full md:w-[12%] bg-blue-950 text-white flex flex-row md:flex-col md:border-l border-blue-900 text-xs shadow-[inset_0_2px_10px_rgba(0,0,0,0.2)] md:shadow-[inset_2px_0_10px_rgba(0,0,0,0.2)] z-20 overflow-x-auto md:overflow-y-auto">
                     <div className="flex flex-row md:flex-col py-1 md:py-3 px-2 gap-1 md:border-b border-blue-900/50">
-                        <div className="px-2 md:px-3 py-2 bg-blue-900/40 hover:bg-blue-800 cursor-pointer flex rounded border border-blue-800/50 transition-colors shadow-sm whitespace-nowrap"><span className="mr-1 md:w-8 font-bold text-yellow-400">F1:</span> Select Ch.</div>
+                        <button
+                            type="button"
+                            onClick={goToSelectChurch}
+                            className="px-2 md:px-3 py-2 bg-blue-900/40 hover:bg-blue-800 cursor-pointer flex rounded border border-blue-800/50 transition-colors shadow-sm whitespace-nowrap text-left"
+                        >
+                            <span className="mr-1 md:w-8 font-bold text-yellow-400">F1:</span> Select Ch.
+                        </button>
                     </div>
                     <div className="flex flex-row md:flex-col py-1 md:py-3 px-2 gap-1 md:border-b border-blue-900/50">
                         <div className="px-2 md:px-3 py-2 bg-blue-900/40 hover:bg-blue-800 cursor-pointer flex rounded border border-blue-800/50 transition-colors shadow-sm whitespace-nowrap"><span className="mr-1 md:w-8 font-bold text-yellow-400">F2:</span> Date</div>
