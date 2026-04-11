@@ -139,6 +139,12 @@ function ScannerContent() {
                                     <RefreshCw className="w-8 h-8 animate-spin text-slate-500" />
                                 </div>
                             )}
+                            <style dangerouslySetInnerHTML={{__html: `
+                                #reader a { color: #60a5fa !important; text-decoration: underline; }
+                                #reader select { background-color: #1e293b !important; color: white !important; border: 1px solid #334155 !important; border-radius: 4px; padding: 4px; margin-bottom: 8px; }
+                                #reader button { background-color: #3b82f6 !important; color: white !important; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+                                #reader span { color: #cbd5e1 !important; }
+                            `}} />
                             <div id="reader" className="overflow-hidden rounded-xl border-2 border-slate-700 bg-black min-h-[300px]"></div>
                         </div>
                     </CardContent>

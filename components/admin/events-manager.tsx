@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useTransition } from "react"
-import { createClient } from "@/lib/client"
+import { getEventsWithAttendance, createEvent, deleteEvent } from "@/app/admin/events/actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -46,23 +46,13 @@ export function EventsManager() {
   const [open, setOpen] = useState(false)
   const [form, setForm] = useState({ name: "", description: "", event_date: "" })
 
-  const supabase = createClient()
-
   const fetchEvents = async () => {
     setLoading(true)
-    const { data, error } = await supabase
-      .from("events")
-      .select("*, attendance(count)")
-      .order("event_date", { ascending: false })
-
-    if (error) {
-      toast.error("Failed to load events: " + error.message)
-    } else {
-      const mapped = (data || []).map((e: any) => ({
-        ...e,
-        attendance_count: e.attendance?.[0]?.count ?? 0,
-      }))
-      setEvents(mapped)
+    try {
+      const data = await getEventsWithAttendance()
+      setEvents(data)
+    } catch (err: any) {
+      toast.error("Failed to load events")
     }
     setLoading(false)
   }
@@ -78,18 +68,9 @@ export function EventsManager() {
     }
 
     setCreating(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { toast.error("Not authenticated."); setCreating(false); return }
-
-    const { error } = await supabase.from("events").insert({
-      name: form.name,
-      description: form.description || null,
-      event_date: form.event_date,
-      created_by: user.id,
-    })
-
-    if (error) {
-      toast.error("Failed to create event: " + error.message)
+    const result = await createEvent(form.name, form.description, form.event_date)
+    if (!result.success) {
+      toast.error("Failed to create event: " + result.message)
     } else {
       toast.success(`Event "${form.name}" created!`)
       setForm({ name: "", description: "", event_date: "" })
@@ -101,9 +82,9 @@ export function EventsManager() {
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Are you sure you want to delete "${name}"?`)) return
-    const { error } = await supabase.from("events").delete().eq("id", id)
-    if (error) {
-      toast.error("Failed to delete: " + error.message)
+    const result = await deleteEvent(id)
+    if (!result.success) {
+      toast.error("Failed to delete: " + result.message)
     } else {
       toast.success("Event deleted.")
       setEvents((prev) => prev.filter((e) => e.id !== id))

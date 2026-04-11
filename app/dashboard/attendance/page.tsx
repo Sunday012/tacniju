@@ -1,4 +1,4 @@
-import { getAttendanceList } from "@/app/attendance/actions"
+import { getAttendanceList } from "@/app/dashboard/attendance/actions"
 import { AttendanceManager } from "@/components/attendance/attendance-manager"
 
 export default async function AttendancePage() {

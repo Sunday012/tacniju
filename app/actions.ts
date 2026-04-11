@@ -35,8 +35,16 @@ export async function markAttendance(userId: string, eventId: string, eventName:
 
     // Check for duplicate attendance for this same event
     const today = new Date().toISOString().split("T")[0]
-    const duplicateQuery = supabase
-        .from("attendance")
+    
+    // Use service role to bypass RLS as the admin is acting ON BEHALF of the user
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceRoleKey) {
+        return { success: false, message: "Server configuration error: Missing service role key." }
+    }
+    const adminSupabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
+
+    const duplicateQuery = adminSupabase
+        .from("member_attendance")
         .select("id")
         .eq("user_id", userId)
         .eq("event_date", today)
@@ -54,25 +62,26 @@ export async function markAttendance(userId: string, eventId: string, eventName:
         return { success: false, message: `${targetUser.full_name} is already marked present!` }
     }
 
-    // Mark Attendance
+    // Mark Attendance — uses member_attendance table (individual tracking)
     const insertPayload: Record<string, any> = {
         user_id: userId,
         event_name: eventName,
         event_date: today,
         attended: true,
+        marked_by: user.id,
     }
 
     if (eventId) {
         insertPayload.event_id = eventId
     }
 
-    const { error: insertError } = await supabase
-        .from("attendance")
+    const { error: insertError } = await adminSupabase
+        .from("member_attendance")
         .insert(insertPayload)
 
     if (insertError) {
-        console.error(insertError)
-        return { success: false, message: "Failed to save attendance record." }
+        console.error("Attendance Insert Error:", insertError)
+        return { success: false, message: "Failed to save attendance record: " + insertError.message }
     }
 
     revalidatePath("/admin")

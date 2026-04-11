@@ -6,8 +6,30 @@ import { revalidatePath } from "next/cache"
 
 async function getOrgId() {
     const cookieStore = cookies()
-    const orgId = cookieStore.get("active_org_id")?.value
-    if (!orgId) throw new Error("No active organization selected")
+    let orgId = cookieStore.get("active_org_id")?.value
+    
+    if (!orgId) {
+        const supabase = await createClient()
+        const { data, error } = await supabase.from('organizations').select('id').limit(1).single()
+        
+        if (data?.id) {
+            orgId = data.id
+        } else {
+            // Auto-create a default org for TACN Iju if one doesn't exist
+            const { data: newOrg, error: insertError } = await supabase.from('organizations').insert({
+                name: 'TACN Iju',
+                email: 'admin@tacniju.org'
+            }).select('id').single()
+            
+            if (newOrg?.id) {
+                orgId = newOrg.id
+            } else {
+                console.error("Organization check failed:", error, insertError);
+                throw new Error("No active organization selected and failed to create default")
+            }
+        }
+    }
+    
     return orgId
 }
 

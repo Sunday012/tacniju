@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/server"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import Link from "next/link"
 import { ArrowLeft, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -41,10 +42,14 @@ export default async function EventAttendancePage({ params }: { params: { id: st
     )
   }
 
-  // Fetch Attendance directly with profile join (assuming typical fk setup in profiles or via manual join)
-  // To be safe, fetch attendance, then fetch profiles
-  const { data: attendanceRecords } = await supabase
-    .from("attendance")
+  // Use service role to bypass RLS — admin needs to see ALL members' attendance, not just their own
+  const adminSupabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  const { data: attendanceRecords } = await adminSupabase
+    .from("member_attendance")
     .select("*")
     .eq("event_id", params.id)
     .order("created_at", { ascending: false })
