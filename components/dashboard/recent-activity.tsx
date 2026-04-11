@@ -1,4 +1,5 @@
 import { AttendanceHistory } from "@/components/attendance-history"
+import Link from "next/link"
 
 interface RecentActivityProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -13,9 +14,11 @@ export function RecentActivity({ attendance }: RecentActivityProps) {
           <span className="w-1.5 h-5 bg-violet-500 rounded-full inline-block shadow-[0_0_10px_rgba(139,92,246,0.5)]"></span>
           Recent Attendance
         </h3>
-        <button className="text-[11px] font-extrabold uppercase tracking-wider text-indigo-600 bg-indigo-50 hover:bg-indigo-100 py-2.5 px-4 rounded-xl transition-colors shadow-sm">
-          View All
-        </button>
+        <Link href="/dashboard/attendance">
+          <button className="text-[11px] font-extrabold uppercase tracking-wider text-indigo-600 bg-indigo-50 hover:bg-indigo-100 py-2.5 px-4 rounded-xl transition-colors shadow-sm">
+            View All
+          </button>
+        </Link>
       </div>
       
       <div className="bg-slate-50/80 rounded-[1.5rem] p-5 border border-slate-100 shadow-inner">
