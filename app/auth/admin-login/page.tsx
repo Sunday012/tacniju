@@ -67,76 +67,84 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <Card className="shadow-xl border-0">
-          <CardHeader className="text-center pb-2">
-            <div className="mx-auto mb-4 w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                />
-              </svg>
+    <div className="min-h-screen bg-[#1c1c1a] py-16 px-4 relative flex items-center justify-center selection:bg-[#ff3b30]/30 text-[#f4f4f0] overflow-hidden">
+      {/* Grungy background pattern */}
+      <div className="absolute inset-0 opacity-[0.2] mix-blend-overlay pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
+      
+      <div className="w-full max-w-md relative z-10">
+        {/* Floating Accent Element */}
+        <div className="absolute -top-6 -right-6 md:-right-10 rotate-[8deg] bg-[#cc2936] text-white py-2 px-6 border-4 border-[#1c1c1a] shadow-[6px_6px_0_rgba(0,0,0,1)] z-20">
+          <h2 className="font-anton text-xl uppercase tracking-wider">RESTRICTED ZONE</h2>
+        </div>
+
+        <div className="bg-[#fcfcfb] border-4 border-[#1c1c1a] shadow-[12px_12px_0_rgba(0,0,0,1)] p-8 md:p-10 relative">
+          
+          <div className="mb-8 text-center border-b-4 border-[#1c1c1a] pb-6">
+            <div className="flex justify-center items-center gap-1 mb-2">
+              <span className="font-anton text-4xl text-[#cc2936]">T</span>
+              <span className="font-anton text-4xl text-[#009b72]">A</span>
+              <span className="font-anton text-4xl text-[#ffbc42]">C</span>
+              <span className="font-anton text-4xl text-[#004e89]">N</span>
             </div>
-            <CardTitle className="text-2xl font-bold text-gray-900">Admin Portal</CardTitle>
-            <CardDescription className="text-gray-600">Sign in to access administrative functions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                  Admin Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="admin@church.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-11"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-11"
-                />
-              </div>
-              {error && (
-                <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md flex items-center">
-                  <svg className="w-4 h-4 mr-2 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                  </svg>
-                  {error}
-                </div>
-              )}
-              <Button type="submit" className="w-full h-11 bg-purple-600 hover:bg-purple-700" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In as Admin"}
-              </Button>
-            </form>
-            <div className="mt-6 space-y-3">
-              <div className="text-center text-sm text-gray-600">
-                <Link href="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-                  Regular member login
-                </Link>
-              </div>
-              <div className="text-center text-xs text-gray-500">
-                Admin access required. Contact system administrator if you need admin privileges.
-              </div>
+            <h1 className="font-anton text-3xl md:text-5xl text-[#1c1c1a] uppercase leading-none mt-2">ADMIN PORTAL</h1>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-6 font-serif">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">
+                Admin Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="admin@church.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-12 border-4 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#cc2936] rounded-none bg-white text-[#1c1c1a]"
+              />
             </div>
-          </CardContent>
-        </Card>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-12 border-4 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#cc2936] rounded-none bg-white text-[#1c1c1a]"
+              />
+            </div>
+            
+            {error && (
+              <div className="p-3 bg-[#cc2936] text-white border-2 border-[#1c1c1a] font-bold shadow-[2px_2px_0_rgba(0,0,0,1)] uppercase text-sm">
+                {error}
+              </div>
+            )}
+
+            <Button 
+              type="submit" 
+              className="w-full h-14 bg-[#cc2936] hover:bg-[#a1202a] text-white font-anton uppercase text-xl rounded-none border-4 border-[#1c1c1a] shadow-[6px_6px_0_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[3px_3px_0_rgba(0,0,0,1)] transition-all mt-4" 
+              disabled={isLoading}
+            >
+              {isLoading ? "SIGNING IN..." : "SIGN IN AS ADMIN"}
+            </Button>
+          </form>
+
+          <div className="mt-8 pt-6 border-t-4 border-[#1c1c1a] space-y-4">
+            <div className="text-center">
+              <Link href="/auth/login" className="text-sm font-bold text-[#1c1c1a] uppercase hover:underline opacity-50 hover:opacity-100 transition-opacity">
+                Regular Member Login
+              </Link>
+            </div>
+            <div className="text-center font-serif text-[#1c1c1a] font-bold text-xs opacity-50">
+              Admin access required. Contact IT if you need privileges.
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   )

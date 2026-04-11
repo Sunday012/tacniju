@@ -53,76 +53,89 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <Card className="shadow-xl border-0">
-          <CardHeader className="text-center pb-2">
-            <div className="mx-auto mb-4 w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
+    <div className="min-h-screen bg-[#1c1c1a] py-16 px-4 relative flex items-center justify-center selection:bg-[#ff3b30]/30 text-[#f4f4f0] overflow-hidden">
+      {/* Grungy background pattern */}
+      <div className="absolute inset-0 opacity-[0.2] mix-blend-overlay pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
+      
+      <div className="w-full max-w-md relative z-10">
+        {/* Floating Accent Element */}
+        <div className="absolute -top-6 -right-6 md:-right-10 rotate-[8deg] bg-[#ffbc42] text-[#1c1c1a] py-2 px-6 border-4 border-[#1c1c1a] shadow-[6px_6px_0_rgba(0,0,0,1)] z-20">
+          <h2 className="font-anton text-xl uppercase tracking-wider">WELCOME BACK</h2>
+        </div>
+
+        <div className="bg-[#fcfcfb] border-4 border-[#1c1c1a] shadow-[12px_12px_0_rgba(0,0,0,1)] p-8 md:p-10 relative">
+          
+          <div className="mb-8 text-center border-b-4 border-[#1c1c1a] pb-6">
+            <div className="flex justify-center items-center gap-1 mb-2">
+              <span className="font-anton text-4xl text-[#cc2936]">T</span>
+              <span className="font-anton text-4xl text-[#009b72]">A</span>
+              <span className="font-anton text-4xl text-[#ffbc42]">C</span>
+              <span className="font-anton text-4xl text-[#004e89]">N</span>
             </div>
-            <CardTitle className="text-2xl font-bold text-gray-900">Welcome Back</CardTitle>
-            <CardDescription className="text-gray-600">Sign in to your church family account</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-medium text-gray-700">
-                  Username
-                </Label>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="your_username"
-                  required
-                  minLength={3}
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value.toLowerCase().trim())} // Normalize username
-                  className="h-11"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-11"
-                />
-              </div>
-              {error && (
-                <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">{error}</div>
-              )}
-              <Button type="submit" className="w-full h-11 bg-indigo-600 hover:bg-indigo-700" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
-            <div className="mt-6 space-y-3">
-              <div className="text-center text-sm text-gray-600">
-                New to our church family?{" "}
-                <Link href="/auth/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-                  Join us today
-                </Link>
-              </div>
-              <div className="text-center">
-                <Link href="/auth/admin-login" className="text-sm font-medium text-purple-600 hover:text-purple-500">
-                  Admin Login
-                </Link>
-              </div>
+            <h1 className="font-anton text-3xl md:text-5xl text-[#1c1c1a] uppercase leading-none mt-2">MEMBER LOGIN</h1>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-6 font-serif">
+            <div className="space-y-2">
+              <Label htmlFor="username" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">
+                Username
+              </Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="your_username"
+                required
+                minLength={3}
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase().trim())}
+                className="h-12 border-4 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#004e89] rounded-none bg-white text-[#1c1c1a]"
+              />
             </div>
-          </CardContent>
-        </Card>
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">
+                Password
+              </Label>
+              <Input
+                id="password"
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-12 border-4 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#004e89] rounded-none bg-white text-[#1c1c1a]"
+              />
+            </div>
+            
+            {error && (
+              <div className="p-3 bg-[#cc2936] text-white border-2 border-[#1c1c1a] font-bold shadow-[2px_2px_0_rgba(0,0,0,1)] uppercase text-sm">
+                {error}
+              </div>
+            )}
+
+            <Button 
+              type="submit" 
+              className="w-full h-14 bg-[#004e89] hover:bg-[#003865] text-white font-anton uppercase text-xl rounded-none border-4 border-[#1c1c1a] shadow-[6px_6px_0_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[3px_3px_0_rgba(0,0,0,1)] transition-all mt-4" 
+              disabled={isLoading}
+            >
+              {isLoading ? "SIGNING IN..." : "SIGN IN"}
+            </Button>
+          </form>
+
+          <div className="mt-8 pt-6 border-t-4 border-[#1c1c1a] space-y-4">
+            <div className="text-center font-serif text-[#1c1c1a] font-bold text-sm">
+              NEW TO OUR CHURCH FAMILY?{" "}
+              <Link href="/auth/register" className="inline-block mt-2 md:mt-0 md:ml-2 bg-[#cc2936] text-white px-3 py-1 border-2 border-[#1c1c1a] hover:bg-[#a1202a] transition-colors shadow-[2px_2px_0_rgba(0,0,0,1)]">
+                JOIN US TODAY
+              </Link>
+            </div>
+            <div className="text-center">
+              <Link href="/auth/admin-login" className="text-xs font-bold text-[#1c1c1a] uppercase hover:underline opacity-50 hover:opacity-100 transition-opacity">
+                Admin Area
+              </Link>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   )

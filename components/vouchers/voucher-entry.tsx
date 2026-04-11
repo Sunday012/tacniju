@@ -229,6 +229,21 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
     const invisibleInputClass = "w-full bg-transparent border-transparent hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-md px-2 h-8 text-right transition-colors"
     const invisibleSelectClass = "w-full bg-transparent border-transparent hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 h-8 shadow-none"
 
+    function handleMasterLedgerChange(value: string) {
+        const selectedLedger = ledgers.find((ledger) => ledger.id === value)
+        if (!selectedLedger) {
+            setMasterLedgerId(value)
+            return
+        }
+
+        if (!selectedLedger.is_cash_bank) {
+            toast.error(`"${selectedLedger.name}" is not a Cash/Bank ledger. Use it in Particulars below.`)
+            return
+        }
+
+        setMasterLedgerId(value)
+    }
+
     const buildLedgerLabel = (ledger: LedgerWithGroup) => {
         const groupName = ledger.account_groups?.name
         const kind = ledger.is_cash_bank ? "Cash/Bank" : "Ledger"
@@ -237,9 +252,11 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
 
     const cashBankLedgers = ledgers.filter((ledger) => ledger.is_cash_bank)
     const regularLedgers = ledgers.filter((ledger) => !ledger.is_cash_bank)
-    const topAccountOptions = cashBankLedgers.map((ledger) => ({
+    const topAccountOptions = ledgers.map((ledger) => ({
         value: ledger.id,
-        label: buildLedgerLabel(ledger),
+        label: ledger.is_cash_bank
+            ? buildLedgerLabel(ledger)
+            : `Use in Particulars: ${buildLedgerLabel(ledger)}`,
     }))
     const detailLedgerCandidates = !isSingleEntry
         ? ledgers
@@ -290,20 +307,20 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
 
                     {isSingleEntry && (
                         <div className="mt-6 flex items-center bg-emerald-50/50 p-2 rounded-md border border-emerald-100">
-                            <Label className="w-24 font-bold text-slate-700">Account :</Label>
+                            <Label className="w-24 font-bold text-slate-700">Cash/Bank :</Label>
                             <div className="flex-1 space-y-1">
                                 <ComboboxInput
                                     value={masterLedgerId}
-                                    onChange={(val) => setMasterLedgerId(val)}
+                                    onChange={handleMasterLedgerChange}
                                     options={topAccountOptions}
-                                    placeholder={topAccountOptions.length > 0 ? "Type cash/bank ledger or group name..." : "No cash/bank ledger found. Create or edit one in Accounts Info."}
+                                    placeholder={topAccountOptions.length > 0 ? "Search cash/bank or ledger name..." : "No cash/bank ledger found. Create or edit one in Accounts Info."}
                                     className="h-10 border-slate-300 font-semibold shadow-sm bg-white rounded-md"
                                     inputClassName="bg-transparent border-none focus-visible:ring-0 shadow-none font-semibold text-slate-800"
                                 />
                                 {requiresCashBankMaster && (
                                     <p className={`text-xs ${hasCashBankMasterOptions ? "text-emerald-700" : "text-red-600"}`}>
                                         {hasCashBankMasterOptions
-                                            ? "Top account accepts Cash/Bank ledgers only."
+                                            ? "This top field accepts Cash/Bank ledgers only. Regular ledgers like Flame Account should be selected in Particulars."
                                             : "Payment, Receipt, and Contra need at least one ledger marked as Cash/Bank."}
                                     </p>
                                 )}
@@ -361,7 +378,9 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
                             <Table>
                                 <TableHeader className="bg-slate-50">
                                     <TableRow className="border-b-slate-200">
-                                        <TableHead className={`${isSingleEntry ? 'w-[50%]' : 'w-[40%]'} text-slate-500 font-semibold h-9 px-2`}>Particulars (Ledger)</TableHead>
+                                        <TableHead className={`${isSingleEntry ? 'w-[50%]' : 'w-[40%]'} text-slate-500 font-semibold h-9 px-2`}>
+                                            {isSingleEntry ? "Particulars (Other Ledger)" : "Particulars (Ledger)"}
+                                        </TableHead>
                                         {isSingleEntry && (
                                             <>
                                                 <TableHead className="text-slate-500 font-semibold h-9 px-2">Method</TableHead>

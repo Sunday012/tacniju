@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Anton } from "next/font/google";
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -15,6 +16,12 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
+const anton = Anton({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-anton",
+});
+
 export const metadata: Metadata = {
   title: "ChurchBooks",
   description: "Church Accounting & Management System",
@@ -28,7 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${anton.variable} antialiased`}
       >
         <ThemeProvider
           attribute="class"

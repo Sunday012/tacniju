@@ -231,6 +231,12 @@ export function EventsManager() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <Link href={`/admin/events/${event.id}`}>
+                          <Button size="sm" variant="outline" className="gap-1.5 text-slate-600">
+                            <Users className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">View</span>
+                          </Button>
+                        </Link>
                         <Link href={`/admin/scanner?eventId=${event.id}&eventName=${encodeURIComponent(event.name)}`}>
                           <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5">
                             <ScanLine className="h-3.5 w-3.5" />

@@ -121,12 +121,6 @@ export default function RegisterPage() {
       return
     }
 
-    if (!formData.family) {
-      setError("Family selection is required")
-      setIsLoading(false)
-      return
-    }
-
     // Check username availability one more time before registration
     if (usernameAvailable === false) {
       setError("Username is already taken")
@@ -245,349 +239,297 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 py-8 px-2 sm:px-4">
-      <div className="max-w-4xl mx-auto w-full">
-        <Card className="shadow-xl border-0 bg-white/95 backdrop-blur-sm">
-          <CardHeader className="text-center bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-t-lg">
-            <div className="flex flex-col sm:flex-row items-center justify-center mb-4 gap-2 sm:gap-0">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mr-0 sm:mr-4 backdrop-blur-sm mb-2 sm:mb-0">
-                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z" />
-                </svg>
-              </div>
-              <div className="text-left">
-                <h1 className="text-lg font-bold leading-tight">
-                  THE APOSTOLIC CHURCH NIGERIA FCT FIELD,
-                  <br />
-                  IJU-STATION AREA
-                  <br />
-                  AREA YOUTH MOVEMENT
-                </h1>
-              </div>
-            </div>
-            <CardTitle className="text-2xl font-bold bg-white/20 backdrop-blur-sm py-3 rounded-lg">
-              Registration Form
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-8">
-            <form onSubmit={handleRegister} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-sm font-semibold text-gray-700">
-                    Full Name *
-                  </Label>
-                  <Input
-                    id="fullName"
-                    type="text"
-                    required
-                    value={formData.fullName}
-                    onChange={(e) => handleInputChange("fullName", e.target.value)}
-                    className="h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg"
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reservationNumber" className="text-sm font-semibold text-gray-700">
-                    Reservation Number *
-                  </Label>
-                  <Input
-                    id="reservationNumber"
-                    type="text"
-                    required
-                    value={formData.reservationNumber}
-                    onChange={(e) => handleInputChange("reservationNumber", e.target.value)}
-                    className="h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg"
-                    placeholder="Enter your reservation number"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="district" className="text-sm font-semibold text-gray-700">
-                    District *
-                  </Label>
-                  <Input
-                    id="district"
-                    type="text"
-                    required
-                    value={formData.district}
-                    onChange={(e) => handleInputChange("district", e.target.value)}
-                    className="h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg"
-                    placeholder="Enter your district"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phoneNo" className="text-sm font-semibold text-gray-700">
-                    Phone Number *
-                  </Label>
-                  <Input
-                    id="phoneNo"
-                    type="tel"
-                    required
-                    value={formData.phoneNo}
-                    onChange={(e) => handleInputChange("phoneNo", e.target.value)}
-                    className="h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg"
-                    placeholder="Enter your phone number"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="assembly" className="text-sm font-semibold text-gray-700">
-                    Assembly *
-                  </Label>
-                  <Input
-                    id="assembly"
-                    type="text"
-                    required
-                    value={formData.assembly}
-                    onChange={(e) => handleInputChange("assembly", e.target.value)}
-                    className="h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg"
-                    placeholder="Enter your assembly"
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="dateOfBirth" className="text-sm font-semibold text-gray-700">
-                      Date of Birth *
-                    </Label>
-                    <Input
-                      id="dateOfBirth"
-                      type="date"
-                      required
-                      value={formData.dateOfBirth}
-                      onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
-                      className="h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="sex" className="text-sm font-semibold text-gray-700">
-                      Sex *
-                    </Label>
-                    <Select value={formData.sex} onValueChange={(value) => handleInputChange("sex", value)}>
-                      <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg">
-                        <SelectValue placeholder="Select" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Male">Male</SelectItem>
-                        <SelectItem value="Female">Female</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
+    <div className="min-h-screen bg-[#e8e6df] py-16 px-4 relative flex items-center justify-center selection:bg-[#ff3b30]/30 overflow-hidden text-[#1c1c1a]">
+      {/* Grungy background pattern */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#1c1c1a 2px, transparent 2px)', backgroundSize: '32px 32px' }}></div>
+      
+      <div className="max-w-4xl mx-auto w-full relative z-10 pt-10">
+        
+        {/* Floating Logo Element */}
+        <div className="absolute top-0 -left-2 md:-left-8 rotate-[-4deg] bg-[#cc2936] text-white py-2 px-6 border-4 border-[#1c1c1a] shadow-[6px_6px_0_rgba(0,0,0,1)] z-20">
+          <Link href="/">
+            <h2 className="font-anton text-2xl uppercase tracking-wider cursor-pointer">JOIN THE MOVEMENT</h2>
+          </Link>
+        </div>
+
+        <div className="bg-[#fcfcfb] border-4 border-[#1c1c1a] shadow-[12px_12px_0_rgba(0,0,0,1)] p-6 md:p-12 relative">
+          
+          <div className="mb-10 text-center border-b-4 border-[#1c1c1a] pb-6">
+            <h1 className="font-anton text-4xl md:text-6xl text-[#1c1c1a] uppercase leading-none">REGISTRATION FORM</h1>
+            <p className="font-serif font-bold text-sm uppercase tracking-widest mt-4 text-[#cc2936]">TACN IJU • AREA YOUTH MOVEMENT</p>
+          </div>
+
+          <form onSubmit={handleRegister} className="space-y-6 font-serif">
+            {/* Split layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="address" className="text-sm font-semibold text-gray-700">
-                  Address *
-                </Label>
+                <Label htmlFor="fullName" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">Full Name *</Label>
                 <Input
-                  id="address"
+                  id="fullName"
                   type="text"
                   required
-                  value={formData.address}
-                  onChange={(e) => handleInputChange("address", e.target.value)}
-                  className="h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg"
-                  placeholder="Enter your full address"
+                  value={formData.fullName}
+                  onChange={(e) => handleInputChange("fullName", e.target.value)}
+                  className="h-12 border-2 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#cc2936] rounded-none bg-[#f4f4f0]"
+                  placeholder="Enter your full name"
                 />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="reservationNumber" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">Reservation Number *</Label>
+                <Input
+                  id="reservationNumber"
+                  type="text"
+                  required
+                  value={formData.reservationNumber}
+                  onChange={(e) => handleInputChange("reservationNumber", e.target.value)}
+                  className="h-12 border-2 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#cc2936] rounded-none bg-[#f4f4f0]"
+                  placeholder="Enter your reservation number"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="district" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">District *</Label>
+                <Input
+                  id="district"
+                  type="text"
+                  required
+                  value={formData.district}
+                  onChange={(e) => handleInputChange("district", e.target.value)}
+                  className="h-12 border-2 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#cc2936] rounded-none bg-[#f4f4f0]"
+                  placeholder="Enter your district"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phoneNo" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">Phone Number *</Label>
+                <Input
+                  id="phoneNo"
+                  type="tel"
+                  required
+                  value={formData.phoneNo}
+                  onChange={(e) => handleInputChange("phoneNo", e.target.value)}
+                  className="h-12 border-2 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#cc2936] rounded-none bg-[#f4f4f0]"
+                  placeholder="Enter your phone number"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="assembly" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">Assembly *</Label>
+                <Input
+                  id="assembly"
+                  type="text"
+                  required
+                  value={formData.assembly}
+                  onChange={(e) => handleInputChange("assembly", e.target.value)}
+                  className="h-12 border-2 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#cc2936] rounded-none bg-[#f4f4f0]"
+                  placeholder="Enter your assembly"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="positionOffice" className="text-sm font-semibold text-gray-700">
-                    Position/Office
-                  </Label>
+                  <Label htmlFor="dateOfBirth" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">Date of Birth *</Label>
                   <Input
-                    id="positionOffice"
-                    type="text"
-                    value={formData.positionOffice}
-                    onChange={(e) => handleInputChange("positionOffice", e.target.value)}
-                    className="h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg"
-                    placeholder="Optional"
+                    id="dateOfBirth"
+                    type="date"
+                    required
+                    value={formData.dateOfBirth}
+                    onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
+                    className="h-12 border-2 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#cc2936] rounded-none bg-[#f4f4f0]"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="family" className="text-sm font-semibold text-gray-700">
-                    Family *
-                  </Label>
-                  <Select value={formData.family} onValueChange={(value) => handleInputChange("family", value)}>
-                    <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg">
-                      <SelectValue placeholder="Select your family" />
+                  <Label htmlFor="sex" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">Sex *</Label>
+                  <Select value={formData.sex} onValueChange={(value) => handleInputChange("sex", value)}>
+                    <SelectTrigger className="h-12 border-2 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#cc2936] rounded-none bg-[#f4f4f0]">
+                      <SelectValue placeholder="Select" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Eden">Eden</SelectItem>
-                      <SelectItem value="Taberah">Taberah</SelectItem>
-                      <SelectItem value="Bethel">Bethel</SelectItem>
+                    <SelectContent className="border-2 border-[#1c1c1a] rounded-none shadow-[4px_4px_0_rgba(0,0,0,1)]">
+                      <SelectItem value="Male" className="cursor-pointer focus:bg-[#009b72] focus:text-white">Male</SelectItem>
+                      <SelectItem value="Female" className="cursor-pointer focus:bg-[#009b72] focus:text-white">Female</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="address" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">Address *</Label>
+              <Input
+                id="address"
+                type="text"
+                required
+                value={formData.address}
+                onChange={(e) => handleInputChange("address", e.target.value)}
+                className="h-12 border-2 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#cc2936] rounded-none bg-[#f4f4f0]"
+                placeholder="Enter your full address"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="positionOffice" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">Position/Office</Label>
+                <Input
+                  id="positionOffice"
+                  type="text"
+                  value={formData.positionOffice}
+                  onChange={(e) => handleInputChange("positionOffice", e.target.value)}
+                  className="h-12 border-2 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#cc2936] rounded-none bg-[#f4f4f0]"
+                  placeholder="Optional"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="family" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">Family</Label>
+                <Select value={formData.family} onValueChange={(value) => handleInputChange("family", value)}>
+                  <SelectTrigger className="h-12 border-2 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#cc2936] rounded-none bg-[#f4f4f0]">
+                    <SelectValue placeholder="Select your family" />
+                  </SelectTrigger>
+                  <SelectContent className="border-2 border-[#1c1c1a] rounded-none shadow-[4px_4px_0_rgba(0,0,0,1)]">
+                    <SelectItem value="Eden" className="cursor-pointer focus:bg-[#009b72] focus:text-white">Eden</SelectItem>
+                    <SelectItem value="Taberah" className="cursor-pointer focus:bg-[#009b72] focus:text-white">Taberah</SelectItem>
+                    <SelectItem value="Bethel" className="cursor-pointer focus:bg-[#009b72] focus:text-white">Bethel</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="guardianSpouseNo" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">Guardian/Spouse No</Label>
+                <Input
+                  id="guardianSpouseNo"
+                  type="text"
+                  value={formData.guardianSpouseNo}
+                  onChange={(e) => handleInputChange("guardianSpouseNo", e.target.value)}
+                  className="h-12 border-2 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#cc2936] rounded-none bg-[#f4f4f0]"
+                  placeholder="Optional"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">Department</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 border-2 border-[#1c1c1a] bg-[#f4f4f0]">
+                  {["Music", "Ushering", "Drama", "Clean Up", "Intercessory"].map((dept) => (
+                    <div key={dept} className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id={dept}
+                        name="department"
+                        checked={formData.department === dept}
+                        onChange={() => handleDepartmentChange(dept)}
+                        className="border-2 border-[#1c1c1a] accent-[#cc2936] w-4 h-4 cursor-pointer"
+                      />
+                      <Label htmlFor={dept} className="text-sm font-bold cursor-pointer text-[#1c1c1a]">
+                        {dept}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#ffbc42] p-4 sm:p-6 border-4 border-[#1c1c1a] shadow-[4px_4px_0_rgba(0,0,0,1)] mt-8">
+              <h3 className="font-anton text-2xl uppercase text-[#1c1c1a] mb-6 border-b-2 border-[#1c1c1a] pb-2">
+                ACCOUNT CREATION
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="guardianSpouseNo" className="text-sm font-semibold text-gray-700">
-                    Guardian/Spouse Number
-                  </Label>
+                  <Label htmlFor="username" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">Username *</Label>
+                  <div className="relative">
+                    <Input
+                      id="username"
+                      type="text"
+                      required
+                      minLength={3}
+                      value={formData.username}
+                      onChange={(e) => handleInputChange("username", e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                      onBlur={handleUsernameBlur}
+                      className={`h-12 border-2 rounded-none bg-[#fcfcfb] pr-10 focus-visible:ring-0 focus-visible:border-[#cc2936] ${
+                        usernameAvailable === true ? 'border-[#009b72]' : usernameAvailable === false ? 'border-[#cc2936]' : 'border-[#1c1c1a]'
+                      }`}
+                      placeholder="Choose a username"
+                    />
+                    {usernameChecking && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="w-4 h-4 border-2 border-[#1c1c1a] border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                  </div>
+                  {usernameAvailable === false && <p className="text-sm font-bold text-[#cc2936]">Username is taken</p>}
+                  {usernameAvailable === true && <p className="text-sm font-bold text-[#009b72]">Username is available</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">Email (Optional)</Label>
                   <Input
-                    id="guardianSpouseNo"
-                    type="text"
-                    value={formData.guardianSpouseNo}
-                    onChange={(e) => handleInputChange("guardianSpouseNo", e.target.value)}
-                    className="h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg"
-                    placeholder="Optional"
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    className="h-12 border-2 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#cc2936] rounded-none bg-[#fcfcfb]"
+                    placeholder="Enter email (optional)"
+                  />
+                  <p className="text-xs text-[#1c1c1a] opacity-80 pb-2 border-b-2 border-dashed border-[#1c1c1a]">
+                    If left empty, you will use username ONLY to login.
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">Password *</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    required
+                    minLength={6}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange("password", e.target.value)}
+                    className="h-12 border-2 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#cc2936] rounded-none bg-[#fcfcfb]"
+                    placeholder="At least 6 characters"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-gray-700">Department</Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 border-2 border-gray-200 rounded-lg bg-gray-50">
-                    {["Music", "Ushering", "Drama", "Clean Up", "Intercessory"].map((dept) => (
-                      <div key={dept} className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          id={dept}
-                          name="department"
-                          checked={formData.department === dept}
-                          onChange={() => handleDepartmentChange(dept)}
-                          className="border-2 border-gray-300 accent-indigo-600"
-                        />
-                        <Label htmlFor={dept} className="text-sm font-medium text-gray-700">
-                          {dept}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
+                  <Label htmlFor="confirmPassword" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">Confirm Password *</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    required
+                    minLength={6}
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                    className="h-12 border-2 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#cc2936] rounded-none bg-[#fcfcfb]"
+                    placeholder="Confirm your password"
+                  />
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 sm:p-6 rounded-lg border-2 border-indigo-100">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                  <svg className="w-5 h-5 mr-2 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                  </svg>
-                  Account Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="username" className="text-sm font-semibold text-gray-700">
-                      Username *
-                    </Label>
-                    <div className="relative">
-                      <Input
-                        id="username"
-                        type="text"
-                        required
-                        minLength={3}
-                        value={formData.username}
-                        onChange={(e) => handleInputChange("username", e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                        onBlur={handleUsernameBlur}
-                        className={`h-12 border-2 focus:border-indigo-500 rounded-lg bg-white pr-10 ${usernameAvailable === true ? 'border-green-500' :
-                          usernameAvailable === false ? 'border-red-500' :
-                            'border-gray-200'
-                          }`}
-                        placeholder="Choose a username (min 3 chars)"
-                      />
-                      {usernameChecking && (
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                          <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                        </div>
-                      )}
-                      {!usernameChecking && usernameAvailable === true && (
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500">
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      )}
-                      {!usernameChecking && usernameAvailable === false && (
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-red-500">
-                          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                    {usernameAvailable === false && (
-                      <p className="text-sm text-red-600">Username is already taken</p>
-                    )}
-                    {usernameAvailable === true && (
-                      <p className="text-sm text-green-600">Username is available</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-semibold text-gray-700">
-                      Email (Optional)
-                    </Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange("email", e.target.value)}
-                      className="h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg bg-white"
-                      placeholder="your.email@example.com"
-                    />
-                    <p className="text-xs text-gray-500">
-                      Email is optional. If not provided, you&apos;ll use username-only login.
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="password" className="text-sm font-semibold text-gray-700">
-                      Password *
-                    </Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      required
-                      minLength={6}
-                      value={formData.password}
-                      onChange={(e) => handleInputChange("password", e.target.value)}
-                      className="h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg bg-white"
-                      placeholder="At least 6 characters"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-sm font-semibold text-gray-700">
-                      Confirm Password *
-                    </Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      required
-                      minLength={6}
-                      value={formData.confirmPassword}
-                      onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                      className="h-12 border-2 border-gray-200 focus:border-indigo-500 rounded-lg bg-white"
-                      placeholder="Confirm your password"
-                    />
-                  </div>
-                </div>
+            </div>
+
+            {error && (
+              <div className="p-4 bg-[#cc2936] text-white border-4 border-[#1c1c1a] font-bold shadow-[2px_2px_0_rgba(0,0,0,1)] uppercase">
+                {error}
               </div>
-              {error && (
-                <div className="p-4 text-sm text-red-700 bg-red-50 border-2 border-red-200 rounded-lg flex items-center">
-                  <svg className="w-5 h-5 mr-2 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
-                  </svg>
-                  {error}
-                </div>
-              )}
-              <div className="flex flex-col sm:flex-row gap-4 pt-6">
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-4 pt-6">
+              <Button
+                type="submit"
+                className="flex-[2] h-14 bg-[#009b72] hover:bg-[#007a5a] text-white font-anton uppercase text-xl rounded-none border-4 border-[#1c1c1a] shadow-[6px_6px_0_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[3px_3px_0_rgba(0,0,0,1)] transition-all"
+                disabled={isLoading || usernameAvailable === false}
+              >
+                {isLoading ? "JOINING..." : "JOIN FAMILY"}
+              </Button>
+              <Link href="/auth/login" className="flex-1">
                 <Button
-                  type="submit"
-                  className="flex-1 h-14 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200"
-                  disabled={isLoading || usernameAvailable === false}
+                  type="button"
+                  variant="outline"
+                  className="w-full h-14 bg-white hover:bg-[#e8e6df] text-[#1c1c1a] font-anton uppercase text-xl rounded-none border-4 border-[#1c1c1a] shadow-[6px_6px_0_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[3px_3px_0_rgba(0,0,0,1)] transition-all"
                 >
-                  {isLoading ? "Registering..." : "Complete Registration"}
+                  SIGN IN
                 </Button>
-                <Link href="/auth/login" className="flex-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-14 border-2 border-gray-300 hover:border-indigo-500 hover:text-indigo-600 font-semibold rounded-lg transition-all duration-200 bg-transparent"
-                  >
-                    Already have an account?
-                  </Button>
-                </Link>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+              </Link>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   )

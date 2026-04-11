@@ -9,6 +9,9 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+      fontFamily: {
+        anton: ["var(--font-anton)", "sans-serif"],
+      },
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',

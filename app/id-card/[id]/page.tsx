@@ -53,7 +53,7 @@ export default async function IDCardPage({ params }: { params: { id: string } })
                         {/* Photo */}
                         <div className="flex justify-center mb-6">
                             <Avatar className="w-32 h-32 border-4 border-indigo-100 shadow-lg print:border-gray-300">
-                                <AvatarImage src={member.profile_picture_url || undefined} className="object-cover" />
+                                <AvatarImage src={member.avatar_url || undefined} className="object-cover" />
                                 <AvatarFallback className="text-4xl font-bold bg-indigo-50 text-indigo-900 print:bg-gray-100 print:text-black">
                                     {getInitials(member.full_name)}
                                 </AvatarFallback>

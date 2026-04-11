@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
+import { updateMemberRankAction } from "@/app/actions"
 import { Download, Users, Search, Filter, Eye, UserCog, FileText, Trash2 } from "lucide-react"
 // ============================================================================
 // INTERFACES (Keep your existing interfaces - no changes)
@@ -86,11 +87,9 @@ export function MembersTable({ members }: MembersTableProps) {
   })
   const updateMemberRank = async (memberId: string, newRank: string) => {
     setIsUpdating(true)
-    const supabase = createClient()
     try {
-      const { error } = await supabase.from("profiles").update({ rank: newRank }).eq("id", memberId)
-      if (error) throw error
-      router.refresh()
+      const result = await updateMemberRankAction(memberId, newRank)
+      if (!result.success) throw new Error(result.message || "Failed update")
       setSelectedMember(null)
     } catch (error) {
       console.error("Error updating rank:", error)
@@ -843,7 +842,7 @@ export function MembersTable({ members }: MembersTableProps) {
       {/* ============================================================================ */}
       {viewMode === "table" ? (
         // DESKTOP TABLE VIEW (Enhanced version of your original table)
-        <Card className="hidden md:block">
+        <Card>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -889,7 +888,13 @@ export function MembersTable({ members }: MembersTableProps) {
                     <TableCell>
                       <div className="flex gap-2">
                         {/* ENHANCED MANAGE DIALOG (Same as your original but with better styling) */}
-                        <Dialog>
+                        <Dialog
+                          open={selectedMember?.id === member.id}
+                          onOpenChange={(isOpen) => {
+                            if (isOpen) setSelectedMember(member)
+                            else setSelectedMember(null)
+                          }}
+                        >
                           <DialogTrigger asChild>
                             <Button
                               variant="outline"
@@ -912,6 +917,15 @@ export function MembersTable({ members }: MembersTableProps) {
                               <div>
                                 <label className="text-sm font-medium text-gray-700 mb-3 block">Update Rank</label>
                                 <div className="grid grid-cols-1 gap-2">
+                                  <Button
+                                    variant={member.rank === "S-Servant" ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => updateMemberRank(member.id, "S-Servant")}
+                                    disabled={isUpdating}
+                                    className="justify-start"
+                                  >
+                                    S-Servant
+                                  </Button>
                                   <Button
                                     variant={member.rank === "A-Chosen" ? "default" : "outline"}
                                     size="sm"
