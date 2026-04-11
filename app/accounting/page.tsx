@@ -4,7 +4,7 @@ import { AccountingClient } from "@/components/accounting/accounting-client"
 import { getAccountGroups, getLedgers, getCustomFields } from "@/app/management/actions"
 import { getRecentVouchers } from "@/app/vouchers/actions"
 import { getItems } from "@/app/inventory/actions"
-import { getAttendanceList } from "@/app/attendance/actions"
+import { getAttendanceList } from "../dashboard/attendance/actions"
 
 export default async function AccountingDashboard({ searchParams }: { searchParams: { date?: string, start?: string, end?: string } }) {
     const supabase = await createClient()
