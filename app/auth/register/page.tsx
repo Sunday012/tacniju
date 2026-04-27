@@ -115,11 +115,7 @@ export default function RegisterPage() {
       return
     }
 
-    if (!formData.reservationNumber) {
-      setError("Reservation number is required")
-      setIsLoading(false)
-      return
-    }
+    // Reservation number is now optional
 
     // Check username availability one more time before registration
     if (usernameAvailable === false) {
@@ -275,15 +271,14 @@ export default function RegisterPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reservationNumber" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">Reservation Number *</Label>
+                <Label htmlFor="reservationNumber" className="text-sm font-bold uppercase tracking-wider text-[#1c1c1a]">Reservation Number</Label>
                 <Input
                   id="reservationNumber"
                   type="text"
-                  required
                   value={formData.reservationNumber}
                   onChange={(e) => handleInputChange("reservationNumber", e.target.value)}
                   className="h-12 border-2 border-[#1c1c1a] focus-visible:ring-0 focus-visible:border-[#cc2936] rounded-none bg-[#f4f4f0]"
-                  placeholder="Enter your reservation number"
+                  placeholder="Optional"
                 />
               </div>
             </div>

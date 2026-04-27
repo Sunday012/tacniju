@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, Loader2, Printer } from "lucide-react"
-import { generateReservationNumberAction, bulkGenerateReservationNumbersAction } from "@/app/actions"
+import { Search, Loader2, Printer, Trash2 } from "lucide-react"
+import { generateReservationNumberAction, bulkGenerateReservationNumbersAction, deleteReservationNumberAction } from "@/app/actions"
 import Link from "next/link"
 
 interface Profile {
@@ -34,6 +34,22 @@ export function ReservationsTable({ members }: ReservationsTableProps) {
     setGeneratingId(id)
     try {
       const result = await generateReservationNumberAction(id)
+      if (!result.success) {
+        alert(result.message)
+      }
+    } catch (error) {
+      console.error(error)
+      alert("An error occurred")
+    } finally {
+      setGeneratingId(null)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this member's reservation number?")) return
+    setGeneratingId(id)
+    try {
+      const result = await deleteReservationNumberAction(id)
       if (!result.success) {
         alert(result.message)
       }
@@ -132,17 +148,30 @@ export function ReservationsTable({ members }: ReservationsTableProps) {
                     )}
                   </TableCell>
                   <TableCell className="text-right print:hidden">
-                    {!member.reservation_number && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleGenerate(member.id)}
-                        disabled={generatingId === member.id || isBulkGenerating}
-                        className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                      >
-                        {generatingId === member.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Generate"}
-                      </Button>
-                    )}
+                    <div className="flex justify-end gap-2">
+                      {!member.reservation_number ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleGenerate(member.id)}
+                          disabled={generatingId === member.id || isBulkGenerating}
+                          className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                        >
+                          {generatingId === member.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Generate"}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(member.id)}
+                          disabled={generatingId === member.id || isBulkGenerating}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          title="Delete Reservation Number"
+                        >
+                          {generatingId === member.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

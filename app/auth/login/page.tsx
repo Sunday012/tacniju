@@ -28,10 +28,20 @@ export default function LoginPage() {
       const sanitizedUsername = username.toLowerCase().replace(/_/g, '-')
       const fakeEmail = `${sanitizedUsername}@user.tacniju.org`
 
-      const { error } = await supabase.auth.signInWithPassword({
+      let { error } = await supabase.auth.signInWithPassword({
         email: fakeEmail,  // Use fake email internally
         password,
       })
+
+      // Fallback for guest accounts
+      if (error && error.message.includes('Invalid login credentials')) {
+        const guestEmail = `${sanitizedUsername}@guest.tacniju.org`
+        const { error: guestError } = await supabase.auth.signInWithPassword({
+          email: guestEmail,
+          password,
+        })
+        error = guestError
+      }
 
       if (error) {
         // Provide user-friendly error messages

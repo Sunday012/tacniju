@@ -215,3 +215,31 @@ export async function bulkGenerateReservationNumbersAction() {
     revalidatePath("/admin/reservations")
     return { success: true, message: `Assigned reservation numbers to ${count} members.` }
 }
+
+export async function deleteReservationNumberAction(memberId: string) {
+    const supabase = await createClient()
+
+    // Verify Admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, message: "Unauthorized. Please login." }
+
+    const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
+    if (!profile?.is_admin && user.email !== "sundayfavour997@gmail.com") {
+        return { success: false, message: "Access denied. Admins only." }
+    }
+
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceRoleKey) return { success: false, message: "Server configuration error." }
+    const adminSupabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
+
+    const { error } = await adminSupabase.from("profiles").update({ reservation_number: null }).eq("id", memberId)
+    
+    if (error) {
+        console.error("Failed to delete reservation number:", error)
+        return { success: false, message: "Failed to delete reservation number." }
+    }
+
+    revalidatePath("/admin")
+    revalidatePath("/admin/reservations")
+    return { success: true, message: "Reservation number deleted." }
+}
