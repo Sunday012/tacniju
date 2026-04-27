@@ -121,3 +121,97 @@ export async function updateMemberRankAction(memberId: string, newRank: string) 
     return { success: true }
 }
 
+export async function generateReservationNumberAction(memberId: string) {
+    const supabase = await createClient()
+
+    // Verify Admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, message: "Unauthorized. Please login." }
+
+    const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
+    if (!profile?.is_admin && user.email !== "sundayfavour997@gmail.com") {
+        return { success: false, message: "Access denied. Admins only." }
+    }
+
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceRoleKey) return { success: false, message: "Server configuration error." }
+    const adminSupabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
+
+    // Check if the user already has one
+    const { data: memberData } = await adminSupabase.from("profiles").select("reservation_number").eq("id", memberId).single()
+    if (memberData?.reservation_number) {
+        return { success: false, message: "Member already has a reservation number." }
+    }
+
+    // Get max reservation number
+    const { data: allProfiles } = await adminSupabase.from("profiles").select("reservation_number").not("reservation_number", "is", null)
+    let maxNum = 1044 // start from 1045
+    if (allProfiles) {
+        for (const p of allProfiles) {
+            const num = parseInt(p.reservation_number, 10)
+            if (!isNaN(num) && num > maxNum) {
+                maxNum = num
+            }
+        }
+    }
+
+    const newNum = String(maxNum + 1)
+    
+    const { error } = await adminSupabase.from("profiles").update({ reservation_number: newNum }).eq("id", memberId)
+    if (error) {
+        return { success: false, message: "Failed to update reservation number." }
+    }
+
+    revalidatePath("/admin")
+    revalidatePath("/admin/reservations")
+    return { success: true, message: `Assigned number ${newNum}` }
+}
+
+export async function bulkGenerateReservationNumbersAction() {
+    const supabase = await createClient()
+
+    // Verify Admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, message: "Unauthorized. Please login." }
+
+    const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
+    if (!profile?.is_admin && user.email !== "sundayfavour997@gmail.com") {
+        return { success: false, message: "Access denied. Admins only." }
+    }
+
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceRoleKey) return { success: false, message: "Server configuration error." }
+    const adminSupabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
+
+    // Get members missing a number
+    const { data: missingProfiles } = await adminSupabase.from("profiles").select("id").or("reservation_number.is.null,reservation_number.eq.")
+    if (!missingProfiles || missingProfiles.length === 0) {
+        return { success: true, message: "All members already have a reservation number." }
+    }
+
+    // Get max reservation number
+    const { data: allProfiles } = await adminSupabase.from("profiles").select("reservation_number").not("reservation_number", "is", null).not("reservation_number", "eq", "")
+    let maxNum = 1044
+    if (allProfiles) {
+        for (const p of allProfiles) {
+            if (p.reservation_number) {
+                const num = parseInt(p.reservation_number, 10)
+                if (!isNaN(num) && num > maxNum) {
+                    maxNum = num
+                }
+            }
+        }
+    }
+
+    let count = 0
+    for (const p of missingProfiles) {
+        maxNum++
+        const newNum = String(maxNum)
+        await adminSupabase.from("profiles").update({ reservation_number: newNum }).eq("id", p.id)
+        count++
+    }
+
+    revalidatePath("/admin")
+    revalidatePath("/admin/reservations")
+    return { success: true, message: `Assigned reservation numbers to ${count} members.` }
+}

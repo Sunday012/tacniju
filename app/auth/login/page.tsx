@@ -122,10 +122,16 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-8 pt-6 border-t-4 border-[#1c1c1a] space-y-4">
-            <div className="text-center font-serif text-[#1c1c1a] font-bold text-sm">
+            <div className="text-center font-serif text-[#1c1c1a] font-bold text-sm mt-4">
               NEW TO OUR CHURCH FAMILY?{" "}
               <Link href="/auth/register" className="inline-block mt-2 md:mt-0 md:ml-2 bg-[#cc2936] text-white px-3 py-1 border-2 border-[#1c1c1a] hover:bg-[#a1202a] transition-colors shadow-[2px_2px_0_rgba(0,0,0,1)]">
                 JOIN US TODAY
+              </Link>
+            </div>
+            <div className="text-center font-serif text-[#1c1c1a] font-bold text-sm mt-4">
+              JUST VISITING?{" "}
+              <Link href="/auth/guest-register" className="inline-block mt-2 md:mt-0 md:ml-2 bg-[#ffbc42] text-[#1c1c1a] px-3 py-1 border-2 border-[#1c1c1a] hover:bg-[#e0a436] transition-colors shadow-[2px_2px_0_rgba(0,0,0,1)]">
+                REGISTER AS GUEST
               </Link>
             </div>
             <div className="text-center">

@@ -518,6 +518,15 @@ export default function RegisterPage() {
               >
                 {isLoading ? "JOINING..." : "JOIN FAMILY"}
               </Button>
+              <Link href="/auth/guest-register" className="flex-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-14 bg-[#ffbc42] hover:bg-[#e0a436] text-[#1c1c1a] font-anton uppercase text-xl rounded-none border-4 border-[#1c1c1a] shadow-[6px_6px_0_rgba(0,0,0,1)] hover:translate-y-1 hover:shadow-[3px_3px_0_rgba(0,0,0,1)] transition-all"
+                >
+                  AS GUEST
+                </Button>
+              </Link>
               <Link href="/auth/login" className="flex-1">
                 <Button
                   type="button"

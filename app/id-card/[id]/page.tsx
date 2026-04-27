@@ -91,7 +91,9 @@ export default async function IDCardPage({ params }: { params: { id: string } })
 
                         {/* Footer / ID */}
                         <div className="w-full pt-4 border-t border-gray-100 text-center print:border-gray-300 print:-mb-2">
-                            <p className="text-xs text-gray-400 font-mono print:text-black">ID: {member.id.slice(0, 8)}</p>
+                            <p className="text-xs text-gray-400 font-mono print:text-black">
+                                RES NO: {member.reservation_number || member.id.slice(0, 8)}
+                            </p>
                         </div>
 
                     </CardContent>

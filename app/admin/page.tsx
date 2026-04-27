@@ -88,6 +88,15 @@ export default async function AdminPage() {
               </Button>
             </Link>
 
+            <Link href="/admin/reservations">
+              <Button variant="ghost" size="sm" className="h-10 px-3 sm:px-4 rounded-xl text-slate-600 font-semibold hover:text-indigo-700 hover:bg-indigo-50 transition-colors">
+                <svg className="w-5 h-5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                </svg>
+                <span className="hidden sm:inline">Reservations</span>
+              </Button>
+            </Link>
+
             <Link href="/accounting">
               <Button variant="ghost" size="sm" className="h-10 px-3 sm:px-4 rounded-xl text-slate-600 font-semibold hover:text-indigo-700 hover:bg-indigo-50 transition-colors">
                 <svg className="w-5 h-5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
