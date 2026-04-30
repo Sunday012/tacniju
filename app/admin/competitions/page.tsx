@@ -2,6 +2,7 @@ import { getCompetitions } from "@/app/actions/competitions";
 import { Plus, Trophy, Users, AlertCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { AddCompetitionModal } from "@/components/admin/competitions/AddCompetitionModal";
+import { DeleteCompetitionButton } from "@/components/admin/competitions/DeleteCompetitionButton";
 import { createClient } from "@/lib/server";
 import { redirect } from "next/navigation";
 
@@ -79,13 +80,16 @@ export default async function CompetitionsPage() {
                   <div className="p-3 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-100 shadow-sm shrink-0">
                     <Trophy className="h-6 w-6 text-amber-500" />
                   </div>
-                  <div className="pt-1">
-                    <h3 className="text-lg font-extrabold text-slate-800 line-clamp-1" title={comp.name}>
+                  <div className="pt-1 flex-1">
+                    <h3 className="text-lg font-extrabold text-slate-800 line-clamp-1 pr-8" title={comp.name}>
                       {comp.name}
                     </h3>
                     <span className="text-[11px] font-medium text-slate-400 inline-block mt-1">
                       {new Date(comp.created_at).toLocaleDateString()}
                     </span>
+                  </div>
+                  <div className="absolute top-4 right-4">
+                    <DeleteCompetitionButton competitionId={comp.id} />
                   </div>
                 </div>
 

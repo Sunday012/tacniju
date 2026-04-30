@@ -106,3 +106,20 @@ export async function getUserMealTicket() {
 
   return { ticket: data };
 }
+
+export async function deleteMealTicket(ticketId: string) {
+  const supabase = await createClient();
+  
+  const { error } = await supabase
+    .from("meal_tickets")
+    .delete()
+    .eq("id", ticketId);
+
+  if (error) {
+    console.error("Error deleting meal ticket:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/admin/meal-tickets");
+  return { success: true };
+}

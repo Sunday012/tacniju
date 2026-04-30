@@ -31,7 +31,7 @@ export function MealTicketCard({ initialTicketCode }: MealTicketCardProps) {
   }
 
   return (
-    <div className="bg-white/80 backdrop-blur-3xl border border-white/60 rounded-[2rem] p-8 sm:p-10 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] transition-all hover:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.14)] hover:border-indigo-100/80 h-full flex flex-col justify-between relative overflow-hidden">
+    <div className="bg-white/80 backdrop-blur-3xl border border-white/60 rounded-[2rem] p-6 sm:p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] transition-all hover:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.14)] hover:border-indigo-100/80 h-full flex flex-col justify-between relative overflow-hidden">
       
       {/* Background decoration */}
       <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-br from-indigo-100 to-violet-50 rounded-full blur-3xl opacity-50 pointer-events-none"></div>

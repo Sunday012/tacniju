@@ -119,3 +119,20 @@ export async function removeCompetitionEntry(entryId: string, competitionId: str
   revalidatePath(`/admin/competitions/${competitionId}`);
   return { success: true };
 }
+
+export async function deleteCompetition(competitionId: string) {
+  const supabase = await createClient();
+  
+  const { error } = await supabase
+    .from("competitions")
+    .delete()
+    .eq("id", competitionId);
+
+  if (error) {
+    console.error("Error deleting competition:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/admin/competitions");
+  return { success: true };
+}

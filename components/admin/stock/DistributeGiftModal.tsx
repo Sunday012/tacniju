@@ -117,8 +117,8 @@ export function DistributeGiftModal({ assets }: { assets: any[] }) {
           <span>Distribute Gift</span>
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-white border-slate-200 text-slate-800 p-0 overflow-hidden shadow-2xl rounded-2xl">
-        <div className="p-6 max-h-[85vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] sm:max-w-[425px] max-h-[90vh] overflow-y-auto bg-white border-slate-200 text-slate-800 p-0 shadow-2xl rounded-2xl mx-auto">
+        <div className="p-4 sm:p-6 max-h-[85vh] overflow-y-auto">
           <DialogHeader className="mb-6">
             <DialogTitle className="text-xl flex items-center gap-2 font-extrabold text-slate-800">
               <Gift className="h-5 w-5 text-indigo-500" />

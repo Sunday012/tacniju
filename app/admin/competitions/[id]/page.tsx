@@ -102,11 +102,11 @@ export default async function CompetitionDetailPage({ params }: { params: Promis
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 print:bg-gray-100">
-                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase">S/N</th>
-                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase">Full Name</th>
-                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase">Res. Number</th>
-                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase">Date Entered</th>
-                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase print:hidden text-right">Actions</th>
+                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase whitespace-nowrap">S/N</th>
+                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase whitespace-nowrap">Full Name</th>
+                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase whitespace-nowrap">Res. Number</th>
+                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase whitespace-nowrap">Date Entered</th>
+                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase whitespace-nowrap print:hidden text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -119,17 +119,17 @@ export default async function CompetitionDetailPage({ params }: { params: Promis
                 ) : (
                   entries.map((entry: any, index: number) => (
                     <tr key={entry.id} className="hover:bg-slate-50/50 transition-colors print:hover:bg-transparent">
-                      <td className="px-6 py-4 text-sm font-medium text-slate-500 print:text-black">{index + 1}</td>
-                      <td className="px-6 py-4 text-sm font-bold text-slate-800 print:text-black">
+                      <td className="px-6 py-4 text-sm font-medium text-slate-500 whitespace-nowrap print:text-black">{index + 1}</td>
+                      <td className="px-6 py-4 text-sm font-bold text-slate-800 whitespace-nowrap print:text-black">
                         {entry.profile?.full_name || "Unknown User"}
                       </td>
-                      <td className="px-6 py-4 text-sm font-mono text-slate-600 print:text-black">
+                      <td className="px-6 py-4 text-sm font-mono text-slate-600 whitespace-nowrap print:text-black">
                         {entry.profile?.reservation_number || "N/A"}
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-500 font-medium print:text-black">
+                      <td className="px-6 py-4 text-sm text-slate-500 font-medium whitespace-nowrap print:text-black">
                         {new Date(entry.entered_at).toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 text-right print:hidden">
+                      <td className="px-6 py-4 text-right whitespace-nowrap print:hidden">
                         <DeleteEntryButton entryId={entry.id} competitionId={id} />
                       </td>
                     </tr>

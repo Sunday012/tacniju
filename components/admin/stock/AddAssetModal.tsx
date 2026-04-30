@@ -42,8 +42,8 @@ export function AddAssetModal() {
           <span>Add Asset</span>
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-white border-slate-200 text-slate-800 p-0 overflow-hidden shadow-2xl rounded-2xl">
-        <div className="p-6">
+      <DialogContent className="w-[95vw] sm:max-w-[425px] max-h-[90vh] overflow-y-auto bg-white border-slate-200 text-slate-800 p-0 shadow-2xl rounded-2xl mx-auto">
+        <div className="p-4 sm:p-6">
           <DialogHeader className="mb-6">
             <DialogTitle className="text-xl font-extrabold text-slate-800">Add New Asset</DialogTitle>
             <DialogDescription className="text-slate-500 font-medium mt-1">

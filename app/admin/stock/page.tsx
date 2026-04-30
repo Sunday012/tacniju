@@ -3,6 +3,7 @@ import { Plus, Gift, Box, AlertCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { AddAssetModal } from "@/components/admin/stock/AddAssetModal";
 import { DistributeGiftModal } from "@/components/admin/stock/DistributeGiftModal";
+import { DeleteAssetButton } from "@/components/admin/stock/DeleteAssetButton";
 import { createClient } from "@/lib/server";
 import { redirect } from "next/navigation";
 
@@ -109,6 +110,9 @@ export default async function StockPage() {
                       {new Date(asset.created_at).toLocaleDateString()}
                     </span>
                   </div>
+                </div>
+                <div className="absolute top-8 right-4 flex items-center gap-2">
+                  <DeleteAssetButton assetId={asset.id} />
                 </div>
               </div>
 

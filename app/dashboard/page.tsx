@@ -67,7 +67,7 @@ export default async function DashboardPage() {
 
         {/* Row 1 Right: Profile Settings */}
         <Link href="/dashboard/settings">
-          <div className="bg-white/80 backdrop-blur-3xl border border-white/60 rounded-[2rem] p-8 sm:p-10 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] transition-all hover:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.14)] hover:border-indigo-100/80 cursor-pointer group h-full">
+          <div className="bg-white/80 backdrop-blur-3xl border border-white/60 rounded-[2rem] p-6 sm:p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] transition-all hover:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.14)] hover:border-indigo-100/80 cursor-pointer group h-full">
             <div className="flex items-start gap-5">
               <div className="p-3.5 bg-gradient-to-br from-indigo-50 to-violet-50 rounded-[18px] shadow-sm border border-indigo-100/50 group-hover:from-indigo-100 group-hover:to-violet-100 transition-all shrink-0">
                 <svg className="w-7 h-7 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

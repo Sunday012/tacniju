@@ -1,9 +1,10 @@
 import { getAdminMealTickets } from "@/app/actions/meal-tickets";
 import { createClient } from "@/lib/server";
 import { redirect } from "next/navigation";
-import { ArrowLeft, Ticket, AlertCircle, Printer, CheckCircle } from "lucide-react";
+import { ArrowLeft, Ticket, AlertCircle, Printer, CheckCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { PrintButton } from "@/components/admin/competitions/PrintButton";
+import { DeleteTicketButton } from "@/components/admin/meal-tickets/DeleteTicketButton";
 
 export const dynamic = "force-dynamic";
 
@@ -87,12 +88,13 @@ export default async function MealTicketsAdminPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 print:bg-gray-100">
-                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase">S/N</th>
-                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase">Ticket Code</th>
-                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase">Full Name</th>
-                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase">Res. Number</th>
-                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase">Phone Number</th>
-                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase">Generated On</th>
+                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase whitespace-nowrap">S/N</th>
+                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase whitespace-nowrap">Ticket Code</th>
+                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase whitespace-nowrap">Full Name</th>
+                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase whitespace-nowrap">Res. Number</th>
+                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase whitespace-nowrap">Phone Number</th>
+                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase whitespace-nowrap">Generated On</th>
+                  <th className="px-6 py-4 font-bold text-slate-700 text-sm tracking-wider uppercase whitespace-nowrap print:hidden text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -105,21 +107,24 @@ export default async function MealTicketsAdminPage() {
                 ) : (
                   tickets.map((ticket: any, index: number) => (
                     <tr key={ticket.id} className="hover:bg-slate-50/50 transition-colors print:hover:bg-transparent">
-                      <td className="px-6 py-4 text-sm font-medium text-slate-500 print:text-black">{index + 1}</td>
-                      <td className="px-6 py-4 text-sm font-bold font-mono text-indigo-600 print:text-black">
+                      <td className="px-6 py-4 text-sm font-medium text-slate-500 whitespace-nowrap print:text-black">{index + 1}</td>
+                      <td className="px-6 py-4 text-sm font-bold font-mono text-indigo-600 whitespace-nowrap print:text-black">
                         {ticket.ticket_code}
                       </td>
-                      <td className="px-6 py-4 text-sm font-bold text-slate-800 print:text-black">
+                      <td className="px-6 py-4 text-sm font-bold text-slate-800 whitespace-nowrap print:text-black">
                         {ticket.profile?.full_name || "Unknown User"}
                       </td>
-                      <td className="px-6 py-4 text-sm font-mono text-slate-600 print:text-black">
+                      <td className="px-6 py-4 text-sm font-mono text-slate-600 whitespace-nowrap print:text-black">
                         {ticket.profile?.reservation_number || "N/A"}
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-600 print:text-black">
+                      <td className="px-6 py-4 text-sm text-slate-600 whitespace-nowrap print:text-black">
                         {ticket.profile?.phone_number || "N/A"}
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-500 font-medium print:text-black">
+                      <td className="px-6 py-4 text-sm text-slate-500 font-medium whitespace-nowrap print:text-black">
                         {new Date(ticket.created_at).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 text-right whitespace-nowrap print:hidden">
+                        <DeleteTicketButton ticketId={ticket.id} />
                       </td>
                     </tr>
                   ))

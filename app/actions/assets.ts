@@ -137,3 +137,20 @@ export async function assignGift(formData: FormData) {
   revalidatePath("/admin/stock");
   return { success: true };
 }
+
+export async function deleteAsset(assetId: string) {
+  const supabase = await createClient();
+  
+  const { error } = await supabase
+    .from("assets")
+    .delete()
+    .eq("id", assetId);
+
+  if (error) {
+    console.error("Error deleting asset:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/admin/stock");
+  return { success: true };
+}

@@ -42,7 +42,7 @@ export function AddCompetitionModal() {
           <span>Create Competition</span>
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] bg-white border-slate-200 text-slate-800 p-0 overflow-hidden shadow-2xl rounded-2xl">
+      <DialogContent className="w-[95vw] sm:max-w-[425px] max-h-[90vh] overflow-y-auto bg-white border-slate-200 text-slate-800 p-0 shadow-2xl rounded-2xl mx-auto">
         <div className="p-6">
           <DialogHeader className="mb-6">
             <DialogTitle className="text-xl font-extrabold text-slate-800">Create New Competition</DialogTitle>
