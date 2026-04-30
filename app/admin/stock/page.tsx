@@ -1,5 +1,5 @@
 import { getAssets } from "@/app/actions/assets";
-import { Plus, Gift, Box, AlertCircle } from "lucide-react";
+import { Plus, Gift, Box, AlertCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { AddAssetModal } from "@/components/admin/stock/AddAssetModal";
 import { DistributeGiftModal } from "@/components/admin/stock/DistributeGiftModal";
@@ -38,9 +38,16 @@ export default async function StockPage() {
 
       <div className="max-w-6xl mx-auto w-full space-y-8 relative z-10">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Program Stock & Assets</h1>
-            <p className="text-slate-500 mt-1 font-medium">Manage internal supplies and distribute gifts to attendees.</p>
+          <div className="flex items-center gap-4">
+            <Link href="/admin">
+              <button className="p-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl transition-colors shadow-sm">
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+            </Link>
+            <div>
+              <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Program Stock & Assets</h1>
+              <p className="text-slate-500 mt-1 font-medium">Manage internal supplies and distribute gifts to attendees.</p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <DistributeGiftModal assets={assets || []} />

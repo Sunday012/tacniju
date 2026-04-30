@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Menu, ScanLine, CalendarDays, BookOpen, LayoutDashboard, LogOut, Shield, Users, Package } from "lucide-react"
+import { Menu, ScanLine, CalendarDays, BookOpen, LayoutDashboard, LogOut, Shield, Users, Package, Trophy } from "lucide-react"
 import { createClient } from "@/lib/client"
 import { useRouter } from "next/navigation"
 
@@ -14,6 +14,7 @@ const navItems = [
   { label: "Scanner", href: "/admin/scanner", icon: ScanLine },
   { label: "Events", href: "/admin/events", icon: CalendarDays },
   { label: "Reservations", href: "/admin/reservations", icon: Users },
+  { label: "Competitions", href: "/admin/competitions", icon: Trophy },
   { label: "Program Stock", href: "/admin/stock", icon: Package },
   { label: "Accounting", href: "/accounting", icon: BookOpen },
   { label: "User Dashboard", href: "/dashboard", icon: LayoutDashboard },
