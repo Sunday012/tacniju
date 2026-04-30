@@ -7,6 +7,8 @@ import { QuickStats } from "@/components/dashboard/quick-stats"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
 import { IdCardQr } from "@/components/dashboard/id-card-qr"
 import { UpcomingEvents } from "@/components/dashboard/upcoming-events"
+import { MealTicketCard } from "@/components/dashboard/meal-ticket-card"
+import { getUserMealTicket } from "@/app/actions/meal-tickets"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -45,6 +47,9 @@ export default async function DashboardPage() {
   }
 
   const initials = getInitials(profile?.full_name || "User")
+  
+  // Fetch meal ticket if it exists
+  const { ticket } = await getUserMealTicket();
 
   return (
     <>
@@ -82,11 +87,14 @@ export default async function DashboardPage() {
             </div>
           </div>
         </Link>
+        
+        {/* Row 2 Left: Meal Ticket */}
+        <MealTicketCard initialTicketCode={ticket?.ticket_code} />
 
-        {/* Row 2 Left: Upcoming Events */}
+        {/* Row 2 Right: Upcoming Events */}
         <UpcomingEvents />
 
-        {/* Row 2 Right: Quick Stats */}
+        {/* Row 3 Right: Quick Stats */}
         <QuickStats
           rank={profile?.rank || "C-Multitude"}
           department={profile?.department || ""}
