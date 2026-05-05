@@ -17,7 +17,6 @@ const navItems = [
   { label: "Competitions", href: "/admin/competitions", icon: Trophy },
   { label: "Meal Tickets", href: "/admin/meal-tickets", icon: Ticket },
   { label: "Program Stock", href: "/admin/stock", icon: Package },
-  { label: "Accounting", href: "/accounting", icon: BookOpen },
   { label: "User Dashboard", href: "/dashboard", icon: LayoutDashboard },
 ]
 

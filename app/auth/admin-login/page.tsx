@@ -1,6 +1,6 @@
 "use client"
-
 import type React from "react"
+import Image from "next/image"
 
 import { createClient } from "@/lib/client"
 import { Button } from "@/components/ui/button"
@@ -81,10 +81,13 @@ export default function AdminLoginPage() {
           
           <div className="mb-8 text-center border-b-4 border-[#1c1c1a] pb-6">
             <div className="flex justify-center items-center gap-1 mb-2">
-              <span className="font-anton text-4xl text-[#cc2936]">T</span>
-              <span className="font-anton text-4xl text-[#009b72]">A</span>
-              <span className="font-anton text-4xl text-[#ffbc42]">C</span>
-              <span className="font-anton text-4xl text-[#004e89]">N</span>
+              <Image 
+                src="https://res.cloudinary.com/dzckvrvu9/image/upload/v1777993333/WhatsApp_Image_2026-05-01_at_08.37.56-removebg-preview_a8w3wt.png" 
+                alt="TACN Logo" 
+                width={150} 
+                height={50} 
+                className="h-10 w-auto object-contain"
+              />
             </div>
             <h1 className="font-anton text-3xl md:text-5xl text-[#1c1c1a] uppercase leading-none mt-2">ADMIN PORTAL</h1>
           </div>

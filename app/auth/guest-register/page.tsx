@@ -1,5 +1,6 @@
 "use client"
 import type React from "react"
+import Image from "next/image"
 import { createClient } from "@/lib/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -167,9 +168,15 @@ export default function GuestRegisterPage() {
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#1c1c1a 2px, transparent 2px)', backgroundSize: '32px 32px' }}></div>
       
       <div className="max-w-4xl mx-auto w-full relative z-10 pt-10">
-        <div className="absolute top-0 -left-2 md:-left-8 rotate-[-4deg] bg-[#004e89] text-white py-2 px-6 border-4 border-[#1c1c1a] shadow-[6px_6px_0_rgba(0,0,0,1)] z-20">
+        <div className="absolute top-0 -left-2 md:-left-8 rotate-[-4deg] bg-white p-2 border-4 border-[#1c1c1a] shadow-[6px_6px_0_rgba(0,0,0,1)] z-20">
           <Link href="/">
-            <h2 className="font-anton text-2xl uppercase tracking-wider cursor-pointer">WELCOME GUEST</h2>
+            <Image 
+              src="https://res.cloudinary.com/dzckvrvu9/image/upload/v1777993333/WhatsApp_Image_2026-05-01_at_08.37.56-removebg-preview_a8w3wt.png" 
+              alt="TACN Logo" 
+              width={150} 
+              height={50} 
+              className="h-10 w-auto object-contain cursor-pointer"
+            />
           </Link>
         </div>
 

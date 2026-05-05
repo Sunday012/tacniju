@@ -59,6 +59,7 @@ export default async function DashboardPage() {
         department={profile?.department}
         avatarUrl={profile?.avatar_url || undefined}
         initials={initials}
+        points={profile?.points || 0}
       />
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-8">

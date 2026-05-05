@@ -9,7 +9,13 @@ function generateTicketCode(): string {
   return `MTRC${digits}`;
 }
 
-export async function generateMealTicket() {
+export async function adminGenerateMealTicket(
+  profileId: string, 
+  amount?: number, 
+  transactionType?: string, 
+  remark?: string, 
+  beneficiaryName?: string
+) {
   const supabase = await createClient();
 
   const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -17,8 +23,18 @@ export async function generateMealTicket() {
     return { error: "You must be logged in to generate a ticket." };
   }
 
+  // Check if caller is admin
+  const { data: adminProfile } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .single();
+
+  if (!adminProfile?.is_admin) {
+    return { error: "Only admins can generate meal tickets." };
+  }
+
   // Attempt to generate and insert the ticket
-  // We'll retry a few times in the highly unlikely event of a ticket code collision
   let maxRetries = 3;
   let success = false;
   let ticketCode = "";
@@ -30,18 +46,21 @@ export async function generateMealTicket() {
       .from("meal_tickets")
       .insert([
         {
-          profile_id: user.id,
+          profile_id: profileId,
           ticket_code: ticketCode,
+          amount: amount || 0,
+          transaction_type: transactionType || 'MEAL',
+          remark: remark || '',
+          beneficiary_name: beneficiaryName || null,
         }
       ]);
 
     if (insertError) {
       if (insertError.code === "23505") { // Unique violation
         if (insertError.message.includes("meal_tickets_profile_id_key")) {
-          return { error: "You have already generated a meal ticket." };
+          return { error: "This member already has a meal ticket." };
         }
         if (insertError.message.includes("meal_tickets_ticket_code_key")) {
-          // Collision on ticket code, retry
           maxRetries--;
           continue;
         }
@@ -57,9 +76,11 @@ export async function generateMealTicket() {
     return { error: "Failed to generate a unique ticket code. Please try again." };
   }
 
+  revalidatePath("/admin/meal-tickets");
   revalidatePath("/dashboard");
   return { success: true, ticketCode };
 }
+
 
 export async function getAdminMealTickets() {
   const supabase = await createClient();
@@ -72,6 +93,10 @@ export async function getAdminMealTickets() {
       ticket_code,
       created_at,
       scanned,
+      amount,
+      transaction_type,
+      remark,
+      beneficiary_name,
       profile:profiles!profile_id(
         full_name,
         reservation_number,
@@ -96,7 +121,7 @@ export async function getUserMealTicket() {
 
   const { data, error } = await supabase
     .from("meal_tickets")
-    .select("ticket_code, scanned, created_at")
+    .select("ticket_code, scanned, created_at, amount, transaction_type, remark, beneficiary_name")
     .eq("profile_id", user.id)
     .single();
 

@@ -78,6 +78,23 @@ export function AddCompetitionModal() {
               ></textarea>
             </div>
 
+            <div className="space-y-2">
+              <label htmlFor="registrationPoints" className="text-sm font-bold text-slate-700">
+                Registration Points (Cost)
+              </label>
+              <input
+                id="registrationPoints"
+                name="registrationPoints"
+                type="number"
+                min="0"
+                defaultValue="0"
+                required
+                className="w-full bg-white border border-slate-200 shadow-sm rounded-xl px-4 py-2.5 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+              />
+              <p className="text-[10px] text-slate-400">Points will be deducted from members upon entry.</p>
+            </div>
+
+
             <div className="pt-4 flex gap-3">
               <button
                 type="button"

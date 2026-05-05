@@ -154,3 +154,47 @@ export async function deleteAsset(assetId: string) {
   revalidatePath("/admin/stock");
   return { success: true };
 }
+export async function updateAsset(assetId: string, formData: FormData) {
+  const supabase = await createClient();
+  const name = formData.get("name") as string;
+  const category = formData.get("category") as string;
+  const is_gift = formData.get("is_gift") === "on";
+  const quantity = parseInt(formData.get("quantity") as string, 10);
+
+  if (!name || !category || isNaN(quantity)) {
+    return { error: "Missing required fields." };
+  }
+
+  // Get current asset to calculate new available quantity
+  const { data: currentAsset, error: fetchError } = await supabase
+    .from("assets")
+    .select("total_quantity, available_quantity")
+    .eq("id", assetId)
+    .single();
+
+  if (fetchError || !currentAsset) {
+    return { error: "Asset not found." };
+  }
+
+  const diff = quantity - currentAsset.total_quantity;
+  const newAvailable = Math.max(0, currentAsset.available_quantity + diff);
+
+  const { error } = await supabase
+    .from("assets")
+    .update({
+      name,
+      category,
+      is_gift,
+      total_quantity: quantity,
+      available_quantity: newAvailable,
+    })
+    .eq("id", assetId);
+
+  if (error) {
+    console.error("Error updating asset:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/admin/stock");
+  return { success: true };
+}

@@ -98,16 +98,11 @@ function ScannerContent() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white p-4 flex flex-col items-center">
+        <div className="p-4 flex flex-col items-center">
             <div className="w-full max-w-md space-y-6">
                 <header className="flex items-center gap-4">
-                    <Link href="/admin/events">
-                        <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white">
-                            <ArrowLeft className="w-5 h-5" />
-                        </Button>
-                    </Link>
                     <div>
-                        <h1 className="text-xl font-bold">Attendance Scanner</h1>
+                        <h1 className="text-xl font-bold text-black">Attendance Scanner</h1>
                         {eventId && (
                             <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
                                 <CalendarDays className="w-3 h-3" />
@@ -118,9 +113,9 @@ function ScannerContent() {
                 </header>
 
                 {!eventId && (
-                    <Card className="bg-amber-950/30 border-amber-700/50">
-                        <CardContent className="p-4 text-sm text-amber-300">
-                            ⚠️ No event selected. <Link href="/admin/events" className="underline font-semibold">Go back and pick an event</Link> before scanning.
+                    <Card className="bg-slate-900 border-indigo-500/30">
+                        <CardContent className="p-4 text-sm text-indigo-300">
+                            <span className="text-lg">⚠️</span> No event selected. <Link href="/admin/events" className="underline font-semibold text-white">Go back and pick an event</Link> before scanning.
                         </CardContent>
                     </Card>
                 )}

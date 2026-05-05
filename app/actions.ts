@@ -243,3 +243,35 @@ export async function deleteReservationNumberAction(memberId: string) {
     revalidatePath("/admin/reservations")
     return { success: true, message: "Reservation number deleted." }
 }
+export async function giveMemberPointsAction(memberId: string, amount: number) {
+    const supabase = await createClient()
+
+    // Verify Admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, message: "Unauthorized. Please login." }
+
+    const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
+    if (!profile?.is_admin && user.email !== "sundayfavour997@gmail.com") {
+        return { success: false, message: "Access denied. Admins only." }
+    }
+
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceRoleKey) return { success: false, message: "Server configuration error." }
+    const adminSupabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
+
+    // Get current points
+    const { data: memberProfile } = await adminSupabase.from("profiles").select("points").eq("id", memberId).single()
+    const currentPoints = memberProfile?.points || 0
+    const newPoints = currentPoints + amount
+
+    const { error } = await adminSupabase.from("profiles").update({ points: newPoints }).eq("id", memberId)
+    
+    if (error) {
+        console.error("Failed to give points:", error)
+        return { success: false, message: "Failed to update points." }
+    }
+
+    revalidatePath("/admin")
+    revalidatePath("/dashboard")
+    return { success: true, message: `Successfully gave ${amount} points!` }
+}

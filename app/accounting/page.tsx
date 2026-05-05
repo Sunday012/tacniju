@@ -8,25 +8,14 @@ import { getAttendanceList } from "../dashboard/attendance/actions"
 
 export default async function AccountingDashboard({ searchParams }: { searchParams: { date?: string, start?: string, end?: string } }) {
     const supabase = await createClient()
-
-    const {
-        data: { user },
-        error: userError,
-    } = await supabase.auth.getUser()
-
-    if (userError || !user) {
-        redirect("/auth/login")
-    }
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return redirect("/auth/admin-login")
 
     const { data: profile } = await supabase
         .from("profiles")
         .select("is_admin, org_members(organizations(name))")
         .eq("id", user.id)
         .maybeSingle()
-
-    if (!profile) {
-        console.log("No profile found for user")
-    }
 
     const cookieStore = require('next/headers').cookies()
     const activeOrgId = cookieStore.get("active_org_id")?.value

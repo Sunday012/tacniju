@@ -16,8 +16,9 @@ import {
 } from "@/components/ui/dialog"
 import { Card, CardContent } from "@/components/ui/card"
 import { useRouter } from "next/navigation"
-import { updateMemberRankAction } from "@/app/actions"
-import { Download, Users, Search, Filter, Eye, UserCog, FileText, Trash2 } from "lucide-react"
+import { updateMemberRankAction, giveMemberPointsAction } from "@/app/actions"
+import { Download, Users, Search, Filter, Eye, UserCog, FileText, Trash2, Coins, PlusCircle } from "lucide-react"
+import { toast } from "sonner"
 // ============================================================================
 // INTERFACES (Keep your existing interfaces - no changes)
 // ============================================================================
@@ -37,6 +38,7 @@ interface Profile {
   office_position?: string
   rank?: string
   reservation_number?: string
+  points?: number
   is_admin?: boolean
   created_at: string
 }
@@ -97,19 +99,20 @@ export function MembersTable({ members }: MembersTableProps) {
       setIsUpdating(false)
     }
   }
-  const addAttendance = async (memberId: string, eventName: string) => {
-    const supabase = createClient()
+  const handleGivePoints = async (memberId: string, amount: number) => {
+    if (isNaN(amount) || amount <= 0) return
+    setIsUpdating(true)
     try {
-      const { error } = await supabase.from("attendance").insert({
-        user_id: memberId,
-        event_name: eventName,
-        event_date: new Date().toISOString().split("T")[0],
-        attended: true,
-      })
-      if (error) throw error
-      router.refresh()
+      const res = await giveMemberPointsAction(memberId, amount)
+      if (res.success) {
+        toast.success(res.message)
+      } else {
+        toast.error(res.message)
+      }
     } catch (error) {
-      console.error("Error adding attendance:", error)
+      toast.error("Failed to update points")
+    } finally {
+      setIsUpdating(false)
     }
   }
 
@@ -560,7 +563,7 @@ export function MembersTable({ members }: MembersTableProps) {
                   <UserCog className="w-5 h-5" />
                   Manage {member.full_name}
                 </DialogTitle>
-                <DialogDescription>Update member rank and add attendance records</DialogDescription>
+                <DialogDescription>Update member rank and manage reward points</DialogDescription>
               </DialogHeader>
               <div className="space-y-6">
                 <div>
@@ -582,18 +585,30 @@ export function MembersTable({ members }: MembersTableProps) {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700 mb-3 block">Quick Attendance</label>
-                  <Select
-                    onValueChange={(value) => addAttendance(member.id, value)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select event" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      <SelectItem value="Sunday Service">Sunday Service</SelectItem>
-                      <SelectItem value="Youth Meeting">Youth Meeting</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <label className="text-sm font-medium text-gray-700 mb-3 block flex items-center gap-2">
+                    <Coins className="w-4 h-4 text-amber-500" />
+                    Manage Points (Current: {member.points || 0})
+                  </label>
+                  <div className="flex gap-2">
+                    <Input 
+                      type="number" 
+                      placeholder="Amount" 
+                      className="flex-1"
+                      id={`points-${member.id}`}
+                    />
+                    <Button 
+                      onClick={() => {
+                        const input = document.getElementById(`points-${member.id}`) as HTMLInputElement
+                        handleGivePoints(member.id, parseInt(input.value))
+                        input.value = ""
+                      }}
+                      disabled={isUpdating}
+                      className="bg-amber-500 hover:bg-amber-600 text-white"
+                    >
+                      <PlusCircle className="w-4 h-4 mr-1" />
+                      Add
+                    </Button>
+                  </div>
                 </div>
               </div>
             </DialogContent>
@@ -851,8 +866,9 @@ export function MembersTable({ members }: MembersTableProps) {
                   <TableHead className="font-semibold">Email</TableHead>
                   <TableHead className="font-semibold">Department</TableHead>
                   <TableHead className="font-semibold">Rank</TableHead>
+                  <TableHead className="font-semibold">Points</TableHead>
                   <TableHead className="font-semibold">Assembly</TableHead>
-                  <TableHead className="font-semibold">Actions</TableHead>
+                  <TableHead className="font-semibold text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -884,8 +900,13 @@ export function MembersTable({ members }: MembersTableProps) {
                         {member.rank || "C-Multitude"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-gray-600">{member.assembly || "Not specified"}</TableCell>
                     <TableCell>
+                      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 font-bold">
+                        {member.points || 0}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-gray-600">{member.assembly || "Not specified"}</TableCell>
+                    <TableCell className="text-right">
                       <div className="flex gap-2">
                         {/* ENHANCED MANAGE DIALOG (Same as your original but with better styling) */}
                         <Dialog
@@ -911,7 +932,7 @@ export function MembersTable({ members }: MembersTableProps) {
                                 <UserCog className="w-5 h-5" />
                                 Manage {member.full_name}
                               </DialogTitle>
-                              <DialogDescription>Update member rank and add attendance records</DialogDescription>
+                              <DialogDescription>Update member rank and manage reward points</DialogDescription>
                             </DialogHeader>
                             <div className="space-y-6">
                               <div>
@@ -956,23 +977,28 @@ export function MembersTable({ members }: MembersTableProps) {
                                 </div>
                               </div>
                               <div>
-                                <label className="text-sm font-medium text-gray-700 mb-3 block">Quick Attendance</label>
-                                <div className="grid grid-cols-1 gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => addAttendance(member.id, "Sunday Service")}
-                                    className="justify-start"
+                                <label className="text-sm font-medium text-gray-700 mb-3 block flex items-center gap-2">
+                                  <Coins className="w-4 h-4 text-amber-500" />
+                                  Manage Points (Current: {member.points || 0})
+                                </label>
+                                <div className="flex gap-2">
+                                  <Input 
+                                    type="number" 
+                                    placeholder="Amount" 
+                                    className="flex-1"
+                                    id={`points-table-${member.id}`}
+                                  />
+                                  <Button 
+                                    onClick={() => {
+                                      const input = document.getElementById(`points-table-${member.id}`) as HTMLInputElement
+                                      handleGivePoints(member.id, parseInt(input.value))
+                                      input.value = ""
+                                    }}
+                                    disabled={isUpdating}
+                                    className="bg-amber-500 hover:bg-amber-600 text-white"
                                   >
-                                    Sunday Service
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => addAttendance(member.id, "Youth Meeting")}
-                                    className="justify-start"
-                                  >
-                                    Youth Meeting
+                                    <PlusCircle className="w-4 h-4 mr-1" />
+                                    Add
                                   </Button>
                                 </div>
                               </div>

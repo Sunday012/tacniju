@@ -40,16 +40,19 @@ export default function LandingPage() {
         </Link>
       </nav>
 
-      {/* HEADER LOGO */}
       <header className="absolute top-0 w-full z-40 p-6 flex justify-center lg:justify-start">
-        <div className="flex items-center gap-1 group cursor-pointer relative">
-          <span className="font-anton text-5xl text-[#cc2936] drop-shadow-[2px_2px_0_rgba(0,0,0,1)] relative z-10 transition-transform group-hover:-rotate-3">T</span>
-          <span className="font-anton text-5xl text-[#009b72] drop-shadow-[2px_2px_0_rgba(0,0,0,1)] relative z-10 -ml-1 transition-transform group-hover:rotate-3">A</span>
-          <span className="font-anton text-5xl text-[#ffbc42] drop-shadow-[2px_2px_0_rgba(0,0,0,1)] relative z-10 -ml-1 transition-transform group-hover:-translate-y-1">C</span>
-          <span className="font-anton text-5xl text-[#004e89] drop-shadow-[2px_2px_0_rgba(0,0,0,1)] relative z-10 -ml-1 transition-transform group-hover:translate-y-1">N</span>
-          <span className="text-[#ffbc42] text-2xl absolute -right-4 -top-1 animate-pulse">✦</span>
-          <span className="text-[#cc2936] text-xl absolute -left-3 bottom-0 animate-pulse delay-75">✦</span>
-        </div>
+        <Link href="/">
+          <div className="flex items-center gap-1 group cursor-pointer relative">
+            <Image 
+              src="https://res.cloudinary.com/dzckvrvu9/image/upload/v1777993333/WhatsApp_Image_2026-05-01_at_08.37.56-removebg-preview_a8w3wt.png" 
+              alt="TACN Logo" 
+              width={180} 
+              height={60} 
+              className="h-12 w-auto object-contain transition-transform group-hover:scale-105"
+            />
+            <span className="text-[#ffbc42] text-2xl absolute -right-6 -top-1 animate-pulse">✦</span>
+          </div>
+        </Link>
       </header>
 
       {/* BIG LOGO & POLAROIDS SECTION (Now First) */}
@@ -145,10 +148,13 @@ export default function LandingPage() {
       <section id="fellowship" className="bg-[#004e89] py-24 sm:py-32 px-4 border-b-4 border-[#1c1c1a] text-center relative selection:bg-white/30 selection:text-black">
          <div className="max-w-5xl mx-auto">
            <div className="flex justify-center items-center gap-2 mb-8">
-             <span className="font-anton text-3xl text-white">T</span>
-             <span className="font-anton text-3xl text-[#cc2936]">A</span>
-             <span className="font-anton text-3xl text-[#ffbc42]">C</span>
-             <span className="font-anton text-3xl text-[#009b72]">N</span>
+             <Image 
+               src="https://res.cloudinary.com/dzckvrvu9/image/upload/v1777993333/WhatsApp_Image_2026-05-01_at_08.37.56-removebg-preview_a8w3wt.png" 
+               alt="TACN Logo" 
+               width={120} 
+               height={40} 
+               className="h-10 w-auto object-contain brightness-0 invert"
+             />
            </div>
            
            <h2 className="font-anton text-6xl md:text-[9rem] leading-[0.9] text-white drop-shadow-[6px_6px_0_rgba(0,0,0,1)] uppercase mb-8 border-b-8 border-white pb-6 inline-block">
@@ -272,10 +278,13 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
            <div className="flex flex-col items-center md:items-start z-10">
              <div className="flex items-center gap-1 mb-4">
-                <span className="font-anton text-4xl text-[#cc2936]">T</span>
-                <span className="font-anton text-4xl text-[#009b72]">A</span>
-                <span className="font-anton text-4xl text-[#ffbc42]">C</span>
-                <span className="font-anton text-4xl text-[#004e89]">N</span>
+               <Image 
+                 src="https://res.cloudinary.com/dzckvrvu9/image/upload/v1777993333/WhatsApp_Image_2026-05-01_at_08.37.56-removebg-preview_a8w3wt.png" 
+                 alt="TACN Logo" 
+                 width={150} 
+                 height={50} 
+                 className="h-10 w-auto object-contain"
+               />
              </div>
              <p className="font-serif text-gray-400 font-bold uppercase tracking-widest text-sm">Iju Station Youth Movement</p>
            </div>

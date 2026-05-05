@@ -1,50 +1,25 @@
 import { getAssets } from "@/app/actions/assets";
-import { Plus, Gift, Box, AlertCircle, ArrowLeft } from "lucide-react";
+import { Plus, Gift, Box, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { AddAssetModal } from "@/components/admin/stock/AddAssetModal";
 import { DistributeGiftModal } from "@/components/admin/stock/DistributeGiftModal";
+import { EditAssetModal } from "@/components/admin/stock/EditAssetModal";
 import { DeleteAssetButton } from "@/components/admin/stock/DeleteAssetButton";
-import { createClient } from "@/lib/server";
-import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
+
 export default async function StockPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/auth/login");
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_admin")
-    .eq("id", user.id)
-    .single();
-
-  if (!profile?.is_admin) {
-    redirect("/dashboard");
-  }
-
   const { assets, error } = await getAssets();
-
+  
   return (
-    <div className="min-h-screen bg-[#F4F7FA] font-sans selection:bg-indigo-500/30 relative overflow-x-hidden p-6 md:p-10">
-      {/* Decorative background blurs */}
-      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-bl from-indigo-200/40 via-violet-100/20 to-transparent rounded-full blur-3xl opacity-60 pointer-events-none -z-10 translate-x-1/3 -translate-y-1/4"></div>
-      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-cyan-100/40 to-transparent rounded-full blur-3xl opacity-50 pointer-events-none -z-10 -translate-x-1/3 translate-y-1/3"></div>
-
+    <div className="p-6 md:p-10 relative">
       <div className="max-w-6xl mx-auto w-full space-y-8 relative z-10">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link href="/admin">
-              <button className="p-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl transition-colors shadow-sm">
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-            </Link>
+            <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center">
+              <Box className="w-6 h-6 text-indigo-600" />
+            </div>
             <div>
               <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Program Stock & Assets</h1>
               <p className="text-slate-500 mt-1 font-medium">Manage internal supplies and distribute gifts to attendees.</p>
@@ -112,8 +87,10 @@ export default async function StockPage() {
                   </div>
                 </div>
                 <div className="absolute top-8 right-4 flex items-center gap-2">
+                  <EditAssetModal asset={asset} />
                   <DeleteAssetButton assetId={asset.id} />
                 </div>
+
               </div>
 
               <div className="mt-auto pt-6 border-t border-slate-100 grid grid-cols-2 gap-4">
