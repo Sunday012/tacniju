@@ -156,7 +156,7 @@ export async function generateTeams(competitionId: string, teamCount: number) {
   const shuffled = [...entries].sort(() => Math.random() - 0.5);
 
   // 3. Create teams
-  const teams = [];
+  const teams: any[] = [];
   for (let i = 0; i < teamCount; i++) {
     const { data: team, error: teamError } = await supabase
       .from("competition_teams")

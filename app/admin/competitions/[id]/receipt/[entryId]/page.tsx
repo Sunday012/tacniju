@@ -33,6 +33,14 @@ export default async function CompetitionReceiptPage({
         redirect(`/admin/competitions/${id}`);
     }
 
+    // Safely extract competition and profile regardless of whether they are arrays or objects
+    const competition = Array.isArray(entry.competition) ? entry.competition[0] : entry.competition;
+    const profile = Array.isArray(entry.profile) ? entry.profile[0] : entry.profile;
+
+    if (!competition || !profile) {
+        redirect(`/admin/competitions/${id}`);
+    }
+
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 py-12 sm:p-8 print:block print:bg-white print:p-0">
             <div className="w-full max-w-md mx-auto space-y-6 print:space-y-0">
@@ -68,9 +76,11 @@ export default async function CompetitionReceiptPage({
                             <div className="space-y-8">
                                 {/* Competition Info */}
                                 <div className="text-center p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                                    <h2 className="text-2xl font-black text-slate-800 leading-tight">{entry.competition.name}</h2>
+                                    <h2 className="text-2xl font-black text-slate-800 leading-tight">
+                                        {competition.name}
+                                    </h2>
                                     <p className="text-xs text-slate-500 mt-2 font-medium max-w-[200px] mx-auto line-clamp-2">
-                                        {entry.competition.description || "Official Competition Program"}
+                                        {competition.description || "Official Competition Program"}
                                     </p>
                                 </div>
 
@@ -82,18 +92,24 @@ export default async function CompetitionReceiptPage({
                                         </div>
                                         <div className="flex-1">
                                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Participant</p>
-                                            <p className="text-lg font-black text-slate-800">{entry.profile.full_name}</p>
+                                            <p className="text-lg font-black text-slate-800">
+                                                {profile.full_name}
+                                            </p>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
                                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Res. Number</p>
-                                            <p className="text-sm font-black text-slate-800 font-mono">{entry.profile.reservation_number || "N/A"}</p>
+                                            <p className="text-sm font-black text-slate-800 font-mono">
+                                                {profile.reservation_number || "N/A"}
+                                            </p>
                                         </div>
                                         <div className="p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
                                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Reg. Cost</p>
-                                            <p className="text-sm font-black text-indigo-600">{entry.competition.registration_points || 0} Points</p>
+                                            <p className="text-sm font-black text-indigo-600">
+                                                {competition.registration_points || 0} Points
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
