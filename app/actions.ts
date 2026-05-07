@@ -262,7 +262,7 @@ export async function giveMemberPointsAction(memberId: string, amount: number) {
     // Get current points
     const { data: memberProfile } = await adminSupabase.from("profiles").select("points").eq("id", memberId).single()
     const currentPoints = memberProfile?.points || 0
-    const newPoints = currentPoints + amount
+    const newPoints = Math.max(0, currentPoints + amount)
 
     const { error } = await adminSupabase.from("profiles").update({ points: newPoints }).eq("id", memberId)
     

@@ -100,7 +100,7 @@ export function MembersTable({ members }: MembersTableProps) {
     }
   }
   const handleGivePoints = async (memberId: string, amount: number) => {
-    if (isNaN(amount) || amount <= 0) return
+    if (isNaN(amount) || amount === 0) return
     setIsUpdating(true)
     try {
       const res = await giveMemberPointsAction(memberId, amount)
@@ -592,7 +592,7 @@ export function MembersTable({ members }: MembersTableProps) {
                   <div className="flex gap-2">
                     <Input 
                       type="number" 
-                      placeholder="Amount" 
+                      placeholder="Amount (+ or -)" 
                       className="flex-1"
                       id={`points-${member.id}`}
                     />
@@ -606,7 +606,16 @@ export function MembersTable({ members }: MembersTableProps) {
                       className="bg-amber-500 hover:bg-amber-600 text-white"
                     >
                       <PlusCircle className="w-4 h-4 mr-1" />
-                      Add
+                      Update
+                    </Button>
+                    <Button
+                      onClick={() => handleGivePoints(member.id, -(member.points || 0))}
+                      disabled={isUpdating || !member.points}
+                      variant="outline"
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50 px-3"
+                      title="Reset points to 0"
+                    >
+                      Reset
                     </Button>
                   </div>
                 </div>
@@ -691,7 +700,7 @@ export function MembersTable({ members }: MembersTableProps) {
       {/* ============================================================================ */}
       {/* NEW SECTION: Statistics Overview Cards */}
       {/* ============================================================================ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 ">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <Card className="relative overflow-hidden bg-[#3952c4] border border-[#4f69dc] shadow-[0_10px_30px_rgba(37,56,120,0.14)] hover:shadow-[0_14px_36px_rgba(37,56,120,0.18)] transition-all duration-300 transform hover:-translate-y-1">
           <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-white/20 via-white/10 to-transparent pointer-events-none" />
           <div className="absolute inset-x-0 top-0 h-px bg-white/45 pointer-events-none" />
@@ -984,7 +993,7 @@ export function MembersTable({ members }: MembersTableProps) {
                                 <div className="flex gap-2">
                                   <Input 
                                     type="number" 
-                                    placeholder="Amount" 
+                                    placeholder="Amount (+ or -)" 
                                     className="flex-1"
                                     id={`points-table-${member.id}`}
                                   />
@@ -998,7 +1007,16 @@ export function MembersTable({ members }: MembersTableProps) {
                                     className="bg-amber-500 hover:bg-amber-600 text-white"
                                   >
                                     <PlusCircle className="w-4 h-4 mr-1" />
-                                    Add
+                                    Update
+                                  </Button>
+                                  <Button
+                                    onClick={() => handleGivePoints(member.id, -(member.points || 0))}
+                                    disabled={isUpdating || !member.points}
+                                    variant="outline"
+                                    className="text-red-500 hover:text-red-600 hover:bg-red-50 px-3"
+                                    title="Reset points to 0"
+                                  >
+                                    Reset
                                   </Button>
                                 </div>
                               </div>

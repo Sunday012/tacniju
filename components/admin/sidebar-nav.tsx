@@ -26,6 +26,7 @@ export function AdminSidebarNav() {
     { name: "Competitions", href: "/admin/competitions", icon: Trophy },
     { name: "Meal Tickets", href: "/admin/meal-tickets", icon: Ticket },
     { name: "Stock", href: "/admin/stock", icon: Package },
+    { name: "Accounting", href: "/accounting", icon: BookOpen },
   ]
 
   return (
