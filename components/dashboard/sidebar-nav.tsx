@@ -10,8 +10,8 @@ export function SidebarNav() {
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Attendance", href: "/dashboard/attendance", icon: Calendar },
+    { name: "Diary", href: "/dashboard/diary", icon: Users },
     // { name: "Vouchers", href: "/dashboard/vouchers", icon: Receipt },
-    // { name: "Members", href: "/dashboard/members", icon: Users },
   ]
 
   return (

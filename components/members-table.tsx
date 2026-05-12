@@ -14,9 +14,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useRouter } from "next/navigation"
-import { updateMemberRankAction, giveMemberPointsAction } from "@/app/actions"
+import { updateMemberRankAction, giveMemberPointsAction, updateMemberDiaryDetailsAction } from "@/app/actions"
 import { Download, Users, Search, Filter, Eye, UserCog, FileText, Trash2, Coins, PlusCircle } from "lucide-react"
 import { toast } from "sonner"
 // ============================================================================
@@ -40,12 +43,18 @@ interface Profile {
   reservation_number?: string
   points?: number
   is_admin?: boolean
+  member_role?: string
+  member_status?: string
+  status_reason?: string
+  awards?: string
+  avatar_url?: string
   created_at: string
 }
 interface MembersTableProps {
   members: Profile[]
+  availableAwards?: { id: string, name: string }[]
 }
-export function MembersTable({ members }: MembersTableProps) {
+export function MembersTable({ members, availableAwards = [] }: MembersTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterDepartment, setFilterDepartment] = useState("all")
   const [filterRank, setFilterRank] = useState("all")
@@ -93,8 +102,34 @@ export function MembersTable({ members }: MembersTableProps) {
       const result = await updateMemberRankAction(memberId, newRank)
       if (!result.success) throw new Error(result.message || "Failed update")
       setSelectedMember(null)
+      toast.success("Rank updated successfully")
     } catch (error) {
       console.error("Error updating rank:", error)
+      toast.error("Failed to update rank")
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const updateDiaryDetails = async (memberId: string, e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsUpdating(true)
+    try {
+      const formData = new FormData(e.currentTarget);
+      const awardsSelected = formData.getAll("awards").join(", ");
+      const data = {
+        office_position: formData.get("office_position") as string,
+        member_role: formData.get("member_role") as string,
+        member_status: formData.get("member_status") as string,
+        status_reason: formData.get("status_reason") as string,
+        awards: awardsSelected,
+      }
+      const result = await updateMemberDiaryDetailsAction(memberId, data);
+      if (!result.success) throw new Error(result.message || "Failed update")
+      toast.success("Details updated successfully")
+    } catch (error) {
+      console.error("Error updating details:", error)
+      toast.error("Failed to update details")
     } finally {
       setIsUpdating(false)
     }
@@ -503,10 +538,18 @@ export function MembersTable({ members }: MembersTableProps) {
   const MemberCard = ({ member }: { member: Profile }) => (
     <Card className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 w-full max-w-md mx-auto sm:max-w-full group">
       <CardContent className="p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4">
-          <div>
-            <h3 className="font-semibold text-lg text-gray-800 break-words">{member.full_name}</h3>
-            <p className="text-sm text-gray-600 break-all">{member.email}</p>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
+          <div className="flex items-start gap-3">
+            <Avatar className="h-10 w-10 border border-slate-100 shrink-0">
+              <AvatarImage src={member.avatar_url || ""} />
+              <AvatarFallback className="bg-slate-100 text-slate-600 font-bold text-xs">
+                {member.full_name.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="font-semibold text-lg text-gray-800 break-words leading-tight">{member.full_name}</h3>
+              <p className="text-sm text-gray-600 break-all mt-0.5">{member.email}</p>
+            </div>
           </div>
           <div className="mt-2 sm:mt-0 flex-shrink-0">
             <Badge
@@ -563,63 +606,148 @@ export function MembersTable({ members }: MembersTableProps) {
                   <UserCog className="w-5 h-5" />
                   Manage {member.full_name}
                 </DialogTitle>
-                <DialogDescription>Update member rank and manage reward points</DialogDescription>
+                <DialogDescription>Update member rank, points, and diary details</DialogDescription>
               </DialogHeader>
-              <div className="space-y-6">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-3 block">Update Rank</label>
-                  <Select
-                    value={selectedMember?.id === member.id ? selectedMember.rank || "C-Multitude" : member.rank || "C-Multitude"}
-                    onValueChange={(value) => updateMemberRank(member.id, value)}
-                    disabled={isUpdating}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select rank" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      <SelectItem value="S-Servant">S-Servant</SelectItem>
-                      <SelectItem value="A-Chosen">A-Chosen</SelectItem>
-                      <SelectItem value="B-Called">B-Called</SelectItem>
-                      <SelectItem value="C-Multitude">C-Multitude</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <Tabs defaultValue="rank" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="rank">Rank & Points</TabsTrigger>
+                  <TabsTrigger value="diary">Diary Details</TabsTrigger>
+                </TabsList>
+                <div className="overflow-y-auto max-h-[55vh] pr-2">
+                  <TabsContent value="rank" className="space-y-6 mt-0">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-3 block">Update Rank</label>
+                      <Select
+                        value={selectedMember?.id === member.id ? selectedMember.rank || "C-Multitude" : member.rank || "C-Multitude"}
+                        onValueChange={(value) => updateMemberRank(member.id, value)}
+                        disabled={isUpdating}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select rank" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white">
+                          <SelectItem value="S-Servant">S-Servant</SelectItem>
+                          <SelectItem value="A-Chosen">A-Chosen</SelectItem>
+                          <SelectItem value="B-Called">B-Called</SelectItem>
+                          <SelectItem value="C-Multitude">C-Multitude</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-3 block flex items-center gap-2">
+                        <Coins className="w-4 h-4 text-amber-500" />
+                        Manage Points (Current: {member.points || 0})
+                      </label>
+                      <div className="flex gap-2">
+                        <Input 
+                          type="number" 
+                          placeholder="Amount (+ or -)" 
+                          className="flex-1"
+                          id={`points-${member.id}`}
+                        />
+                        <Button 
+                          onClick={() => {
+                            const input = document.getElementById(`points-${member.id}`) as HTMLInputElement
+                            handleGivePoints(member.id, parseInt(input.value))
+                            input.value = ""
+                          }}
+                          disabled={isUpdating}
+                          className="bg-amber-500 hover:bg-amber-600 text-white"
+                        >
+                          <PlusCircle className="w-4 h-4 mr-1" />
+                          Update
+                        </Button>
+                        <Button
+                          onClick={() => handleGivePoints(member.id, -(member.points || 0))}
+                          disabled={isUpdating || !member.points}
+                          variant="outline"
+                          className="text-red-500 hover:text-red-600 hover:bg-red-50 px-3"
+                          title="Reset points to 0"
+                        >
+                          Reset
+                        </Button>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="diary" className="mt-0">
+                    <form onSubmit={(e) => updateDiaryDetails(member.id, e)} className="space-y-4">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-1 block">Office Position</label>
+                        <Input 
+                          name="office_position" 
+                          defaultValue={member.office_position || ""} 
+                          placeholder="e.g. Choir Master" 
+                          disabled={isUpdating}
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 mb-1 block">Role</label>
+                          <Select name="member_role" defaultValue={member.member_role || "Member"} disabled={isUpdating}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Role" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white">
+                              <SelectItem value="Member">Member</SelectItem>
+                              <SelectItem value="Worker">Worker</SelectItem>
+                              <SelectItem value="Executive">Executive</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700 mb-1 block">Status</label>
+                          <Select name="member_status" defaultValue={member.member_status || "Active"} disabled={isUpdating}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white">
+                              <SelectItem value="Active">Active</SelectItem>
+                              <SelectItem value="Transferred">Transferred</SelectItem>
+                              <SelectItem value="Terminated">Terminated</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-1 block">Status Reason (if transferred/terminated)</label>
+                        <Input 
+                          name="status_reason" 
+                          defaultValue={member.status_reason || ""} 
+                          placeholder="Reason for transfer or termination..." 
+                          disabled={isUpdating}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 mb-1 block">Awards</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-32 overflow-y-auto p-3 border border-slate-200 rounded-md bg-slate-50/50">
+                          {availableAwards.length > 0 ? availableAwards.map(award => (
+                            <div key={award.id} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`award-${member.id}-${award.id}`} 
+                                name="awards" 
+                                value={award.name}
+                                defaultChecked={member.awards ? member.awards.split(",").map(a => a.trim()).includes(award.name) : false}
+                                disabled={isUpdating}
+                              />
+                              <label htmlFor={`award-${member.id}-${award.id}`} className="text-sm font-medium leading-none cursor-pointer">
+                                {award.name}
+                              </label>
+                            </div>
+                          )) : <p className="text-xs text-gray-500">No awards created yet.</p>}
+                        </div>
+                      </div>
+
+                      <Button type="submit" disabled={isUpdating} className="w-full">
+                        {isUpdating ? "Saving..." : "Save Diary Details"}
+                      </Button>
+                    </form>
+                  </TabsContent>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 mb-3 block flex items-center gap-2">
-                    <Coins className="w-4 h-4 text-amber-500" />
-                    Manage Points (Current: {member.points || 0})
-                  </label>
-                  <div className="flex gap-2">
-                    <Input 
-                      type="number" 
-                      placeholder="Amount (+ or -)" 
-                      className="flex-1"
-                      id={`points-${member.id}`}
-                    />
-                    <Button 
-                      onClick={() => {
-                        const input = document.getElementById(`points-${member.id}`) as HTMLInputElement
-                        handleGivePoints(member.id, parseInt(input.value))
-                        input.value = ""
-                      }}
-                      disabled={isUpdating}
-                      className="bg-amber-500 hover:bg-amber-600 text-white"
-                    >
-                      <PlusCircle className="w-4 h-4 mr-1" />
-                      Update
-                    </Button>
-                    <Button
-                      onClick={() => handleGivePoints(member.id, -(member.points || 0))}
-                      disabled={isUpdating || !member.points}
-                      variant="outline"
-                      className="text-red-500 hover:text-red-600 hover:bg-red-50 px-3"
-                      title="Reset points to 0"
-                    >
-                      Reset
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              </Tabs>
             </DialogContent>
           </Dialog>
 
@@ -883,7 +1011,17 @@ export function MembersTable({ members }: MembersTableProps) {
               <TableBody>
                 {sortedMembers.map((member) => (
                   <TableRow key={member.id} className="hover:bg-gray-50/50">
-                    <TableCell className="font-medium">{member.full_name}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8 border border-slate-100">
+                          <AvatarImage src={member.avatar_url || ""} />
+                          <AvatarFallback className="bg-slate-100 text-slate-600 font-bold text-[10px]">
+                            {member.full_name.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        {member.full_name}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-gray-600">{member.email}</TableCell>
                     <TableCell>
                       {member.department ? (
@@ -943,84 +1081,169 @@ export function MembersTable({ members }: MembersTableProps) {
                               </DialogTitle>
                               <DialogDescription>Update member rank and manage reward points</DialogDescription>
                             </DialogHeader>
-                            <div className="space-y-6">
-                              <div>
-                                <label className="text-sm font-medium text-gray-700 mb-3 block">Update Rank</label>
-                                <div className="grid grid-cols-1 gap-2">
-                                  <Button
-                                    variant={member.rank === "S-Servant" ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => updateMemberRank(member.id, "S-Servant")}
-                                    disabled={isUpdating}
-                                    className="justify-start"
-                                  >
-                                    S-Servant
-                                  </Button>
-                                  <Button
-                                    variant={member.rank === "A-Chosen" ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => updateMemberRank(member.id, "A-Chosen")}
-                                    disabled={isUpdating}
-                                    className="justify-start"
-                                  >
-                                    A-Chosen
-                                  </Button>
-                                  <Button
-                                    variant={member.rank === "B-Called" ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => updateMemberRank(member.id, "B-Called")}
-                                    disabled={isUpdating}
-                                    className="justify-start"
-                                  >
-                                    B-Called
-                                  </Button>
-                                  <Button
-                                    variant={member.rank === "C-Multitude" || !member.rank ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => updateMemberRank(member.id, "C-Multitude")}
-                                    disabled={isUpdating}
-                                    className="justify-start"
-                                  >
-                                    C-Multitude
-                                  </Button>
-                                </div>
+                            <Tabs defaultValue="rank" className="w-full">
+                              <TabsList className="grid w-full grid-cols-2 mb-4">
+                                <TabsTrigger value="rank">Rank & Points</TabsTrigger>
+                                <TabsTrigger value="diary">Diary Details</TabsTrigger>
+                              </TabsList>
+                              <div className="overflow-y-auto max-h-[55vh] pr-2">
+                                <TabsContent value="rank" className="space-y-6 mt-0">
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-700 mb-3 block">Update Rank</label>
+                                    <div className="grid grid-cols-1 gap-2">
+                                      <Button
+                                        variant={member.rank === "S-Servant" ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => updateMemberRank(member.id, "S-Servant")}
+                                        disabled={isUpdating}
+                                        className="justify-start"
+                                      >
+                                        S-Servant
+                                      </Button>
+                                      <Button
+                                        variant={member.rank === "A-Chosen" ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => updateMemberRank(member.id, "A-Chosen")}
+                                        disabled={isUpdating}
+                                        className="justify-start"
+                                      >
+                                        A-Chosen
+                                      </Button>
+                                      <Button
+                                        variant={member.rank === "B-Called" ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => updateMemberRank(member.id, "B-Called")}
+                                        disabled={isUpdating}
+                                        className="justify-start"
+                                      >
+                                        B-Called
+                                      </Button>
+                                      <Button
+                                        variant={member.rank === "C-Multitude" || !member.rank ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => updateMemberRank(member.id, "C-Multitude")}
+                                        disabled={isUpdating}
+                                        className="justify-start"
+                                      >
+                                        C-Multitude
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-700 mb-3 block flex items-center gap-2">
+                                      <Coins className="w-4 h-4 text-amber-500" />
+                                      Manage Points (Current: {member.points || 0})
+                                    </label>
+                                    <div className="flex gap-2">
+                                      <Input 
+                                        type="number" 
+                                        placeholder="Amount (+ or -)" 
+                                        className="flex-1"
+                                        id={`points-table-${member.id}`}
+                                      />
+                                      <Button 
+                                        onClick={() => {
+                                          const input = document.getElementById(`points-table-${member.id}`) as HTMLInputElement
+                                          handleGivePoints(member.id, parseInt(input.value))
+                                          input.value = ""
+                                        }}
+                                        disabled={isUpdating}
+                                        className="bg-amber-500 hover:bg-amber-600 text-white"
+                                      >
+                                        <PlusCircle className="w-4 h-4 mr-1" />
+                                        Update
+                                      </Button>
+                                      <Button
+                                        onClick={() => handleGivePoints(member.id, -(member.points || 0))}
+                                        disabled={isUpdating || !member.points}
+                                        variant="outline"
+                                        className="text-red-500 hover:text-red-600 hover:bg-red-50 px-3"
+                                        title="Reset points to 0"
+                                      >
+                                        Reset
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </TabsContent>
+
+                                <TabsContent value="diary" className="mt-0">
+                                  <form onSubmit={(e) => updateDiaryDetails(member.id, e)} className="space-y-4">
+                                    <div>
+                                      <label className="text-sm font-medium text-gray-700 mb-1 block">Office Position</label>
+                                      <Input 
+                                        name="office_position" 
+                                        defaultValue={member.office_position || ""} 
+                                        placeholder="e.g. Choir Master" 
+                                        disabled={isUpdating}
+                                      />
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700 mb-1 block">Role</label>
+                                        <Select name="member_role" defaultValue={member.member_role || "Member"} disabled={isUpdating}>
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Role" />
+                                          </SelectTrigger>
+                                          <SelectContent className="bg-white">
+                                            <SelectItem value="Member">Member</SelectItem>
+                                            <SelectItem value="Worker">Worker</SelectItem>
+                                            <SelectItem value="Executive">Executive</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-700 mb-1 block">Status</label>
+                                        <Select name="member_status" defaultValue={member.member_status || "Active"} disabled={isUpdating}>
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Status" />
+                                          </SelectTrigger>
+                                          <SelectContent className="bg-white">
+                                            <SelectItem value="Active">Active</SelectItem>
+                                            <SelectItem value="Transferred">Transferred</SelectItem>
+                                            <SelectItem value="Terminated">Terminated</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </div>
+
+                                    <div>
+                                      <label className="text-sm font-medium text-gray-700 mb-1 block">Status Reason (if transferred/terminated)</label>
+                                      <Input 
+                                        name="status_reason" 
+                                        defaultValue={member.status_reason || ""} 
+                                        placeholder="Reason for transfer or termination..." 
+                                        disabled={isUpdating}
+                                      />
+                                    </div>
+
+                                    <div>
+                                      <label className="text-sm font-medium text-gray-700 mb-1 block">Awards</label>
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-32 overflow-y-auto p-3 border border-slate-200 rounded-md bg-slate-50/50">
+                                        {availableAwards.length > 0 ? availableAwards.map(award => (
+                                          <div key={award.id} className="flex items-center space-x-2">
+                                            <Checkbox 
+                                              id={`award-table-${member.id}-${award.id}`} 
+                                              name="awards" 
+                                              value={award.name}
+                                              defaultChecked={member.awards ? member.awards.split(",").map(a => a.trim()).includes(award.name) : false}
+                                              disabled={isUpdating}
+                                            />
+                                            <label htmlFor={`award-table-${member.id}-${award.id}`} className="text-sm font-medium leading-none cursor-pointer">
+                                              {award.name}
+                                            </label>
+                                          </div>
+                                        )) : <p className="text-xs text-gray-500">No awards created yet.</p>}
+                                      </div>
+                                    </div>
+
+                                    <Button type="submit" disabled={isUpdating} className="w-full">
+                                      {isUpdating ? "Saving..." : "Save Diary Details"}
+                                    </Button>
+                                  </form>
+                                </TabsContent>
                               </div>
-                              <div>
-                                <label className="text-sm font-medium text-gray-700 mb-3 block flex items-center gap-2">
-                                  <Coins className="w-4 h-4 text-amber-500" />
-                                  Manage Points (Current: {member.points || 0})
-                                </label>
-                                <div className="flex gap-2">
-                                  <Input 
-                                    type="number" 
-                                    placeholder="Amount (+ or -)" 
-                                    className="flex-1"
-                                    id={`points-table-${member.id}`}
-                                  />
-                                  <Button 
-                                    onClick={() => {
-                                      const input = document.getElementById(`points-table-${member.id}`) as HTMLInputElement
-                                      handleGivePoints(member.id, parseInt(input.value))
-                                      input.value = ""
-                                    }}
-                                    disabled={isUpdating}
-                                    className="bg-amber-500 hover:bg-amber-600 text-white"
-                                  >
-                                    <PlusCircle className="w-4 h-4 mr-1" />
-                                    Update
-                                  </Button>
-                                  <Button
-                                    onClick={() => handleGivePoints(member.id, -(member.points || 0))}
-                                    disabled={isUpdating || !member.points}
-                                    variant="outline"
-                                    className="text-red-500 hover:text-red-600 hover:bg-red-50 px-3"
-                                    title="Reset points to 0"
-                                  >
-                                    Reset
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>
+                            </Tabs>
                           </DialogContent>
                         </Dialog>
 

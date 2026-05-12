@@ -2,6 +2,7 @@ import { createClient } from "@/lib/server"
 import { MembersTable } from "@/components/members-table"
 import { AdminStats } from "@/components/admin-stats"
 import { AdminCleanup } from "@/components/admin-cleanup"
+import { AdminAwards } from "@/components/admin-awards"
 
 export default async function AdminPage() {
   const supabase = await createClient()
@@ -14,6 +15,12 @@ export default async function AdminPage() {
     .from("attendance")
     .select("event_name, event_date, attended")
     .order("event_date", { ascending: false })
+
+  // Get awards
+  const { data: awards } = await supabase
+    .from("awards")
+    .select("*")
+    .order("created_at", { ascending: true })
 
   return (
     <div className="p-6 md:p-10 relative">
@@ -48,12 +55,20 @@ export default async function AdminPage() {
                 </h3>
                 <p className="text-slate-500 text-[15px] mt-2.5 sm:ml-[52px] font-medium">Search, filter, edit roles and interact with all registered congregants.</p>
               </div>
+              <a href="/admin/diary" className="shrink-0 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-semibold border border-indigo-100 hover:bg-indigo-100 transition-colors">
+                View Full Diary
+              </a>
             </div>
             <div className="members-table-wrapper rounded-2xl overflow-hidden shadow-inner border border-slate-200/50 bg-white">
-              <MembersTable members={members || []} />
+              <MembersTable members={members || []} availableAwards={awards || []} />
             </div>
           </div>
           
+          {/* Awards Management */}
+          <div className="admin-awards-wrapper">
+             <AdminAwards awards={awards || []} />
+          </div>
+
           {/* System Cleanup */}
           <div className="bg-white/70 backdrop-blur-3xl border border-white/60 rounded-[2rem] p-6 sm:p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.1)] transition-all">
             <h3 className="text-[20px] text-slate-800 font-extrabold tracking-tight flex items-center gap-3 mb-6">

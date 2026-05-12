@@ -121,6 +121,106 @@ export async function updateMemberRankAction(memberId: string, newRank: string) 
     return { success: true }
 }
 
+export async function updateMemberDiaryDetailsAction(memberId: string, data: { office_position?: string, member_role?: string, member_status?: string, status_reason?: string, awards?: string }) {
+    const supabase = await createClient()
+
+    // Verify Admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, message: "Unauthorized. Please login." }
+
+    const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
+    if (!profile?.is_admin && user.email !== "sundayfavour997@gmail.com") {
+        return { success: false, message: "Access denied. Admins only." }
+    }
+
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceRoleKey) {
+        return { success: false, message: "Server configuration error: Missing service role key." }
+    }
+
+    const adminSupabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
+    
+    // Auto-promote to Worker if position is set and role is Member or missing
+    let role = data.member_role || 'Member';
+    if (data.office_position && data.office_position.trim() !== '' && role === 'Member') {
+        role = 'Worker';
+    }
+
+    const { error } = await adminSupabase.from("profiles").update({ 
+        office_position: data.office_position,
+        member_role: role,
+        member_status: data.member_status || 'Active',
+        status_reason: data.status_reason || null,
+        awards: data.awards || null
+    }).eq("id", memberId)
+    
+    if (error) {
+        console.error("Failed to update member diary details:", error)
+        return { success: false, message: "Failed to update member details in database." }
+    }
+
+    revalidatePath("/admin")
+    revalidatePath("/dashboard/diary")
+    revalidatePath("/admin/diary")
+    return { success: true }
+}
+
+export async function createAwardAction(name: string) {
+    const supabase = await createClient()
+
+    // Verify Admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, message: "Unauthorized." }
+
+    const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
+    if (!profile?.is_admin && user.email !== "sundayfavour997@gmail.com") {
+        return { success: false, message: "Access denied." }
+    }
+
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceRoleKey) return { success: false, message: "Server configuration error." }
+
+    const adminSupabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
+    
+    const { error } = await adminSupabase.from("awards").insert([{ name }])
+    
+    if (error) {
+        console.error("Failed to create award:", error)
+        return { success: false, message: error.code === '23505' ? "Award already exists." : "Failed to create award." }
+    }
+
+    revalidatePath("/admin")
+    return { success: true }
+}
+
+export async function deleteAwardAction(id: string) {
+    const supabase = await createClient()
+
+    // Verify Admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, message: "Unauthorized." }
+
+    const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
+    if (!profile?.is_admin && user.email !== "sundayfavour997@gmail.com") {
+        return { success: false, message: "Access denied." }
+    }
+
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceRoleKey) return { success: false, message: "Server configuration error." }
+
+    const adminSupabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
+    
+    const { error } = await adminSupabase.from("awards").delete().eq("id", id)
+    
+    if (error) {
+        console.error("Failed to delete award:", error)
+        return { success: false, message: "Failed to delete award." }
+    }
+
+    revalidatePath("/admin")
+    return { success: true }
+}
+
 export async function generateReservationNumberAction(memberId: string) {
     const supabase = await createClient()
 
