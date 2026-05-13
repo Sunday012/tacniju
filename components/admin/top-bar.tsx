@@ -4,7 +4,7 @@ import { AdminMobileNav } from "./mobile-nav"
 
 export function AdminTopBar() {
   return (
-    <header className="h-[88px] z-30 bg-white/70 flex items-center justify-between px-6 sm:px-10 w-full sticky top-0 py-4 backdrop-blur-2xl border-b border-indigo-100/50 shadow-sm lg:hidden">
+    <header className="h-[88px] z-30 bg-white/70 flex items-center justify-between px-6 sm:px-10 w-full sticky top-0 py-4 backdrop-blur-2xl border-b border-indigo-100/50 shadow-sm lg:hidden print:hidden">
       <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
         <div className="flex items-center space-x-4">
           <div className="w-16 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm border border-slate-200 p-2 overflow-hidden">

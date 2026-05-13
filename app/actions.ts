@@ -373,5 +373,6 @@ export async function giveMemberPointsAction(memberId: string, amount: number) {
 
     revalidatePath("/admin")
     revalidatePath("/dashboard")
-    return { success: true, message: `Successfully gave ${amount} points!` }
+    const verb = amount < 0 ? "deducted" : "added"
+    return { success: true, message: `Successfully ${verb} ${Math.abs(amount)} points!` }
 }

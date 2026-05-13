@@ -29,9 +29,9 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-[#F4F7FA]">
+    <div className="flex min-h-screen bg-[#F4F7FA] print:bg-white print:block">
       <AdminSidebarNav />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 print:w-full print:block">
         <AdminTopBar />
         {children}
       </div>

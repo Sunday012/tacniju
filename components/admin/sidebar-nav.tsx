@@ -30,7 +30,7 @@ export function AdminSidebarNav() {
   ]
 
   return (
-    <aside className="w-64 bg-white/60 backdrop-blur-2xl border-r border-[#E5E7EB]/50 hidden lg:flex flex-col h-screen sticky top-0 py-8 px-5 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
+    <aside className="w-64 bg-white/60 backdrop-blur-2xl border-r border-[#E5E7EB]/50 hidden lg:flex flex-col h-screen sticky top-0 py-8 px-5 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20 print:hidden">
       <div className="flex items-center gap-4 px-2 mb-12 cursor-pointer hover:opacity-90 transition-opacity">
         <div className="w-14 h-11 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-200 p-1.5 overflow-hidden">
           <Image 
