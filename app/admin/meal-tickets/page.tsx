@@ -107,7 +107,12 @@ export default async function MealTicketsAdminPage() {
                       <td className="px-6 py-4 text-sm text-slate-500 font-medium whitespace-nowrap print:text-black">
                         {new Date(ticket.created_at).toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 text-right whitespace-nowrap print:hidden">
+                      <td className="px-6 py-4 text-right whitespace-nowrap print:hidden flex items-center justify-end gap-2">
+                        <Link href={`/admin/meal-tickets/${ticket.id}/print`}>
+                          <button className="text-indigo-600 hover:text-indigo-700 h-[32px] w-[32px] flex items-center justify-center rounded-md hover:bg-indigo-50 transition-colors" title="Print Receipt">
+                            <Printer className="w-4 h-4" />
+                          </button>
+                        </Link>
                         <DeleteTicketButton ticketId={ticket.id} />
                       </td>
                     </tr>

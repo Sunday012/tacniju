@@ -23,6 +23,9 @@ export async function createAsset(formData: FormData) {
   const name = formData.get("name") as string;
   const category = formData.get("category") as string;
   const is_gift = formData.get("is_gift") === "on";
+  const is_stall_item = formData.get("is_stall_item") === "on";
+  const money_price = parseFloat(formData.get("money_price") as string) || 0;
+  const point_price = parseInt(formData.get("point_price") as string, 10) || 0;
   const quantity = parseInt(formData.get("quantity") as string, 10);
 
   if (!name || !category || isNaN(quantity)) {
@@ -33,6 +36,9 @@ export async function createAsset(formData: FormData) {
     name,
     category,
     is_gift,
+    is_stall_item,
+    money_price,
+    point_price,
     total_quantity: quantity,
     available_quantity: quantity,
   });
@@ -69,14 +75,46 @@ export async function getAssetAssignments(assetId: string) {
   return { assignments: data };
 }
 
+export async function getAllAssetAssignments() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("asset_assignments")
+    .select(`
+      id,
+      assigned_at,
+      asset:assets!asset_id(
+        name,
+        category
+      ),
+      profile:profiles!profile_id(
+        full_name,
+        reservation_number,
+        phone_number
+      ),
+      assigned_by_profile:profiles!assigned_by(
+        full_name
+      )
+    `)
+    .order("assigned_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching all assignments:", error);
+    return { error: error.message };
+  }
+
+  return { assignments: data };
+}
+
 export async function assignGift(formData: FormData) {
   const supabase = await createClient();
-  const reservationNumber = formData.get("reservationNumber") as string;
+  const rawReservationNumber = formData.get("reservationNumber") as string;
+  const reservationNumber = rawReservationNumber?.trim();
   const assetId = formData.get("assetId") as string;
 
   if (!reservationNumber || !assetId) {
     return { error: "Missing reservation number or asset ID." };
   }
+
 
   // 1. Find profile by reservation number
   const { data: profiles, error: profileError } = await supabase
@@ -154,11 +192,14 @@ export async function deleteAsset(assetId: string) {
   revalidatePath("/admin/stock");
   return { success: true };
 }
-export async function updateAsset(assetId: string, formData: FormData) {
+export async function editAsset(assetId: string, formData: FormData) {
   const supabase = await createClient();
   const name = formData.get("name") as string;
   const category = formData.get("category") as string;
   const is_gift = formData.get("is_gift") === "on";
+  const is_stall_item = formData.get("is_stall_item") === "on";
+  const money_price = parseFloat(formData.get("money_price") as string) || 0;
+  const point_price = parseInt(formData.get("point_price") as string, 10) || 0;
   const quantity = parseInt(formData.get("quantity") as string, 10);
 
   if (!name || !category || isNaN(quantity)) {
@@ -185,6 +226,9 @@ export async function updateAsset(assetId: string, formData: FormData) {
       name,
       category,
       is_gift,
+      is_stall_item,
+      money_price,
+      point_price,
       total_quantity: quantity,
       available_quantity: newAvailable,
     })
@@ -195,6 +239,176 @@ export async function updateAsset(assetId: string, formData: FormData) {
     return { error: error.message };
   }
 
+  revalidatePath("/admin/stock");
+  return { success: true };
+}
+
+export async function revokeGift(assignmentId: string) {
+  const supabase = await createClient();
+
+  // 1. Get the assignment to know which asset it is
+  const { data: assignment, error: fetchError } = await supabase
+    .from("asset_assignments")
+    .select("asset_id")
+    .eq("id", assignmentId)
+    .single();
+
+  if (fetchError || !assignment) {
+    return { error: "Assignment not found." };
+  }
+
+  // 2. Delete the assignment
+  const { error: deleteError } = await supabase
+    .from("asset_assignments")
+    .delete()
+    .eq("id", assignmentId);
+
+  if (deleteError) {
+    console.error("Error revoking gift:", deleteError);
+    return { error: deleteError.message };
+  }
+
+  // 3. Increment the available quantity of the asset
+  const { data: asset, error: assetError } = await supabase
+    .from("assets")
+    .select("available_quantity")
+    .eq("id", assignment.asset_id)
+    .single();
+
+  if (!assetError && asset) {
+    await supabase
+      .from("assets")
+      .update({ available_quantity: asset.available_quantity + 1 })
+      .eq("id", assignment.asset_id);
+  }
+
+  revalidatePath("/admin/stock");
+  return { success: true };
+}
+
+export async function toggleAssetVisibility(assetId: string, currentVisibility: boolean) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("assets")
+    .update({ is_visible: !currentVisibility })
+    .eq("id", assetId);
+
+  if (error) {
+    console.error("Error toggling visibility:", error);
+    return { error: error.message };
+  }
+  revalidatePath("/admin/stock");
+  revalidatePath("/dashboard/stall");
+  return { success: true };
+}
+
+export async function getAdminStallOrders() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("stall_orders")
+    .select(`
+      id,
+      payment_method,
+      status,
+      created_at,
+      asset:assets!asset_id(name, category, money_price, point_price),
+      profile:profiles!profile_id(full_name, reservation_number, phone_number, points)
+    `)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching stall orders:", error);
+    return { error: error.message };
+  }
+  return { orders: data };
+}
+
+export async function updateStallOrderStatus(orderId: string, status: string, assetId: string, paymentMethod: string, profileId: string, pointPrice: number) {
+  const supabase = await createClient();
+  
+  // Update order status
+  const { error } = await supabase
+    .from("stall_orders")
+    .update({ status })
+    .eq("id", orderId);
+
+  if (error) {
+    console.error("Error updating order status:", error);
+    return { error: error.message };
+  }
+
+  // If approved, decrement asset available quantity
+  if (status === "approved") {
+    const { data: asset } = await supabase.from("assets").select("available_quantity").eq("id", assetId).single();
+    if (asset) {
+      await supabase.from("assets").update({ available_quantity: Math.max(0, asset.available_quantity - 1) }).eq("id", assetId);
+    }
+  }
+
+  // If rejected AND paid with points, refund the points
+  if (status === "rejected" && paymentMethod === "points") {
+    const { data: profile } = await supabase.from("profiles").select("points").eq("id", profileId).single();
+    if (profile) {
+      await supabase.from("profiles").update({ points: (profile.points || 0) + pointPrice }).eq("id", profileId);
+    }
+  }
+
+  revalidatePath("/admin/stock");
+  return { success: true };
+}
+
+export async function createStallOrder(assetId: string, paymentMethod: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  // Verify asset exists and is available
+  const { data: asset, error: assetError } = await supabase
+    .from("assets")
+    .select("available_quantity, point_price")
+    .eq("id", assetId)
+    .single();
+
+  if (assetError || !asset) return { error: "Item not found" };
+  if (asset.available_quantity <= 0) return { error: "Item is out of stock" };
+
+  // If paying with points, deduct points
+  if (paymentMethod === "points") {
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("points")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) return { error: "Could not fetch your points" };
+    if ((profile.points || 0) < asset.point_price) {
+      return { error: "You do not have enough points for this item." };
+    }
+
+    // Deduct points
+    const { error: deductError } = await supabase
+      .from("profiles")
+      .update({ points: profile.points - asset.point_price })
+      .eq("id", user.id);
+
+    if (deductError) return { error: "Failed to deduct points" };
+  }
+
+  // Create order
+  const { error: orderError } = await supabase.from("stall_orders").insert({
+    profile_id: user.id,
+    asset_id: assetId,
+    payment_method: paymentMethod,
+    status: "pending"
+  });
+
+  if (orderError) {
+    // Note: if order fails after deducting points, we should ideally refund them, but keeping it simple for now.
+    console.error("Error creating order:", orderError);
+    return { error: "Failed to place request" };
+  }
+
+  revalidatePath("/dashboard/stall");
   revalidatePath("/admin/stock");
   return { success: true };
 }

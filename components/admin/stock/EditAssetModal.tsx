@@ -19,6 +19,9 @@ interface EditAssetModalProps {
     name: string;
     category: string;
     is_gift: boolean;
+    is_stall_item?: boolean;
+    money_price?: number;
+    point_price?: number;
     total_quantity: number;
   };
 }
@@ -99,6 +102,50 @@ export function EditAssetModal({ asset }: EditAssetModalProps) {
               <label htmlFor="is_gift" className="text-sm font-bold text-slate-700 cursor-pointer select-none">
                 This is a gift <span className="font-medium text-slate-500">(can be distributed)</span>
               </label>
+            </div>
+
+            <div className="flex flex-col gap-4 py-3 bg-amber-50/50 px-4 rounded-xl border border-amber-100/50">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="is_stall_item"
+                  name="is_stall_item"
+                  defaultChecked={asset.is_stall_item}
+                  className="h-5 w-5 rounded border-amber-300 text-amber-600 focus:ring-amber-500/50 focus:ring-offset-white"
+                />
+                <label htmlFor="is_stall_item" className="text-sm font-bold text-slate-700 cursor-pointer select-none">
+                  Stall Item <span className="font-medium text-slate-500">(available for member purchase)</span>
+                </label>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="money_price" className="text-xs font-bold text-slate-700">
+                    Money Price (₦)
+                  </label>
+                  <input
+                    id="money_price"
+                    name="money_price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    defaultValue={asset.money_price}
+                    className="w-full bg-white border border-slate-200 shadow-sm rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="point_price" className="text-xs font-bold text-slate-700">
+                    Point Price
+                  </label>
+                  <input
+                    id="point_price"
+                    name="point_price"
+                    type="number"
+                    min="0"
+                    defaultValue={asset.point_price}
+                    className="w-full bg-white border border-slate-200 shadow-sm rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all placeholder:text-slate-400 text-sm"
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="space-y-2">

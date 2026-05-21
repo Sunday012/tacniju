@@ -16,7 +16,7 @@ import { toast } from "sonner";
 export function TeamBuilder({ competitionId, entryCount }: { competitionId: string, entryCount: number }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [teamCount, setTeamCount] = useState(2);
+  const teamCount = 2; // Hardcoded to 2 teams per requirement
 
   async function handleGenerate() {
     if (entryCount === 0) {
@@ -64,30 +64,18 @@ export function TeamBuilder({ competitionId, entryCount }: { competitionId: stri
             <div className="space-y-3">
               <label className="text-sm font-bold text-slate-700">Number of Teams</label>
               <div className="flex items-center gap-4">
-                <input
-                  type="range"
-                  min="2"
-                  max={Math.max(20, entryCount)}
-                  value={teamCount}
-                  onChange={(e) => setTeamCount(parseInt(e.target.value))}
-                  className="flex-1 h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-                />
-                <input 
-                  type="number"
-                  min="2"
-                  max={Math.max(20, entryCount)}
-                  value={teamCount}
-                  onChange={(e) => setTeamCount(Math.min(Math.max(20, entryCount), Math.max(2, parseInt(e.target.value) || 2)))}
-                  className="bg-indigo-50 text-indigo-700 font-black w-16 py-1 rounded-lg border border-indigo-100 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-                />
+                <div className="bg-indigo-50 text-indigo-700 font-black w-16 py-1 rounded-lg border border-indigo-100 text-center">
+                  2
+                </div>
+                <p className="text-sm text-slate-500 font-medium">Teams</p>
               </div>
 
               <p className="text-[11px] text-slate-400">
-                ~{Math.floor(entryCount / teamCount)} members per team
+                ~{Math.floor(entryCount / 2)} members per team
               </p>
             </div>
 
-            {entryCount < teamCount && (
+            {entryCount < 2 && (
               <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl flex gap-3 text-amber-700 text-xs">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <p>You have fewer participants than teams. Some teams will be empty.</p>
