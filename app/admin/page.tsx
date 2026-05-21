@@ -3,6 +3,7 @@ import { MembersTable } from "@/components/members-table"
 import { AdminStats } from "@/components/admin-stats"
 import { AdminCleanup } from "@/components/admin-cleanup"
 import { AdminAwards } from "@/components/admin-awards"
+import { getAllAssetAssignments } from "@/app/actions/assets"
 
 export default async function AdminPage() {
   const supabase = await createClient()
@@ -21,6 +22,9 @@ export default async function AdminPage() {
     .from("awards")
     .select("*")
     .order("created_at", { ascending: true })
+
+  // Get gifts
+  const { assignments: gifts } = await getAllAssetAssignments();
 
   return (
     <div className="p-6 md:p-10 relative">
@@ -60,7 +64,7 @@ export default async function AdminPage() {
               </a>
             </div>
             <div className="members-table-wrapper rounded-2xl overflow-hidden shadow-inner border border-slate-200/50 bg-white">
-              <MembersTable members={members || []} availableAwards={awards || []} />
+              <MembersTable members={members || []} availableAwards={awards || []} gifts={gifts || []} />
             </div>
           </div>
           

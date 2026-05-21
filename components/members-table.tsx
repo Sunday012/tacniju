@@ -53,8 +53,9 @@ interface Profile {
 interface MembersTableProps {
   members: Profile[]
   availableAwards?: { id: string, name: string }[]
+  gifts?: any[]
 }
-export function MembersTable({ members, availableAwards = [] }: MembersTableProps) {
+export function MembersTable({ members, availableAwards = [], gifts = [] }: MembersTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterDepartment, setFilterDepartment] = useState("all")
   const [filterRank, setFilterRank] = useState("all")
@@ -1082,11 +1083,31 @@ export function MembersTable({ members, availableAwards = [] }: MembersTableProp
                               <DialogDescription>Update member rank and manage reward points</DialogDescription>
                             </DialogHeader>
                             <Tabs defaultValue="rank" className="w-full">
-                              <TabsList className="grid w-full grid-cols-2 mb-4">
+                              <TabsList className="grid w-full grid-cols-3 mb-4">
                                 <TabsTrigger value="rank">Rank & Points</TabsTrigger>
-                                <TabsTrigger value="diary">Diary Details</TabsTrigger>
+                                <TabsTrigger value="diary">Diary</TabsTrigger>
+                                <TabsTrigger value="gifts">Gifts</TabsTrigger>
                               </TabsList>
-                              <div className="overflow-y-auto max-h-[55vh] pr-2">
+                              <div className="overflow-y-auto max-h-[55vh] pr-2 custom-scrollbar">
+                                <TabsContent value="gifts" className="space-y-4 mt-0">
+                                  <div className="space-y-3">
+                                    {gifts.filter(g => g.profile_id === member.id).length === 0 ? (
+                                      <p className="text-sm text-gray-500 text-center py-4">No gifts received yet.</p>
+                                    ) : (
+                                      gifts.filter(g => g.profile_id === member.id).map(gift => (
+                                        <div key={gift.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl bg-gray-50">
+                                          <div className="flex flex-col">
+                                            <span className="font-bold text-gray-800 text-sm">{Array.isArray(gift.asset) ? gift.asset[0]?.name : gift.asset?.name}</span>
+                                            <span className="text-xs text-gray-500">{new Date(gift.assigned_at).toLocaleDateString()}</span>
+                                          </div>
+                                          <Badge variant="outline" className="bg-rose-50 text-rose-600 border-rose-200">
+                                            {Array.isArray(gift.asset) ? gift.asset[0]?.category : gift.asset?.category}
+                                          </Badge>
+                                        </div>
+                                      ))
+                                    )}
+                                  </div>
+                                </TabsContent>
                                 <TabsContent value="rank" className="space-y-6 mt-0">
                                   <div>
                                     <label className="text-sm font-medium text-gray-700 mb-3 block">Update Rank</label>

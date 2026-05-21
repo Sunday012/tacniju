@@ -82,6 +82,7 @@ export async function getAllAssetAssignments() {
     .select(`
       id,
       assigned_at,
+      profile_id,
       asset:assets!asset_id(
         name,
         category
@@ -99,6 +100,32 @@ export async function getAllAssetAssignments() {
 
   if (error) {
     console.error("Error fetching all assignments:", error);
+    return { error: error.message };
+  }
+
+  return { assignments: data };
+}
+
+export async function getUserAssetAssignments() {
+  const supabase = await createClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData?.user) return { assignments: [] };
+
+  const { data, error } = await supabase
+    .from("asset_assignments")
+    .select(`
+      id,
+      assigned_at,
+      asset:assets!asset_id(
+        name,
+        category
+      )
+    `)
+    .eq("profile_id", authData.user.id)
+    .order("assigned_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching user assignments:", error);
     return { error: error.message };
   }
 

@@ -9,6 +9,8 @@ import { IdCardQr } from "@/components/dashboard/id-card-qr"
 import { UpcomingEvents } from "@/components/dashboard/upcoming-events"
 import { MealTicketCard } from "@/components/dashboard/meal-ticket-card"
 import { getUserMealTicket } from "@/app/actions/meal-tickets"
+import { getUserAssetAssignments } from "@/app/actions/assets"
+import { ReceivedGifts } from "@/components/dashboard/received-gifts"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -50,6 +52,9 @@ export default async function DashboardPage() {
   
   // Fetch meal ticket if it exists
   const { ticket } = await getUserMealTicket();
+  
+  // Fetch received gifts
+  const { assignments: gifts } = await getUserAssetAssignments();
 
   return (
     <>
@@ -103,8 +108,9 @@ export default async function DashboardPage() {
           eventsCount={attendance?.length || 0}
         />
 
-        {/* Row 3: Recent Activity — full width */}
-        <div className="xl:col-span-2">
+        {/* Row 3: Recent Activity & Gifts */}
+        <div className="xl:col-span-2 space-y-8">
+          {gifts && gifts.length > 0 && <ReceivedGifts gifts={gifts} />}
           <RecentActivity attendance={attendance || []} />
         </div>
       </div>

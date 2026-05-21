@@ -42,7 +42,7 @@ export default async function AdminPrintMealTicketPage({ params }: { params: { i
     }).replace(',', '');
 
     const transactionDate = new Date(ticket.created_at).toISOString().slice(0, 19).replace('T', ' ');
-    const member = ticket.profile;
+    const member: any = Array.isArray(ticket.profile) ? ticket.profile[0] : ticket.profile;
 
     return (
         <div className="min-h-screen bg-slate-100/50 flex flex-col items-center p-4 py-12 sm:p-8 print:bg-white print:p-0 print:block">
