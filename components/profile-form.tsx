@@ -182,9 +182,9 @@ export function ProfileForm({ profile }: ProfileFormProps) {
               <SelectContent>
                 <SelectItem value="Music">Music</SelectItem>
                 <SelectItem value="Ushering">Ushering</SelectItem>
-                <SelectItem value="Drama">Drama</SelectItem>
-                <SelectItem value="Clean Up">Clean Up</SelectItem>
-                <SelectItem value="Intercessory">Intercessory</SelectItem>
+                <SelectItem value="Admin Unit">Admin Unit</SelectItem>
+                <SelectItem value="Account Unit">Account Unit</SelectItem>
+                <SelectItem value="Welfare">Welfare</SelectItem>
               </SelectContent>
             </Select>
           </div>

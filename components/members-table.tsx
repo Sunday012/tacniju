@@ -485,16 +485,16 @@ export function MembersTable({ members, availableAwards = [] }: MembersTableProp
                   <span>Ushering</span>
                 </div>
                 <div class="dept-item">
-                  <div class="checkbox ${member.department === 'Drama' ? 'checked' : ''}">${member.department === 'Drama' ? '✓' : ''}</div>
-                  <span>Drama</span>
+                  <div class="checkbox ${member.department === 'Admin Unit' ? 'checked' : ''}">${member.department === 'Admin Unit' ? '✓' : ''}</div>
+                  <span>Admin Unit</span>
                 </div>
                 <div class="dept-item">
-                  <div class="checkbox ${member.department === 'Clean Up' ? 'checked' : ''}">${member.department === 'Clean Up' ? '✓' : ''}</div>
-                  <span>Clean Up</span>
+                  <div class="checkbox ${member.department === 'Account Unit' ? 'checked' : ''}">${member.department === 'Account Unit' ? '✓' : ''}</div>
+                  <span>Account Unit</span>
                 </div>
                 <div class="dept-item">
-                  <div class="checkbox ${member.department === 'Intercessory' ? 'checked' : ''}">${member.department === 'Intercessory' ? '✓' : ''}</div>
-                  <span>Intercessory</span>
+                  <div class="checkbox ${member.department === 'Welfare' ? 'checked' : ''}">${member.department === 'Welfare' ? '✓' : ''}</div>
+                  <span>Welfare</span>
                 </div>
               </div>
             </div>
@@ -927,9 +927,9 @@ export function MembersTable({ members, availableAwards = [] }: MembersTableProp
                   <SelectItem value="all">All Departments</SelectItem>
                   <SelectItem value="Music">Music</SelectItem>
                   <SelectItem value="Ushering">Ushering</SelectItem>
-                  <SelectItem value="Drama">Drama</SelectItem>
-                  <SelectItem value="Clean Up">Clean Up</SelectItem>
-                  <SelectItem value="Intercessory">Intercessory</SelectItem>
+                  <SelectItem value="Admin Unit">Admin Unit</SelectItem>
+                  <SelectItem value="Account Unit">Account Unit</SelectItem>
+                  <SelectItem value="Welfare">Welfare</SelectItem>
                 </SelectContent>
               </Select>
 
