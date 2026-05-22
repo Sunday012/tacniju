@@ -25,6 +25,7 @@ interface CleanupResponse {
 
 export function AdminCleanup() {
   const [isLoading, setIsLoading] = useState(false)
+  const [isWipingAttendance, setIsWipingAttendance] = useState(false)
   const [results, setResults] = useState<CleanupResponse | null>(null)
   const router = useRouter()
 
@@ -56,7 +57,29 @@ export function AdminCleanup() {
     }
   }
 
+  const handleWipeAttendance = async () => {
+    if (!confirm("Are you sure you want to delete ALL attendance data? This cannot be undone!")) return;
+    
+    setIsWipingAttendance(true)
+    try {
+      const response = await fetch("/api/admin/wipe-attendance", {
+        method: "POST",
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || "Failed to wipe attendance")
+      
+      alert(data.message)
+      router.refresh()
+    } catch (error) {
+      console.error("Wipe error:", error)
+      alert(error instanceof Error ? error.message : "Failed to wipe attendance")
+    } finally {
+      setIsWipingAttendance(false)
+    }
+  }
+
   return (
+    <div className="space-y-6">
     <Card className="border-orange-200 bg-orange-50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-orange-800">
@@ -132,5 +155,29 @@ export function AdminCleanup() {
         )}
       </CardContent>
     </Card>
+
+    <Card className="border-red-200 bg-red-50">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-red-800">
+          <Trash2 className="w-5 h-5" />
+          Wipe Attendance Data
+        </CardTitle>
+        <CardDescription className="text-red-700">
+          Permanently delete all attendance records (including test data). This action cannot be undone.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button
+          onClick={handleWipeAttendance}
+          disabled={isWipingAttendance}
+          variant="destructive"
+          className="bg-red-600 hover:bg-red-700 text-white"
+        >
+          <Trash2 className="w-4 h-4 mr-2" />
+          {isWipingAttendance ? "Wiping Data..." : "Wipe All Attendance Data"}
+        </Button>
+      </CardContent>
+    </Card>
+    </div>
   )
 }

@@ -10,7 +10,9 @@ import { UpcomingEvents } from "@/components/dashboard/upcoming-events"
 import { MealTicketCard } from "@/components/dashboard/meal-ticket-card"
 import { getUserMealTicket } from "@/app/actions/meal-tickets"
 import { getUserAssetAssignments } from "@/app/actions/assets"
+import { getActiveBattles } from "@/app/actions/battles"
 import { ReceivedGifts } from "@/components/dashboard/received-gifts"
+import { TopNewsBattles } from "@/components/dashboard/top-news-battles"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -56,6 +58,9 @@ export default async function DashboardPage() {
   // Fetch received gifts
   const { assignments: gifts } = await getUserAssetAssignments();
 
+  // Fetch active battles
+  const { battles: activeBattles } = await getActiveBattles();
+
   return (
     <>
       <WelcomeBanner
@@ -66,6 +71,10 @@ export default async function DashboardPage() {
         initials={initials}
         points={profile?.points || 0}
       />
+
+      <div className="mt-8">
+        <TopNewsBattles battles={activeBattles || []} />
+      </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-8">
         {/* Row 1 Left: Digital Pass */}

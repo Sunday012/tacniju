@@ -1,0 +1,35 @@
+import { createClient } from "@/lib/server"
+import { redirect } from "next/navigation"
+import { FamiliesManager } from "@/components/admin/families-manager"
+import { getFamilies } from "@/app/actions/families"
+
+export default async function FamiliesPage() {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect("/")
+
+  const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
+  if (!profile?.is_admin && user.email !== "sundayfavour997@gmail.com") redirect("/")
+
+  const { families } = await getFamilies()
+  
+  // Fetch profiles for assignment
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, reservation_number, family_id")
+    .order("full_name")
+
+  return (
+    <div className="p-6 md:p-10 relative">
+      <div className="max-w-7xl mx-auto z-10 relative space-y-8">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-800">Families Management</h1>
+          <p className="text-slate-600 mt-2">Create family groups and assign members to them.</p>
+        </div>
+        
+        <FamiliesManager families={families || []} profiles={profiles || []} />
+      </div>
+    </div>
+  )
+}

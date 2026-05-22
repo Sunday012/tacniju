@@ -3,11 +3,12 @@
 import { createClient } from "@/lib/server"
 import { cookies } from "next/headers"
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 
 async function getOrgId() {
     const cookieStore = cookies()
     const orgId = cookieStore.get("active_org_id")?.value
-    if (!orgId) throw new Error("No active organization selected")
+    if (!orgId) redirect("/select-church")
     return orgId
 }
 

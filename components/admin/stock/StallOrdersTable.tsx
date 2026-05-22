@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, X, Loader2 } from "lucide-react";
+import { Check, X, Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { updateStallOrderStatus } from "@/app/actions/assets";
 import { toast } from "sonner";
@@ -15,6 +15,21 @@ export function StallOrdersTable({ orders }: { orders: any[] }) {
       const res = await updateStallOrderStatus(orderId, status, assetId, paymentMethod, profileId, pointPrice);
       if (res.error) toast.error(res.error);
       else toast.success(`Order ${status} successfully`);
+    } catch (err) {
+      toast.error("An error occurred");
+    } finally {
+      setProcessing(null);
+    }
+  }
+
+  async function handleDelete(orderId: string) {
+    if (!confirm("Are you sure you want to delete this order?")) return;
+    setProcessing(orderId);
+    try {
+      const { deleteStallOrder } = await import("@/app/actions/assets");
+      const res = await deleteStallOrder(orderId);
+      if (res.error) toast.error(res.error);
+      else toast.success("Order deleted successfully");
     } catch (err) {
       toast.error("An error occurred");
     } finally {
@@ -92,6 +107,26 @@ export function StallOrdersTable({ orders }: { orders: any[] }) {
                         title="Reject Order"
                       >
                         {processing === order.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(order.id)}
+                        disabled={processing === order.id}
+                        className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg transition-colors border border-slate-200/50"
+                        title="Delete Order"
+                      >
+                        {processing === order.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4 text-red-500" />}
+                      </button>
+                    </div>
+                  )}
+                  {order.status !== 'pending' && (
+                    <div className="flex items-center justify-end gap-2">
+                       <button
+                        onClick={() => handleDelete(order.id)}
+                        disabled={processing === order.id}
+                        className="p-2 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg transition-colors border border-slate-200/50"
+                        title="Delete Order"
+                      >
+                        {processing === order.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4 text-red-500" />}
                       </button>
                     </div>
                   )}

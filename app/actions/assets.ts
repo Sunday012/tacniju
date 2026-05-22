@@ -335,6 +335,8 @@ export async function getAdminStallOrders() {
     .from("stall_orders")
     .select(`
       id,
+      profile_id,
+      asset_id,
       payment_method,
       status,
       created_at,
@@ -445,5 +447,21 @@ export async function createStallOrder(assetId: string, paymentMethod: string) {
 
   revalidatePath("/dashboard/stall");
   revalidatePath("/admin/stock");
+  return { success: true };
+}
+
+export async function deleteStallOrder(orderId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("stall_orders")
+    .delete()
+    .eq("id", orderId);
+
+  if (error) {
+    console.error("Error deleting stall order:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/admin/stalls");
   return { success: true };
 }

@@ -210,6 +210,9 @@ export async function deleteAwardAction(id: string) {
 
     const adminSupabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
     
+    // First, get the award name so we can scrub it from profiles
+    const { data: awardData } = await adminSupabase.from("awards").select("name").eq("id", id).single()
+    
     const { error } = await adminSupabase.from("awards").delete().eq("id", id)
     
     if (error) {
@@ -217,7 +220,24 @@ export async function deleteAwardAction(id: string) {
         return { success: false, message: "Failed to delete award." }
     }
 
+    // Scrub the award from all profiles
+    if (awardData && awardData.name) {
+        const awardName = awardData.name;
+        // Fetch all profiles that have awards
+        const { data: profilesWithAwards } = await adminSupabase.from("profiles").select("id, awards").not("awards", "is", null).not("awards", "eq", "");
+        if (profilesWithAwards) {
+            for (const p of profilesWithAwards) {
+                if (p.awards && p.awards.includes(awardName)) {
+                    // Split, filter out the deleted award, and rejoin
+                    const newAwards = p.awards.split(",").map((a: string) => a.trim()).filter((a: string) => a !== awardName).join(", ");
+                    await adminSupabase.from("profiles").update({ awards: newAwards || null }).eq("id", p.id);
+                }
+            }
+        }
+    }
+
     revalidatePath("/admin")
+    revalidatePath("/dashboard")
     return { success: true }
 }
 

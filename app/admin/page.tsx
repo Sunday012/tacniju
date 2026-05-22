@@ -1,8 +1,6 @@
 import { createClient } from "@/lib/server"
 import { MembersTable } from "@/components/members-table"
 import { AdminStats } from "@/components/admin-stats"
-import { AdminCleanup } from "@/components/admin-cleanup"
-import { AdminAwards } from "@/components/admin-awards"
 import { getAllAssetAssignments } from "@/app/actions/assets"
 
 export default async function AdminPage() {
@@ -68,25 +66,6 @@ export default async function AdminPage() {
             </div>
           </div>
           
-          {/* Awards Management */}
-          <div className="admin-awards-wrapper">
-             <AdminAwards awards={awards || []} />
-          </div>
-
-          {/* System Cleanup */}
-          <div className="bg-white/70 backdrop-blur-3xl border border-white/60 rounded-[2rem] p-6 sm:p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.1)] transition-all">
-            <h3 className="text-[20px] text-slate-800 font-extrabold tracking-tight flex items-center gap-3 mb-6">
-              <div className="p-2.5 bg-gradient-to-br from-rose-50 to-red-50 rounded-[12px] shadow-sm border border-rose-100/60">
-                <svg className="w-[20px] h-[20px] text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </div>
-              System Cleanup
-            </h3>
-            <div className="admin-cleanup-wrapper">
-              <AdminCleanup />
-            </div>
-          </div>
 
         </div>
       </main>

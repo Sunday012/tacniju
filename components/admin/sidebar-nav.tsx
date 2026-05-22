@@ -15,59 +15,90 @@ import {
   Home,
   LogOut,
   ChevronDown,
-  MonitorPlay
+  MonitorPlay,
+  Users,
+  Swords,
+  ShoppingBag,
+  Settings,
+  Award
 } from "lucide-react"
+
+const NAV_GROUPS = [
+  {
+    title: "Overview",
+    items: [
+      { name: "Admin Home", href: "/admin", icon: LayoutDashboard },
+      { name: "Awards", href: "/admin/awards", icon: Award },
+      { name: "System", href: "/admin/system", icon: Settings },
+    ]
+  },
+  {
+    title: "Operations",
+    items: [
+      { name: "Events", href: "/admin/events", icon: Calendar },
+      { name: "Reservations", href: "/admin/reservations", icon: Hash },
+      { name: "Meal Tickets", href: "/admin/meal-tickets", icon: Ticket },
+      { name: "Families", href: "/admin/families", icon: Users },
+    ]
+  },
+  {
+    title: "Finance & Assets",
+    items: [
+      { name: "Gifts", href: "/admin/stock", icon: Package },
+      { name: "Stall Orders", href: "/admin/stalls", icon: ShoppingBag },
+      { name: "Accounting", href: "/admin/accounting", icon: BookOpen },
+    ]
+  },
+  {
+    title: "Media & Tech",
+    items: [
+      { name: "Presentation Suite", href: "/admin/presenter", icon: MonitorPlay },
+      { name: "Scanner", href: "/admin/scanner", icon: Scan },
+    ]
+  },
+  {
+    title: "Engagement",
+    items: [
+      { name: "Competitions", href: "/admin/competitions", icon: Trophy },
+      { name: "Battles", href: "/admin/battles", icon: Swords },
+    ]
+  }
+]
 
 export function AdminSidebarNav() {
   const pathname = usePathname()
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
-    "Overview": true,
-    "Operations": true,
-    "Finance & Assets": true,
-    "Media & Tech": true,
-    "Engagement": true
+  
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    const initialState: Record<string, boolean> = {}
+    let foundActive = false
+    
+    NAV_GROUPS.forEach(group => {
+      const hasActive = group.items.some(item => 
+        pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
+      )
+      initialState[group.title] = hasActive
+      if (hasActive) foundActive = true
+    })
+
+    // If no group matches the current path, open Overview by default
+    if (!foundActive) {
+      initialState["Overview"] = true
+    }
+    return initialState
   })
 
   const toggleGroup = (title: string) => {
-    setOpenGroups(prev => ({ ...prev, [title]: !prev[title] }))
+    setOpenGroups(prev => {
+      if (prev[title]) {
+        return { ...prev, [title]: false }
+      }
+      
+      const newState: Record<string, boolean> = {}
+      Object.keys(prev).forEach(key => newState[key] = false)
+      newState[title] = true
+      return newState
+    })
   }
-
-  const navGroups = [
-    {
-      title: "Overview",
-      items: [
-        { name: "Admin Home", href: "/admin", icon: LayoutDashboard },
-      ]
-    },
-    {
-      title: "Operations",
-      items: [
-        { name: "Events", href: "/admin/events", icon: Calendar },
-        { name: "Reservations", href: "/admin/reservations", icon: Hash },
-        { name: "Meal Tickets", href: "/admin/meal-tickets", icon: Ticket },
-      ]
-    },
-    {
-      title: "Finance & Assets",
-      items: [
-        { name: "Stock & Gifts", href: "/admin/stock", icon: Package },
-        { name: "Accounting", href: "/admin/accounting", icon: BookOpen },
-      ]
-    },
-    {
-      title: "Media & Tech",
-      items: [
-        { name: "Presentation Suite", href: "/admin/presenter", icon: MonitorPlay },
-        { name: "Scanner", href: "/admin/scanner", icon: Scan },
-      ]
-    },
-    {
-      title: "Engagement",
-      items: [
-        { name: "Competitions", href: "/admin/competitions", icon: Trophy },
-      ]
-    }
-  ]
 
   return (
     <aside className="w-64 bg-white/60 backdrop-blur-2xl border-r border-[#E5E7EB]/50 hidden lg:flex flex-col h-screen sticky top-0 py-8 px-5 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20 print:hidden overflow-y-auto custom-scrollbar">
@@ -88,7 +119,7 @@ export function AdminSidebarNav() {
       </div>
 
       <div className="space-y-6 flex-1 pb-6">
-        {navGroups.map((group) => (
+        {NAV_GROUPS.map((group) => (
           <div key={group.title}>
             <button 
               onClick={() => toggleGroup(group.title)}
