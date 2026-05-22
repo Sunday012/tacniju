@@ -21,8 +21,7 @@ export default function PresentationDisplay() {
   const supabase = createClient();
 
   useEffect(() => {
-    // 1. Fetch initial state
-    const fetchInitialState = async () => {
+    const fetchState = async () => {
       const { data, error } = await supabase
         .from("presentation_state")
         .select("*")
@@ -38,9 +37,15 @@ export default function PresentationDisplay() {
       }
     };
     
-    fetchInitialState();
+    // Initial fetch
+    fetchState();
 
-    // 2. Subscribe to real-time changes
+    // Setup polling fallback (in case realtime is not configured properly in Supabase)
+    const intervalId = setInterval(() => {
+      fetchState();
+    }, 1500);
+
+    // Subscribe to real-time changes
     const channel = supabase
       .channel("presentation_updates")
       .on(
@@ -57,6 +62,7 @@ export default function PresentationDisplay() {
       .subscribe();
 
     return () => {
+      clearInterval(intervalId);
       supabase.removeChannel(channel);
     };
   }, [supabase]);
@@ -88,7 +94,7 @@ export default function PresentationDisplay() {
     if (!state.is_active || !state.content) {
       return (
         <div className="flex items-center justify-center h-full w-full opacity-30">
-          <img src="/logo.png" alt="Church Logo" className="w-64 h-64 object-contain opacity-50 grayscale" />
+          <img src="https://res.cloudinary.com/dzckvrvu9/image/upload/v1777993333/WhatsApp_Image_2026-05-01_at_08.37.56-removebg-preview_a8w3wt.png" alt="Church Logo" className="w-64 h-64 object-contain opacity-50 grayscale" />
         </div>
       );
     }

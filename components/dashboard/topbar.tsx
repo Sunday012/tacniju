@@ -23,7 +23,7 @@ export function Topbar({ userInitial, avatarUrl, isAdmin }: TopbarProps) {
   }
 
   return (
-    <header className="h-[88px] bg-transparent flex items-center justify-between px-4 sm:px-10 w-full z-10 sticky top-0 py-4 backdrop-blur-xl border-b border-slate-200/40">
+    <header className="h-[88px] bg-white/80 flex items-center justify-between px-4 sm:px-10 w-full z-50 sticky top-0 py-4 backdrop-blur-xl border-b border-slate-200/40">
       <div className="flex-1 flex items-center gap-3">
         {/* Mobile hamburger */}
         <UserMobileNav isAdmin={isAdmin} />

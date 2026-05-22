@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Menu, Home, Calendar, Settings, LogOut, ShieldCheck, Users } from "lucide-react"
+import { Menu, Home, Calendar, Settings, LogOut, ShieldCheck, Users, Receipt, MonitorPlay } from "lucide-react"
 import { createClient } from "@/lib/client"
 import { useRouter } from "next/navigation"
 
@@ -17,6 +17,8 @@ const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: Home },
   { label: "Attendance", href: "/dashboard/attendance", icon: Calendar },
   { label: "Diary", href: "/dashboard/diary", icon: Users },
+  { label: "Stall", href: "/dashboard/stall", icon: Receipt },
+  { label: "Live Screen", href: "/present", icon: MonitorPlay },
   { label: "Profile Settings", href: "/dashboard/settings", icon: Settings },
 ]
 

@@ -8,13 +8,13 @@ export async function setPresentationState(isActive: boolean, type: "text" | "bi
 
   const { error } = await supabase
     .from("presentation_state")
-    .upsert({
-      id: 1,
+    .update({
       is_active: isActive,
       type,
       content,
       updated_at: new Date().toISOString(),
-    }, { onConflict: 'id' });
+    })
+    .eq('id', 1);
 
   if (error) {
     console.error("Error setting presentation state:", error);

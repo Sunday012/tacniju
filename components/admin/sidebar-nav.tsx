@@ -1,4 +1,5 @@
 "use client"
+import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
@@ -12,27 +13,66 @@ import {
   Package, 
   BookOpen, 
   Home,
-  LogOut
+  LogOut,
+  ChevronDown,
+  MonitorPlay
 } from "lucide-react"
 
 export function AdminSidebarNav() {
   const pathname = usePathname()
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    "Overview": true,
+    "Operations": true,
+    "Finance & Assets": true,
+    "Media & Tech": true,
+    "Engagement": true
+  })
 
-  const navItems = [
-    { name: "Admin Home", href: "/admin", icon: LayoutDashboard },
-    { name: "Scanner", href: "/admin/scanner", icon: Scan },
-    { name: "Events", href: "/admin/events", icon: Calendar },
-    { name: "Reservations", href: "/admin/reservations", icon: Hash },
-    { name: "Competitions", href: "/admin/competitions", icon: Trophy },
-    { name: "Meal Tickets", href: "/admin/meal-tickets", icon: Ticket },
-    { name: "Stock", href: "/admin/stock", icon: Package },
-    { name: "Accounting", href: "/accounting", icon: BookOpen },
+  const toggleGroup = (title: string) => {
+    setOpenGroups(prev => ({ ...prev, [title]: !prev[title] }))
+  }
+
+  const navGroups = [
+    {
+      title: "Overview",
+      items: [
+        { name: "Admin Home", href: "/admin", icon: LayoutDashboard },
+      ]
+    },
+    {
+      title: "Operations",
+      items: [
+        { name: "Events", href: "/admin/events", icon: Calendar },
+        { name: "Reservations", href: "/admin/reservations", icon: Hash },
+        { name: "Meal Tickets", href: "/admin/meal-tickets", icon: Ticket },
+      ]
+    },
+    {
+      title: "Finance & Assets",
+      items: [
+        { name: "Stock & Gifts", href: "/admin/stock", icon: Package },
+        { name: "Accounting", href: "/admin/accounting", icon: BookOpen },
+      ]
+    },
+    {
+      title: "Media & Tech",
+      items: [
+        { name: "Presentation Suite", href: "/admin/presenter", icon: MonitorPlay },
+        { name: "Scanner", href: "/admin/scanner", icon: Scan },
+      ]
+    },
+    {
+      title: "Engagement",
+      items: [
+        { name: "Competitions", href: "/admin/competitions", icon: Trophy },
+      ]
+    }
   ]
 
   return (
-    <aside className="w-64 bg-white/60 backdrop-blur-2xl border-r border-[#E5E7EB]/50 hidden lg:flex flex-col h-screen sticky top-0 py-8 px-5 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20 print:hidden">
-      <div className="flex items-center gap-4 px-2 mb-12 cursor-pointer hover:opacity-90 transition-opacity">
-        <div className="w-14 h-11 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-200 p-1.5 overflow-hidden">
+    <aside className="w-64 bg-white/60 backdrop-blur-2xl border-r border-[#E5E7EB]/50 hidden lg:flex flex-col h-screen sticky top-0 py-8 px-5 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20 print:hidden overflow-y-auto custom-scrollbar">
+      <div className="flex items-center gap-4 px-2 mb-10 cursor-pointer hover:opacity-90 transition-opacity">
+        <div className="w-14 h-11 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-200 p-1.5 overflow-hidden shrink-0">
           <Image 
             src="https://res.cloudinary.com/dzckvrvu9/image/upload/v1777993333/WhatsApp_Image_2026-05-01_at_08.37.56-removebg-preview_a8w3wt.png" 
             alt="TACN Logo" 
@@ -47,39 +87,50 @@ export function AdminSidebarNav() {
         </div>
       </div>
 
-      <div className="mb-4">
-        <p className="text-xs font-bold text-slate-400/80 uppercase tracking-widest mb-4 px-3">Management</p>
-        <nav className="space-y-1.5 flex-1">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
-            const Icon = item.icon
-            return (
-              <Link key={item.name} href={item.href}>
-                <span className={`flex items-center gap-3.5 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${
-                  isActive 
-                    ? "bg-indigo-600/10 text-indigo-700 font-semibold" 
-                    : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-900 font-medium"
-                }`}>
-                  <Icon className={`w-[22px] h-[22px] transition-colors ${isActive ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"}`} />
-                  <span className="text-sm tracking-wide">{item.name}</span>
-                </span>
-              </Link>
-            )
-          })}
-        </nav>
+      <div className="space-y-6 flex-1 pb-6">
+        {navGroups.map((group) => (
+          <div key={group.title}>
+            <button 
+              onClick={() => toggleGroup(group.title)}
+              className="w-full flex items-center justify-between text-xs font-bold text-slate-400/80 uppercase tracking-widest mb-2 px-3 hover:text-slate-600 transition-colors"
+            >
+              {group.title}
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openGroups[group.title] ? 'rotate-180' : ''}`} />
+            </button>
+            
+            <div className={`space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${openGroups[group.title] ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+              {group.items.map((item) => {
+                const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
+                const Icon = item.icon
+                return (
+                  <Link key={item.name} href={item.href}>
+                    <span className={`flex items-center gap-3.5 px-4 py-2.5 rounded-2xl transition-all duration-200 group ${
+                      isActive 
+                        ? "bg-indigo-600/10 text-indigo-700 font-semibold" 
+                        : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-900 font-medium"
+                    }`}>
+                      <Icon className={`w-5 h-5 transition-colors ${isActive ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"}`} />
+                      <span className="text-sm tracking-wide">{item.name}</span>
+                    </span>
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        ))}
       </div>
       
-      <div className="mt-auto pt-6 border-t border-slate-200/50 space-y-2">
-        <p className="text-xs font-bold text-slate-400/80 uppercase tracking-widest mb-4 px-3">Quick Links</p>
+      <div className="mt-auto pt-6 border-t border-slate-200/50 space-y-1">
+        <p className="text-xs font-bold text-slate-400/80 uppercase tracking-widest mb-3 px-3">Quick Links</p>
         <Link href="/dashboard">
-          <span className="flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-slate-100/80 hover:text-slate-900 font-medium transition-all duration-300 group">
-            <Home className="w-[22px] h-[22px] text-slate-400 group-hover:text-slate-600" />
+          <span className="flex items-center gap-3.5 px-4 py-2.5 rounded-2xl text-slate-500 hover:bg-slate-100/80 hover:text-slate-900 font-medium transition-all duration-200 group">
+            <Home className="w-5 h-5 text-slate-400 group-hover:text-slate-600" />
             <span className="text-sm tracking-wide">User Dashboard</span>
           </span>
         </Link>
         <form action="/api/auth/signout" method="post">
-          <button type="submit" className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-rose-50 hover:text-rose-600 font-medium transition-all duration-300 group">
-            <LogOut className="w-[22px] h-[22px] text-slate-400 group-hover:text-rose-500" />
+          <button type="submit" className="w-full flex items-center gap-3.5 px-4 py-2.5 rounded-2xl text-slate-500 hover:bg-rose-50 hover:text-rose-600 font-medium transition-all duration-200 group">
+            <LogOut className="w-5 h-5 text-slate-400 group-hover:text-rose-500" />
             <span className="text-sm tracking-wide">Sign Out</span>
           </button>
         </form>

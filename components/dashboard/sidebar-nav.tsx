@@ -2,7 +2,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Home, Calendar, Receipt, Settings, Users } from "lucide-react"
+import { Home, Calendar, Receipt, Settings, Users, MonitorPlay } from "lucide-react"
 
 export function SidebarNav() {
   const pathname = usePathname()
@@ -11,7 +11,8 @@ export function SidebarNav() {
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Attendance", href: "/dashboard/attendance", icon: Calendar },
     { name: "Diary", href: "/dashboard/diary", icon: Users },
-    // { name: "Vouchers", href: "/dashboard/vouchers", icon: Receipt },
+    { name: "Stall", href: "/dashboard/stall", icon: Receipt },
+    { name: "Live Screen", href: "/present", icon: MonitorPlay },
   ]
 
   return (

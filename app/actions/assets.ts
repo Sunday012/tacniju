@@ -364,12 +364,20 @@ export async function updateStallOrderStatus(orderId: string, status: string, as
     return { error: error.message };
   }
 
-  // If approved, decrement asset available quantity
+  // If approved, decrement asset available quantity and create assignment
   if (status === "approved") {
     const { data: asset } = await supabase.from("assets").select("available_quantity").eq("id", assetId).single();
     if (asset) {
       await supabase.from("assets").update({ available_quantity: Math.max(0, asset.available_quantity - 1) }).eq("id", assetId);
     }
+    
+    // Create the assignment so it shows up in "Received Gifts"
+    const { data: authData } = await supabase.auth.getUser();
+    await supabase.from("asset_assignments").insert({
+      asset_id: assetId,
+      profile_id: profileId,
+      assigned_by: authData?.user?.id,
+    });
   }
 
   // If rejected AND paid with points, refund the points
