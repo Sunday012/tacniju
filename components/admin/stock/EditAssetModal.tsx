@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { updateAsset } from "@/app/actions/assets";
+import { editAsset } from "@/app/actions/assets";
 import { toast } from "sonner";
 
 interface EditAssetModalProps {
@@ -33,7 +33,7 @@ export function EditAssetModal({ asset }: EditAssetModalProps) {
   async function handleSubmit(formData: FormData) {
     setLoading(true);
     try {
-      const res = await updateAsset(asset.id, formData);
+      const res = await editAsset(asset.id, formData);
       if (res.error) {
         toast.error(res.error);
       } else {
