@@ -67,8 +67,14 @@ export function BattlesManager({ battles, profiles }: { battles: any[], profiles
   }
 
   const handlePresentBattle = async (battle: any) => {
+    // Open window synchronously from the click — must happen before any await,
+    // otherwise the browser's popup blocker swallows it.
+    const presentWindow = window.open("/present", "presentation_screen")
+    presentWindow?.focus()
+
     toast.loading("Sending to screen...", { id: "present" })
-    const res = await setPresentationState(true, "battle" as any, {
+    const res = await setPresentationState(true, "media", {
+      isBattle: true,
       title: battle.title,
       category: battle.category || "General",
       player1: battle.player1?.full_name,

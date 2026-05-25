@@ -174,7 +174,7 @@ export function MembersTable({ members, availableAwards = [], gifts = [] }: Memb
       router.refresh()
     } catch (error) {
       console.error("Error deleting member:", error)
-      alert(error instanceof Error ? error.message : "Failed to delete member. Please try again.")
+      toast.error(error instanceof Error ? error.message : "Failed to delete member. Please try again.")
     } finally {
       setIsDeleting(false)
     }

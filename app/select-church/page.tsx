@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { getOrganizations, joinOrganization, createChurch } from "./actions"
+import { toast } from "sonner"
 
 type Organization = {
     id: string
@@ -40,11 +41,11 @@ export default function SelectChurchPage() {
         try {
             const result = await joinOrganization(orgId, passwords[orgId] || "")
             if (result?.error) {
-                alert(result.error)
+                toast.error(result.error)
                 setJoiningId(null)
             }
         } catch (error: any) {
-            alert(error.message || "Failed to join church")
+            toast.error(error.message || "Failed to join church")
             setJoiningId(null)
         }
     }

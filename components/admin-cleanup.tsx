@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertTriangle, Trash2, CheckCircle, XCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 interface CleanupResult {
   id: string
@@ -51,7 +52,7 @@ export function AdminCleanup() {
       router.refresh()
     } catch (error) {
       console.error("Cleanup error:", error)
-      alert(error instanceof Error ? error.message : "Cleanup failed")
+      toast.error(error instanceof Error ? error.message : "Cleanup failed")
     } finally {
       setIsLoading(false)
     }
@@ -68,11 +69,11 @@ export function AdminCleanup() {
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || "Failed to wipe attendance")
       
-      alert(data.message)
+      toast.success(data.message)
       router.refresh()
     } catch (error) {
       console.error("Wipe error:", error)
-      alert(error instanceof Error ? error.message : "Failed to wipe attendance")
+      toast.error(error instanceof Error ? error.message : "Failed to wipe attendance")
     } finally {
       setIsWipingAttendance(false)
     }

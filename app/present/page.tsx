@@ -6,7 +6,7 @@ import { Maximize, Minimize } from "lucide-react";
 
 type PresentationState = {
   is_active: boolean;
-  type: "text" | "bible" | "lyrics" | "media" | "battle";
+  type: "text" | "bible" | "lyrics" | "media";
   content: any;
 };
 
@@ -145,47 +145,50 @@ export default function PresentationDisplay() {
           </div>
         );
 
-      case "battle":
-        return (
-          <div className="flex flex-col items-center justify-center h-full w-full px-12 animate-in fade-in zoom-in-95 duration-700">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-5xl font-black text-indigo-400 uppercase tracking-[0.2em] mb-4 drop-shadow-lg">
-                {state.content.category || "Head-to-Head"}
-              </h2>
-              <h1 className="text-6xl md:text-8xl font-black text-white leading-tight drop-shadow-2xl">
-                {state.content.title}
-              </h1>
-            </div>
+      case "media":
+        if (state.content?.isBattle) {
+          return (
+            <div className="flex flex-col items-center justify-center h-full w-full px-12 animate-in fade-in zoom-in-95 duration-700">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-5xl font-black text-indigo-400 uppercase tracking-[0.2em] mb-4 drop-shadow-lg">
+                  {state.content.category || "Head-to-Head"}
+                </h2>
+                <h1 className="text-6xl md:text-8xl font-black text-white leading-tight drop-shadow-2xl">
+                  {state.content.title}
+                </h1>
+              </div>
 
-            <div className="flex items-center justify-center gap-12 md:gap-24 w-full max-w-7xl">
-              <div className="flex-1 flex flex-col items-center text-center">
-                <div className="w-48 h-48 md:w-64 md:h-64 rounded-full bg-indigo-600/20 border-4 border-indigo-500/50 flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(79,70,229,0.3)]">
-                  {state.content.p1Avatar ? (
-                    <img src={state.content.p1Avatar} alt={state.content.player1} className="w-full h-full object-cover rounded-full" />
-                  ) : (
-                    <div className="text-8xl font-black text-indigo-300">{state.content.player1?.charAt(0)}</div>
-                  )}
+              <div className="flex items-center justify-center gap-12 md:gap-24 w-full max-w-7xl">
+                <div className="flex-1 flex flex-col items-center text-center">
+                  <div className="w-48 h-48 md:w-64 md:h-64 rounded-full bg-indigo-600/20 border-4 border-indigo-500/50 flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(79,70,229,0.3)]">
+                    {state.content.p1Avatar ? (
+                      <img src={state.content.p1Avatar} alt={state.content.player1} className="w-full h-full object-cover rounded-full" />
+                    ) : (
+                      <div className="text-8xl font-black text-indigo-300">{state.content.player1?.charAt(0)}</div>
+                    )}
+                  </div>
+                  <h3 className="text-4xl md:text-6xl font-bold text-white drop-shadow-xl">{state.content.player1}</h3>
                 </div>
-                <h3 className="text-4xl md:text-6xl font-bold text-white drop-shadow-xl">{state.content.player1}</h3>
-              </div>
 
-              <div className="shrink-0 flex items-center justify-center w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 shadow-[0_0_60px_rgba(245,158,11,0.5)] z-10 animate-pulse">
-                <span className="text-5xl md:text-6xl font-black text-white italic drop-shadow-md">VS</span>
-              </div>
-
-              <div className="flex-1 flex flex-col items-center text-center">
-                <div className="w-48 h-48 md:w-64 md:h-64 rounded-full bg-rose-600/20 border-4 border-rose-500/50 flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(225,29,72,0.3)]">
-                  {state.content.p2Avatar ? (
-                    <img src={state.content.p2Avatar} alt={state.content.player2} className="w-full h-full object-cover rounded-full" />
-                  ) : (
-                    <div className="text-8xl font-black text-rose-300">{state.content.player2?.charAt(0)}</div>
-                  )}
+                <div className="shrink-0 flex items-center justify-center w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 shadow-[0_0_60px_rgba(245,158,11,0.5)] z-10 animate-pulse">
+                  <span className="text-5xl md:text-6xl font-black text-white italic drop-shadow-md">VS</span>
                 </div>
-                <h3 className="text-4xl md:text-6xl font-bold text-white drop-shadow-xl">{state.content.player2}</h3>
+
+                <div className="flex-1 flex flex-col items-center text-center">
+                  <div className="w-48 h-48 md:w-64 md:h-64 rounded-full bg-rose-600/20 border-4 border-rose-500/50 flex items-center justify-center mb-8 shadow-[0_0_50px_rgba(225,29,72,0.3)]">
+                    {state.content.p2Avatar ? (
+                      <img src={state.content.p2Avatar} alt={state.content.player2} className="w-full h-full object-cover rounded-full" />
+                    ) : (
+                      <div className="text-8xl font-black text-rose-300">{state.content.player2?.charAt(0)}</div>
+                    )}
+                  </div>
+                  <h3 className="text-4xl md:text-6xl font-bold text-white drop-shadow-xl">{state.content.player2}</h3>
+                </div>
               </div>
             </div>
-          </div>
-        );
+          );
+        }
+        return null;
 
       default:
         return null;

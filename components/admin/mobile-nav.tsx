@@ -33,7 +33,7 @@ const NAV_GROUPS = [
       { name: "Gifts", href: "/admin/stock", icon: Package },
       { name: "Gift Records", href: "/admin/stock/gift-records", icon: Package },
       { name: "Stall Orders", href: "/admin/stalls", icon: ShoppingBag },
-      { name: "Accounting", href: "/admin/accounting", icon: BookOpen },
+      { name: "Accounting", href: "/accounting", icon: BookOpen },
     ]
   },
   {

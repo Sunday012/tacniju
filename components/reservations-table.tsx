@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Search, Loader2, Printer, Trash2 } from "lucide-react"
 import { generateReservationNumberAction, bulkGenerateReservationNumbersAction, deleteReservationNumberAction } from "@/app/actions"
 import Link from "next/link"
+import { toast } from "sonner"
 
 interface Profile {
   id: string
@@ -35,11 +36,13 @@ export function ReservationsTable({ members }: ReservationsTableProps) {
     try {
       const result = await generateReservationNumberAction(id)
       if (!result.success) {
-        alert(result.message)
+        toast.error(result.message)
+      } else {
+        toast.success(result.message || "Generated successfully")
       }
     } catch (error) {
       console.error(error)
-      alert("An error occurred")
+      toast.error("An error occurred")
     } finally {
       setGeneratingId(null)
     }
@@ -51,11 +54,13 @@ export function ReservationsTable({ members }: ReservationsTableProps) {
     try {
       const result = await deleteReservationNumberAction(id)
       if (!result.success) {
-        alert(result.message)
+        toast.error(result.message)
+      } else {
+        toast.success(result.message || "Deleted successfully")
       }
     } catch (error) {
       console.error(error)
-      alert("An error occurred")
+      toast.error("An error occurred")
     } finally {
       setGeneratingId(null)
     }
@@ -66,10 +71,14 @@ export function ReservationsTable({ members }: ReservationsTableProps) {
     setIsBulkGenerating(true)
     try {
       const result = await bulkGenerateReservationNumbersAction()
-      alert(result.message)
+      if (result.success) {
+        toast.success(result.message)
+      } else {
+        toast.error(result.message)
+      }
     } catch (error) {
       console.error(error)
-      alert("An error occurred")
+      toast.error("An error occurred")
     } finally {
       setIsBulkGenerating(false)
     }
