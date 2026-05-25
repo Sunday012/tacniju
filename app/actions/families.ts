@@ -27,9 +27,7 @@ export async function createFamilyAction(name: string, description: string = "",
   const adminSupabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
   
   const { error } = await adminSupabase.from("families").insert([{
-    name,
-    description,
-    logo_url: logoUrl
+    name
   }])
 
   if (error) return { success: false, error: error.message }

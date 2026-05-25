@@ -1,10 +1,11 @@
 "use client"
 import { useState } from "react"
-import { Swords, Plus, Trash2, Trophy, Shuffle, Loader2 } from "lucide-react"
+import { Swords, Plus, Trash2, Trophy, Shuffle, Loader2, MonitorPlay } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { createBattleAction, deleteBattleAction, updateBattleAction } from "@/app/actions/battles"
+import { setPresentationState } from "@/app/actions/presentation"
 import { toast } from "sonner"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
@@ -62,6 +63,23 @@ export function BattlesManager({ battles, profiles }: { battles: any[], profiles
       toast.success("Battle updated")
     } else {
       toast.error(res.error || "Failed to update")
+    }
+  }
+
+  const handlePresentBattle = async (battle: any) => {
+    toast.loading("Sending to screen...", { id: "present" })
+    const res = await setPresentationState(true, "battle" as any, {
+      title: battle.title,
+      category: battle.category || "General",
+      player1: battle.player1?.full_name,
+      player2: battle.player2?.full_name,
+      p1Avatar: battle.player1?.avatar_url,
+      p2Avatar: battle.player2?.avatar_url,
+    })
+    if (res.success) {
+      toast.success("Battle on screen!", { id: "present" })
+    } else {
+      toast.error(res.error || "Failed to present", { id: "present" })
     }
   }
 
@@ -196,6 +214,10 @@ export function BattlesManager({ battles, profiles }: { battles: any[], profiles
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => handleUpdateStatus(b.id, { winner_id: b.participant2_id, status: 'completed' })} className="flex-1 text-xs border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700">
                         P2 Wins
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handlePresentBattle(b)} className="flex-1 text-xs bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100">
+                        <MonitorPlay className="w-3 h-3 mr-1" />
+                        Present
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => handleUpdateStatus(b.id, { status: 'completed' })} className="flex-1 text-xs text-slate-500">
                         End Draw

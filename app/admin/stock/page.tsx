@@ -1,19 +1,16 @@
-import { getAssets, getAllAssetAssignments } from "@/app/actions/assets";
+import { getAssets } from "@/app/actions/assets";
 import { Plus, Gift, Box, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { AddAssetModal } from "@/components/admin/stock/AddAssetModal";
 import { DistributeGiftModal } from "@/components/admin/stock/DistributeGiftModal";
 import { EditAssetModal } from "@/components/admin/stock/EditAssetModal";
 import { DeleteAssetButton } from "@/components/admin/stock/DeleteAssetButton";
-import { RevokeGiftButton } from "@/components/admin/stock/RevokeGiftButton";
 import { VisibilityToggle } from "@/components/admin/stock/VisibilityToggle";
-import { PrintButton } from "@/components/ui/print-button";
 
 export const dynamic = "force-dynamic";
 
 export default async function StockPage() {
   const { assets, error } = await getAssets();
-  const { assignments: allAssignments } = await getAllAssetAssignments();
   
   return (
     <div className="p-6 md:p-10 relative">
@@ -112,67 +109,7 @@ export default async function StockPage() {
           ))}
         </div>
 
-        {/* Gift Distributed Records Section */}
-        <div className="mt-12">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-indigo-50 rounded-xl">
-                <Gift className="w-5 h-5 text-indigo-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-800">Gift Distributed Records</h2>
-            </div>
-            <PrintButton />
-          </div>
-          
-          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="px-4 py-3 font-bold text-slate-700 text-xs tracking-wider uppercase">Date</th>
-                    <th className="px-4 py-3 font-bold text-slate-700 text-xs tracking-wider uppercase">Gift</th>
-                    <th className="px-4 py-3 font-bold text-slate-700 text-xs tracking-wider uppercase">Recipient</th>
-                    <th className="px-4 py-3 font-bold text-slate-700 text-xs tracking-wider uppercase">Distributed By</th>
-                    <th className="px-4 py-3 font-bold text-slate-700 text-xs tracking-wider uppercase text-right print:hidden">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {(!allAssignments || allAssignments.length === 0) ? (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-slate-500 font-medium text-sm">
-                        No gifts have been distributed yet.
-                      </td>
-                    </tr>
-                  ) : (
-                    allAssignments.map((assignment: any) => (
-                      <tr key={assignment.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-4 py-3 text-xs font-medium text-slate-500">
-                          {new Date(assignment.assigned_at).toLocaleString()}
-                        </td>
-                        <td className="px-4 py-3">
-                          <p className="text-sm font-bold text-slate-800">{assignment.asset?.name}</p>
-                          <span className="text-[10px] font-semibold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded mt-0.5 inline-block">
-                            {assignment.asset?.category}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <p className="text-sm font-bold text-indigo-600">{assignment.profile?.full_name}</p>
-                          <p className="text-[10px] text-slate-500 font-mono mt-0.5">{assignment.profile?.reservation_number || "No Res. #"}</p>
-                        </td>
-                        <td className="px-4 py-3 text-sm font-medium text-slate-600">
-                          {assignment.assigned_by_profile?.full_name || "Unknown Admin"}
-                        </td>
-                        <td className="px-4 py-3 text-right print:hidden">
-                          <RevokeGiftButton assignmentId={assignment.id} />
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+
 
       </div>
     </div>

@@ -56,7 +56,6 @@ export async function createBattleAction(title: string, player1Id: string, playe
     title,
     participant1_id: player1Id,
     participant2_id: player2Id,
-    category,
     status: 'live'
   }])
 
