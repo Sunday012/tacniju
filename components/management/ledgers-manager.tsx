@@ -20,7 +20,10 @@ type LedgerRow = Ledger & {
     } | null
 }
 
-export function LedgersManager({ ledgers, groups }: { ledgers: LedgerRow[], groups: AccountGroup[] }) {
+type LedgersManagerMode = "accounts" | "banks"
+
+export function LedgersManager({ ledgers, groups, mode = "accounts" }: { ledgers: LedgerRow[], groups: AccountGroup[], mode?: LedgersManagerMode }) {
+    const isBankMode = mode === "banks"
     const router = useRouter()
     const [isOpen, setIsOpen] = useState(false)
     const [editId, setEditId] = useState<string | null>(null)
@@ -28,9 +31,16 @@ export function LedgersManager({ ledgers, groups }: { ledgers: LedgerRow[], grou
     const [groupId, setGroupId] = useState("")
     const [openingBalance, setOpeningBalance] = useState("0")
     const [balanceType, setBalanceType] = useState<"Dr" | "Cr">("Dr")
-    const [isCashBank, setIsCashBank] = useState(false)
+    const [isCashBank, setIsCashBank] = useState(isBankMode)
     const [description, setDescription] = useState("")
+    const [bankName, setBankName] = useState("")
+    const [accountNumber, setAccountNumber] = useState("")
+    const [contactPerson, setContactPerson] = useState("")
+    const [phoneNumber, setPhoneNumber] = useState("")
     const [isSubmitting, setIsSubmitting] = useState(false)
+
+    // Banking tab shows only cash/bank ledgers; Accounts tab shows the rest.
+    const visibleLedgers = ledgers.filter(l => Boolean(l.is_cash_bank) === isBankMode)
 
     function resetForm() {
         setEditId(null)
@@ -38,8 +48,12 @@ export function LedgersManager({ ledgers, groups }: { ledgers: LedgerRow[], grou
         setGroupId("")
         setOpeningBalance("0")
         setBalanceType("Dr")
-        setIsCashBank(false)
+        setIsCashBank(isBankMode)
         setDescription("")
+        setBankName("")
+        setAccountNumber("")
+        setContactPerson("")
+        setPhoneNumber("")
     }
 
     function openCreate() {
@@ -55,6 +69,10 @@ export function LedgersManager({ ledgers, groups }: { ledgers: LedgerRow[], grou
         setBalanceType(ledger.balance_type)
         setIsCashBank(Boolean(ledger.is_cash_bank))
         setDescription(ledger.description || "")
+        setBankName(ledger.bank_name || "")
+        setAccountNumber(ledger.account_number || "")
+        setContactPerson(ledger.contact_person || "")
+        setPhoneNumber(ledger.phone_number || "")
         setIsOpen(true)
     }
 
@@ -72,12 +90,12 @@ export function LedgersManager({ ledgers, groups }: { ledgers: LedgerRow[], grou
                 name,
                 opening_balance: Number(openingBalance) || 0,
                 balance_type: balanceType,
-                is_cash_bank: isCashBank,
+                is_cash_bank: isBankMode ? true : isCashBank,
                 description: description || null,
-                account_number: null,
-                bank_name: null,
-                contact_person: null,
-                phone_number: null,
+                account_number: isBankMode ? (accountNumber || null) : null,
+                bank_name: isBankMode ? (bankName || null) : null,
+                contact_person: isBankMode ? (contactPerson || null) : null,
+                phone_number: isBankMode ? (phoneNumber || null) : null,
                 email: null,
                 address: null,
                 tax_id: null,
@@ -130,8 +148,12 @@ export function LedgersManager({ ledgers, groups }: { ledgers: LedgerRow[], grou
         <Card className="bg-white shadow-sm border-slate-200">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div>
-                    <CardTitle className="text-xl">Ledgers</CardTitle>
-                    <CardDescription>Create and manage the ledgers used in vouchers.</CardDescription>
+                    <CardTitle className="text-xl">{isBankMode ? "Bank Accounts" : "Party Ledgers / Accounts"}</CardTitle>
+                    <CardDescription>
+                        {isBankMode
+                            ? "Create and manage bank accounts. These are the only ledgers selectable as the top Cash/Bank field on Payment, Receipt, and Contra vouchers."
+                            : "Create and manage party ledgers (customers, vendors, expense / income accounts). Bank accounts are managed separately under Banking."}
+                    </CardDescription>
                 </div>
                 <Dialog
                     open={isOpen}
@@ -141,20 +163,37 @@ export function LedgersManager({ ledgers, groups }: { ledgers: LedgerRow[], grou
                     }}
                 >
                     <DialogTrigger asChild>
-                        <Button size="sm" onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-500">+ New Ledger</Button>
+                        <Button size="sm" onClick={openCreate} className={isBankMode ? "bg-indigo-600 hover:bg-indigo-700" : "bg-indigo-600 hover:bg-indigo-700"}>
+                            + New {isBankMode ? "Bank" : "Ledger"}
+                        </Button>
                     </DialogTrigger>
-                    <DialogContent className="bg-slate-50 border-slate-200 text-slate-900 max-w-xl">
+                    <DialogContent className="bg-white border-slate-200 text-slate-900 max-w-xl">
                         <DialogHeader>
-                            <DialogTitle>{editId ? "Edit Ledger" : "Create Ledger"}</DialogTitle>
+                            <DialogTitle>{editId ? `Edit ${isBankMode ? "Bank" : "Ledger"}` : `Create ${isBankMode ? "Bank" : "Ledger"}`}</DialogTitle>
                             <DialogDescription>
-                                {editId ? "Update an existing ledger." : "Add a ledger that can be selected in vouchers."}
+                                {isBankMode
+                                    ? (editId ? "Update bank account details." : "Add a bank account that can be used as the Cash/Bank field on vouchers.")
+                                    : (editId ? "Update an existing ledger." : "Add a ledger that can be selected as a party or expense/income account on vouchers.")}
                             </DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="space-y-2">
-                                <Label>Ledger Name</Label>
-                                <Input value={name} onChange={(e) => setName(e.target.value)} required className="bg-white border-slate-300" />
+                                <Label>{isBankMode ? "Account Display Name" : "Ledger Name"}</Label>
+                                <Input value={name} onChange={(e) => setName(e.target.value)} required className="bg-white border-slate-300" placeholder={isBankMode ? "e.g. Main Operating Account" : ""} />
                             </div>
+
+                            {isBankMode && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Bank Name</Label>
+                                        <Input value={bankName} onChange={(e) => setBankName(e.target.value)} className="bg-white border-slate-300" placeholder="e.g. Access Bank" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Account Number</Label>
+                                        <Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="bg-white border-slate-300" placeholder="0123456789" />
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
@@ -197,19 +236,35 @@ export function LedgersManager({ ledgers, groups }: { ledgers: LedgerRow[], grou
                                     />
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label>Ledger Type</Label>
-                                    <label className="flex items-center gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
-                                        <input
-                                            type="checkbox"
-                                            checked={isCashBank}
-                                            onChange={(e) => setIsCashBank(e.target.checked)}
-                                            className="h-4 w-4"
-                                        />
-                                        Cash/Bank Ledger
-                                    </label>
-                                </div>
+                                {!isBankMode && (
+                                    <div className="space-y-2">
+                                        <Label>Ledger Type</Label>
+                                        <label className="flex items-center gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500">
+                                            <input
+                                                type="checkbox"
+                                                checked={false}
+                                                disabled
+                                                className="h-4 w-4"
+                                            />
+                                            Cash/Bank Ledger
+                                            <span className="ml-auto text-[10px] uppercase tracking-wider text-slate-400">Use Banking tab</span>
+                                        </label>
+                                    </div>
+                                )}
                             </div>
+
+                            {isBankMode && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label>Contact Person</Label>
+                                        <Input value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} className="bg-white border-slate-300" placeholder="Optional" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Phone</Label>
+                                        <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="bg-white border-slate-300" placeholder="Optional" />
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="space-y-2">
                                 <Label>Description</Label>
@@ -217,8 +272,8 @@ export function LedgersManager({ ledgers, groups }: { ledgers: LedgerRow[], grou
                             </div>
 
                             <DialogFooter>
-                                <Button type="submit" disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-500">
-                                    {editId ? "Save Changes" : "Create Ledger"}
+                                <Button type="submit" disabled={isSubmitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                                    {editId ? "Save Changes" : `Create ${isBankMode ? "Bank" : "Ledger"}`}
                                 </Button>
                             </DialogFooter>
                         </form>
@@ -229,30 +284,36 @@ export function LedgersManager({ ledgers, groups }: { ledgers: LedgerRow[], grou
                 <Table>
                     <TableHeader>
                         <TableRow className="border-slate-200">
-                            <TableHead className="text-slate-500">Ledger</TableHead>
+                            <TableHead className="text-slate-500">{isBankMode ? "Account" : "Ledger"}</TableHead>
+                            {isBankMode && <TableHead className="text-slate-500">Bank</TableHead>}
+                            {isBankMode && <TableHead className="text-slate-500">A/C Number</TableHead>}
                             <TableHead className="text-slate-500">Group</TableHead>
-                            <TableHead className="text-slate-500">Type</TableHead>
+                            {!isBankMode && <TableHead className="text-slate-500">Type</TableHead>}
                             <TableHead className="text-slate-500">Opening</TableHead>
                             <TableHead className="text-right text-slate-500">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {ledgers.length === 0 ? (
+                        {visibleLedgers.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center text-slate-500 py-6">
-                                    No ledgers found yet. Create one to use it in vouchers.
+                                <TableCell colSpan={isBankMode ? 6 : 5} className="text-center text-slate-500 py-6">
+                                    {isBankMode
+                                        ? "No bank accounts yet. Add one to use it on vouchers."
+                                        : "No ledgers found yet. Create one to use it in vouchers."}
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            ledgers.map((ledger) => (
+                            visibleLedgers.map((ledger) => (
                                 <TableRow key={ledger.id} className="border-slate-200">
                                     <TableCell className="font-medium text-slate-800">{ledger.name}</TableCell>
+                                    {isBankMode && <TableCell className="text-slate-500">{ledger.bank_name || "-"}</TableCell>}
+                                    {isBankMode && <TableCell className="text-slate-500 font-mono text-xs">{ledger.account_number || "-"}</TableCell>}
                                     <TableCell className="text-slate-500">{ledger.account_groups?.name || groups.find((group) => group.id === ledger.group_id)?.name || "-"}</TableCell>
-                                    <TableCell className="text-slate-500">{ledger.is_cash_bank ? "Cash/Bank" : ledger.balance_type}</TableCell>
+                                    {!isBankMode && <TableCell className="text-slate-500">{ledger.balance_type}</TableCell>}
                                     <TableCell className="text-slate-500">{Number(ledger.opening_balance || 0).toLocaleString()}</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-1">
-                                            <Button variant="ghost" size="sm" onClick={() => openEdit(ledger)} className="h-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50">
+                                            <Button variant="ghost" size="sm" onClick={() => openEdit(ledger)} className="h-8 text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50">
                                                 Edit
                                             </Button>
                                             <Button

@@ -47,6 +47,9 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
             else if (key === 'f6' || (isAlt && key === 'r')) newType = 'Receipt';
             else if (key === 'f8' || (isAlt && key === 's')) newType = 'Sales';
             else if (key === 'f9' || (isAlt && key === 'u')) newType = 'Purchase';
+            else if (isAlt && key === 'e') newType = 'Expense';
+            else if (isAlt && key === 'i') newType = 'Income';
+            else if (isAlt && key === 'g') newType = 'Program';
 
             if (newType) {
                 e.preventDefault();
@@ -71,7 +74,10 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
         }
     }, [voucherType, needsItems])
 
-    const isSingleEntry = voucherType === "Payment" || voucherType === "Receipt" || voucherType === "Contra"
+    // Expense behaves like Payment (cash out), Income & Program behave like Receipt (cash in)
+    const isPaymentLike = voucherType === "Payment" || voucherType === "Expense"
+    const isReceiptLike = voucherType === "Receipt" || voucherType === "Income" || voucherType === "Program"
+    const isSingleEntry = isPaymentLike || isReceiptLike || voucherType === "Contra"
 
     const totalDebit = selectedLedgers.reduce((sum, l) => sum + (l.debit_amount || 0), 0)
     const totalCredit = selectedLedgers.reduce((sum, l) => sum + (l.credit_amount || 0), 0)
@@ -94,8 +100,8 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
 
             let masterEntry: VoucherLedgerEntry = { ledger_id: masterLedgerId, debit_amount: 0, credit_amount: 0 }
 
-            if (voucherType === 'Payment') masterEntry.credit_amount = totalAmount
-            else if (voucherType === 'Receipt') masterEntry.debit_amount = totalAmount
+            if (isPaymentLike) masterEntry.credit_amount = totalAmount
+            else if (isReceiptLike) masterEntry.debit_amount = totalAmount
             else if (voucherType === 'Contra') masterEntry.debit_amount = totalAmount
 
             finalLedgers.push(masterEntry)
@@ -103,8 +109,8 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
             validLines.forEach(line => {
                 finalLedgers.push({
                     ledger_id: line.ledger_id,
-                    debit_amount: voucherType === 'Payment' ? line.amount : (voucherType === 'Contra' ? 0 : 0),
-                    credit_amount: voucherType === 'Receipt' ? line.amount : (voucherType === 'Contra' ? line.amount : 0),
+                    debit_amount: isPaymentLike ? line.amount : 0,
+                    credit_amount: isReceiptLike ? line.amount : (voucherType === 'Contra' ? line.amount : 0),
                     adjustment_method: line.adjustment_method,
                     adjustment_reference: line.adjustment_reference
                 })
@@ -226,8 +232,23 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
         }
     }
 
-    const invisibleInputClass = "w-full bg-transparent border-transparent hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-md px-2 h-8 text-right transition-colors"
-    const invisibleSelectClass = "w-full bg-transparent border-transparent hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 h-8 shadow-none"
+    // Per-voucher-type accent palette. White background everywhere; the accent
+    // tints the type badge, master ledger panel, focus rings, row hover, totals
+    // border, and submit button.
+    const themes = {
+        Payment:  { name: "Gold",   ring: "focus:border-amber-500 focus:ring-amber-500",     text: "text-amber-700",   textSoft: "text-amber-600",   bg: "bg-amber-50",   bgSoft: "bg-amber-50/40",   border: "border-amber-200",   borderStrong: "border-amber-500",   trigger: "border-amber-300 text-amber-700",   button: "bg-amber-500 hover:bg-amber-400",       hover: "hover:bg-amber-50/40",   totalsBorder: "border-amber-500" },
+        Receipt:  { name: "Red",    ring: "focus:border-red-500 focus:ring-red-500",         text: "text-red-700",     textSoft: "text-red-600",     bg: "bg-red-50",     bgSoft: "bg-red-50/40",     border: "border-red-200",     borderStrong: "border-red-500",     trigger: "border-red-300 text-red-700",       button: "bg-red-500 hover:bg-red-400",           hover: "hover:bg-red-50/40",     totalsBorder: "border-red-500" },
+        Sales:    { name: "Blue",   ring: "focus:border-blue-500 focus:ring-blue-500",       text: "text-blue-700",    textSoft: "text-blue-600",    bg: "bg-blue-50",    bgSoft: "bg-blue-50/40",    border: "border-blue-200",    borderStrong: "border-blue-500",    trigger: "border-blue-300 text-blue-700",     button: "bg-blue-600 hover:bg-blue-500",         hover: "hover:bg-blue-50/40",    totalsBorder: "border-blue-500" },
+        Purchase: { name: "Green",  ring: "focus:border-green-500 focus:ring-green-500",     text: "text-green-700",   textSoft: "text-green-600",   bg: "bg-green-50",   bgSoft: "bg-green-50/40",   border: "border-green-200",   borderStrong: "border-green-500",   trigger: "border-green-300 text-green-700",   button: "bg-green-600 hover:bg-green-500",       hover: "hover:bg-green-50/40",   totalsBorder: "border-green-500" },
+        Expense:  { name: "Orange", ring: "focus:border-orange-500 focus:ring-orange-500",   text: "text-orange-700",  textSoft: "text-orange-600",  bg: "bg-orange-50",  bgSoft: "bg-orange-50/40",  border: "border-orange-200",  borderStrong: "border-orange-500",  trigger: "border-orange-300 text-orange-700", button: "bg-orange-500 hover:bg-orange-400",     hover: "hover:bg-orange-50/40",  totalsBorder: "border-orange-500" },
+        Income:   { name: "Teal",   ring: "focus:border-teal-500 focus:ring-teal-500",       text: "text-teal-700",    textSoft: "text-teal-600",    bg: "bg-teal-50",    bgSoft: "bg-teal-50/40",    border: "border-teal-200",    borderStrong: "border-teal-500",    trigger: "border-teal-300 text-teal-700",     button: "bg-teal-600 hover:bg-teal-500",         hover: "hover:bg-teal-50/40",    totalsBorder: "border-teal-500" },
+        Contra:   { name: "Black",  ring: "focus:border-slate-900 focus:ring-slate-900",     text: "text-slate-900",   textSoft: "text-slate-700",   bg: "bg-slate-100",  bgSoft: "bg-slate-50",      border: "border-slate-300",   borderStrong: "border-slate-900",   trigger: "border-slate-400 text-slate-900",   button: "bg-slate-900 hover:bg-slate-800",       hover: "hover:bg-slate-100/60",  totalsBorder: "border-slate-900" },
+        Program:  { name: "Indigo", ring: "focus:border-indigo-500 focus:ring-indigo-500",   text: "text-indigo-700",  textSoft: "text-indigo-600",  bg: "bg-indigo-50",  bgSoft: "bg-indigo-50/40",  border: "border-indigo-200",  borderStrong: "border-indigo-500",  trigger: "border-indigo-300 text-indigo-700", button: "bg-indigo-600 hover:bg-indigo-500",     hover: "hover:bg-indigo-50/40",  totalsBorder: "border-indigo-500" },
+    } as const
+    const theme = themes[voucherType]
+
+    const invisibleInputClass = `w-full bg-transparent border-transparent hover:border-slate-300 ${theme.ring} focus:ring-1 rounded-md px-2 h-8 text-right transition-colors`
+    const invisibleSelectClass = `w-full bg-transparent border-transparent hover:border-slate-300 ${theme.ring} focus:ring-1 h-8 shadow-none`
 
     function handleMasterLedgerChange(value: string) {
         const selectedLedger = ledgers.find((ledger) => ledger.id === value)
@@ -281,32 +302,36 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
                             setVoucherType(v)
                             setSelectedItems(v === 'Sales' || v === 'Purchase' ? [{ item_id: "", qty: 1, rate: 0, amount: 0 }] : [])
                             setSelectedLedgers([{ ledger_id: "", debit_amount: 0, credit_amount: 0 }])
+                            setMasterLedgerId("")
                         }}>
-                            <SelectTrigger className="w-[180px] bg-slate-50 border-emerald-600/50 text-emerald-400 font-semibold">
+                            <SelectTrigger className={`w-[200px] bg-white font-bold border-2 ${theme.trigger}`}>
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-white border-slate-300 text-slate-900">
-                                <SelectItem value="Contra">Contra (Alt+C)</SelectItem>
                                 <SelectItem value="Payment">Payment (Alt+P)</SelectItem>
                                 <SelectItem value="Receipt">Receipt (Alt+R)</SelectItem>
                                 <SelectItem value="Sales">Sales (Alt+S)</SelectItem>
                                 <SelectItem value="Purchase">Purchase (Alt+U)</SelectItem>
+                                <SelectItem value="Expense">Expense (Alt+E)</SelectItem>
+                                <SelectItem value="Income">Income (Alt+I)</SelectItem>
+                                <SelectItem value="Contra">Contra (Alt+C)</SelectItem>
+                                <SelectItem value="Program">Program (Alt+G)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="grid grid-cols-2 gap-4 mt-4">
                         <div className="flex items-center gap-2">
                             <Label className="w-16 text-slate-500">Date</Label>
-                            <Input type="date" value={date} onChange={e => setDate(e.target.value)} required className="h-8 bg-transparent border-t-0 border-x-0 border-b-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-emerald-500 px-1 [&::-webkit-calendar-picker-indicator]:hidden" />
+                            <Input type="date" value={date} onChange={e => setDate(e.target.value)} required className="h-8 bg-transparent border-t-0 border-x-0 border-b-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-slate-400 px-1 [&::-webkit-calendar-picker-indicator]:hidden" />
                         </div>
                         <div className="flex items-center gap-2">
                             <Label className="w-16 text-slate-500">Ref</Label>
-                            <Input value={reference} onChange={e => setReference(e.target.value)} placeholder="Ref / Cheque No" className="h-8 bg-transparent border-t-0 border-x-0 border-b-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-emerald-500 px-1" />
+                            <Input value={reference} onChange={e => setReference(e.target.value)} placeholder="Ref / Cheque No" className="h-8 bg-transparent border-t-0 border-x-0 border-b-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-slate-400 px-1" />
                         </div>
                     </div>
 
                     {isSingleEntry && (
-                        <div className="mt-6 flex items-center bg-emerald-50/50 p-2 rounded-md border border-emerald-100">
+                        <div className={`mt-6 flex items-center p-2 rounded-md border ${theme.bgSoft} ${theme.border}`}>
                             <Label className="w-24 font-bold text-slate-700">Cash/Bank :</Label>
                             <div className="flex-1 space-y-1">
                                 <ComboboxInput
@@ -318,10 +343,10 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
                                     inputClassName="bg-transparent border-none focus-visible:ring-0 shadow-none font-semibold text-slate-800"
                                 />
                                 {requiresCashBankMaster && (
-                                    <p className={`text-xs ${hasCashBankMasterOptions ? "text-emerald-700" : "text-red-600"}`}>
+                                    <p className={`text-xs ${hasCashBankMasterOptions ? theme.textSoft : "text-red-600"}`}>
                                         {hasCashBankMasterOptions
                                             ? "This top field accepts Cash/Bank ledgers only. Regular ledgers like Flame Account should be selected in Particulars."
-                                            : "Payment, Receipt, and Contra need at least one ledger marked as Cash/Bank."}
+                                            : "Single-entry vouchers (Payment, Receipt, Contra, Expense, Income, Program) need at least one ledger marked as Cash/Bank."}
                                     </p>
                                 )}
                             </div>
@@ -346,7 +371,7 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
                                     </TableHeader>
                                     <TableBody>
                                         {selectedItems.map((pi, idx) => (
-                                            <TableRow key={`item-${idx}`} className="border-b-slate-100 h-10 hover:bg-emerald-50/30">
+                                            <TableRow key={`item-${idx}`} className={`border-b-slate-100 h-10 ${theme.hover}`}>
                                                 <TableCell className="p-1 relative group">
                                                     <ComboboxInput
                                                         value={pi.item_id}
@@ -354,7 +379,7 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
                                                         options={items.map(i => ({ value: i.id, label: i.name }))}
                                                         placeholder="Type item..."
                                                         className="h-8"
-                                                        inputClassName="bg-transparent border-transparent hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-none h-8 px-2"
+                                                        inputClassName={`bg-transparent border-transparent hover:border-slate-300 ${theme.ring} focus:ring-1 shadow-none h-8 px-2`}
                                                     />
                                                 </TableCell>
                                                 <TableCell className="p-1">
@@ -398,7 +423,7 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
                                 </TableHeader>
                                 <TableBody>
                                     {(!isSingleEntry || masterLedgerId) ? selectedLedgers.map((sl, idx) => (
-                                        <TableRow key={`ledger-${idx}`} className="border-b-slate-100 h-10 hover:bg-emerald-50/30">
+                                        <TableRow key={`ledger-${idx}`} className={`border-b-slate-100 h-10 ${theme.hover}`}>
                                             <TableCell className="p-1 relative group">
                                                 <ComboboxInput
                                                     value={sl.ledger_id}
@@ -466,7 +491,7 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
                                         value={narration}
                                         onChange={e => setNarration(e.target.value)}
                                         required
-                                        className="h-8 bg-transparent border-t-0 border-x-0 border-b-slate-400 rounded-none focus-visible:ring-0 focus-visible:border-emerald-600 px-1 shadow-none w-full"
+                                        className="h-8 bg-transparent border-t-0 border-x-0 border-b-slate-400 rounded-none focus-visible:ring-0 focus-visible:border-slate-600 px-1 shadow-none w-full"
                                     />
                                 </div>
 
@@ -474,15 +499,15 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
                                 <div className="flex justify-end gap-6 text-sm font-bold text-slate-800 items-center">
                                     <div className="text-slate-500 mr-2 border-b border-transparent">Total:</div>
                                     {isSingleEntry ? (
-                                        <div className="min-w-[120px] text-right border-t border-b-4 border-double border-slate-800 py-1 px-2">
+                                        <div className={`min-w-[120px] text-right border-t border-b-4 border-double ${theme.totalsBorder} py-1 px-2 ${theme.text}`}>
                                             {totalAmount.toFixed(2)}
                                         </div>
                                     ) : (
                                         <>
-                                            <div className={`min-w-[120px] text-right border-t border-b-4 border-double border-slate-800 py-1 px-2 ${totalDebit !== totalCredit ? 'text-red-600 border-red-600' : ''}`}>
+                                            <div className={`min-w-[120px] text-right border-t border-b-4 border-double py-1 px-2 ${totalDebit !== totalCredit ? 'text-red-600 border-red-600' : `${theme.totalsBorder} ${theme.text}`}`}>
                                                 {totalDebit.toFixed(2)}
                                             </div>
-                                            <div className={`min-w-[120px] text-right border-t border-b-4 border-double border-slate-800 py-1 px-2 ${totalDebit !== totalCredit ? 'text-red-600 border-red-600' : ''}`}>
+                                            <div className={`min-w-[120px] text-right border-t border-b-4 border-double py-1 px-2 ${totalDebit !== totalCredit ? 'text-red-600 border-red-600' : `${theme.totalsBorder} ${theme.text}`}`}>
                                                 {totalCredit.toFixed(2)}
                                             </div>
                                         </>
@@ -492,7 +517,7 @@ export function VoucherEntry({ ledgers, recentVouchers, items }: { ledgers: Ledg
                         </div>
 
                         <div className="flex justify-end pt-4">
-                            <Button type="submit" disabled={isSubmitting || !isBalanced} className="bg-emerald-600 hover:bg-emerald-500 min-w-[120px]">
+                            <Button type="submit" disabled={isSubmitting || !isBalanced} className={`${theme.button} min-w-[120px] text-white`}>
                                 {isSubmitting ? "Saving..." : `Save ${voucherType}`}
                             </Button>
                         </div>

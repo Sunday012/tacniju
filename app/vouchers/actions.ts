@@ -12,7 +12,7 @@ async function getOrgId() {
     return orgId
 }
 
-export type VoucherType = 'Payment' | 'Receipt' | 'Sales' | 'Purchase' | 'Contra'
+export type VoucherType = 'Payment' | 'Receipt' | 'Sales' | 'Purchase' | 'Contra' | 'Expense' | 'Income' | 'Program'
 
 export type VoucherItemPayload = {
     item_id: string

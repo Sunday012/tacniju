@@ -1,11 +1,11 @@
 "use client"
 import { useState } from "react"
-import { Users, Plus, Trash2, Shield } from "lucide-react"
+import { Users, Plus, Trash2, Shield, Shuffle, Loader2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { createFamilyAction, deleteFamilyAction, assignMemberToFamilyAction } from "@/app/actions/families"
+import { createFamilyAction, deleteFamilyAction, assignMemberToFamilyAction, distributeUnassignedMembersAction } from "@/app/actions/families"
 import { toast } from "sonner"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -14,6 +14,9 @@ export function FamiliesManager({ families, profiles }: { families: any[], profi
   const [isCreating, setIsCreating] = useState(false)
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
   const [isAssigning, setIsAssigning] = useState<string | null>(null)
+  const [isDistributing, setIsDistributing] = useState(false)
+
+  const unassignedCount = profiles.filter(p => !p.family_id).length
 
   const handleCreate = async () => {
     if (!newFamilyName.trim()) return
@@ -40,6 +43,21 @@ export function FamiliesManager({ families, profiles }: { families: any[], profi
     }
   }
 
+  const handleDistribute = async () => {
+    if (families.length === 0) return toast.error("Create at least one family first.")
+    if (unassignedCount === 0) return toast.error("Every member is already assigned to a family.")
+    if (!confirm(`Randomly distribute ${unassignedCount} unassigned member${unassignedCount === 1 ? "" : "s"} across ${families.length} ${families.length === 1 ? "family" : "families"}?`)) return
+
+    setIsDistributing(true)
+    const res = await distributeUnassignedMembersAction()
+    setIsDistributing(false)
+    if (res.success) {
+      toast.success(`Assigned ${res.assigned} member${res.assigned === 1 ? "" : "s"} across ${res.familiesUsed} ${res.familiesUsed === 1 ? "family" : "families"}.`)
+    } else {
+      toast.error(res.error || "Failed to distribute")
+    }
+  }
+
   const handleAssign = async (profileId: string, familyId: string | null) => {
     setIsAssigning(profileId)
     const res = await assignMemberToFamilyAction(profileId, familyId)
@@ -62,16 +80,32 @@ export function FamiliesManager({ families, profiles }: { families: any[], profi
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="flex gap-2 mb-6">
-            <Input 
-              value={newFamilyName} 
-              onChange={e => setNewFamilyName(e.target.value)} 
-              placeholder="New family name..." 
+          <div className="flex flex-wrap gap-2 mb-6 items-center">
+            <Input
+              value={newFamilyName}
+              onChange={e => setNewFamilyName(e.target.value)}
+              placeholder="New family name..."
               className="max-w-xs"
             />
             <Button onClick={handleCreate} disabled={isCreating || !newFamilyName.trim()} className="bg-indigo-600 hover:bg-indigo-700">
               <Plus className="w-4 h-4 mr-1" />
               Add Family
+            </Button>
+            <Button
+              onClick={handleDistribute}
+              disabled={isDistributing || families.length === 0 || unassignedCount === 0}
+              variant="outline"
+              className="ml-auto border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+              title={
+                families.length === 0
+                  ? "Create at least one family first"
+                  : unassignedCount === 0
+                    ? "Every member is already assigned"
+                    : `Randomly assigns ${unassignedCount} unassigned member${unassignedCount === 1 ? "" : "s"} across the existing families`
+              }
+            >
+              {isDistributing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Shuffle className="w-4 h-4 mr-1" />}
+              Random Distribute{unassignedCount > 0 ? ` (${unassignedCount})` : ""}
             </Button>
           </div>
 

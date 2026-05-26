@@ -23,8 +23,13 @@ export async function getBattles() {
 }
 
 export async function getActiveBattles() {
-  const supabase = await createServerClient()
-  const { data, error } = await supabase
+  // Use service role so the profile joins resolve for non-admin dashboard viewers
+  // (regular RLS would block other users' profile rows and leave player1/player2 null).
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceRoleKey) return { battles: [], error: "Server config error" }
+
+  const adminSupabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
+  const { data, error } = await adminSupabase
     .from("battles")
     .select(`
       *,
@@ -33,7 +38,7 @@ export async function getActiveBattles() {
     `)
     .eq("status", "live")
     .order("created_at", { ascending: false })
-  
+
   if (error) {
     console.error("Error fetching active battles:", error)
     return { battles: [], error: error.message }
