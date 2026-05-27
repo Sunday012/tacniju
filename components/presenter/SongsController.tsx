@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getSongs, createSong } from "@/app/actions/songs";
+import { getSongs, createSong, deleteSong } from "@/app/actions/songs";
 import { setPresentationState } from "@/app/actions/presentation";
 import { toast } from "sonner";
-import { Loader2, Music, Send, Plus, Search } from "lucide-react";
+import { Loader2, Music, Send, Plus, Search, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export function SongsController() {
@@ -16,6 +16,7 @@ export function SongsController() {
   
   const [openAdd, setOpenAdd] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | string | null>(null);
 
   const fetchSongs = async () => {
     setLoading(true);
@@ -42,6 +43,26 @@ export function SongsController() {
       toast.error("Failed to add song");
     } finally {
       setAdding(false);
+    }
+  };
+
+  const handleDeleteSong = async (song: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm(`Delete "${song.title}"? This cannot be undone.`)) return;
+    setDeletingId(song.id);
+    try {
+      const res = await deleteSong(song.id);
+      if (res.error) {
+        toast.error(res.error);
+      } else {
+        toast.success("Song deleted");
+        if (selectedSong?.id === song.id) setSelectedSong(null);
+        setSongs(prev => prev.filter(s => s.id !== song.id));
+      }
+    } catch (err) {
+      toast.error("Failed to delete song");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -130,15 +151,29 @@ export function SongsController() {
             ) : (
               <ul className="divide-y divide-slate-100">
                 {filteredSongs.map(song => (
-                  <li 
+                  <li
                     key={song.id}
                     onClick={() => setSelectedSong(song)}
-                    className={`p-3 cursor-pointer transition-colors ${
+                    className={`group p-3 cursor-pointer transition-colors flex items-start justify-between gap-2 ${
                       selectedSong?.id === song.id ? 'bg-indigo-50 border-l-4 border-indigo-500' : 'hover:bg-slate-100 border-l-4 border-transparent'
                     }`}
                   >
-                    <p className="font-bold text-slate-800 text-sm">{song.title}</p>
-                    <p className="text-xs text-slate-500 capitalize">{song.type}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-slate-800 text-sm truncate">{song.title}</p>
+                      <p className="text-xs text-slate-500 capitalize">{song.type}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteSong(song, e)}
+                      disabled={deletingId === song.id}
+                      title="Delete song"
+                      aria-label={`Delete ${song.title}`}
+                      className="opacity-0 group-hover:opacity-100 focus:opacity-100 shrink-0 p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all disabled:opacity-50"
+                    >
+                      {deletingId === song.id
+                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                        : <Trash2 className="w-4 h-4" />}
+                    </button>
                   </li>
                 ))}
               </ul>

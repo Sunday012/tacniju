@@ -5,11 +5,24 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Menu, Scan, Calendar, BookOpen, LayoutDashboard, LogOut, Shield, Users, Package, Trophy, Ticket, ChevronDown, MonitorPlay, Hash, ShoppingBag, Settings, Award, Swords } from "lucide-react"
+import { Menu, Scan, Calendar, BookOpen, LayoutDashboard, LogOut, Shield, Users, Package, Trophy, Ticket, ChevronDown, MonitorPlay, Hash, ShoppingBag, Settings, Award, Swords, FileText } from "lucide-react"
+
+type NavItem = {
+  name: string
+  href: string
+  icon: any
+  children?: NavItem[]
+}
+
+function itemMatchesPath(item: NavItem, pathname: string): boolean {
+  if (pathname === item.href) return true
+  if (item.href !== "/admin" && pathname.startsWith(item.href)) return true
+  return item.children?.some(c => itemMatchesPath(c, pathname)) ?? false
+}
 import { createClient } from "@/lib/client"
 import { useRouter } from "next/navigation"
 
-const NAV_GROUPS = [
+const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
     title: "Overview",
     items: [
@@ -30,8 +43,14 @@ const NAV_GROUPS = [
   {
     title: "Finance & Assets",
     items: [
-      { name: "Gifts", href: "/admin/stock", icon: Package },
-      { name: "Gift Records", href: "/admin/stock/gift-records", icon: Package },
+      {
+        name: "Gifts",
+        href: "/admin/stock",
+        icon: Package,
+        children: [
+          { name: "Gift Records", href: "/admin/stock/gift-records", icon: FileText },
+        ],
+      },
       { name: "Stall Orders", href: "/admin/stalls", icon: ShoppingBag },
       { name: "Accounting", href: "/accounting", icon: BookOpen },
     ]
@@ -60,11 +79,9 @@ export function AdminMobileNav() {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initialState: Record<string, boolean> = {}
     let foundActive = false
-    
+
     NAV_GROUPS.forEach(group => {
-      const hasActive = group.items.some(item => 
-        pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
-      )
+      const hasActive = group.items.some(item => itemMatchesPath(item, pathname))
       initialState[group.title] = hasActive
       if (hasActive) foundActive = true
     })
@@ -75,17 +92,33 @@ export function AdminMobileNav() {
     return initialState
   })
 
+  const [openItems, setOpenItems] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {}
+    NAV_GROUPS.forEach(group => {
+      group.items.forEach(item => {
+        if (item.children && item.children.some(c => itemMatchesPath(c, pathname))) {
+          initial[item.href] = true
+        }
+      })
+    })
+    return initial
+  })
+
   const toggleGroup = (title: string) => {
     setOpenGroups(prev => {
       if (prev[title]) {
         return { ...prev, [title]: false }
       }
-      
+
       const newState: Record<string, boolean> = {}
       Object.keys(prev).forEach(key => newState[key] = false)
       newState[title] = true
       return newState
     })
+  }
+
+  const toggleItem = (href: string) => {
+    setOpenItems(prev => ({ ...prev, [href]: !prev[href] }))
   }
 
   const handleSignOut = async () => {
@@ -131,23 +164,61 @@ export function AdminMobileNav() {
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openGroups[group.title] ? 'rotate-180' : ''}`} />
               </button>
               
-              <div className={`space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${openGroups[group.title] ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+              <div className={`space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${openGroups[group.title] ? 'max-h-[40rem] opacity-100' : 'max-h-0 opacity-0'}`}>
                 {group.items.map((item) => {
                   const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href))
                   const Icon = item.icon
+                  const hasChildren = !!item.children?.length
+                  const isOpen = !!openItems[item.href]
+
                   return (
-                    <Link key={item.href} href={item.href} onClick={() => setOpen(false)}>
+                    <div key={item.href}>
                       <div
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                        className={`flex items-center rounded-xl text-sm font-semibold transition-colors border ${
                           isActive
-                            ? "bg-indigo-50 text-indigo-700 border border-indigo-100"
-                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent"
+                            ? "bg-indigo-50 text-indigo-700 border-indigo-100"
+                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent"
                         }`}
                       >
-                        <Icon className={`w-4.5 h-4.5 ${isActive ? "text-indigo-600" : "text-slate-400"}`} />
-                        {item.name}
+                        <Link href={item.href} onClick={() => setOpen(false)} className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 px-3 py-2.5">
+                            <Icon className={`w-4.5 h-4.5 ${isActive ? "text-indigo-600" : "text-slate-400"}`} />
+                            <span className="truncate">{item.name}</span>
+                          </div>
+                        </Link>
+                        {hasChildren && (
+                          <button
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); toggleItem(item.href) }}
+                            className="p-2 mr-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+                            aria-label={isOpen ? `Collapse ${item.name}` : `Expand ${item.name}`}
+                          >
+                            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                          </button>
+                        )}
                       </div>
-                    </Link>
+
+                      {hasChildren && (
+                        <div className={`pl-7 mt-1 space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}>
+                          {item.children!.map(child => {
+                            const childActive = pathname === child.href || (child.href !== "/admin" && pathname.startsWith(child.href))
+                            const ChildIcon = child.icon
+                            return (
+                              <Link key={child.href} href={child.href} onClick={() => setOpen(false)}>
+                                <div className={`flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-semibold transition-colors border ${
+                                  childActive
+                                    ? "bg-indigo-50 text-indigo-700 border-indigo-100"
+                                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent"
+                                }`}>
+                                  <ChildIcon className={`w-4 h-4 ${childActive ? "text-indigo-600" : "text-slate-400"}`} />
+                                  <span className="truncate">{child.name}</span>
+                                </div>
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
                   )
                 })}
               </div>

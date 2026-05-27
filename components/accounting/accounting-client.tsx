@@ -203,7 +203,7 @@ export function AccountingClient({ profile, orgName, groups, ledgers, customFiel
                         <div className="w-full md:w-1/2 p-4 md:p-6 flex items-center justify-center relative bg-indigo-50/40">
                             {/* Menu Box */}
                             <div className="bg-white border rounded-lg shadow-xl flex flex-col w-full max-w-[360px] overflow-hidden border-indigo-100 ring-1 ring-indigo-900/5">
-                                <div className="bg-indigo-700 text-white text-center font-bold py-3 border-b-[3px] border-amber-400 tracking-wide shadow-sm z-10">
+                                <div className="bg-indigo-950 text-white text-center font-bold py-3 border-b-[3px] border-amber-400 tracking-wide shadow-sm z-10">
                                     Accounting Gateway
                                 </div>
 
@@ -288,7 +288,7 @@ export function AccountingClient({ profile, orgName, groups, ledgers, customFiel
         <div className="min-h-screen bg-white font-sans text-slate-800 flex flex-col overflow-hidden select-none">
 
             {/* Top Hotkey Bar - Hidden on mobile */}
-            <div className="hidden md:flex bg-indigo-700 border-b-[3px] border-amber-400 text-indigo-100 text-xs px-4 py-1.5 justify-between font-semibold shadow-sm z-10">
+            <div className="hidden md:flex bg-indigo-950 border-b-[3px] border-amber-400 text-indigo-100 text-xs px-4 py-1.5 justify-between font-semibold shadow-sm z-10">
                 <div className="flex space-x-6 overflow-x-auto">
                     <span className="flex items-center hover:text-white cursor-pointer transition-colors whitespace-nowrap"><span className="text-amber-400 font-bold mr-1 border-b border-amber-400 leading-none">P</span>: Print</span>
                     <span className="flex items-center hover:text-white cursor-pointer transition-colors whitespace-nowrap"><span className="text-amber-400 font-bold mr-1 border-b border-amber-400 leading-none">E</span>: Export</span>
@@ -309,7 +309,7 @@ export function AccountingClient({ profile, orgName, groups, ledgers, customFiel
                 <div className="flex-1 flex flex-col md:border-r border-slate-200 relative z-10 bg-white overflow-hidden">
 
                     {/* Application Header */}
-                    <div className="bg-indigo-800 text-white px-4 py-2 flex justify-between font-bold text-sm shadow-md">
+                    <div className="bg-indigo-950 text-white px-4 py-2 flex justify-between font-bold text-sm shadow-md">
                         <span className="tracking-wide">CHURCH ACCOUNTING PORTAL</span>
                         <span className="flex gap-4">
                             <span className="text-indigo-200 hover:text-white cursor-pointer transition-colors text-xs font-medium">Ctrl + M ☒</span>
@@ -320,19 +320,19 @@ export function AccountingClient({ profile, orgName, groups, ledgers, customFiel
                 </div>
 
                 {/* Vertical Right Strip Menu - Horizontal on Mobile */}
-                <div className="w-full md:w-[12%] bg-indigo-800 text-white flex flex-row md:flex-col md:border-l border-indigo-900 text-xs shadow-[inset_0_2px_10px_rgba(0,0,0,0.2)] md:shadow-[inset_2px_0_10px_rgba(0,0,0,0.2)] z-20 overflow-x-auto md:overflow-y-auto">
-                    <div className="flex flex-row md:flex-col py-1 md:py-3 px-2 gap-1 md:border-b border-indigo-900/50">
+                <div className="w-full md:w-[12%] bg-indigo-950 text-white flex flex-row md:flex-col md:border-l border-black/40 text-xs shadow-[inset_0_2px_10px_rgba(0,0,0,0.25)] md:shadow-[inset_2px_0_10px_rgba(0,0,0,0.25)] z-20 overflow-x-auto md:overflow-y-auto">
+                    <div className="flex flex-row md:flex-col py-1 md:py-3 px-2 gap-1 md:border-b border-black/40">
                         <button
                             type="button"
                             onClick={goToSelectChurch}
-                            className="px-2 md:px-3 py-2 bg-indigo-900/40 hover:bg-indigo-700 cursor-pointer flex rounded border border-indigo-700/50 transition-colors shadow-sm whitespace-nowrap text-left"
+                            className="px-2 md:px-3 py-2 bg-black/30 hover:bg-indigo-800 cursor-pointer flex rounded border border-indigo-800/60 transition-colors shadow-sm whitespace-nowrap text-left"
                         >
                             <span className="mr-1 md:w-8 font-bold text-amber-400">F1:</span> Select Ch.
                         </button>
                     </div>
-                    <div className="flex flex-row md:flex-col py-1 md:py-3 px-2 gap-1 md:border-b border-indigo-900/50">
-                        <div className="px-2 md:px-3 py-2 bg-indigo-900/40 hover:bg-indigo-700 cursor-pointer flex rounded border border-indigo-700/50 transition-colors shadow-sm whitespace-nowrap"><span className="mr-1 md:w-8 font-bold text-amber-400">F2:</span> Date</div>
-                        <div className="px-2 md:px-3 py-2 bg-indigo-900/40 hover:bg-indigo-700 cursor-pointer flex rounded border border-indigo-700/50 transition-colors shadow-sm whitespace-nowrap"><span className="mr-1 md:w-8 font-bold text-amber-400 border-b-2 border-amber-400 leading-none pb-0.5">F2:</span> Period</div>
+                    <div className="flex flex-row md:flex-col py-1 md:py-3 px-2 gap-1 md:border-b border-black/40">
+                        <div className="px-2 md:px-3 py-2 bg-black/30 hover:bg-indigo-800 cursor-pointer flex rounded border border-indigo-800/60 transition-colors shadow-sm whitespace-nowrap"><span className="mr-1 md:w-8 font-bold text-amber-400">F2:</span> Date</div>
+                        <div className="px-2 md:px-3 py-2 bg-black/30 hover:bg-indigo-800 cursor-pointer flex rounded border border-indigo-800/60 transition-colors shadow-sm whitespace-nowrap"><span className="mr-1 md:w-8 font-bold text-amber-400 border-b-2 border-amber-400 leading-none pb-0.5">F2:</span> Period</div>
                     </div>
                 </div>
             </div>
@@ -383,7 +383,7 @@ export function AccountingClient({ profile, orgName, groups, ledgers, customFiel
                     </div>
                 </div>
                 {/* Footer Strip */}
-                <div className="bg-indigo-900 text-[10px] text-indigo-200 px-5 py-2 flex justify-between font-medium tracking-wide">
+                <div className="bg-indigo-950 text-[10px] text-indigo-200 px-5 py-2 flex justify-between font-medium tracking-wide">
                     <span>TACN MAIN <span className="text-amber-400 mx-1">▶</span> Gateway of Accounting</span>
                     <div className="flex gap-8">
                         <span className="opacity-80">© 2026 The Apostolic Church</span>

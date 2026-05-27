@@ -3,15 +3,15 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { 
-  LayoutDashboard, 
-  Scan, 
-  Calendar, 
-  Hash, 
-  Trophy, 
-  Ticket, 
-  Package, 
-  BookOpen, 
+import {
+  LayoutDashboard,
+  Scan,
+  Calendar,
+  Hash,
+  Trophy,
+  Ticket,
+  Package,
+  BookOpen,
   Home,
   LogOut,
   ChevronDown,
@@ -20,10 +20,18 @@ import {
   Swords,
   ShoppingBag,
   Settings,
-  Award
+  Award,
+  FileText
 } from "lucide-react"
 
-const NAV_GROUPS = [
+type NavItem = {
+  name: string
+  href: string
+  icon: any
+  children?: NavItem[]
+}
+
+const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
     title: "Overview",
     items: [
@@ -44,8 +52,14 @@ const NAV_GROUPS = [
   {
     title: "Finance & Assets",
     items: [
-      { name: "Gifts", href: "/admin/stock", icon: Package },
-      { name: "Gift Records", href: "/admin/stock/gift-records", icon: Package },
+      {
+        name: "Gifts",
+        href: "/admin/stock",
+        icon: Package,
+        children: [
+          { name: "Gift Records", href: "/admin/stock/gift-records", icon: FileText },
+        ],
+      },
       { name: "Stall Orders", href: "/admin/stalls", icon: ShoppingBag },
       { name: "Accounting", href: "/accounting", icon: BookOpen },
     ]
@@ -66,26 +80,41 @@ const NAV_GROUPS = [
   }
 ]
 
+function itemMatchesPath(item: NavItem, pathname: string): boolean {
+  if (pathname === item.href) return true
+  if (item.href !== "/admin" && pathname.startsWith(item.href)) return true
+  return item.children?.some(c => itemMatchesPath(c, pathname)) ?? false
+}
+
 export function AdminSidebarNav() {
   const pathname = usePathname()
-  
+
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
     const initialState: Record<string, boolean> = {}
     let foundActive = false
-    
+
     NAV_GROUPS.forEach(group => {
-      const hasActive = group.items.some(item => 
-        pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
-      )
+      const hasActive = group.items.some(item => itemMatchesPath(item, pathname))
       initialState[group.title] = hasActive
       if (hasActive) foundActive = true
     })
 
-    // If no group matches the current path, open Overview by default
     if (!foundActive) {
       initialState["Overview"] = true
     }
     return initialState
+  })
+
+  const [openItems, setOpenItems] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {}
+    NAV_GROUPS.forEach(group => {
+      group.items.forEach(item => {
+        if (item.children && item.children.some(c => itemMatchesPath(c, pathname))) {
+          initial[item.href] = true
+        }
+      })
+    })
+    return initial
   })
 
   const toggleGroup = (title: string) => {
@@ -93,12 +122,16 @@ export function AdminSidebarNav() {
       if (prev[title]) {
         return { ...prev, [title]: false }
       }
-      
+
       const newState: Record<string, boolean> = {}
       Object.keys(prev).forEach(key => newState[key] = false)
       newState[title] = true
       return newState
     })
+  }
+
+  const toggleItem = (href: string) => {
+    setOpenItems(prev => ({ ...prev, [href]: !prev[href] }))
   }
 
   return (
@@ -130,21 +163,59 @@ export function AdminSidebarNav() {
               <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openGroups[group.title] ? 'rotate-180' : ''}`} />
             </button>
             
-            <div className={`space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${openGroups[group.title] ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className={`space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${openGroups[group.title] ? 'max-h-[40rem] opacity-100' : 'max-h-0 opacity-0'}`}>
               {group.items.map((item) => {
                 const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
                 const Icon = item.icon
+                const hasChildren = !!item.children?.length
+                const isOpen = !!openItems[item.href]
+
                 return (
-                  <Link key={item.name} href={item.href}>
-                    <span className={`flex items-center gap-3.5 px-4 py-2.5 rounded-2xl transition-all duration-200 group ${
-                      isActive 
-                        ? "bg-indigo-600/10 text-indigo-700 font-semibold" 
-                        : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-900 font-medium"
+                  <div key={item.name}>
+                    <div className={`flex items-center rounded-2xl transition-all duration-200 group ${
+                      isActive
+                        ? "bg-indigo-600/10 text-indigo-700"
+                        : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-900"
                     }`}>
-                      <Icon className={`w-5 h-5 transition-colors ${isActive ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"}`} />
-                      <span className="text-sm tracking-wide">{item.name}</span>
-                    </span>
-                  </Link>
+                      <Link href={item.href} className="flex-1 min-w-0">
+                        <span className="flex items-center gap-3.5 px-4 py-2.5">
+                          <Icon className={`w-5 h-5 transition-colors ${isActive ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"}`} />
+                          <span className={`text-sm tracking-wide truncate ${isActive ? "font-semibold" : "font-medium"}`}>{item.name}</span>
+                        </span>
+                      </Link>
+                      {hasChildren && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); toggleItem(item.href) }}
+                          className="p-2 mr-1.5 rounded-lg hover:bg-slate-200/60 text-slate-400 hover:text-slate-700 transition-colors"
+                          aria-label={isOpen ? `Collapse ${item.name}` : `Expand ${item.name}`}
+                        >
+                          <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+                        </button>
+                      )}
+                    </div>
+
+                    {hasChildren && (
+                      <div className={`pl-7 mt-1 space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}>
+                        {item.children!.map(child => {
+                          const childActive = pathname === child.href || (child.href !== "/admin" && pathname.startsWith(child.href))
+                          const ChildIcon = child.icon
+                          return (
+                            <Link key={child.href} href={child.href}>
+                              <span className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 ${
+                                childActive
+                                  ? "bg-indigo-600/10 text-indigo-700 font-semibold"
+                                  : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-900 font-medium"
+                              }`}>
+                                <ChildIcon className={`w-4 h-4 ${childActive ? "text-indigo-600" : "text-slate-400"}`} />
+                                <span className="text-[13px] tracking-wide truncate">{child.name}</span>
+                              </span>
+                            </Link>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
                 )
               })}
             </div>

@@ -145,63 +145,82 @@ export function FamilyLounge({ family, members, head, isAdmin = false }: Props) 
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {members.map(m => {
-              const isHead = m.id === family.head_id
-              return (
-                <Card
-                  key={m.id}
-                  className={`bg-white border transition-all duration-300 hover:shadow-md ${
-                    isHead ? "border-amber-300 shadow-[0_8px_30px_-12px_rgba(245,158,11,0.35)]" : "border-slate-100"
-                  }`}
-                >
-                  <CardContent className="p-5">
-                    <div className="flex items-start gap-4">
-                      <Avatar className={`h-14 w-14 border-2 ${isHead ? "border-amber-300" : "border-indigo-50"}`}>
-                        <AvatarImage src={m.avatar_url || ""} />
-                        <AvatarFallback className={isHead ? "bg-amber-100 text-amber-800 font-bold" : "bg-indigo-100 text-indigo-700 font-bold"}>
-                          {m.full_name.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-bold text-slate-800 leading-tight truncate">{m.full_name}</h3>
-                          {isHead && (
-                            <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-[10px] font-bold tracking-wider uppercase">
-                              <Crown className="w-3 h-3 mr-1" /> Head
-                            </Badge>
-                          )}
-                        </div>
-                        {m.office_position && (
-                          <p className="text-xs font-semibold text-indigo-700 mt-0.5">{m.office_position}</p>
-                        )}
-                        <div className="flex flex-wrap gap-1.5 mt-2">
-                          {m.rank && <Badge variant="outline" className="text-[10px]">{m.rank}</Badge>}
-                          {m.department && <Badge variant="outline" className="text-[10px]">{m.department}</Badge>}
-                          {m.member_role && <Badge variant="outline" className="text-[10px]">{m.member_role}</Badge>}
-                        </div>
-                      </div>
-                    </div>
-
+          <Card className="border-slate-200 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="px-5 py-3 font-bold text-slate-600 text-[11px] uppercase tracking-wider">Member</th>
+                    <th className="px-5 py-3 font-bold text-slate-600 text-[11px] uppercase tracking-wider hidden md:table-cell">Role</th>
+                    <th className="px-5 py-3 font-bold text-slate-600 text-[11px] uppercase tracking-wider hidden md:table-cell">Department</th>
+                    <th className="px-5 py-3 font-bold text-slate-600 text-[11px] uppercase tracking-wider hidden lg:table-cell">Office</th>
+                    <th className="px-5 py-3 font-bold text-slate-600 text-[11px] uppercase tracking-wider hidden sm:table-cell">Rank</th>
                     {isAdmin && (
-                      <div className="mt-4 pt-4 border-t border-slate-100 flex justify-end">
-                        <button
-                          onClick={() => handleRemove(m.id)}
-                          disabled={removingId === m.id}
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-                        >
-                          {removingId === m.id
-                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            : <UserMinus className="w-3.5 h-3.5" />}
-                          Remove
-                        </button>
-                      </div>
+                      <th className="px-5 py-3 font-bold text-slate-600 text-[11px] uppercase tracking-wider text-right">Actions</th>
                     )}
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </div>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 bg-white">
+                  {members.map(m => {
+                    const isHead = m.id === family.head_id
+                    return (
+                      <tr key={m.id} className={`transition-colors ${isHead ? "bg-amber-50/40 hover:bg-amber-50/60" : "hover:bg-slate-50/60"}`}>
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <Avatar className={`h-9 w-9 border-2 shrink-0 ${isHead ? "border-amber-300" : "border-indigo-50"}`}>
+                              <AvatarImage src={m.avatar_url || ""} />
+                              <AvatarFallback className={isHead ? "bg-amber-100 text-amber-800 font-bold text-xs" : "bg-indigo-100 text-indigo-700 font-bold text-xs"}>
+                                {m.full_name.substring(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-slate-800 truncate">{m.full_name}</span>
+                                {isHead && (
+                                  <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-[9px] font-bold tracking-wider uppercase shrink-0">
+                                    <Crown className="w-2.5 h-2.5 mr-1" /> Head
+                                  </Badge>
+                                )}
+                              </div>
+                              {m.reservation_number && (
+                                <div className="text-[10px] text-slate-400 font-mono mt-0.5">{m.reservation_number}</div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-3 hidden md:table-cell text-slate-600 text-xs">
+                          {m.member_role || <span className="text-slate-300">—</span>}
+                        </td>
+                        <td className="px-5 py-3 hidden md:table-cell text-slate-600 text-xs">
+                          {m.department || <span className="text-slate-300">—</span>}
+                        </td>
+                        <td className="px-5 py-3 hidden lg:table-cell text-indigo-700 text-xs font-semibold">
+                          {m.office_position || <span className="text-slate-300 font-normal">—</span>}
+                        </td>
+                        <td className="px-5 py-3 hidden sm:table-cell text-slate-600 text-xs">
+                          {m.rank || <span className="text-slate-300">—</span>}
+                        </td>
+                        {isAdmin && (
+                          <td className="px-5 py-3 text-right">
+                            <button
+                              onClick={() => handleRemove(m.id)}
+                              disabled={removingId === m.id}
+                              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50 px-2.5 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                            >
+                              {removingId === m.id
+                                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                : <UserMinus className="w-3.5 h-3.5" />}
+                              <span className="hidden sm:inline">Remove</span>
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         )}
       </div>
     </div>

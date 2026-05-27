@@ -52,3 +52,23 @@ export async function createSong(formData: FormData) {
   revalidatePath("/admin/presenter");
   return { success: true };
 }
+
+export async function deleteSong(id: number | string) {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
+  const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
+  if (!profile?.is_admin) return { error: "Only admins can delete songs" };
+
+  const { error } = await supabase.from("songs").delete().eq("id", id);
+
+  if (error) {
+    console.error("Error deleting song:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/admin/presenter");
+  return { success: true };
+}
