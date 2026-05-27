@@ -33,6 +33,33 @@ export default async function DashboardPage() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
+  // Family info: only fetch when the member is assigned to a family.
+  let familyInfo: { id: string; name: string; headName: string | null; isHead: boolean } | null = null
+  if (profile?.family_id) {
+    const { data: family } = await adminSupabase
+      .from("families")
+      .select("id, name, head_id")
+      .eq("id", profile.family_id)
+      .maybeSingle()
+    if (family) {
+      let headName: string | null = null
+      if (family.head_id) {
+        const { data: head } = await adminSupabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", family.head_id)
+          .maybeSingle()
+        headName = head?.full_name || null
+      }
+      familyInfo = {
+        id: family.id,
+        name: family.name,
+        headName,
+        isHead: family.head_id === user.id,
+      }
+    }
+  }
+
   // Get recent attendance from member_attendance table
   const { data: attendance } = await adminSupabase
     .from("member_attendance")
@@ -115,6 +142,7 @@ export default async function DashboardPage() {
           department={profile?.department || ""}
           assembly={profile?.assembly || ""}
           eventsCount={attendance?.length || 0}
+          family={familyInfo}
         />
 
         {/* Row 3: Recent Activity & Gifts */}

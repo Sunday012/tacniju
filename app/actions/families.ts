@@ -95,14 +95,76 @@ export async function distributeUnassignedMembersAction() {
 export async function assignMemberToFamilyAction(profileId: string, familyId: string | null) {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceRoleKey) return { success: false, error: "Server config error" }
-  
+
   const adminSupabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
-  
+
+  // If we're moving a member off a family, also clear them as head of that family
+  if (!familyId) {
+    await adminSupabase.from("families").update({ head_id: null }).eq("head_id", profileId)
+  }
+
   const { error } = await adminSupabase.from("profiles").update({ family_id: familyId }).eq("id", profileId)
-  
+
   if (error) return { success: false, error: error.message }
-  
+
   revalidatePath("/admin/families")
   revalidatePath("/admin")
+  revalidatePath("/dashboard")
+  revalidatePath("/dashboard/lounge")
+  return { success: true }
+}
+
+export async function getFamilyDetails(familyId: string) {
+  const adminSupabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
+
+  const [{ data: family, error: famErr }, { data: members, error: memErr }] = await Promise.all([
+    adminSupabase.from("families").select("*").eq("id", familyId).maybeSingle(),
+    adminSupabase
+      .from("profiles")
+      .select("id, full_name, reservation_number, avatar_url, rank, department, office_position, member_role, member_status")
+      .eq("family_id", familyId)
+      .order("full_name", { ascending: true }),
+  ])
+
+  if (famErr) return { family: null, members: [], error: famErr.message }
+  if (memErr) return { family, members: [], error: memErr.message }
+  return { family, members: members || [], error: null }
+}
+
+export async function setFamilyHeadAction(familyId: string, headProfileId: string | null) {
+  const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: "Unauthorized" }
+
+  const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
+  if (!profile?.is_admin) return { success: false, error: "Only admins can set a family head" }
+
+  const adminSupabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
+
+  // The head must already be a member of the family (or null to clear).
+  if (headProfileId) {
+    const { data: candidate } = await adminSupabase
+      .from("profiles")
+      .select("family_id")
+      .eq("id", headProfileId)
+      .maybeSingle()
+    if (!candidate || candidate.family_id !== familyId) {
+      return { success: false, error: "Selected member is not part of this family" }
+    }
+  }
+
+  const { error } = await adminSupabase.from("families").update({ head_id: headProfileId }).eq("id", familyId)
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath("/admin/families")
+  revalidatePath(`/admin/families/${familyId}`)
+  revalidatePath("/dashboard")
+  revalidatePath("/dashboard/lounge")
   return { success: true }
 }

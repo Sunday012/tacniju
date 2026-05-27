@@ -1,3 +1,5 @@
+import Link from "next/link"
+import { Crown } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 interface QuickStatsProps {
@@ -5,9 +7,10 @@ interface QuickStatsProps {
   department: string
   assembly: string
   eventsCount: number
+  family?: { id: string; name: string; headName: string | null; isHead: boolean } | null
 }
 
-export function QuickStats({ rank, department, assembly, eventsCount }: QuickStatsProps) {
+export function QuickStats({ rank, department, assembly, eventsCount, family }: QuickStatsProps) {
   return (
     <div className="bg-white/70 backdrop-blur-3xl border border-white/60 rounded-[2rem] p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.12)] transition-shadow">
       <h3 className="text-lg text-slate-800 font-extrabold mb-6 tracking-tight flex items-center gap-2.5">
@@ -52,6 +55,35 @@ export function QuickStats({ rank, department, assembly, eventsCount }: QuickSta
             {eventsCount}
           </span>
         </div>
+
+        {family ? (
+          <Link href="/dashboard/lounge" className="block group">
+            <div className="flex justify-between items-center p-3.5 rounded-[1.25rem] bg-gradient-to-br from-indigo-50/80 to-violet-50/60 border border-indigo-100 shadow-sm group-hover:shadow-md transition-all">
+              <div className="flex flex-col">
+                <span className="text-[13px] font-bold text-indigo-700/80 ml-2 uppercase tracking-wide">Family</span>
+                {family.headName && (
+                  <span className="text-[11px] ml-2 text-slate-500 mt-0.5">
+                    {family.isHead ? (
+                      <span className="inline-flex items-center gap-1 text-amber-700 font-bold">
+                        <Crown className="w-3 h-3" /> You lead this family
+                      </span>
+                    ) : (
+                      <>Head: <span className="font-semibold text-slate-700">{family.headName}</span></>
+                    )}
+                  </span>
+                )}
+              </div>
+              <span className="text-sm font-bold text-indigo-800 bg-white shadow-sm border border-indigo-100 px-4 py-1.5 rounded-xl">
+                {family.name}
+              </span>
+            </div>
+          </Link>
+        ) : (
+          <div className="flex justify-between items-center p-3.5 rounded-[1.25rem] bg-gradient-to-br from-slate-50 to-white border border-dashed border-slate-200">
+            <span className="text-[13px] font-bold text-slate-500 ml-2 uppercase tracking-wide">Family</span>
+            <span className="text-xs italic text-slate-400 px-4 py-1.5">Not assigned</span>
+          </div>
+        )}
       </div>
     </div>
   )

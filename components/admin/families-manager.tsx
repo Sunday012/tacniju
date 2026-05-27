@@ -1,6 +1,7 @@
 "use client"
 import { useState } from "react"
-import { Users, Plus, Trash2, Shield, Shuffle, Loader2 } from "lucide-react"
+import Link from "next/link"
+import { Users, Plus, Trash2, Shield, Shuffle, Loader2, ArrowRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -114,21 +115,32 @@ export function FamiliesManager({ families, profiles }: { families: any[], profi
               <p className="text-slate-500 text-sm italic col-span-full">No families created yet.</p>
             ) : families.map(f => {
               const count = profiles.filter(p => p.family_id === f.id).length
+              const head = f.head_id ? profiles.find(p => p.id === f.head_id) : null
               return (
-                <div key={f.id} className="border border-slate-200 rounded-xl p-4 bg-white hover:border-indigo-200 transition-colors flex justify-between items-start">
-                  <div>
-                    <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                <div key={f.id} className="group border border-slate-200 rounded-xl p-4 bg-white hover:border-indigo-300 hover:shadow-md transition-all flex justify-between items-start relative">
+                  <Link href={`/admin/families/${f.id}`} className="flex-1 min-w-0 pr-2">
+                    <h3 className="font-bold text-slate-800 flex items-center gap-2 group-hover:text-indigo-700 transition-colors">
                       <Shield className="w-4 h-4 text-indigo-500" />
                       {f.name}
+                      <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all text-indigo-500" />
                     </h3>
                     <Badge variant="secondary" className="mt-2 text-xs bg-indigo-50 text-indigo-700 border border-indigo-100">
-                      {count} Members
+                      {count} {count === 1 ? "Member" : "Members"}
                     </Badge>
-                  </div>
-                  <button 
-                    onClick={() => handleDelete(f.id)}
+                    {head && (
+                      <div className="mt-2 text-[11px] text-slate-500 truncate">
+                        Head: <span className="font-semibold text-slate-700">{head.full_name}</span>
+                      </div>
+                    )}
+                    <div className="text-[11px] text-indigo-600 mt-2 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+                      Open lounge →
+                    </div>
+                  </Link>
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(f.id) }}
                     disabled={isDeleting === f.id}
-                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                    className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors z-10"
+                    title="Delete family"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

@@ -74,7 +74,7 @@ export default function SelectChurchPage() {
         <div className="min-h-screen w-full flex bg-white" style={{ fontFamily: "'Inter', sans-serif" }}>
 
             {/* Left Sidebar — Branding */}
-            <div className="hidden md:flex w-[340px] flex-shrink-0 bg-gradient-to-br from-indigo-600 to-violet-700 flex-col justify-between p-8 text-white relative overflow-hidden">
+            <div className="hidden md:flex w-[340px] flex-shrink-0 bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950 flex-col justify-between p-8 text-white relative overflow-hidden">
                 {/* subtle pattern */}
                 <div className="absolute inset-0 opacity-[0.08] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #ffffff 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
 
@@ -85,7 +85,7 @@ export default function SelectChurchPage() {
                             <span className="text-white text-xs font-bold tracking-widest uppercase">Cloud ERP</span>
                         </div>
                         <h1 className="text-3xl font-extrabold leading-tight mb-2">TACN<br />Finance</h1>
-                        <p className="text-indigo-100/90 text-sm leading-relaxed">
+                        <p className="text-indigo-200/80 text-sm leading-relaxed">
                             Church accounting portal for The Apostolic Church Nigeria assemblies.
                         </p>
                     </div>
@@ -102,14 +102,14 @@ export default function SelectChurchPage() {
                                 </div>
                                 <div>
                                     <div className="text-white text-xs font-semibold">{f.label}</div>
-                                    <div className="text-indigo-100/70 text-[11px]">{f.desc}</div>
+                                    <div className="text-indigo-200/60 text-[11px]">{f.desc}</div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                <div className="text-indigo-100/60 text-[11px] relative">
+                <div className="text-indigo-200/50 text-[11px] relative">
                     <div className="border-t border-white/15 pt-4">© 2026 The Apostolic Church Nigeria</div>
                 </div>
             </div>
@@ -124,7 +124,7 @@ export default function SelectChurchPage() {
                     </div>
                     <button
                         onClick={() => { setShowModal(true); setModalError(""); setNewName(""); setNewPassword("") }}
-                        className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm px-4 py-2 rounded-lg transition-all shadow-[0_4px_16px_rgba(79,70,229,0.3)] hover:shadow-[0_4px_20px_rgba(79,70,229,0.4)] active:scale-95"
+                        className="flex items-center gap-2 bg-indigo-800 hover:bg-indigo-900 text-white font-bold text-sm px-4 py-2 rounded-lg transition-all shadow-[0_4px_16px_rgba(49,46,129,0.35)] hover:shadow-[0_4px_20px_rgba(49,46,129,0.45)] active:scale-95"
                     >
                         <span className="text-lg leading-none">+</span>
                         Create Church
@@ -135,24 +135,24 @@ export default function SelectChurchPage() {
                 <div className="flex-1 overflow-y-auto px-6 md:px-10 py-6">
                     {isLoading ? (
                         <div className="flex justify-center py-20">
-                            <div className="w-10 h-10 rounded-full border-2 border-indigo-200 border-t-indigo-600 animate-spin"></div>
+                            <div className="w-10 h-10 rounded-full border-2 border-indigo-200 border-t-indigo-800 animate-spin"></div>
                         </div>
                     ) : organizations.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-64 text-center">
                             <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mb-4 text-2xl">⛪</div>
                             <p className="text-slate-700 font-medium">No assemblies registered yet</p>
-                            <p className="text-slate-500 text-sm mt-1">Click <span className="text-indigo-700 font-bold">+ Create Church</span> to get started</p>
+                            <p className="text-slate-500 text-sm mt-1">Click <span className="text-indigo-900 font-bold">+ Create Church</span> to get started</p>
                         </div>
                     ) : (
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 items-start">
                             {organizations.map((org) => (
                                 <div
                                     key={org.id}
-                                    className="group bg-white border border-slate-200 hover:border-indigo-300 rounded-xl p-5 transition-all duration-200 shadow-sm hover:shadow-[0_8px_30px_-12px_rgba(79,70,229,0.25)]"
+                                    className="group bg-white border border-slate-200 hover:border-indigo-400 rounded-xl p-5 transition-all duration-200 shadow-sm hover:shadow-[0_8px_30px_-12px_rgba(49,46,129,0.3)]"
                                 >
                                     {/* Avatar */}
                                     <div className="flex items-center gap-3 mb-5">
-                                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-200 flex-shrink-0">
+                                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-800 to-violet-900 flex items-center justify-center shadow-md shadow-indigo-200 flex-shrink-0">
                                             <span className="text-white font-extrabold text-lg">{org.name.charAt(0)}</span>
                                         </div>
                                         <div className="min-w-0">
@@ -171,14 +171,14 @@ export default function SelectChurchPage() {
                                         value={passwords[org.id] || ""}
                                         onChange={(e) => setPasswords({ ...passwords, [org.id]: e.target.value })}
                                         onKeyDown={(e) => { if (e.key === "Enter" && passwords[org.id]) handleJoin(org.id) }}
-                                        className="w-full mb-3 bg-slate-50 border border-slate-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 text-slate-800 placeholder:text-slate-400 rounded-lg px-3 py-2 text-sm outline-none transition-colors"
+                                        className="w-full mb-3 bg-slate-50 border border-slate-200 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 text-slate-800 placeholder:text-slate-400 rounded-lg px-3 py-2 text-sm outline-none transition-colors"
                                     />
 
                                     {/* Join Button */}
                                     <button
                                         onClick={() => handleJoin(org.id)}
                                         disabled={joiningId === org.id || !passwords[org.id]}
-                                        className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-30 disabled:cursor-not-allowed text-white font-bold py-2 rounded-lg transition-all text-sm shadow-[0_4px_12px_rgba(79,70,229,0.2)] active:scale-95"
+                                        className="w-full bg-indigo-800 hover:bg-indigo-900 disabled:opacity-30 disabled:cursor-not-allowed text-white font-bold py-2 rounded-lg transition-all text-sm shadow-[0_4px_12px_rgba(49,46,129,0.25)] active:scale-95"
                                     >
                                         {joiningId === org.id
                                             ? <span className="flex items-center justify-center gap-2"><span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin"></span> Connecting...</span>
@@ -196,7 +196,7 @@ export default function SelectChurchPage() {
                 <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
                         {/* Modal Header */}
-                        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-br from-indigo-50 to-violet-50">
+                        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-br from-indigo-100 to-violet-100">
                             <div>
                                 <h3 className="text-slate-900 font-bold text-base">Register New Assembly</h3>
                                 <p className="text-slate-500 text-xs mt-0.5">You'll be set as admin automatically</p>
@@ -224,7 +224,7 @@ export default function SelectChurchPage() {
                                     onChange={(e) => setNewName(e.target.value)}
                                     required
                                     autoFocus
-                                    className="w-full bg-white border border-slate-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 text-slate-800 placeholder:text-slate-400 rounded-lg px-4 py-3 text-sm outline-none transition-colors"
+                                    className="w-full bg-white border border-slate-200 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 text-slate-800 placeholder:text-slate-400 rounded-lg px-4 py-3 text-sm outline-none transition-colors"
                                     placeholder="e.g. Grace Assembly, Iju"
                                 />
                             </div>
@@ -235,7 +235,7 @@ export default function SelectChurchPage() {
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     required
-                                    className="w-full bg-white border border-slate-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 text-slate-800 placeholder:text-slate-400 rounded-lg px-4 py-3 text-sm outline-none transition-colors"
+                                    className="w-full bg-white border border-slate-200 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 text-slate-800 placeholder:text-slate-400 rounded-lg px-4 py-3 text-sm outline-none transition-colors"
                                     placeholder="Members will use this to join"
                                 />
                             </div>
@@ -250,7 +250,7 @@ export default function SelectChurchPage() {
                                 <button
                                     type="submit"
                                     disabled={creating || !newName || !newPassword}
-                                    className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-30 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-lg transition-all text-sm shadow-[0_4px_12px_rgba(79,70,229,0.2)] active:scale-95"
+                                    className="flex-1 bg-indigo-800 hover:bg-indigo-900 disabled:opacity-30 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-lg transition-all text-sm shadow-[0_4px_12px_rgba(49,46,129,0.25)] active:scale-95"
                                 >
                                     {creating ? "Creating..." : "Register & Enter"}
                                 </button>
