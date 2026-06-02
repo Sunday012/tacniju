@@ -15,6 +15,17 @@ export default async function SettingsPage() {
   }
 
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
+  let assignedFamilyName: string | null = null
+
+  if (profile?.family_id) {
+    const { data: family } = await supabase
+      .from("families")
+      .select("name")
+      .eq("id", profile.family_id)
+      .maybeSingle()
+
+    assignedFamilyName = family?.name || null
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -26,7 +37,7 @@ export default async function SettingsPage() {
 
       {/* Form Card */}
       <div className="bg-white/80 backdrop-blur-3xl border border-white/60 rounded-[2rem] p-6 sm:p-10 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)]">
-        <ProfileForm profile={profile} />
+        <ProfileForm profile={profile} assignedFamilyName={assignedFamilyName} />
       </div>
     </div>
   )

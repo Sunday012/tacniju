@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { Crown, Shield, Users, Loader2, UserMinus } from "lucide-react"
+import { Crown, Shield, Users, Loader2, UserMinus, Printer } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { setFamilyHeadAction, assignMemberToFamilyAction } from "@/app/actions/families"
 import { toast } from "sonner"
@@ -60,45 +60,60 @@ export function FamilyLounge({ family, members, head, isAdmin = false }: Props) 
     else toast.error(res.error || "Could not remove member")
   }
 
+  const sortedMembers = [...members].sort((a, b) => {
+    if (a.id === family.head_id) return -1
+    if (b.id === family.head_id) return 1
+    return 0
+  })
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 print:space-y-4">
       {/* Hero / Family Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900 via-indigo-800 to-violet-900 p-8 sm:p-10 shadow-[0_20px_40px_-15px_rgba(49,46,129,0.4)] border border-indigo-700/40">
-        <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 opacity-10 pointer-events-none">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900 via-indigo-800 to-violet-900 p-8 sm:p-10 shadow-[0_20px_40px_-15px_rgba(49,46,129,0.4)] border border-indigo-700/40 print:bg-white print:bg-none print:border-slate-200 print:shadow-none print:p-4">
+        <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 opacity-10 pointer-events-none print:hidden">
           <Shield className="w-72 h-72 text-white" />
         </div>
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
-            <div className="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-lg">
-              <Shield className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center shadow-lg print:bg-indigo-50 print:border-indigo-100 print:shadow-none">
+              <Shield className="w-8 h-8 text-white print:text-indigo-700" />
             </div>
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-white/80 text-[10px] font-bold tracking-widest uppercase mb-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-white/80 text-[10px] font-bold tracking-widest uppercase mb-2 print:bg-slate-100 print:border-slate-200 print:text-slate-600">
                 Family Lounge
               </div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">{family.name}</h1>
-              <p className="text-indigo-200/80 text-sm mt-1.5">
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight print:text-slate-900">{family.name}</h1>
+              <p className="text-indigo-200/80 text-sm mt-1.5 print:text-slate-600">
                 {members.length} {members.length === 1 ? "member" : "members"}
-                {head && <> · Led by <span className="font-semibold text-white">{head.full_name}</span></>}
+                {head && <> · Led by <span className="font-semibold text-white print:text-slate-900">{head.full_name}</span></>}
               </p>
             </div>
           </div>
 
-          {head && (
-            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-amber-400/15 border border-amber-300/30 backdrop-blur-md">
-              <Crown className="w-5 h-5 text-amber-300" />
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-200/90">Family Head</p>
-                <p className="text-sm font-bold text-white">{head.full_name}</p>
+          <div className="flex items-center gap-3">
+            {head && (
+              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-amber-400/15 border border-amber-300/30 backdrop-blur-md print:bg-amber-50 print:border-amber-200">
+                <Crown className="w-5 h-5 text-amber-300 print:text-amber-600" />
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-amber-200/90 print:text-amber-700">Family Head</p>
+                  <p className="text-sm font-bold text-white print:text-slate-900">{head.full_name}</p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+            <button
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white text-sm font-semibold transition-colors backdrop-blur-md print:hidden"
+            >
+              <Printer className="w-4 h-4" />
+              Print
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Admin: set head */}
       {isAdmin && (
-        <Card className="border-indigo-100 shadow-sm">
+        <Card className="border-indigo-100 shadow-sm print:hidden">
           <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
             <div className="flex items-center gap-3">
               <Crown className="w-5 h-5 text-amber-500" />
@@ -156,7 +171,7 @@ export function FamilyLounge({ family, members, head, isAdmin = false }: Props) 
                     <th className="px-5 py-3 font-bold text-slate-600 text-[11px] uppercase tracking-wider hidden lg:table-cell">Office</th>
                     <th className="px-5 py-3 font-bold text-slate-600 text-[11px] uppercase tracking-wider hidden sm:table-cell">Rank</th>
                     {isAdmin && (
-                      <th className="px-5 py-3 font-bold text-slate-600 text-[11px] uppercase tracking-wider text-right">Actions</th>
+                      <th className="px-5 py-3 font-bold text-slate-600 text-[11px] uppercase tracking-wider text-right print:hidden">Actions</th>
                     )}
                   </tr>
                 </thead>

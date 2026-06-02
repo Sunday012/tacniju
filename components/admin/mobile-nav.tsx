@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Menu, Scan, Calendar, BookOpen, LayoutDashboard, LogOut, Shield, Users, Package, Trophy, Ticket, ChevronDown, MonitorPlay, Hash, ShoppingBag, Settings, Award, Swords, FileText } from "lucide-react"
+import { Menu, Scan, Calendar, BookOpen, LayoutDashboard, LogOut, Shield, Users, Package, Trophy, Ticket, ChevronDown, MonitorPlay, Hash, ShoppingBag, Settings, Award, Swords, FileText, Megaphone } from "lucide-react"
 
 type NavItem = {
   name: string
@@ -58,6 +58,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
     title: "Media & Tech",
     items: [
+      { name: "Announcements", href: "/admin/announcements", icon: Megaphone },
       { name: "Presentation Suite", href: "/admin/presenter", icon: MonitorPlay },
       { name: "Scanner", href: "/admin/scanner", icon: Scan },
     ]

@@ -3,6 +3,7 @@
 import { createClient as createServerClient } from "@/lib/server"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { revalidatePath } from "next/cache"
+import { isGuestProfile } from "@/lib/profile-kind"
 
 export async function getFamilies() {
   const supabase = await createServerClient()
@@ -61,16 +62,17 @@ export async function distributeUnassignedMembersAction() {
 
   const [{ data: families, error: famErr }, { data: unassigned, error: profErr }] = await Promise.all([
     adminSupabase.from("families").select("id"),
-    adminSupabase.from("profiles").select("id").is("family_id", null),
+    adminSupabase.from("profiles").select("id, rank, district, assembly, email").is("family_id", null),
   ])
 
   if (famErr) return { success: false, error: famErr.message }
   if (profErr) return { success: false, error: profErr.message }
   if (!families || families.length === 0) return { success: false, error: "Create at least one family first." }
-  if (!unassigned || unassigned.length === 0) return { success: false, error: "No unassigned members to distribute." }
+  const unassignedMembers = (unassigned || []).filter(profile => !isGuestProfile(profile))
+  if (unassignedMembers.length === 0) return { success: false, error: "No unassigned members to distribute." }
 
   // Shuffle members, then round-robin into families so the distribution stays even.
-  const members = [...unassigned].sort(() => Math.random() - 0.5)
+  const members = [...unassignedMembers].sort(() => Math.random() - 0.5)
   const familyIds = families.map(f => f.id)
 
   const updates = members.map((m, idx) => ({ id: m.id, family_id: familyIds[idx % familyIds.length] }))
@@ -97,6 +99,16 @@ export async function assignMemberToFamilyAction(profileId: string, familyId: st
   if (!serviceRoleKey) return { success: false, error: "Server config error" }
 
   const adminSupabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
+
+  const { data: targetProfile, error: profileError } = await adminSupabase
+    .from("profiles")
+    .select("rank, district, assembly, email")
+    .eq("id", profileId)
+    .maybeSingle()
+
+  if (profileError) return { success: false, error: profileError.message }
+  if (!targetProfile) return { success: false, error: "Member not found" }
+  if (isGuestProfile(targetProfile)) return { success: false, error: "Guests cannot be assigned to member families." }
 
   // If we're moving a member off a family, also clear them as head of that family
   if (!familyId) {

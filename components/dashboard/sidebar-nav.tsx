@@ -2,7 +2,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Home, Calendar, Receipt, Settings, Users, MonitorPlay, Shield } from "lucide-react"
+import { Home, Calendar, Receipt, Settings, Users, MonitorPlay, Shield, Megaphone } from "lucide-react"
 
 export function SidebarNav() {
   const pathname = usePathname()
@@ -12,6 +12,7 @@ export function SidebarNav() {
     { name: "Attendance", href: "/dashboard/attendance", icon: Calendar },
     { name: "Diary", href: "/dashboard/diary", icon: Users },
     { name: "Lounge", href: "/dashboard/lounge", icon: Shield },
+    { name: "Announcements", href: "/dashboard/announcements", icon: Megaphone },
     { name: "Stall", href: "/dashboard/stall", icon: Receipt },
     { name: "Live Screen", href: "/present", icon: MonitorPlay },
   ]
@@ -38,7 +39,7 @@ export function SidebarNav() {
         <p className="text-xs font-bold text-slate-400/80 uppercase tracking-widest mb-4 px-3">Overview</p>
         <nav className="space-y-1.5 flex-1">
           {navItems.map((item) => {
-            const isActive = pathname === item.href
+            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
             const Icon = item.icon
             return (
               <Link key={item.name} href={item.href}>

@@ -2,12 +2,15 @@ import { createClient } from "@/lib/server"
 import { MembersTable } from "@/components/members-table"
 import { AdminStats } from "@/components/admin-stats"
 import { getAllAssetAssignments } from "@/app/actions/assets"
+import { isGuestProfile } from "@/lib/profile-kind"
 
 export default async function AdminPage() {
   const supabase = await createClient()
 
   // Get all members
   const { data: members } = await supabase.from("profiles").select("*")
+  const memberProfiles = (members || []).filter(member => !isGuestProfile(member))
+  const guestProfiles = (members || []).filter(member => isGuestProfile(member))
 
   // Get attendance stats
   const { data: attendanceStats } = await supabase
@@ -39,7 +42,7 @@ export default async function AdminPage() {
               Platform Statistics
             </h3>
             <div className="admin-stats-wrapper">
-              <AdminStats members={members || []} attendance={attendanceStats || []} />
+              <AdminStats members={memberProfiles} attendance={attendanceStats || []} />
             </div>
           </div>
 
@@ -55,14 +58,19 @@ export default async function AdminPage() {
                   </div>
                    Youth Members Directory
                 </h3>
-                <p className="text-slate-500 text-[15px] mt-2.5 sm:ml-[52px] font-medium">Search, filter, edit roles and interact with all registered congregants.</p>
+                <p className="text-slate-500 text-[15px] mt-2.5 sm:ml-[52px] font-medium">Search, filter, edit roles and interact with registered youth members.</p>
               </div>
-              <a href="/admin/diary" className="shrink-0 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-semibold border border-indigo-100 hover:bg-indigo-100 transition-colors">
-                View Full Diary
-              </a>
+              <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                <a href="/admin/diary" className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-semibold border border-indigo-100 hover:bg-indigo-100 transition-colors text-center">
+                  View Full Diary
+                </a>
+                <a href="/admin/guests" className="px-4 py-2 bg-amber-50 text-amber-700 rounded-xl font-semibold border border-amber-100 hover:bg-amber-100 transition-colors text-center">
+                  View Guests ({guestProfiles.length})
+                </a>
+              </div>
             </div>
             <div className="members-table-wrapper rounded-2xl overflow-hidden shadow-inner border border-slate-200/50 bg-white">
-              <MembersTable members={members || []} availableAwards={awards || []} gifts={gifts || []} />
+              <MembersTable members={memberProfiles} availableAwards={awards || []} gifts={gifts || []} />
             </div>
           </div>
           

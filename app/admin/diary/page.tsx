@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Link from "next/link"
+import { isGuestProfile } from "@/lib/profile-kind"
 
 export default async function AdminDiaryPage() {
   const supabase = await createClient()
@@ -13,7 +14,7 @@ export default async function AdminDiaryPage() {
     .select("*")
     .order("full_name", { ascending: true })
     
-  const members = profiles || []
+  const members = (profiles || []).filter(profile => !isGuestProfile(profile))
   const transferred = members.filter(m => m.member_status === 'Transferred')
   const terminated = members.filter(m => m.member_status === 'Terminated')
 

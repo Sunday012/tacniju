@@ -2,6 +2,7 @@ import { createClient } from "@/lib/server"
 import { redirect } from "next/navigation"
 import { BattlesManager } from "@/components/admin/battles-manager"
 import { getBattles } from "@/app/actions/battles"
+import { isGuestProfile } from "@/lib/profile-kind"
 
 export default async function BattlesPage() {
   const supabase = await createClient()
@@ -17,8 +18,9 @@ export default async function BattlesPage() {
   // Fetch profiles for pairing
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, full_name, reservation_number, avatar_url")
+    .select("id, full_name, reservation_number, avatar_url, rank, district, assembly, email")
     .order("full_name")
+  const memberProfiles = (profiles || []).filter(profile => !isGuestProfile(profile))
 
   return (
     <div className="p-6 md:p-10 relative">
@@ -28,7 +30,7 @@ export default async function BattlesPage() {
           <p className="text-slate-600 mt-2">Create, manage, and decide winners for live match-ups.</p>
         </div>
         
-        <BattlesManager battles={battles || []} profiles={profiles || []} />
+        <BattlesManager battles={battles || []} profiles={memberProfiles} />
       </div>
     </div>
   )

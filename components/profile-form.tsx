@@ -29,13 +29,16 @@ interface Profile {
   rank?: string
   reservation_number?: string
   avatar_url?: string
+  family_id?: string | null
 }
 
 interface ProfileFormProps {
   profile: Profile | null
+  assignedFamilyName?: string | null
 }
 
-export function ProfileForm({ profile }: ProfileFormProps) {
+export function ProfileForm({ profile, assignedFamilyName }: ProfileFormProps) {
+  const hasAssignedFamily = Boolean(profile?.family_id)
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || "",
     phone_number: profile?.phone_number || "",
@@ -68,7 +71,11 @@ export function ProfileForm({ profile }: ProfileFormProps) {
     const supabase = createClient()
 
     try {
-      const { error } = await supabase.from("profiles").update(formData).eq("id", profile?.id)
+      const updateData = hasAssignedFamily
+        ? Object.fromEntries(Object.entries(formData).filter(([key]) => key !== "family"))
+        : formData
+
+      const { error } = await supabase.from("profiles").update(updateData).eq("id", profile?.id)
 
       if (error) throw error
 
@@ -190,16 +197,23 @@ export function ProfileForm({ profile }: ProfileFormProps) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="family">Family</Label>
-            <Select value={formData.family} onValueChange={(value) => handleInputChange("family", value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select family" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Eden">Eden</SelectItem>
-                <SelectItem value="Taberah">Taberah</SelectItem>
-                <SelectItem value="Bethel">Bethel</SelectItem>
-              </SelectContent>
-            </Select>
+            {hasAssignedFamily ? (
+              <div>
+                <Input value={assignedFamilyName || "Assigned by admin"} disabled className="bg-slate-50 text-slate-600" />
+                <p className="mt-1 text-xs text-slate-500">Your admin-assigned family overrides the family selected during registration.</p>
+              </div>
+            ) : (
+              <Select value={formData.family} onValueChange={(value) => handleInputChange("family", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select family" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Eden">Eden</SelectItem>
+                  <SelectItem value="Taberah">Taberah</SelectItem>
+                  <SelectItem value="Bethel">Bethel</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </div>
 

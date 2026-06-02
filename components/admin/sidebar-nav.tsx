@@ -21,7 +21,8 @@ import {
   ShoppingBag,
   Settings,
   Award,
-  FileText
+  FileText,
+  Megaphone
 } from "lucide-react"
 
 type NavItem = {
@@ -67,6 +68,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
     title: "Media & Tech",
     items: [
+      { name: "Announcements", href: "/admin/announcements", icon: Megaphone },
       { name: "Presentation Suite", href: "/admin/presenter", icon: MonitorPlay },
       { name: "Scanner", href: "/admin/scanner", icon: Scan },
     ]

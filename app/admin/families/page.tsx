@@ -2,6 +2,7 @@ import { createClient } from "@/lib/server"
 import { redirect } from "next/navigation"
 import { FamiliesManager } from "@/components/admin/families-manager"
 import { getFamilies } from "@/app/actions/families"
+import { isGuestProfile } from "@/lib/profile-kind"
 
 export default async function FamiliesPage() {
   const supabase = await createClient()
@@ -17,8 +18,9 @@ export default async function FamiliesPage() {
   // Fetch profiles for assignment
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, full_name, reservation_number, family_id")
+    .select("id, full_name, reservation_number, family_id, rank, district, assembly, email")
     .order("full_name")
+  const memberProfiles = (profiles || []).filter(profile => !isGuestProfile(profile))
 
   return (
     <div className="p-6 md:p-10 relative">
@@ -28,7 +30,7 @@ export default async function FamiliesPage() {
           <p className="text-slate-600 mt-2">Create family groups and assign members to them.</p>
         </div>
         
-        <FamiliesManager families={families || []} profiles={profiles || []} />
+        <FamiliesManager families={families || []} profiles={memberProfiles} />
       </div>
     </div>
   )

@@ -1,17 +1,17 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/server"
 import { ReservationsTable } from "@/components/reservations-table"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { isGuestProfile } from "@/lib/profile-kind"
 
 export default async function ReservationsPage() {
   const supabase = await createClient()
   // Get all members, sorting so that those without reservation numbers are at the top
   const { data: members } = await supabase
     .from("profiles")
-    .select("id, full_name, rank, assembly, reservation_number")
+    .select("id, full_name, rank, assembly, district, email, reservation_number")
     .order('reservation_number', { ascending: true, nullsFirst: true })
     .order('full_name', { ascending: true })
+  const memberProfiles = (members || []).filter(member => !isGuestProfile(member))
 
   return (
     <div className="p-6 md:p-10 relative">
@@ -29,7 +29,7 @@ export default async function ReservationsPage() {
             <p className="text-slate-500 text-[15px] mt-2.5 sm:ml-[52px] font-medium">Generate and view reservation numbers for congregants.</p>
           </div>
           
-          <ReservationsTable members={members || []} />
+          <ReservationsTable members={memberProfiles} />
         </div>
       </main>
     </div>

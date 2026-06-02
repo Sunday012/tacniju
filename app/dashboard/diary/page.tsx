@@ -2,6 +2,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { isGuestProfile } from "@/lib/profile-kind"
 
 export default async function DiaryPage() {
   const adminSupabase = createSupabaseClient(
@@ -13,11 +14,11 @@ export default async function DiaryPage() {
   // Only selecting necessary public fields to avoid exposing sensitive data
   const { data: profiles } = await adminSupabase
     .from("profiles")
-    .select("id, full_name, member_role, office_position, department, awards, avatar_url")
+    .select("id, full_name, member_role, office_position, department, awards, avatar_url, rank, district, assembly, email")
     .eq("member_status", "Active")
     .order("full_name", { ascending: true })
     
-  const members = profiles || []
+  const members = (profiles || []).filter(profile => !isGuestProfile(profile))
   const executives = members.filter(m => m.member_role === 'Executive')
   const workers = members.filter(m => m.member_role === 'Worker')
   const generalMembers = members.filter(m => !m.member_role || m.member_role === 'Member')
