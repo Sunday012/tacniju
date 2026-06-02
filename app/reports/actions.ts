@@ -115,6 +115,12 @@ export async function getDayBook(date: string) {
                 debit_amount,
                 credit_amount,
                 ledgers ( name )
+            ),
+            voucher_items (
+                qty,
+                amount,
+                movement_type,
+                items ( name )
             )
         `)
         .eq("org_id", orgId)

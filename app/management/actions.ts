@@ -203,6 +203,47 @@ export async function getLedgers() {
     return data
 }
 
+export type LedgerBalance = { amount: number; type: 'Dr' | 'Cr' }
+
+// Current (closing) balance per ledger: opening balance + netted voucher movements.
+export async function getLedgerBalances(): Promise<Record<string, LedgerBalance>> {
+    const supabase = await createClient()
+    const orgId = await getOrgId()
+
+    const { data: ledgersData } = await supabase
+        .from("ledgers")
+        .select("id, opening_balance, balance_type")
+        .eq("org_id", orgId)
+
+    const { data: movements } = await supabase
+        .from("voucher_entries")
+        .select("ledger_id, debit_amount, credit_amount, vouchers!inner(org_id)")
+        .eq("vouchers.org_id", orgId)
+
+    const moves = new Map<string, { dr: number; cr: number }>()
+    for (const m of movements || []) {
+        const id = m.ledger_id as string
+        const curr = moves.get(id) || { dr: 0, cr: 0 }
+        curr.dr += Number(m.debit_amount || 0)
+        curr.cr += Number(m.credit_amount || 0)
+        moves.set(id, curr)
+    }
+
+    const balances: Record<string, LedgerBalance> = {}
+    for (const ledger of ledgersData || []) {
+        const openingDr = ledger.balance_type === 'Dr' ? Number(ledger.opening_balance || 0) : 0
+        const openingCr = ledger.balance_type === 'Cr' ? Number(ledger.opening_balance || 0) : 0
+        const move = moves.get(ledger.id) || { dr: 0, cr: 0 }
+        const net = (openingDr + move.dr) - (openingCr + move.cr)
+        balances[ledger.id] = {
+            amount: Math.abs(net),
+            type: net >= 0 ? 'Dr' : 'Cr',
+        }
+    }
+
+    return balances
+}
+
 export async function createLedger(payload: Omit<Ledger, "id">) {
     const supabase = await createClient()
     const orgId = await getOrgId()

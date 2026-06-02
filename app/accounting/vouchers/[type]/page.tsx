@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation"
 import { AccountingShell } from "@/components/accounting/accounting-shell"
 import { VoucherEntry } from "@/components/vouchers/voucher-entry"
-import { getLedgers } from "@/app/management/actions"
+import { getLedgers, getLedgerBalances } from "@/app/management/actions"
 import { getRecentVouchers, VoucherType } from "@/app/vouchers/actions"
 import { getItems } from "@/app/inventory/actions"
 import { getAccountingParties, getAccountingPrograms } from "@/app/accounting/actions"
@@ -66,11 +66,12 @@ export default async function AccountingVoucherPage({ params }: { params: { type
   if (voucherType === "Program") redirect("/accounting/programs")
 
   const parties = await getAccountingParties()
-  const [ledgers, vouchers, items, programs] = await Promise.all([
+  const [ledgers, vouchers, items, programs, balances] = await Promise.all([
     getLedgers(),
     getRecentVouchers(),
     getItems(),
     getAccountingPrograms(),
+    getLedgerBalances(),
   ])
 
   return (
@@ -93,6 +94,7 @@ export default async function AccountingVoucherPage({ params }: { params: { type
         items={items}
         parties={parties}
         programs={programs}
+        balances={balances}
       />
     </AccountingShell>
   )
