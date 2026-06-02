@@ -9,18 +9,24 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { createItem, deleteItem, Item } from "@/app/inventory/actions"
 import { useRouter } from "next/navigation"
-import { Trash2 } from "lucide-react"
+import { Bell, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
-export function ItemManager({ items }: { items: Item[] }) {
+export function ItemManager({ items, hideTitle = false }: { items: Item[]; hideTitle?: boolean }) {
     const [isOpen, setIsOpen] = useState(false)
     const [name, setName] = useState("")
     const [code, setCode] = useState("")
     const [unit, setUnit] = useState("Pieces")
+    const [secondaryUnit, setSecondaryUnit] = useState("")
+    const [secondaryPerPrimary, setSecondaryPerPrimary] = useState("1")
+    const [category, setCategory] = useState("")
     const [purchaseRate, setPurchaseRate] = useState("0")
     const [sellingRate, setSellingRate] = useState("0")
     const [openingQty, setOpeningQty] = useState("0")
     const [reorderLevel, setReorderLevel] = useState("0")
+    const [alertOpen, setAlertOpen] = useState(false)
+    const [noStockAlert, setNoStockAlert] = useState(false)
+    const [noStockQuantity, setNoStockQuantity] = useState("0")
     const [isSubmitting, setIsSubmitting] = useState(false)
     const router = useRouter()
 
@@ -31,12 +37,19 @@ export function ItemManager({ items }: { items: Item[] }) {
             await createItem({
                 name,
                 code: code || null,
-                category: null,
+                category: category || null,
                 unit,
+                primary_unit: unit,
+                secondary_unit: secondaryUnit || null,
+                secondary_per_primary: parseFloat(secondaryPerPrimary) || 1,
                 purchase_rate: parseFloat(purchaseRate),
                 selling_rate: parseFloat(sellingRate),
                 opening_qty: parseFloat(openingQty),
                 reorder_level: parseFloat(reorderLevel),
+                no_stock_alert_enabled: noStockAlert,
+                no_stock_quantity: parseFloat(noStockQuantity) || 0,
+                source_context: "accounting",
+                source_asset_id: null,
                 description: null
             })
             setIsOpen(false)
@@ -47,6 +60,11 @@ export function ItemManager({ items }: { items: Item[] }) {
             setSellingRate("0")
             setOpeningQty("0")
             setReorderLevel("0")
+            setSecondaryUnit("")
+            setSecondaryPerPrimary("1")
+            setCategory("")
+            setNoStockAlert(false)
+            setNoStockQuantity("0")
             router.refresh()
         } catch (error) {
             console.error("Failed to create item", error)
@@ -72,44 +90,54 @@ export function ItemManager({ items }: { items: Item[] }) {
     }
 
     return (
-        <Card className="bg-white shadow-sm border-slate-200">
+        <Card className="bg-white shadow-sm border-slate-200 rounded-lg">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div>
-                    <CardTitle className="text-xl">Inventory Items</CardTitle>
-                    <CardDescription>Manage stock items, books, merchandise.</CardDescription>
+                    {!hideTitle && <CardTitle className="text-xl">Inventory Management</CardTitle>}
                 </div>
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
                     <DialogTrigger asChild>
-                        <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500">+ Add Item</Button>
+                        <Button size="sm" className="h-9 bg-emerald-600 px-4 font-bold text-white hover:bg-emerald-500">Create Stock</Button>
                     </DialogTrigger>
                     <DialogContent className="bg-slate-50 border-slate-200 text-slate-900 max-w-xl">
                         <DialogHeader>
-                            <DialogTitle>Create Inventory Item</DialogTitle>
-                            <DialogDescription>Add a new item to track in stock.</DialogDescription>
+                            <DialogTitle>Create Stock</DialogTitle>
+                            <DialogDescription>Accounting-created stock stays inside accounting.</DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label>Item Name</Label>
+                                    <Label>Stock</Label>
                                     <Input value={name} onChange={e => setName(e.target.value)} required className="bg-white border-slate-300" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Code / SKU</Label>
-                                    <Input value={code} onChange={e => setCode(e.target.value)} className="bg-white border-slate-300" placeholder="Optional" />
+                                    <Label>Category</Label>
+                                    <Input value={category} onChange={e => setCategory(e.target.value)} className="bg-white border-slate-300" placeholder="Books, Beverage..." />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label>Primary Unit</Label>
+                                    <Input value={unit} onChange={e => setUnit(e.target.value)} required className="bg-white border-slate-300" placeholder="Pack" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Secondary Unit</Label>
+                                    <Input value={secondaryUnit} onChange={e => setSecondaryUnit(e.target.value)} className="bg-white border-slate-300" placeholder="Piece" />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-3 gap-4">
                                 <div className="space-y-2">
-                                    <Label>Unit of Measure</Label>
-                                    <Input value={unit} onChange={e => setUnit(e.target.value)} required className="bg-white border-slate-300" placeholder="Pieces, Copies..." />
+                                    <Label>Secondary Qty</Label>
+                                    <Input type="number" step="0.01" min="1" value={secondaryPerPrimary} onChange={e => setSecondaryPerPrimary(e.target.value)} className="bg-white border-slate-300" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Purchase Cost (₦)</Label>
+                                    <Label>Purchase Price</Label>
                                     <Input type="number" step="0.01" min="0" value={purchaseRate} onChange={e => setPurchaseRate(e.target.value)} className="bg-white border-slate-300" />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label>Selling Price (₦)</Label>
+                                    <Label>Sales Price</Label>
                                     <Input type="number" step="0.01" min="0" value={sellingRate} onChange={e => setSellingRate(e.target.value)} className="bg-white border-slate-300" />
                                 </div>
                             </div>
@@ -125,10 +153,40 @@ export function ItemManager({ items }: { items: Item[] }) {
                                 </div>
                             </div>
 
+                            <div className="rounded-md border border-slate-200 bg-white p-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setAlertOpen(true)}
+                                    className={`inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-semibold ${noStockAlert ? "border-red-200 bg-red-50 text-red-700" : "border-slate-200 text-slate-600 hover:bg-slate-50"}`}
+                                >
+                                    <Bell className="h-4 w-4" />
+                                    No Stock Alert
+                                </button>
+                                {noStockAlert && (
+                                    <span className="ml-3 text-sm font-medium text-red-600">Alert at {noStockQuantity || 0}</span>
+                                )}
+                            </div>
+
                             <DialogFooter>
-                                <Button type="submit" disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-500">Create Item</Button>
+                                <Button type="submit" disabled={isSubmitting} className="h-10 bg-emerald-600 px-5 font-bold text-white hover:bg-emerald-500">Create Item</Button>
                             </DialogFooter>
                         </form>
+                    </DialogContent>
+                </Dialog>
+                <Dialog open={alertOpen} onOpenChange={setAlertOpen}>
+                    <DialogContent className="bg-white border-slate-200 text-slate-900 max-w-sm">
+                        <DialogHeader>
+                            <DialogTitle>No Stock Alert</DialogTitle>
+                            <DialogDescription>Set the stock quantity that should trigger an alert.</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-3">
+                            <Label>Alert Quantity</Label>
+                            <Input type="number" min="0" value={noStockQuantity} onChange={e => setNoStockQuantity(e.target.value)} />
+                        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => { setNoStockAlert(false); setAlertOpen(false) }}>Disable</Button>
+                            <Button onClick={() => { setNoStockAlert(true); setAlertOpen(false) }} className="h-10 bg-red-600 px-5 font-bold text-white hover:bg-red-500">Save Alert</Button>
+                        </DialogFooter>
                     </DialogContent>
                 </Dialog>
             </CardHeader>
@@ -136,8 +194,10 @@ export function ItemManager({ items }: { items: Item[] }) {
                 <Table>
                     <TableHeader>
                         <TableRow className="border-slate-200">
-                            <TableHead className="text-slate-500">Item</TableHead>
+                            <TableHead className="text-slate-500">Stock</TableHead>
+                            <TableHead className="text-slate-500">Category</TableHead>
                             <TableHead className="text-slate-500 text-center">Unit</TableHead>
+                            <TableHead className="text-slate-500 text-center">Secondary</TableHead>
                             <TableHead className="text-slate-500 text-right">Cost</TableHead>
                             <TableHead className="text-slate-500 text-right">Price</TableHead>
                             <TableHead className="text-slate-500 text-right">Stock</TableHead>
@@ -147,20 +207,29 @@ export function ItemManager({ items }: { items: Item[] }) {
                     <TableBody>
                         {items.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center text-slate-500 py-6">No items in inventory.</TableCell>
+                                <TableCell colSpan={8} className="text-center text-slate-500 py-6">No items in inventory.</TableCell>
                             </TableRow>
                         ) : (
                             items.map(item => (
                                 <TableRow key={item.id} className="border-slate-200">
                                     <TableCell className="font-medium text-slate-800">
                                         {item.name}
-                                        {item.code && <span className="ml-2 text-[10px] text-slate-500">({item.code})</span>}
+                                        {item.source_context === "admin" && <span className="ml-2 text-[10px] text-indigo-600 font-bold">ADMIN</span>}
                                     </TableCell>
-                                    <TableCell className="text-center text-slate-500">{item.unit}</TableCell>
+                                    <TableCell className="text-slate-500">{item.category || "-"}</TableCell>
+                                    <TableCell className="text-center text-slate-500">{item.primary_unit || item.unit}</TableCell>
+                                    <TableCell className="text-center text-slate-500">
+                                        {item.secondary_unit ? `${item.secondary_per_primary || 1} ${item.secondary_unit}` : "-"}
+                                    </TableCell>
                                     <TableCell className="text-right text-slate-500">₦{Number(item.purchase_rate).toLocaleString()}</TableCell>
                                     <TableCell className="text-right text-slate-500">₦{Number(item.selling_rate).toLocaleString()}</TableCell>
                                     <TableCell className="text-right font-bold text-slate-800">
-                                        <span className={(item.current_stock || 0) <= item.reorder_level && item.reorder_level > 0 ? "text-red-400" : ""}>
+                                        <span className={
+                                            ((item.no_stock_alert_enabled && (item.current_stock || 0) <= (item.no_stock_quantity || 0)) ||
+                                            ((item.current_stock || 0) <= item.reorder_level && item.reorder_level > 0))
+                                                ? "text-red-500"
+                                                : ""
+                                        }>
                                             {item.current_stock}
                                         </span>
                                     </TableCell>

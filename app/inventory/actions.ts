@@ -25,11 +25,61 @@ export type Item = {
     description: string | null
     active: boolean
     current_stock?: number // calculated
+    source_context?: "admin" | "accounting"
+    source_asset_id?: string | null
+    primary_unit?: string | null
+    secondary_unit?: string | null
+    secondary_per_primary?: number | null
+    no_stock_alert_enabled?: boolean
+    no_stock_quantity?: number
+}
+
+async function syncAdminAssetsToAccountingItems(supabase: Awaited<ReturnType<typeof createClient>>, orgId: string) {
+    const { data: assets } = await supabase
+        .from("assets")
+        .select("id, name, category, money_price, total_quantity, available_quantity")
+        .order("name", { ascending: true })
+
+    if (!assets?.length) return
+
+    const { data: existing } = await supabase
+        .from("items")
+        .select("source_asset_id")
+        .eq("org_id", orgId)
+        .not("source_asset_id", "is", null)
+
+    const existingAssetIds = new Set((existing || []).map(item => item.source_asset_id))
+    const missingAssets = assets.filter(asset => !existingAssetIds.has(asset.id))
+
+    if (missingAssets.length === 0) return
+
+    await supabase.from("items").insert(missingAssets.map(asset => ({
+        org_id: orgId,
+        name: asset.name,
+        code: null,
+        category: asset.category || "Admin Stock",
+        unit: "Unit",
+        primary_unit: "Unit",
+        secondary_unit: null,
+        secondary_per_primary: 1,
+        purchase_rate: 0,
+        selling_rate: Number(asset.money_price || 0),
+        opening_qty: Number(asset.available_quantity ?? asset.total_quantity ?? 0),
+        reorder_level: 0,
+        no_stock_alert_enabled: false,
+        no_stock_quantity: 0,
+        source_context: "admin",
+        source_asset_id: asset.id,
+        description: "Synced from admin stock",
+        active: true,
+    })))
 }
 
 export async function getItems() {
     const supabase = await createClient()
     const orgId = await getOrgId()
+
+    await syncAdminAssetsToAccountingItems(supabase, orgId)
 
     // Get items
     const { data: items, error } = await supabase
@@ -78,7 +128,9 @@ export async function createItem(payload: Omit<Item, "id" | "current_stock" | "a
         .from("items")
         .insert({
             org_id: orgId,
-            ...payload
+            source_context: "accounting",
+            ...payload,
+            unit: payload.primary_unit || payload.unit,
         })
 
     if (error) throw error

@@ -184,6 +184,9 @@ export type Ledger = {
     tax_id: string | null
     custom_data: Record<string, any>
     active: boolean
+    ledger_kind?: 'ledger' | 'party' | 'bank'
+    source_context?: 'admin' | 'accounting'
+    source_profile_id?: string | null
 }
 
 export async function getLedgers() {
@@ -208,6 +211,8 @@ export async function createLedger(payload: Omit<Ledger, "id">) {
         .from("ledgers")
         .insert({
             org_id: orgId,
+            ledger_kind: payload.is_cash_bank ? "bank" : (payload.ledger_kind || "ledger"),
+            source_context: payload.source_context || "accounting",
             ...payload
         })
 
@@ -222,7 +227,10 @@ export async function updateLedger(id: string, payload: Partial<Omit<Ledger, "id
 
     const { error } = await supabase
         .from("ledgers")
-        .update(payload)
+        .update({
+            ...payload,
+            ledger_kind: payload.is_cash_bank ? "bank" : (payload.ledger_kind || undefined),
+        })
         .eq("id", id)
         .eq("org_id", orgId)
 

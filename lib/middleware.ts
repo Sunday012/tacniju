@@ -37,18 +37,6 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (
-    request.nextUrl.pathname !== "/" &&
-    !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/auth")
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
-    const url = request.nextUrl.clone()
-    url.pathname = "/auth/login"
-    return NextResponse.redirect(url)
-  }
-
   // Handle Root Redirect based on Login Mode
   if (request.nextUrl.pathname === "/" && user) {
     const loginMode = request.cookies.get("login_mode")?.value
@@ -62,13 +50,26 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Special handling for admin routes - redirect to admin login if not authenticated
+  // Special handling for admin/accounting routes - redirect to admin login if not authenticated
   if (
-    request.nextUrl.pathname.startsWith("/admin") &&
+    (request.nextUrl.pathname.startsWith("/admin") ||
+      request.nextUrl.pathname.startsWith("/accounting")) &&
     !user
   ) {
     const url = request.nextUrl.clone()
     url.pathname = "/auth/admin-login"
+    return NextResponse.redirect(url)
+  }
+
+  if (
+    request.nextUrl.pathname !== "/" &&
+    !user &&
+    !request.nextUrl.pathname.startsWith("/login") &&
+    !request.nextUrl.pathname.startsWith("/auth")
+  ) {
+    // no user, potentially respond by redirecting the user to the login page
+    const url = request.nextUrl.clone()
+    url.pathname = "/auth/login"
     return NextResponse.redirect(url)
   }
 

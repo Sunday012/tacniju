@@ -1,11 +1,13 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { useRouter, useSearchParams } from "next/navigation"
 
-export function DayBookView({ data, onBack }: { data: any[], onBack: () => void }) {
+const voucherOrder = ["Receipt", "Payment", "Sales", "Purchase", "Expense", "Income", "Program", "Contra"]
+
+export function DayBookView({ data, onBack }: { data: any[], onBack?: () => void }) {
     const router = useRouter()
     const searchParams = useSearchParams()
     const targetDate = searchParams.get("date") || new Date().toISOString().slice(0, 10)
@@ -25,39 +27,66 @@ export function DayBookView({ data, onBack }: { data: any[], onBack: () => void 
         const formData = new FormData(e.currentTarget)
         const date = formData.get("date") as string
         if (date) {
-            router.push(`/accounting?date=${date}`)
+            router.push(`/accounting/day-book?date=${date}`)
         }
     }
 
+    const sortedData = [...data].sort((a, b) => {
+        const typeDiff = voucherOrder.indexOf(a.voucher_type) - voucherOrder.indexOf(b.voucher_type)
+        if (typeDiff !== 0) return typeDiff
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    })
+
+    const totals = sortedData.reduce((acc, voucher) => {
+        const entryTotals = getEntryTotals(voucher.voucher_entries || [])
+        if (voucher.voucher_type === "Receipt") acc.receipts += entryTotals.debit || entryTotals.credit
+        if (voucher.voucher_type === "Payment") acc.payments += entryTotals.credit || entryTotals.debit
+        if (voucher.voucher_type === "Sales") acc.sales += Math.max(entryTotals.debit, entryTotals.credit)
+        if (voucher.voucher_type === "Purchase") acc.purchases += Math.max(entryTotals.debit, entryTotals.credit)
+        if (voucher.voucher_type === "Expense") acc.expenses += Math.max(entryTotals.debit, entryTotals.credit)
+        return acc
+    }, { receipts: 0, payments: 0, sales: 0, purchases: 0, expenses: 0 })
+
     return (
-        <div className="p-4 md:p-8 overflow-y-auto h-full space-y-6 bg-slate-50 relative z-20">
-            <div className="flex justify-between items-end mb-6">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Day Book</h1>
-                    <p className="text-slate-500">Chronological record of daily transactions.</p>
-                </div>
-                <button onClick={onBack} className="text-sm bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded transition font-medium">Esc: Back</button>
+        <div className="space-y-7">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <form onSubmit={handleDateSubmit} className="flex max-w-sm gap-2">
+                <input
+                    type="date"
+                    name="date"
+                    defaultValue={targetDate}
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm focus:border-indigo-400 focus:outline-none"
+                />
+                <Button type="submit" className="h-11 bg-indigo-600 px-6 font-bold text-white hover:bg-indigo-700">Go</Button>
+              </form>
+              {onBack && <button onClick={onBack} className="h-10 rounded-xl bg-slate-100 px-4 text-sm font-bold text-slate-700 hover:bg-slate-200">Back</button>}
             </div>
 
-            <Card className="bg-white border-slate-200 shadow-sm">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                {[
+                    ["Total Receipts", totals.receipts],
+                    ["Total Payments", totals.payments],
+                    ["Total Sales", totals.sales],
+                    ["Total Purchases", totals.purchases],
+                    ["Total Expenses", totals.expenses],
+                ].map(([label, value]) => (
+                    <div key={label as string} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <p className="text-xs font-black uppercase tracking-widest text-slate-400">{label}</p>
+                        <p className="mt-2 text-2xl font-black text-slate-900">₦{Number(value).toLocaleString()}</p>
+                    </div>
+                ))}
+            </div>
+
+            <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
                 <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                         <div>
                             <CardTitle className="text-xl">Transactions for {new Date(targetDate).toLocaleDateString()}</CardTitle>
-                            <CardDescription>All vouchers entered on this day.</CardDescription>
                         </div>
-                        <form onSubmit={handleDateSubmit} className="flex gap-2">
-                            <input
-                                type="date"
-                                name="date"
-                                defaultValue={targetDate}
-                                className="bg-slate-50 border border-slate-300 rounded px-3 py-1 text-sm text-slate-900"
-                            />
-                            <Button type="submit" size="sm" className="bg-emerald-600 hover:bg-emerald-500">Go</Button>
-                        </form>
                     </div>
                 </CardHeader>
                 <CardContent>
+                    <div className="overflow-x-auto rounded-xl border border-slate-200">
                     <Table>
                         <TableHeader>
                             <TableRow className="border-slate-200">
@@ -70,12 +99,12 @@ export function DayBookView({ data, onBack }: { data: any[], onBack: () => void 
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {data.length === 0 ? (
+                            {sortedData.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={6} className="text-center text-slate-500 py-6">No transactions recorded on this date.</TableCell>
                                 </TableRow>
                             ) : (
-                                data.map(v => {
+                                sortedData.map(v => {
                                     const entries = v.voucher_entries || []
                                     const totals = getEntryTotals(entries)
 
@@ -122,6 +151,7 @@ export function DayBookView({ data, onBack }: { data: any[], onBack: () => void 
                             )}
                         </TableBody>
                     </Table>
+                    </div>
                 </CardContent>
             </Card>
         </div>

@@ -27,6 +27,7 @@ export type VoucherLedgerEntry = {
     credit_amount: number
     adjustment_method?: 'New Reference' | 'Against Reference' | 'Advance' | 'On Account'
     adjustment_reference?: string
+    due_date?: string
 }
 
 export type VoucherFormPayload = {
@@ -91,6 +92,9 @@ export async function saveVoucher(payload: VoucherFormPayload) {
         ledger_id: e.ledger_id,
         debit_amount: e.debit_amount || 0,
         credit_amount: e.credit_amount || 0,
+        adjustment_method: e.adjustment_method || null,
+        adjustment_reference: e.adjustment_reference || null,
+        due_date: e.due_date || null,
     }))
 
     const { error: lineErr } = await supabase.from("voucher_entries").insert(entries)
@@ -136,6 +140,9 @@ export async function getRecentVouchers() {
                 ledger_id,
                 debit_amount,
                 credit_amount,
+                adjustment_method,
+                adjustment_reference,
+                due_date,
                 ledgers ( name )
             )
         `)

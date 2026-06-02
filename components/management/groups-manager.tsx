@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { createAccountGroup, updateAccountGroup, deleteAccountGroup, AccountGroup, Ledger, seedDefaultGroups } from "@/app/management/actions"
 import { useRouter } from "next/navigation"
-import { Trash2 } from "lucide-react"
+import { Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 export function GroupsManager({ groups, ledgers = [] }: { groups: AccountGroup[], ledgers?: Ledger[] }) {
@@ -121,79 +121,90 @@ export function GroupsManager({ groups, ledgers = [] }: { groups: AccountGroup[]
     }
 
     return (
-        <Card className="bg-white shadow-sm border-slate-200">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <div>
-                    <CardTitle className="text-xl">Account Groups</CardTitle>
-                    <CardDescription>Organize ledgers hierarchically.</CardDescription>
-                </div>
-                <div className="flex gap-2">
-                    {groups.length === 0 && (
-                        <Button variant="outline" size="sm" onClick={handleSeed} disabled={isSubmitting} className="border-emerald-600 text-emerald-500">
-                            Seed Defaults
-                        </Button>
-                    )}
-                    <Dialog open={isOpen} onOpenChange={(open) => {
-                        setIsOpen(open)
-                        if (!open) {
-                            setEditId(null)
-                            setName("")
-                            setNature("Asset")
-                            setParentId("none")
-                        }
-                    }}>
-                        <DialogTrigger asChild>
-                            <Button size="sm" onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-500">+ New Group</Button>
-                        </DialogTrigger>
-                        <DialogContent className="bg-slate-50 border-slate-200 text-slate-900">
-                            <DialogHeader>
-                                <DialogTitle>{editId ? "Edit Account Group" : "Create Account Group"}</DialogTitle>
-                                <DialogDescription>{editId ? "Modify existing category." : "Add a new category for your ledgers."}</DialogDescription>
-                            </DialogHeader>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label>Group Name</Label>
-                                    <Input value={name} onChange={e => setName(e.target.value)} required className="bg-white border-slate-300" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Nature</Label>
-                                    <Select value={nature} onValueChange={(val: any) => setNature(val)}>
-                                        <SelectTrigger className="bg-white border-slate-300">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-white text-slate-900 border-slate-300">
-                                            <SelectItem value="Asset">Asset</SelectItem>
-                                            <SelectItem value="Liability">Liability</SelectItem>
-                                            <SelectItem value="Income">Income</SelectItem>
-                                            <SelectItem value="Expense">Expense</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Parent Group</Label>
-                                    <Select value={parentId} onValueChange={setParentId}>
-                                        <SelectTrigger className="bg-white border-slate-300">
-                                            <SelectValue placeholder="No Parent (Primary)" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-white text-slate-900 border-slate-300">
-                                            <SelectItem value="none">No Parent (Primary)</SelectItem>
-                                            {groups.filter(g => g.id !== editId).map(g => (
-                                                <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <DialogFooter>
-                                    <Button type="submit" disabled={isSubmitting} className="bg-emerald-600 hover:bg-emerald-500">
-                                        {editId ? "Save Changes" : "Create"}
-                                    </Button>
-                                </DialogFooter>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
-                </div>
-            </CardHeader>
-            <CardContent>
+        <div className="space-y-6">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <Dialog open={isOpen} onOpenChange={(open) => {
+                    setIsOpen(open)
+                    if (!open) {
+                        setEditId(null)
+                        setName("")
+                        setNature("Asset")
+                        setParentId("none")
+                    }
+                }}>
+                    <DialogTrigger asChild>
+                        <button
+                            type="button"
+                            onClick={openCreate}
+                            className="flex w-full max-w-sm items-center gap-3 rounded-2xl border border-dashed border-indigo-300 bg-white p-6 text-left shadow-sm transition hover:border-indigo-400 hover:bg-indigo-50"
+                        >
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+                                <Plus className="h-5 w-5" />
+                            </span>
+                            <span className="text-lg font-black text-slate-800">Create New Group</span>
+                        </button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-slate-50 border-slate-200 text-slate-900">
+                        <DialogHeader>
+                            <DialogTitle>{editId ? "Edit Account Group" : "Create Account Group"}</DialogTitle>
+                            <DialogDescription>{editId ? "Modify existing category." : "Add a new category for your ledgers."}</DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Group Name</Label>
+                                <Input value={name} onChange={e => setName(e.target.value)} required className="bg-white border-slate-300" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Nature</Label>
+                                <Select value={nature} onValueChange={(val: any) => setNature(val)}>
+                                    <SelectTrigger className="bg-white border-slate-300">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white text-slate-900 border-slate-300">
+                                        <SelectItem value="Asset">Asset</SelectItem>
+                                        <SelectItem value="Liability">Liability</SelectItem>
+                                        <SelectItem value="Income">Income</SelectItem>
+                                        <SelectItem value="Expense">Expense</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Parent Group</Label>
+                                <Select value={parentId} onValueChange={setParentId}>
+                                    <SelectTrigger className="bg-white border-slate-300">
+                                        <SelectValue placeholder="No Parent (Primary)" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white text-slate-900 border-slate-300">
+                                        <SelectItem value="none">No Parent (Primary)</SelectItem>
+                                        {groups.filter(g => g.id !== editId).map(g => (
+                                            <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <DialogFooter>
+                                <Button type="submit" disabled={isSubmitting} className="h-10 bg-indigo-600 px-5 font-bold text-white hover:bg-indigo-700">
+                                    {editId ? "Save Changes" : "Create"}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+                {groups.length === 0 && (
+                    <Button variant="outline" onClick={handleSeed} disabled={isSubmitting} className="min-h-[120px] rounded-2xl border-indigo-200 bg-white px-6 font-black text-indigo-700 hover:bg-indigo-50">
+                        Seed Defaults
+                    </Button>
+                )}
+            </div>
+
+            <Card className="bg-white shadow-sm border-slate-200">
+                <CardHeader className="pb-2">
+                    <div>
+                        <CardTitle className="text-xl">Account Groups</CardTitle>
+                        <CardDescription>Organize ledgers hierarchically.</CardDescription>
+                    </div>
+                </CardHeader>
+                <CardContent>
                 <Table>
                     <TableHeader>
                         <TableRow className="border-slate-200">
@@ -247,7 +258,8 @@ export function GroupsManager({ groups, ledgers = [] }: { groups: AccountGroup[]
                         )}
                     </TableBody>
                 </Table>
-            </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
+        </div>
     )
 }

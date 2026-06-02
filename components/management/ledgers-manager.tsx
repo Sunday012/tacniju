@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Trash2 } from "lucide-react"
+import { Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -39,8 +39,10 @@ export function LedgersManager({ ledgers, groups, mode = "accounts" }: { ledgers
     const [phoneNumber, setPhoneNumber] = useState("")
     const [isSubmitting, setIsSubmitting] = useState(false)
 
-    // Banking tab shows only cash/bank ledgers; Accounts tab shows the rest.
-    const visibleLedgers = ledgers.filter(l => Boolean(l.is_cash_bank) === isBankMode)
+    const visibleLedgers = ledgers.filter(l => {
+        if (isBankMode) return Boolean(l.is_cash_bank) || l.ledger_kind === "bank"
+        return !l.is_cash_bank && l.ledger_kind !== "party"
+    })
 
     function resetForm() {
         setEditId(null)
@@ -85,12 +87,15 @@ export function LedgersManager({ ledgers, groups, mode = "accounts" }: { ledgers
 
         setIsSubmitting(true)
         try {
-            const payload = {
+            const payload: Omit<Ledger, "id"> = {
                 group_id: groupId,
                 name,
                 opening_balance: Number(openingBalance) || 0,
                 balance_type: balanceType,
                 is_cash_bank: isBankMode ? true : isCashBank,
+                ledger_kind: isBankMode ? "bank" : "ledger",
+                source_context: "accounting",
+                source_profile_id: null,
                 description: description || null,
                 account_number: isBankMode ? (accountNumber || null) : null,
                 bank_name: isBankMode ? (bankName || null) : null,
@@ -145,16 +150,8 @@ export function LedgersManager({ ledgers, groups, mode = "accounts" }: { ledgers
     }
 
     return (
-        <Card className="bg-white shadow-sm border-slate-200">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <div>
-                    <CardTitle className="text-xl">{isBankMode ? "Bank Accounts" : "Party Ledgers / Accounts"}</CardTitle>
-                    <CardDescription>
-                        {isBankMode
-                            ? "Create and manage bank accounts. These are the only ledgers selectable as the top Cash/Bank field on Payment, Receipt, and Contra vouchers."
-                            : "Create and manage party ledgers (customers, vendors, expense / income accounts). Bank accounts are managed separately under Banking."}
-                    </CardDescription>
-                </div>
+        <div className="space-y-6">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <Dialog
                     open={isOpen}
                     onOpenChange={(open) => {
@@ -163,17 +160,22 @@ export function LedgersManager({ ledgers, groups, mode = "accounts" }: { ledgers
                     }}
                 >
                     <DialogTrigger asChild>
-                        <Button size="sm" onClick={openCreate} className={isBankMode ? "bg-indigo-600 hover:bg-indigo-700" : "bg-indigo-600 hover:bg-indigo-700"}>
-                            + New {isBankMode ? "Bank" : "Ledger"}
-                        </Button>
+                        <button
+                            type="button"
+                            onClick={openCreate}
+                            className="flex w-full max-w-sm items-center gap-3 rounded-2xl border border-dashed border-indigo-300 bg-white p-6 text-left shadow-sm transition hover:border-indigo-400 hover:bg-indigo-50"
+                        >
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+                                <Plus className="h-5 w-5" />
+                            </span>
+                            <span className="text-lg font-black text-slate-800">Create New {isBankMode ? "Bank" : "Ledger"}</span>
+                        </button>
                     </DialogTrigger>
                     <DialogContent className="bg-white border-slate-200 text-slate-900 max-w-xl">
                         <DialogHeader>
                             <DialogTitle>{editId ? `Edit ${isBankMode ? "Bank" : "Ledger"}` : `Create ${isBankMode ? "Bank" : "Ledger"}`}</DialogTitle>
                             <DialogDescription>
-                                {isBankMode
-                                    ? (editId ? "Update bank account details." : "Add a bank account that can be used as the Cash/Bank field on vouchers.")
-                                    : (editId ? "Update an existing ledger." : "Add a ledger that can be selected as a party or expense/income account on vouchers.")}
+                                {editId ? "Update record." : "Create a record."}
                             </DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -272,15 +274,22 @@ export function LedgersManager({ ledgers, groups, mode = "accounts" }: { ledgers
                             </div>
 
                             <DialogFooter>
-                                <Button type="submit" disabled={isSubmitting} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                                <Button type="submit" disabled={isSubmitting} className="h-10 bg-indigo-600 px-5 font-bold text-white hover:bg-indigo-700">
                                     {editId ? "Save Changes" : `Create ${isBankMode ? "Bank" : "Ledger"}`}
                                 </Button>
                             </DialogFooter>
                         </form>
                     </DialogContent>
                 </Dialog>
-            </CardHeader>
-            <CardContent>
+            </div>
+
+            <Card className="bg-white shadow-sm border-slate-200">
+                <CardHeader className="pb-2">
+                    <div>
+                        <CardTitle className="text-xl">{isBankMode ? "Bank Accounts" : "Ledgers"}</CardTitle>
+                    </div>
+                </CardHeader>
+                <CardContent>
                 <Table>
                     <TableHeader>
                         <TableRow className="border-slate-200">
@@ -333,7 +342,8 @@ export function LedgersManager({ ledgers, groups, mode = "accounts" }: { ledgers
                         )}
                     </TableBody>
                 </Table>
-            </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
+        </div>
     )
 }
