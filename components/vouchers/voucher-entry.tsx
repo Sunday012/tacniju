@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ComboboxInput } from "@/components/ui/combobox-input"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { saveVoucher, deleteVoucher, VoucherType, VoucherItemPayload, VoucherLedgerEntry } from "@/app/vouchers/actions"
+import { saveVoucher, VoucherType, VoucherItemPayload, VoucherLedgerEntry } from "@/app/vouchers/actions"
 import { Ledger, LedgerBalance } from "@/app/management/actions"
 import { Item } from "@/app/inventory/actions"
 import { getOrCreateProfilePartyLedger } from "@/app/accounting/actions"
@@ -73,7 +73,6 @@ export function VoucherEntry({
     const [offsetEnabled, setOffsetEnabled] = useState(false)
 
     const [isSubmitting, setIsSubmitting] = useState(false)
-    const [deletingVoucherId, setDeletingVoucherId] = useState<string | null>(null)
     const router = useRouter()
 
     useEffect(() => {
@@ -206,21 +205,6 @@ export function VoucherEntry({
         }
     }
 
-    async function handleDeleteVoucher(voucher: any) {
-        if (!confirm(`Are you sure you want to delete voucher ${voucher.voucher_no}?`)) return
-
-        setDeletingVoucherId(voucher.id)
-        try {
-            await deleteVoucher(voucher.id)
-            toast.success("Voucher deleted")
-            router.refresh()
-        } catch (error) {
-            console.error(error)
-            toast.error("Failed to delete voucher.")
-        } finally {
-            setDeletingVoucherId(null)
-        }
-    }
 
     // -- Items Management --
     function updateItem(index: number, field: keyof VoucherItemPayload, value: any) {
@@ -897,57 +881,6 @@ export function VoucherEntry({
                     )}
                 </DialogContent>
             </Dialog>
-
-            <Card className="mt-6 rounded-[2rem] border-slate-200 bg-white shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)]">
-                <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">Recent Vouchers</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="rounded-md border border-slate-200 overflow-hidden">
-                        <Table>
-                            <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600">
-                                <TableRow className="border-b-slate-200">
-                                    <TableHead className="text-slate-500 font-semibold">Voucher No</TableHead>
-                                    <TableHead className="text-slate-500 font-semibold">Type</TableHead>
-                                    <TableHead className="text-slate-500 font-semibold">Date</TableHead>
-                                    <TableHead className="text-slate-500 font-semibold">Narration</TableHead>
-                                    <TableHead className="text-right text-slate-500 font-semibold">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody className="[&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
-                                {recentVouchers.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center text-slate-400">
-                                            No vouchers recorded yet.
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    recentVouchers.map((voucher) => (
-                                        <TableRow key={voucher.id} className="border-b-slate-100 hover:bg-slate-50/50">
-                                            <TableCell className="font-medium text-slate-800">{voucher.voucher_no}</TableCell>
-                                            <TableCell className="text-slate-600">{voucher.voucher_type}</TableCell>
-                                            <TableCell className="text-slate-600">{new Date(voucher.date).toLocaleDateString()}</TableCell>
-                                            <TableCell className="text-slate-600 max-w-[360px] truncate">{voucher.narration || "-"}</TableCell>
-                                            <TableCell className="text-right">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => handleDeleteVoucher(voucher)}
-                                                    disabled={deletingVoucherId === voucher.id}
-                                                    className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                    title={`Delete ${voucher.voucher_no}`}
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardContent>
-            </Card>
         </div>
     )
 }
