@@ -398,7 +398,7 @@ export function VoucherEntry({
         }
 
         if (!selectedLedger.is_cash_bank) {
-            toast.error(`"${selectedLedger.name}" is not a Cash/Bank ledger. Use it in Particulars below.`)
+            toast.error(`"${selectedLedger.name}" is not a cash/bank account. Select it in the Party / Ledger rows below.`)
             return
         }
 
@@ -420,11 +420,10 @@ export function VoucherEntry({
 
     const cashBankLedgers = ledgers.filter((ledger) => ledger.is_cash_bank)
     const regularLedgers = ledgers.filter((ledger) => !ledger.is_cash_bank)
-    const topAccountOptions = ledgers.map((ledger) => ({
+    // Top "Account" field lists every ledger by plain name (cash/bank accounts first).
+    const topAccountOptions = [...cashBankLedgers, ...regularLedgers].map((ledger) => ({
         value: ledger.id,
-        label: ledger.is_cash_bank
-            ? buildLedgerLabel(ledger)
-            : `Use in Particulars: ${buildLedgerLabel(ledger)}`,
+        label: ledger.name,
     }))
     const detailLedgerCandidates = !isSingleEntry
         ? ledgers
@@ -494,21 +493,19 @@ export function VoucherEntry({
 
                     {isSingleEntry && (
                         <div className={`mt-6 flex flex-col gap-2 p-3 rounded-md border sm:flex-row sm:items-center sm:gap-3 ${theme.bgSoft} ${theme.border}`}>
-                            <Label className="font-bold text-slate-700 shrink-0 sm:w-24">Cash/Bank :</Label>
+                            <Label className="font-bold text-slate-700 shrink-0 sm:w-24">Account</Label>
                             <div className="w-full flex-1 space-y-1">
                                 <ComboboxInput
                                     value={masterLedgerId}
                                     onChange={handleMasterLedgerChange}
                                     options={topAccountOptions}
-                                    placeholder={topAccountOptions.length > 0 ? "Search cash/bank or ledger name..." : "No cash/bank ledger found. Create or edit one in Accounts Info."}
+                                    placeholder={topAccountOptions.length > 0 ? "Search account name..." : "No account found. Create one in Accounts Info."}
                                     className="h-10 w-full border-slate-300 font-semibold shadow-sm bg-white rounded-md"
                                     inputClassName="bg-transparent border-none focus-visible:ring-0 shadow-none font-semibold text-slate-800"
                                 />
-                                {requiresCashBankMaster && (
-                                    <p className={`text-xs ${hasCashBankMasterOptions ? theme.textSoft : "text-red-600"}`}>
-                                        {hasCashBankMasterOptions
-                                            ? "This top field accepts Cash/Bank ledgers only. Regular ledgers like Flame Account should be selected in Particulars."
-                                            : "Single-entry vouchers (Payment, Receipt, Contra, Expense, Income, Program) need at least one ledger marked as Cash/Bank."}
+                                {requiresCashBankMaster && !hasCashBankMasterOptions && (
+                                    <p className="text-xs text-red-600">
+                                        No account exists yet — create one in Accounts Info before recording this voucher.
                                     </p>
                                 )}
                             </div>
