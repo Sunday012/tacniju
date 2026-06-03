@@ -82,7 +82,6 @@ export default async function AccountingVoucherPage({ params }: { params: { type
       backLabel="Vouchers"
       hero={{
         title: `${voucherType} Voucher`,
-        subtitle: "Enter the account, party, ledger details, narration, and amount for this transaction.",
         badge: voucherType,
         ...heroStyles[voucherType],
       }}

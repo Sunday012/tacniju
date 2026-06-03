@@ -12,7 +12,6 @@ export default async function AccountingInventoryPage() {
       hero={{
         eyebrow: "Accounting Inventory",
         title: "Inventory Management",
-        subtitle: "Create and track stock items, quantities, cost and selling prices for this assembly.",
         badge: "Stock",
       }}
     >

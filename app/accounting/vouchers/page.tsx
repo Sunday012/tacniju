@@ -3,14 +3,14 @@ import { ReceiptText, ShoppingCart, WalletCards } from "lucide-react"
 import { AccountingShell } from "@/components/accounting/accounting-shell"
 
 const voucherCards = [
-  { href: "/accounting/vouchers/receipt", label: "Receipt", description: "Money received", icon: ReceiptText },
-  { href: "/accounting/vouchers/payment", label: "Payment", description: "Money paid out", icon: WalletCards },
-  { href: "/accounting/vouchers/sales", label: "Sales", description: "Stock sales", icon: ShoppingCart },
-  { href: "/accounting/vouchers/purchase", label: "Purchase", description: "Stock purchases", icon: ShoppingCart },
-  { href: "/accounting/vouchers/expense", label: "Expense", description: "Expense entry", icon: WalletCards },
-  { href: "/accounting/vouchers/income", label: "Income", description: "Income entry", icon: ReceiptText },
-  { href: "/accounting/vouchers/contra", label: "Contra", description: "Bank/cash transfer", icon: WalletCards },
-  { href: "/accounting/programs", label: "Program", description: "Create programs", icon: ReceiptText },
+  { href: "/accounting/vouchers/receipt", label: "Receipt", icon: ReceiptText },
+  { href: "/accounting/vouchers/payment", label: "Payment", icon: WalletCards },
+  { href: "/accounting/vouchers/sales", label: "Sales", icon: ShoppingCart },
+  { href: "/accounting/vouchers/purchase", label: "Purchase", icon: ShoppingCart },
+  { href: "/accounting/vouchers/expense", label: "Expense", icon: WalletCards },
+  { href: "/accounting/vouchers/income", label: "Income", icon: ReceiptText },
+  { href: "/accounting/vouchers/contra", label: "Contra", icon: WalletCards },
+  { href: "/accounting/programs", label: "Program", icon: ReceiptText },
 ]
 
 export default function AccountingVouchersPage() {
@@ -28,10 +28,7 @@ export default function AccountingVouchersPage() {
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600">
                 <Icon className="h-5 w-5" />
               </div>
-              <div className="min-w-0">
-                <h2 className="text-base font-bold text-slate-800">{card.label}</h2>
-                <p className="truncate text-xs text-slate-500">{card.description}</p>
-              </div>
+              <h2 className="text-base font-bold text-slate-800">{card.label}</h2>
             </Link>
           )
         })}
