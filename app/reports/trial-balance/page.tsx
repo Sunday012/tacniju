@@ -30,7 +30,7 @@ export default async function TrialBalancePage({ searchParams }: { searchParams:
                     </CardHeader>
                     <CardContent>
                         <Table>
-                            <TableHeader>
+                            <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600">
                                 <TableRow className="border-slate-200">
                                     <TableHead className="text-slate-500">Ledger</TableHead>
                                     <TableHead className="text-slate-500">Group</TableHead>
@@ -39,7 +39,7 @@ export default async function TrialBalancePage({ searchParams }: { searchParams:
                                     <TableHead className="text-slate-500 text-right">Credit Balance (₦)</TableHead>
                                 </TableRow>
                             </TableHeader>
-                            <TableBody>
+                            <TableBody className="[&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
                                 {data.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={5} className="text-center text-slate-500 py-6">No data found.</TableCell>

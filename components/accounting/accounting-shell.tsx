@@ -55,7 +55,7 @@ export function AccountingShell({
 
       <main className="mx-auto max-w-[1500px] px-4 py-8 sm:px-6 lg:px-10">
         {hero ? (
-          <section className={`relative mb-8 overflow-hidden rounded-[2rem] px-6 py-8 text-white shadow-[0_18px_50px_-22px_rgba(15,23,42,0.35)] sm:px-10 ${hero.className || "bg-gradient-to-br from-indigo-500 via-violet-600 to-purple-700"}`}>
+          <section className={`relative mb-8 overflow-hidden rounded-[2rem] px-6 py-8 text-white shadow-[0_18px_50px_-22px_rgba(15,23,42,0.35)] sm:px-10 ${hero.className || "bg-gradient-to-br from-indigo-900 via-indigo-800 to-violet-900"}`}>
             <div className="absolute right-0 top-0 h-64 w-64 translate-x-20 -translate-y-16 rounded-full bg-white/10" />
             <div className="absolute bottom-0 right-28 h-44 w-44 translate-y-20 rounded-full bg-purple-950/10" />
             <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">

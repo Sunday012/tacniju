@@ -102,7 +102,7 @@ export function PartyManager({ parties }: { parties: Party[] }) {
           <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search member name, reservation, phone..." className="max-w-sm" />
         </div>
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600">
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Reservation</TableHead>
@@ -110,7 +110,7 @@ export function PartyManager({ parties }: { parties: Party[] }) {
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className="[&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
             {filteredParties.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="py-8 text-center text-slate-500">No parties found.</TableCell>

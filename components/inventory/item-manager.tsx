@@ -192,7 +192,7 @@ export function ItemManager({ items, hideTitle = false }: { items: Item[]; hideT
             </CardHeader>
             <CardContent>
                 <Table>
-                    <TableHeader>
+                    <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600">
                         <TableRow className="border-slate-200">
                             <TableHead className="text-slate-500">Stock</TableHead>
                             <TableHead className="text-slate-500">Category</TableHead>
@@ -204,7 +204,7 @@ export function ItemManager({ items, hideTitle = false }: { items: Item[]; hideT
                             <TableHead className="text-right text-slate-500">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
-                    <TableBody>
+                    <TableBody className="[&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
                         {items.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={8} className="text-center text-slate-500 py-6">No items in inventory.</TableCell>

@@ -83,7 +83,7 @@ export function ProgramsManager({ programs }: { programs: AccountingProgram[] })
       </div>
 
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600">
           <TableRow>
             <TableHead>Name of Program</TableHead>
             <TableHead className="text-right">Amount</TableHead>
@@ -91,7 +91,7 @@ export function ProgramsManager({ programs }: { programs: AccountingProgram[] })
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody className="[&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
           {programs.length === 0 ? (
             <TableRow>
               <TableCell colSpan={4} className="py-8 text-center text-slate-500">No programs created yet.</TableCell>

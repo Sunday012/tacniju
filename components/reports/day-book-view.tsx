@@ -113,7 +113,7 @@ export function DayBookView({ data, onBack }: { data: any[], onBack?: () => void
                 <CardContent>
                     <div className="overflow-x-auto rounded-xl border border-slate-200">
                     <Table>
-                        <TableHeader>
+                        <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600">
                             <TableRow className="border-slate-200">
                                 <TableHead className="text-slate-500">Details</TableHead>
                                 <TableHead className="text-slate-500">Vch Type</TableHead>
@@ -122,7 +122,7 @@ export function DayBookView({ data, onBack }: { data: any[], onBack?: () => void
                                 <TableHead className="text-slate-500 text-right">Credit (₦)<span className="block text-[10px] font-normal normal-case">Outward Qty</span></TableHead>
                             </TableRow>
                         </TableHeader>
-                        <TableBody>
+                        <TableBody className="[&_td]:px-5 [&_td]:py-3.5">
                             {groups.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="text-center text-slate-500 py-6">No transactions recorded on this date.</TableCell>

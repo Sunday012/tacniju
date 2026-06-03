@@ -906,7 +906,7 @@ export function VoucherEntry({
                 <CardContent>
                     <div className="rounded-md border border-slate-200 overflow-hidden">
                         <Table>
-                            <TableHeader className="bg-slate-50">
+                            <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600">
                                 <TableRow className="border-b-slate-200">
                                     <TableHead className="text-slate-500 font-semibold">Voucher No</TableHead>
                                     <TableHead className="text-slate-500 font-semibold">Type</TableHead>
@@ -915,7 +915,7 @@ export function VoucherEntry({
                                     <TableHead className="text-right text-slate-500 font-semibold">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
-                            <TableBody>
+                            <TableBody className="[&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
                                 {recentVouchers.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={5} className="h-24 text-center text-slate-400">
