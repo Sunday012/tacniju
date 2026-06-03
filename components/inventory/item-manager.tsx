@@ -90,7 +90,7 @@ export function ItemManager({ items, hideTitle = false }: { items: Item[]; hideT
     }
 
     return (
-        <Card className="bg-white shadow-sm border-slate-200 rounded-lg">
+        <Card className="overflow-hidden bg-white shadow-sm border-slate-200 rounded-lg">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div>
                     {!hideTitle && <CardTitle className="text-xl">Inventory Management</CardTitle>}
@@ -190,9 +190,9 @@ export function ItemManager({ items, hideTitle = false }: { items: Item[]; hideT
                     </DialogContent>
                 </Dialog>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0">
                 <Table>
-                    <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600">
+                    <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600 [&_tr]:border-b [&_tr]:border-slate-200">
                         <TableRow className="border-slate-200">
                             <TableHead className="text-slate-500">Stock</TableHead>
                             <TableHead className="text-slate-500">Category</TableHead>
@@ -204,7 +204,7 @@ export function ItemManager({ items, hideTitle = false }: { items: Item[]; hideT
                             <TableHead className="text-right text-slate-500">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
-                    <TableBody className="[&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
+                    <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
                         {items.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={8} className="text-center text-slate-500 py-6">No items in inventory.</TableCell>

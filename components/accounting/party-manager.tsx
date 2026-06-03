@@ -18,7 +18,7 @@ type Party = {
   ledgerId?: string | null
 }
 
-export function PartyManager({ parties }: { parties: Party[] }) {
+export function PartyManager({ parties, hideTitle = false }: { parties: Party[], hideTitle?: boolean }) {
   const router = useRouter()
   const [search, setSearch] = useState("")
   const [showForm, setShowForm] = useState(false)
@@ -98,8 +98,8 @@ export function PartyManager({ parties }: { parties: Party[] }) {
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-xl font-bold text-slate-900">Parties</h2>
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search member name, reservation, phone..." className="max-w-sm" />
+          {!hideTitle && <h2 className="text-xl font-bold text-slate-900">Parties</h2>}
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search member name, reservation, phone..." className="max-w-sm sm:ml-auto" />
         </div>
         <Table>
           <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600">
@@ -110,7 +110,7 @@ export function PartyManager({ parties }: { parties: Party[] }) {
               <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody className="[&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
+          <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
             {filteredParties.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="py-8 text-center text-slate-500">No parties found.</TableCell>

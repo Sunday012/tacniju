@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
-export function ProgramsManager({ programs }: { programs: AccountingProgram[] }) {
+export function ProgramsManager({ programs, hideTitle = false }: { programs: AccountingProgram[], hideTitle?: boolean }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -46,7 +46,7 @@ export function ProgramsManager({ programs }: { programs: AccountingProgram[] })
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
       <div className="flex items-center justify-between border-b border-slate-200 p-4">
-        <h2 className="text-xl font-black text-slate-900">Programs</h2>
+        {!hideTitle ? <h2 className="text-xl font-black text-slate-900">Programs</h2> : <span />}
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button className="h-10 gap-2 bg-indigo-600 px-5 font-bold text-white hover:bg-indigo-700">
@@ -91,7 +91,7 @@ export function ProgramsManager({ programs }: { programs: AccountingProgram[] })
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody className="[&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
+        <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
           {programs.length === 0 ? (
             <TableRow>
               <TableCell colSpan={4} className="py-8 text-center text-slate-500">No programs created yet.</TableCell>

@@ -6,8 +6,8 @@ export default async function AccountingProgramsPage() {
   const programs = await getAccountingPrograms()
 
   return (
-    <AccountingShell title="Programs" showTitle={false}>
-      <ProgramsManager programs={programs} />
+    <AccountingShell title="Programs" framed={false}>
+      <ProgramsManager programs={programs} hideTitle />
     </AccountingShell>
   )
 }

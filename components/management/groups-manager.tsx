@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation"
 import { Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
-export function GroupsManager({ groups, ledgers = [] }: { groups: AccountGroup[], ledgers?: Ledger[] }) {
+export function GroupsManager({ groups, ledgers = [], hideTitle = false }: { groups: AccountGroup[], ledgers?: Ledger[], hideTitle?: boolean }) {
     const [isOpen, setIsOpen] = useState(false)
     const [editId, setEditId] = useState<string | null>(null)
     const [name, setName] = useState("")
@@ -197,16 +197,18 @@ export function GroupsManager({ groups, ledgers = [] }: { groups: AccountGroup[]
                 )}
             </div>
 
-            <Card className="bg-white shadow-sm border-slate-200">
-                <CardHeader className="pb-2">
-                    <div>
-                        <CardTitle className="text-xl">Account Groups</CardTitle>
-                        <CardDescription>Organize ledgers hierarchically.</CardDescription>
-                    </div>
-                </CardHeader>
-                <CardContent>
+            <Card className="overflow-hidden bg-white shadow-sm border-slate-200">
+                {!hideTitle && (
+                    <CardHeader className="pb-4">
+                        <div>
+                            <CardTitle className="text-xl">Account Groups</CardTitle>
+                            <CardDescription>Organize ledgers hierarchically.</CardDescription>
+                        </div>
+                    </CardHeader>
+                )}
+                <CardContent className="p-0">
                 <Table>
-                    <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600">
+                    <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600 [&_tr]:border-b [&_tr]:border-slate-200">
                         <TableRow className="border-slate-200">
                             <TableHead className="text-slate-500">Name</TableHead>
                             <TableHead className="text-slate-500">Nature</TableHead>
@@ -214,7 +216,7 @@ export function GroupsManager({ groups, ledgers = [] }: { groups: AccountGroup[]
                             <TableHead className="text-right"></TableHead>
                         </TableRow>
                     </TableHeader>
-                    <TableBody className="[&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
+                    <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
                         {groups.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={4} className="text-center text-slate-500 py-6">No groups found.</TableCell>

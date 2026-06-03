@@ -22,7 +22,7 @@ type LedgerRow = Ledger & {
 
 type LedgersManagerMode = "accounts" | "banks"
 
-export function LedgersManager({ ledgers, groups, mode = "accounts" }: { ledgers: LedgerRow[], groups: AccountGroup[], mode?: LedgersManagerMode }) {
+export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle = false }: { ledgers: LedgerRow[], groups: AccountGroup[], mode?: LedgersManagerMode, hideTitle?: boolean }) {
     const isBankMode = mode === "banks"
     const router = useRouter()
     const [isOpen, setIsOpen] = useState(false)
@@ -283,15 +283,17 @@ export function LedgersManager({ ledgers, groups, mode = "accounts" }: { ledgers
                 </Dialog>
             </div>
 
-            <Card className="bg-white shadow-sm border-slate-200">
-                <CardHeader className="pb-2">
-                    <div>
-                        <CardTitle className="text-xl">{isBankMode ? "Bank Accounts" : "Ledgers"}</CardTitle>
-                    </div>
-                </CardHeader>
-                <CardContent>
+            <Card className="overflow-hidden bg-white shadow-sm border-slate-200">
+                {!hideTitle && (
+                    <CardHeader className="pb-4">
+                        <div>
+                            <CardTitle className="text-xl">{isBankMode ? "Bank Accounts" : "Ledgers"}</CardTitle>
+                        </div>
+                    </CardHeader>
+                )}
+                <CardContent className="p-0">
                 <Table>
-                    <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600">
+                    <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600 [&_tr]:border-b [&_tr]:border-slate-200">
                         <TableRow className="border-slate-200">
                             <TableHead className="text-slate-500">{isBankMode ? "Account" : "Ledger"}</TableHead>
                             {isBankMode && <TableHead className="text-slate-500">Bank</TableHead>}
@@ -302,7 +304,7 @@ export function LedgersManager({ ledgers, groups, mode = "accounts" }: { ledgers
                             <TableHead className="text-right text-slate-500">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
-                    <TableBody className="[&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
+                    <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
                         {visibleLedgers.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={isBankMode ? 6 : 5} className="text-center text-slate-500 py-6">

@@ -9,8 +9,8 @@ export default async function AccountingGroupPage() {
   ])
 
   return (
-    <AccountingShell title="Groups" showTitle={false} backHref="/accounting/info" backLabel="Accounts Info">
-      <GroupsManager groups={groups} ledgers={ledgers} />
+    <AccountingShell title="Groups" framed={false} backHref="/accounting/info" backLabel="Accounts Info">
+      <GroupsManager groups={groups} ledgers={ledgers} hideTitle />
     </AccountingShell>
   )
 }

@@ -9,8 +9,8 @@ export default async function AccountingBankAccountPage() {
   ])
 
   return (
-    <AccountingShell title="Bank Accounts" showTitle={false} backHref="/accounting/info" backLabel="Accounts Info">
-      <LedgersManager groups={groups} ledgers={ledgers} mode="banks" />
+    <AccountingShell title="Bank Accounts" framed={false} backHref="/accounting/info" backLabel="Accounts Info">
+      <LedgersManager groups={groups} ledgers={ledgers} mode="banks" hideTitle />
     </AccountingShell>
   )
 }

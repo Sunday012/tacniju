@@ -6,8 +6,8 @@ export default async function AccountingBankingPage() {
   const [groups, ledgers] = await Promise.all([getAccountGroups(), getLedgers()])
 
   return (
-    <AccountingShell title="Banking" showTitle={false}>
-      <LedgersManager groups={groups} ledgers={ledgers} mode="banks" />
+    <AccountingShell title="Banking" framed={false}>
+      <LedgersManager groups={groups} ledgers={ledgers} mode="banks" hideTitle />
     </AccountingShell>
   )
 }
