@@ -493,15 +493,15 @@ export function VoucherEntry({
                     </div>
 
                     {isSingleEntry && (
-                        <div className={`mt-6 flex items-center gap-3 p-2 rounded-md border ${theme.bgSoft} ${theme.border}`}>
-                            <Label className="w-24 font-bold text-slate-700">Cash/Bank :</Label>
-                            <div className="flex-1 space-y-1">
+                        <div className={`mt-6 flex flex-col gap-2 p-3 rounded-md border sm:flex-row sm:items-center sm:gap-3 ${theme.bgSoft} ${theme.border}`}>
+                            <Label className="font-bold text-slate-700 shrink-0 sm:w-24">Cash/Bank :</Label>
+                            <div className="w-full flex-1 space-y-1">
                                 <ComboboxInput
                                     value={masterLedgerId}
                                     onChange={handleMasterLedgerChange}
                                     options={topAccountOptions}
                                     placeholder={topAccountOptions.length > 0 ? "Search cash/bank or ledger name..." : "No cash/bank ledger found. Create or edit one in Accounts Info."}
-                                    className="h-10 border-slate-300 font-semibold shadow-sm bg-white rounded-md"
+                                    className="h-10 w-full border-slate-300 font-semibold shadow-sm bg-white rounded-md"
                                     inputClassName="bg-transparent border-none focus-visible:ring-0 shadow-none font-semibold text-slate-800"
                                 />
                                 {requiresCashBankMaster && (
@@ -512,7 +512,7 @@ export function VoucherEntry({
                                     </p>
                                 )}
                             </div>
-                            <div className="w-44 shrink-0 text-right">
+                            <div className="w-full shrink-0 text-left sm:w-44 sm:text-right">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Current Bal</p>
                                 <p className={`text-sm font-bold ${formatBalance(masterLedgerId) ? theme.text : "text-slate-300"}`}>
                                     {formatBalance(masterLedgerId) || "—"}
@@ -522,22 +522,24 @@ export function VoucherEntry({
                     )}
 
                     {voucherType !== "Contra" && (
-                        <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_auto]">
-                            <div className="flex items-center gap-3 rounded-md border border-slate-200 bg-white p-2">
-                                <Label className="w-24 font-bold text-slate-700">Party</Label>
-                                <ComboboxInput
-                                    value={selectedPartyId}
-                                    onChange={handlePartyChange}
-                                    options={parties.map(p => ({
-                                        value: p.id,
-                                        label: p.reservation_number ? `${p.name} (${p.reservation_number})` : p.name,
-                                    }))}
-                                    placeholder="Search registered member..."
-                                    className="h-10"
-                                    inputClassName="border-slate-300"
-                                />
+                        <div className="mt-3">
+                            <div className="flex flex-col gap-2 rounded-md border border-slate-200 bg-white p-2 sm:flex-row sm:items-center sm:gap-3">
+                                <Label className="font-bold text-slate-700 shrink-0 sm:w-24">Party</Label>
+                                <div className="w-full flex-1">
+                                    <ComboboxInput
+                                        value={selectedPartyId}
+                                        onChange={handlePartyChange}
+                                        options={parties.map(p => ({
+                                            value: p.id,
+                                            label: p.reservation_number ? `${p.name} (${p.reservation_number})` : p.name,
+                                        }))}
+                                        placeholder="Search registered member..."
+                                        className="h-10 w-full"
+                                        inputClassName="border-slate-300"
+                                    />
+                                </div>
                                 {formatBalance(selectedLedgers[0]?.ledger_id) && (
-                                    <div className="shrink-0 text-right">
+                                    <div className="shrink-0 text-left sm:text-right">
                                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Bal </span>
                                         <span className={`text-sm font-bold ${theme.text}`}>{formatBalance(selectedLedgers[0]?.ledger_id)}</span>
                                     </div>
@@ -748,9 +750,9 @@ export function VoucherEntry({
                             </div>
 
                             {/* Footer: Narration & Totals */}
-                            <div className="flex items-end justify-between bg-slate-50/50 border-t border-slate-300 px-4 py-4">
+                            <div className="flex flex-col gap-4 bg-slate-50/50 border-t border-slate-300 px-4 py-4 sm:flex-row sm:items-end sm:justify-between">
                                 {/* Narration - Left Side */}
-                                <div className="w-[60%] flex gap-2 items-center">
+                                <div className="w-full flex gap-2 items-center sm:w-[60%]">
                                     <Label className="text-slate-700 font-semibold whitespace-nowrap">Narration:</Label>
                                     <Input
                                         value={narration}
