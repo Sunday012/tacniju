@@ -197,6 +197,7 @@ export async function getOrCreateProfilePartyLedger(profileId: string) {
 export type LedgerTransactionRow = {
   id: string
   date: string
+  voucherId: string
   voucherNumber: string | null
   voucherType: string
   detailName: string
@@ -218,9 +219,10 @@ async function fetchLedgerTransactions(ledgerIds: string[], startDate?: string, 
       credit_amount,
       ledgers!voucher_entries_ledger_id_fkey(name),
       vouchers!inner(
+        id,
         org_id,
         date,
-        voucher_number,
+        voucher_no,
         voucher_type
       )
     `)
@@ -241,7 +243,8 @@ async function fetchLedgerTransactions(ledgerIds: string[], startDate?: string, 
   return (data || []).map((entry: any) => ({
     id: entry.id as string,
     date: entry.vouchers?.date as string,
-    voucherNumber: (entry.vouchers?.voucher_number as string | null) || null,
+    voucherId: entry.vouchers?.id as string,
+    voucherNumber: (entry.vouchers?.voucher_no as string | null) || null,
     voucherType: (entry.vouchers?.voucher_type as string) || "Voucher",
     detailName: (entry.ledgers?.name as string) || "Ledger",
     debitAmount: Number(entry.debit_amount || 0),

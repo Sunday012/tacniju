@@ -4,9 +4,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
-export default async function DayBookPage({ searchParams }: { searchParams: { date?: string } }) {
-    const targetDate = searchParams.date || new Date().toISOString().slice(0, 10)
-    const data = await getDayBook(targetDate)
+export default async function DayBookPage({ searchParams }: { searchParams: { date?: string; start?: string; end?: string } }) {
+    const today = new Date().toISOString().slice(0, 10)
+    const hasPeriodFilter = Boolean(searchParams.start || searchParams.end)
+    const selectedDate = hasPeriodFilter ? "" : searchParams.date || today
+    const startDate = searchParams.start || ""
+    const endDate = searchParams.end || ""
+    const data = hasPeriodFilter
+        ? await getDayBook({ startDate: startDate || undefined, endDate: endDate || undefined })
+        : await getDayBook({ date: selectedDate })
 
     function getEntryTotals(entries: any[] = []) {
         return entries.reduce(
@@ -37,16 +43,24 @@ export default async function DayBookPage({ searchParams }: { searchParams: { da
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                             <div>
-                                <CardTitle className="text-xl">Transactions for {new Date(targetDate).toLocaleDateString()}</CardTitle>
-                                <CardDescription>All vouchers entered on this day.</CardDescription>
+                                <CardTitle className="text-xl">
+                                    {hasPeriodFilter
+                                        ? `Transactions for ${startDate || "-"} to ${endDate || "-"}`
+                                        : `Transactions for ${selectedDate}`}
+                                </CardTitle>
+                                <CardDescription>
+                                    {hasPeriodFilter ? "All vouchers entered in this period." : "All vouchers entered on this day."}
+                                </CardDescription>
                             </div>
-                            <form className="flex gap-2">
+                            <form className="flex gap-2" method="get">
                                 <input
                                     type="date"
                                     name="date"
-                                    defaultValue={targetDate}
+                                    defaultValue={selectedDate}
                                     className="bg-slate-50 border border-slate-200 rounded px-3 py-1 text-sm text-slate-900"
                                 />
+                                <input type="date" name="start" defaultValue={startDate} className="bg-slate-50 border border-slate-200 rounded px-3 py-1 text-sm text-slate-900" />
+                                <input type="date" name="end" defaultValue={endDate} className="bg-slate-50 border border-slate-200 rounded px-3 py-1 text-sm text-slate-900" />
                                 <Button type="submit" size="sm" className="bg-emerald-600 hover:bg-emerald-500">Go</Button>
                             </form>
                         </div>

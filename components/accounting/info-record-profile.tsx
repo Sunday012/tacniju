@@ -24,6 +24,17 @@ type DetailSection = {
   fields: Field[]
 }
 
+function formatIsoDate(dateValue: string) {
+  const [year, month, day] = dateValue.split("-")
+  if (!year || !month || !day) return dateValue
+  return `${day}/${month}/${year}`
+}
+
+function getVoucherHref(voucherType: string, voucherId: string) {
+  const slug = voucherType.toLowerCase()
+  return `/accounting/vouchers/${slug}/${voucherId}`
+}
+
 export function InfoRecordProfile({
   title,
   subtitle,
@@ -50,7 +61,7 @@ export function InfoRecordProfile({
   const currentYear = new Date().getFullYear()
   const startDate = transactionStartDate || `${currentYear}-01-01`
   const endDate = transactionEndDate || `${currentYear}-12-31`
-  const transactionPeriod = `${new Date(startDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} to ${new Date(endDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
+  const transactionPeriod = `${formatIsoDate(startDate)} to ${formatIsoDate(endDate)}`
 
   return (
     <div className="min-h-screen bg-[#F4F7FA] text-slate-900">
@@ -158,11 +169,19 @@ export function InfoRecordProfile({
                       </TableRow>
                     ) : (
                       transactionRows.map(item => (
-                        <TableRow key={item.id}>
-                          <TableCell className="text-slate-500">{new Date(item.date).toLocaleDateString()}</TableCell>
-                          <TableCell className="font-medium text-slate-800">{item.detailName}</TableCell>
+                        <TableRow key={item.id} className="cursor-pointer">
+                          <TableCell className="text-slate-500">{formatIsoDate(item.date)}</TableCell>
+                          <TableCell className="font-medium text-slate-800">
+                            <Link href={getVoucherHref(item.voucherType, item.voucherId)} className="block hover:text-indigo-700">
+                              {item.detailName}
+                            </Link>
+                          </TableCell>
                           <TableCell className="pl-8 text-slate-500">{item.voucherType}</TableCell>
-                          <TableCell className="text-slate-500">{item.voucherNumber || "-"}</TableCell>
+                          <TableCell className="text-slate-500">
+                            <Link href={getVoucherHref(item.voucherType, item.voucherId)} className="hover:text-indigo-700">
+                              {item.voucherNumber || "-"}
+                            </Link>
+                          </TableCell>
                           <TableCell className="text-right text-slate-700">
                             {item.debitAmount > 0 ? item.debitAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "-"}
                           </TableCell>

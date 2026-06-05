@@ -157,6 +157,46 @@ export async function getRecentVouchers() {
     return data
 }
 
+export async function getVoucherById(id: string) {
+    const supabase = await createClient()
+    const orgId = await getOrgId()
+
+    const { data, error } = await supabase
+        .from("vouchers")
+        .select(`
+            *,
+            voucher_entries (
+                id,
+                ledger_id,
+                debit_amount,
+                credit_amount,
+                adjustment_method,
+                adjustment_reference,
+                due_date,
+                ledgers ( name )
+            ),
+            voucher_items (
+                id,
+                item_id,
+                qty,
+                rate,
+                amount,
+                movement_type,
+                items ( name )
+            )
+        `)
+        .eq("id", id)
+        .eq("org_id", orgId)
+        .maybeSingle()
+
+    if (error) {
+        console.error("Error fetching voucher:", error)
+        return null
+    }
+
+    return data
+}
+
 export async function deleteVoucher(id: string) {
     const supabase = await createClient()
     const orgId = await getOrgId()

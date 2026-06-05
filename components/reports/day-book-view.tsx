@@ -1,9 +1,9 @@
 "use client"
 
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { useRouter, useSearchParams } from "next/navigation"
 
 // Vouchers are listed serially by type: all Receipts, then Payments, then Sales, etc.
 const voucherOrder = ["Receipt", "Payment", "Sales", "Purchase", "Expense", "Income", "Program", "Contra"]
@@ -19,10 +19,68 @@ const typeBadge: Record<string, string> = {
     Contra: "bg-slate-200 text-slate-700",
 }
 
-export function DayBookView({ data, onBack }: { data: any[], onBack?: () => void }) {
-    const router = useRouter()
-    const searchParams = useSearchParams()
-    const targetDate = searchParams.get("date") || new Date().toISOString().slice(0, 10)
+function formatIsoDate(dateValue: string) {
+    const [year, month, day] = dateValue.split("-")
+    if (!year || !month || !day) return dateValue
+    return `${day}/${month}/${year}`
+}
+
+function getVoucherHref(voucherType: string, voucherId: string) {
+    return `/accounting/vouchers/${voucherType.toLowerCase()}/${voucherId}`
+}
+
+function getVoucherDisplayAmounts(voucherType: string, debit: number, credit: number) {
+    const total = Math.max(debit, credit)
+
+    switch (voucherType) {
+        case "Payment":
+        case "Expense":
+        case "Sales":
+            return { debitDisplay: null as number | null, creditDisplay: total }
+        case "Receipt":
+        case "Income":
+        case "Program":
+        case "Purchase":
+            return { debitDisplay: total, creditDisplay: null as number | null }
+        case "Contra":
+        default:
+            return { debitDisplay: debit || null, creditDisplay: credit || null }
+    }
+}
+
+type DayBookViewProps = {
+    data: any[]
+    selectedDate: string
+    startDate: string
+    endDate: string
+    actionPath?: string
+    onBack?: () => void
+}
+
+export function DayBookView({
+    data,
+    selectedDate,
+    startDate,
+    endDate,
+    actionPath = "/accounting/day-book",
+    onBack,
+}: DayBookViewProps) {
+    const isPeriodMode = Boolean(startDate || endDate)
+
+    function clearPeriod(form: HTMLFormElement) {
+        const dateInput = form.elements.namedItem("date") as HTMLInputElement | null
+        const startInput = form.elements.namedItem("start") as HTMLInputElement | null
+        const endInput = form.elements.namedItem("end") as HTMLInputElement | null
+        if (!dateInput || !startInput || !endInput) return
+        startInput.value = ""
+        endInput.value = ""
+    }
+
+    function clearDate(form: HTMLFormElement) {
+        const dateInput = form.elements.namedItem("date") as HTMLInputElement | null
+        if (!dateInput) return
+        dateInput.value = ""
+    }
 
     function getEntryTotals(entries: any[] = []) {
         return entries.reduce(
@@ -44,15 +102,6 @@ export function DayBookView({ data, onBack }: { data: any[], onBack?: () => void
             },
             { inward: 0, outward: 0 }
         )
-    }
-
-    function handleDateSubmit(e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault()
-        const formData = new FormData(e.currentTarget)
-        const date = formData.get("date") as string
-        if (date) {
-            router.push(`/accounting/day-book?date=${date}`)
-        }
     }
 
     const sortedData = [...data].sort((a, b) => {
@@ -80,13 +129,37 @@ export function DayBookView({ data, onBack }: { data: any[], onBack?: () => void
     return (
         <div className="space-y-7">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <form onSubmit={handleDateSubmit} className="flex max-w-sm gap-2">
-                <input
-                    type="date"
-                    name="date"
-                    defaultValue={targetDate}
-                    className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm focus:border-indigo-400 focus:outline-none"
-                />
+              <form method="get" action={actionPath} className="flex flex-col gap-3 lg:flex-row lg:items-end">
+                <label className="flex flex-col gap-1.5">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Date</span>
+                    <input
+                        type="date"
+                        name="date"
+                        defaultValue={selectedDate}
+                        onChange={(event) => clearPeriod(event.currentTarget.form!)}
+                        className="h-11 min-w-[180px] rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm focus:border-indigo-400 focus:outline-none"
+                    />
+                </label>
+                <label className="flex flex-col gap-1.5">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Period Start</span>
+                    <input
+                        type="date"
+                        name="start"
+                        defaultValue={startDate}
+                        onChange={(event) => clearDate(event.currentTarget.form!)}
+                        className="h-11 min-w-[180px] rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm focus:border-indigo-400 focus:outline-none"
+                    />
+                </label>
+                <label className="flex flex-col gap-1.5">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Period End</span>
+                    <input
+                        type="date"
+                        name="end"
+                        defaultValue={endDate}
+                        onChange={(event) => clearDate(event.currentTarget.form!)}
+                        className="h-11 min-w-[180px] rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm focus:border-indigo-400 focus:outline-none"
+                    />
+                </label>
                 <Button type="submit" className="h-11 bg-indigo-600 px-6 font-bold text-white hover:bg-indigo-700">Go</Button>
               </form>
               {onBack && <button onClick={onBack} className="h-10 rounded-xl bg-slate-100 px-4 text-sm font-bold text-slate-700 hover:bg-slate-200">Back</button>}
@@ -108,7 +181,18 @@ export function DayBookView({ data, onBack }: { data: any[], onBack?: () => void
 
             <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
                 <CardHeader className="pb-2">
-                    <CardTitle className="text-xl">Day Book — {new Date(targetDate).toLocaleDateString()}</CardTitle>
+                    <div className="space-y-1">
+                        <CardTitle className="text-xl">
+                            {isPeriodMode
+                                ? `Day Book — ${startDate && endDate ? `${formatIsoDate(startDate)} to ${formatIsoDate(endDate)}` : "Period View"}`
+                                : `Day Book — ${formatIsoDate(selectedDate)}`}
+                        </CardTitle>
+                        {isPeriodMode ? (
+                            <p className="text-sm text-slate-500">
+                                Period: {(startDate && formatIsoDate(startDate)) || "-"} to {(endDate && formatIsoDate(endDate)) || "-"}
+                            </p>
+                        ) : null}
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <div className="overflow-x-auto rounded-xl border border-slate-200">
@@ -125,7 +209,9 @@ export function DayBookView({ data, onBack }: { data: any[], onBack?: () => void
                         <TableBody className="[&_td]:px-5 [&_td]:py-3.5">
                             {groups.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center text-slate-500 py-6">No transactions recorded on this date.</TableCell>
+                                    <TableCell colSpan={5} className="text-center text-slate-500 py-6">
+                                        {isPeriodMode ? "No transactions recorded in this period." : "No transactions recorded on this date."}
+                                    </TableCell>
                                 </TableRow>
                             ) : (
                                 groups.map(group => (
@@ -155,7 +241,9 @@ export function DayBookView({ data, onBack }: { data: any[], onBack?: () => void
                     return (
                         <TableRow key={v.id} className="border-slate-200 align-top hover:bg-slate-50">
                             <TableCell>
-                                <div className="font-medium text-slate-800 italic mb-1">"{v.narration}"</div>
+                                <Link href={getVoucherHref(v.voucher_type, v.id)} className="block hover:text-indigo-700">
+                                    <div className="font-medium text-slate-800 italic mb-1">"{v.narration}"</div>
+                                </Link>
                                 <div className="space-y-0.5">
                                     {entries.length === 0 ? (
                                         <div className="text-xs text-red-600">No ledger entries saved.</div>
@@ -171,13 +259,25 @@ export function DayBookView({ data, onBack }: { data: any[], onBack?: () => void
                                     {v.voucher_type}
                                 </span>
                             </TableCell>
-                            <TableCell className="font-bold text-slate-700 text-xs">{v.voucher_no}</TableCell>
+                            <TableCell className="font-bold text-slate-700 text-xs">
+                                <Link href={getVoucherHref(v.voucher_type, v.id)} className="hover:text-indigo-700">
+                                    {v.voucher_no}
+                                </Link>
+                            </TableCell>
                             <TableCell className="text-right font-mono">
-                                <div>{eTotals.debit > 0 ? eTotals.debit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}</div>
+                                <div>
+                                    {getVoucherDisplayAmounts(v.voucher_type, eTotals.debit, eTotals.credit).debitDisplay
+                                        ? getVoucherDisplayAmounts(v.voucher_type, eTotals.debit, eTotals.credit).debitDisplay!.toLocaleString(undefined, { minimumFractionDigits: 2 })
+                                        : '-'}
+                                </div>
                                 {qty.inward > 0 && <div className="text-[11px] text-slate-400">{qty.inward} in</div>}
                             </TableCell>
                             <TableCell className="text-right font-mono">
-                                <div>{eTotals.credit > 0 ? eTotals.credit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}</div>
+                                <div>
+                                    {getVoucherDisplayAmounts(v.voucher_type, eTotals.debit, eTotals.credit).creditDisplay
+                                        ? getVoucherDisplayAmounts(v.voucher_type, eTotals.debit, eTotals.credit).creditDisplay!.toLocaleString(undefined, { minimumFractionDigits: 2 })
+                                        : '-'}
+                                </div>
                                 {qty.outward > 0 && <div className="text-[11px] text-slate-400">{qty.outward} out</div>}
                             </TableCell>
                         </TableRow>

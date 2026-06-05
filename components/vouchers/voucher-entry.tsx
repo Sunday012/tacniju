@@ -356,23 +356,22 @@ export function VoucherEntry({
         }
     }
 
-    // Per-voucher-type accent palette. White background everywhere; the accent
-    // tints the type badge, master ledger panel, focus rings, row hover, totals
-    // border, and submit button.
+    // Keep voucher color only for the primary action button; the form itself
+    // stays neutral across every voucher type.
     const themes = {
-        Payment:  { name: "Gold",   ring: "focus:border-amber-500 focus:ring-amber-500",     text: "text-amber-700",   textSoft: "text-amber-600",   bg: "bg-amber-50",   bgSoft: "bg-amber-50/40",   border: "border-amber-200",   borderStrong: "border-amber-500",   trigger: "border-amber-300 text-amber-700",   button: "bg-amber-500 hover:bg-amber-400",       hover: "hover:bg-amber-50/40",   totalsBorder: "border-amber-500" },
-        Receipt:  { name: "Red",    ring: "focus:border-red-500 focus:ring-red-500",         text: "text-red-700",     textSoft: "text-red-600",     bg: "bg-red-50",     bgSoft: "bg-red-50/40",     border: "border-red-200",     borderStrong: "border-red-500",     trigger: "border-red-300 text-red-700",       button: "bg-red-500 hover:bg-red-400",           hover: "hover:bg-red-50/40",     totalsBorder: "border-red-500" },
-        Sales:    { name: "Blue",   ring: "focus:border-blue-500 focus:ring-blue-500",       text: "text-blue-700",    textSoft: "text-blue-600",    bg: "bg-blue-50",    bgSoft: "bg-blue-50/40",    border: "border-blue-200",    borderStrong: "border-blue-500",    trigger: "border-blue-300 text-blue-700",     button: "bg-blue-600 hover:bg-blue-500",         hover: "hover:bg-blue-50/40",    totalsBorder: "border-blue-500" },
-        Purchase: { name: "Blue",   ring: "focus:border-blue-500 focus:ring-blue-500",       text: "text-blue-700",    textSoft: "text-blue-600",    bg: "bg-blue-50",    bgSoft: "bg-blue-50/40",    border: "border-blue-200",    borderStrong: "border-blue-500",    trigger: "border-blue-300 text-blue-700",     button: "bg-blue-600 hover:bg-blue-500",         hover: "hover:bg-blue-50/40",    totalsBorder: "border-blue-500" },
-        Expense:  { name: "Amber",  ring: "focus:border-amber-500 focus:ring-amber-500",     text: "text-amber-700",   textSoft: "text-amber-600",   bg: "bg-amber-50",   bgSoft: "bg-amber-50/40",   border: "border-amber-200",   borderStrong: "border-amber-500",   trigger: "border-amber-300 text-amber-700",   button: "bg-amber-500 hover:bg-amber-400",       hover: "hover:bg-amber-50/40",   totalsBorder: "border-amber-500" },
-        Income:   { name: "Amber",  ring: "focus:border-amber-500 focus:ring-amber-500",     text: "text-amber-700",   textSoft: "text-amber-600",   bg: "bg-amber-50",   bgSoft: "bg-amber-50/40",   border: "border-amber-200",   borderStrong: "border-amber-500",   trigger: "border-amber-300 text-amber-700",   button: "bg-amber-500 hover:bg-amber-400",       hover: "hover:bg-amber-50/40",   totalsBorder: "border-amber-500" },
-        Contra:   { name: "Black",  ring: "focus:border-slate-900 focus:ring-slate-900",     text: "text-slate-900",   textSoft: "text-slate-700",   bg: "bg-slate-100",  bgSoft: "bg-slate-50",      border: "border-slate-300",   borderStrong: "border-slate-900",   trigger: "border-slate-400 text-slate-900",   button: "bg-slate-900 hover:bg-slate-800",       hover: "hover:bg-slate-100/60",  totalsBorder: "border-slate-900" },
-        Program:  { name: "Indigo", ring: "focus:border-indigo-500 focus:ring-indigo-500",   text: "text-indigo-700",  textSoft: "text-indigo-600",  bg: "bg-indigo-50",  bgSoft: "bg-indigo-50/40",  border: "border-indigo-200",  borderStrong: "border-indigo-500",  trigger: "border-indigo-300 text-indigo-700", button: "bg-indigo-600 hover:bg-indigo-500",     hover: "hover:bg-indigo-50/40",  totalsBorder: "border-indigo-500" },
+        Payment:  { button: "bg-amber-500 hover:bg-amber-400" },
+        Receipt:  { button: "bg-red-500 hover:bg-red-400" },
+        Sales:    { button: "bg-blue-600 hover:bg-blue-500" },
+        Purchase: { button: "bg-blue-600 hover:bg-blue-500" },
+        Expense:  { button: "bg-amber-500 hover:bg-amber-400" },
+        Income:   { button: "bg-amber-500 hover:bg-amber-400" },
+        Contra:   { button: "bg-slate-900 hover:bg-slate-800" },
+        Program:  { button: "bg-indigo-600 hover:bg-indigo-500" },
     } as const
     const theme = themes[voucherType]
 
-    const invisibleInputClass = `w-full bg-transparent border-transparent hover:border-slate-300 ${theme.ring} focus:ring-1 rounded-md px-2 h-8 text-right transition-colors`
-    const invisibleSelectClass = `w-full bg-transparent border-transparent hover:border-slate-300 ${theme.ring} focus:ring-1 h-8 shadow-none`
+    const invisibleInputClass = "w-full bg-transparent border-transparent hover:border-slate-300 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 rounded-md px-2 h-8 text-right transition-colors"
+    const invisibleSelectClass = "w-full bg-transparent border-transparent hover:border-slate-300 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 h-8 shadow-none"
 
     function handleMasterLedgerChange(value: string) {
         const selectedLedger = ledgers.find((ledger) => ledger.id === value)
@@ -437,18 +436,17 @@ export function VoucherEntry({
 
     return (
         <div className="w-full">
-            <section className={`overflow-hidden rounded-[2rem] border bg-white shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] ${theme.border}`}>
-                <div className={`border-b px-5 py-4 ${theme.bgSoft} ${theme.border}`}>
-                    <div className="flex items-center justify-between">
-                        <h2 className={`text-2xl font-black ${theme.text}`}>{voucherType}</h2>
-                        {!fixedType && (
+            <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)]">
+                <div className="border-b border-slate-200 bg-white px-5 py-4">
+                    {!fixedType && (
+                        <div className="mb-4 flex justify-end">
                             <Select value={voucherType} onValueChange={(v: VoucherType) => {
                                 setVoucherType(v)
                                 setSelectedItems(v === 'Sales' || v === 'Purchase' ? [{ item_id: "", qty: 1, rate: 0, amount: 0 }] : [])
                                 setSelectedLedgers([{ ledger_id: "", debit_amount: 0, credit_amount: 0 }])
                                 setMasterLedgerId("")
                             }}>
-                                <SelectTrigger className={`w-[200px] bg-white font-bold border-2 ${theme.trigger}`}>
+                                <SelectTrigger className="w-[200px] border-slate-300 bg-white font-bold text-slate-800">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white border-slate-300 text-slate-900">
@@ -462,8 +460,8 @@ export function VoucherEntry({
                                     <SelectItem value="Program">Program (Alt+G)</SelectItem>
                                 </SelectContent>
                             </Select>
-                        )}
-                    </div>
+                        </div>
+                    )}
                     <div className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2">
                         <div className="flex items-center gap-2">
                             <Label className="w-16 text-slate-500">Date</Label>
@@ -476,7 +474,7 @@ export function VoucherEntry({
                     </div>
 
                     {isSingleEntry && (
-                        <div className={`mt-6 flex flex-col gap-2 p-3 rounded-md border sm:flex-row sm:items-center sm:gap-3 ${theme.bgSoft} ${theme.border}`}>
+                        <div className="mt-6 flex flex-col gap-2 rounded-md border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:gap-3">
                             <Label className="font-bold text-slate-700 shrink-0 sm:w-24">Account</Label>
                             <div className="w-full flex-1 space-y-1">
                                 <ComboboxInput
@@ -495,7 +493,7 @@ export function VoucherEntry({
                             </div>
                             <div className="w-full shrink-0 text-left sm:w-44 sm:text-right">
                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Current Bal</p>
-                                <p className={`text-sm font-bold ${formatBalance(masterLedgerId) ? theme.text : "text-slate-300"}`}>
+                                <p className={`text-sm font-bold ${formatBalance(masterLedgerId) ? "text-slate-700" : "text-slate-300"}`}>
                                     {formatBalance(masterLedgerId) || "—"}
                                 </p>
                             </div>
@@ -522,7 +520,7 @@ export function VoucherEntry({
                                 {formatBalance(selectedLedgers[0]?.ledger_id) && (
                                     <div className="shrink-0 text-left sm:text-right">
                                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Bal </span>
-                                        <span className={`text-sm font-bold ${theme.text}`}>{formatBalance(selectedLedgers[0]?.ledger_id)}</span>
+                                        <span className="text-sm font-bold text-slate-700">{formatBalance(selectedLedgers[0]?.ledger_id)}</span>
                                     </div>
                                 )}
                             </div>
@@ -551,7 +549,7 @@ export function VoucherEntry({
                                         {selectedItems.map((pi, idx) => {
                                             const itemDef = items.find(i => i.id === pi.item_id)
                                             return (
-                                            <TableRow key={`item-${idx}`} className={`border-b-slate-100 h-10 ${theme.hover}`}>
+                                            <TableRow key={`item-${idx}`} className="h-10 border-b-slate-100 hover:bg-slate-50/60">
                                                 <TableCell className="p-1 relative group">
                                                     <ComboboxInput
                                                         value={pi.item_id}
@@ -559,7 +557,7 @@ export function VoucherEntry({
                                                         options={items.map(i => ({ value: i.id, label: i.name }))}
                                                         placeholder="Type item..."
                                                         className="h-8"
-                                                        inputClassName={`bg-transparent border-transparent hover:border-slate-300 ${theme.ring} focus:ring-1 shadow-none h-8 px-2`}
+                                                        inputClassName="h-8 bg-transparent border-transparent px-2 shadow-none hover:border-slate-300 focus:border-slate-400 focus:ring-1 focus:ring-slate-300"
                                                     />
                                                 </TableCell>
                                                 <TableCell className="p-1">
@@ -644,7 +642,7 @@ export function VoucherEntry({
                                       .map((sl, index) => ({ sl, index }))
                                       .filter(({ sl, index }) => index === 0 || sl.forceVisible || sl.ledger_id || sl.amount > 0 || sl.debit_amount > 0 || sl.credit_amount > 0)
                                       .map(({ sl, index }) => (
-                                        <TableRow key={`ledger-${index}`} className={`border-b-slate-100 h-10 ${theme.hover}`}>
+                                        <TableRow key={`ledger-${index}`} className="h-10 border-b-slate-100 hover:bg-slate-50/60">
                                             <TableCell className="p-1 relative group">
                                                 {sl.display_label || ledgerLabels[sl.ledger_id] ? (
                                                     <div className="flex h-8 items-center rounded-md px-2 font-semibold text-slate-700">
@@ -747,18 +745,18 @@ export function VoucherEntry({
                                 <div className="flex justify-end gap-6 text-sm font-bold text-slate-800 items-center">
                                     <div className="text-slate-500 mr-2 border-b border-transparent">Total:</div>
                                     {isSingleEntry ? (
-                                        <div className={`min-w-[120px] text-right border-t border-b-4 border-double ${theme.totalsBorder} py-1 px-2 ${theme.text}`}>
-                                            {totalAmount.toFixed(2)}
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <div className={`min-w-[120px] text-right border-t border-b-4 border-double py-1 px-2 ${totalDebit !== totalCredit ? 'text-red-600 border-red-600' : `${theme.totalsBorder} ${theme.text}`}`}>
+                                            <div className="min-w-[120px] border-t border-b-4 border-double border-slate-900 py-1 px-2 text-right text-slate-900">
+                                                {totalAmount.toFixed(2)}
+                                            </div>
+                                        ) : (
+                                            <>
+                                            <div className={`min-w-[120px] text-right border-t border-b-4 border-double py-1 px-2 ${totalDebit !== totalCredit ? 'border-red-600 text-red-600' : 'border-slate-900 text-slate-900'}`}>
                                                 {totalDebit.toFixed(2)}
                                             </div>
-                                            <div className={`min-w-[120px] text-right border-t border-b-4 border-double py-1 px-2 ${totalDebit !== totalCredit ? 'text-red-600 border-red-600' : `${theme.totalsBorder} ${theme.text}`}`}>
+                                            <div className={`min-w-[120px] text-right border-t border-b-4 border-double py-1 px-2 ${totalDebit !== totalCredit ? 'border-red-600 text-red-600' : 'border-slate-900 text-slate-900'}`}>
                                                 {totalCredit.toFixed(2)}
                                             </div>
-                                        </>
+                                            </>
                                     )}
                                 </div>
                             </div>
@@ -774,14 +772,14 @@ export function VoucherEntry({
             </section>
 
             <Dialog open={managedLedgerIndex !== null} onOpenChange={(open) => !open && setManagedLedgerIndex(null)}>
-                <DialogContent className="max-w-4xl overflow-hidden border-slate-300 bg-[#e5f0ec] p-0 text-slate-900">
-                    <DialogHeader className="border-b border-emerald-900 bg-emerald-950 px-5 py-3 text-white">
+                <DialogContent className="max-w-4xl overflow-hidden border-slate-300 bg-white p-0 text-slate-900">
+                    <DialogHeader className="border-b border-slate-200 bg-slate-900 px-5 py-3 text-white">
                         <DialogTitle className="text-base font-black">Bill-wise Details</DialogTitle>
                     </DialogHeader>
 
                     {managedLedgerIndex !== null && managedLedger && (
                         <div>
-                            <div className="border-b border-slate-300 bg-[#f4fbf8] px-5 py-4 text-center text-sm font-semibold">
+                            <div className="border-b border-slate-200 bg-slate-50 px-5 py-4 text-center text-sm font-semibold">
                                 <span>Bill-wise Details for: </span>
                                 <span className="font-black">{managedLedgerName || "Selected Ledger"}</span>
                                 <span className="ml-2">
@@ -869,11 +867,11 @@ export function VoucherEntry({
                                 </div>
                             </div>
 
-                            <DialogFooter className="border-t border-emerald-200 bg-emerald-50 px-5 py-3">
+                            <DialogFooter className="border-t border-slate-200 bg-slate-50 px-5 py-3">
                                 <Button type="button" variant="outline" onClick={() => setManagedLedgerIndex(null)}>
                                     Quit
                                 </Button>
-                                <Button type="button" onClick={() => setManagedLedgerIndex(null)} className="bg-emerald-700 px-6 font-bold text-white hover:bg-emerald-800">
+                                <Button type="button" onClick={() => setManagedLedgerIndex(null)} className="bg-slate-900 px-6 font-bold text-white hover:bg-slate-800">
                                     Accept
                                 </Button>
                             </DialogFooter>

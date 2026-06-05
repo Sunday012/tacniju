@@ -102,11 +102,15 @@ export async function getTrialBalance(startDate?: string, endDate?: string): Pro
     return rows.sort((a, b) => a.nature.localeCompare(b.nature) || a.groupName.localeCompare(b.groupName) || a.ledgerName.localeCompare(b.ledgerName))
 }
 
-export async function getDayBook(date: string) {
+export async function getDayBook(filters?: { date?: string; startDate?: string; endDate?: string }) {
     const supabase = await createClient()
     const orgId = await getOrgId()
 
-    const { data, error } = await supabase
+    const date = filters?.date
+    const startDate = filters?.startDate
+    const endDate = filters?.endDate
+    
+    let query = supabase
         .from("vouchers")
         .select(`
             *,
@@ -124,8 +128,16 @@ export async function getDayBook(date: string) {
             )
         `)
         .eq("org_id", orgId)
-        .eq("date", date)
         .order("created_at", { ascending: true })
+
+    if (date) {
+        query = query.eq("date", date)
+    } else {
+        if (startDate) query = query.gte("date", startDate)
+        if (endDate) query = query.lte("date", endDate)
+    }
+
+    const { data, error } = await query
 
     if (error) return []
     return data

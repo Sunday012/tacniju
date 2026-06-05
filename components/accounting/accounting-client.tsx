@@ -28,9 +28,11 @@ type AccountingClientProps = {
 export function AccountingClient({ profile, orgName, groups, ledgers, customFields, vouchers, items, attendance, dayBook, trialBalance }: AccountingClientProps) {
     const [activeTab, setActiveTab] = useState<"gateway" | "management" | "banking" | "vouchers" | "inventory" | "attendance" | "reports" | "day-book" | "trial-balance">("gateway")
     const router = useRouter()
+    const isoToday = new Date().toISOString().slice(0, 10)
+    const currentYear = new Date().getFullYear()
 
     const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-    const currentPeriod = `1-Jan-${new Date().getFullYear()} to 31-Dec-${new Date().getFullYear()}`
+    const currentPeriod = `1-Jan-${currentYear} to 31-Dec-${currentYear}`
 
     const goToSelectChurch = () => {
         router.push("/select-church")
@@ -77,7 +79,15 @@ export function AccountingClient({ profile, orgName, groups, ledgers, customFiel
     const renderContent = () => {
         switch (activeTab) {
             case "day-book":
-                return <DayBookView data={dayBook} onBack={() => setActiveTab("reports")} />
+                return (
+                    <DayBookView
+                        data={dayBook}
+                        selectedDate={isoToday}
+                        startDate={`${currentYear}-01-01`}
+                        endDate={`${currentYear}-12-31`}
+                        onBack={() => setActiveTab("reports")}
+                    />
+                )
             case "trial-balance":
                 return <TrialBalanceView data={trialBalance} onBack={() => setActiveTab("reports")} />
             case "management":
