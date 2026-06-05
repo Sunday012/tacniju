@@ -3,11 +3,11 @@ import { ArrowLeft } from "lucide-react"
 
 const navItems = [
   { href: "/accounting/info", label: "Accounts Info" },
-  { href: "/accounting/banking", label: "Banking" },
   { href: "/accounting/vouchers", label: "Vouchers" },
-  { href: "/accounting/programs", label: "Programs" },
-  { href: "/accounting/inventory", label: "Inventory" },
-  { href: "/accounting/day-book", label: "Day Book" },
+  { href: "/accounting/inventory-vouchers", label: "Inventory Vouchers" },
+  { href: "/accounting/inventory", label: "Inventory Info" },
+  { href: "/accounting/statements", label: "Statements" },
+  { href: "/accounting/display", label: "Display" },
 ]
 
 export function AccountingShell({

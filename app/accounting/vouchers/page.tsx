@@ -1,16 +1,12 @@
 import Link from "next/link"
-import { ReceiptText, ShoppingCart, WalletCards } from "lucide-react"
+import { ReceiptText, WalletCards } from "lucide-react"
 import { AccountingShell } from "@/components/accounting/accounting-shell"
 
 const voucherCards = [
   { href: "/accounting/vouchers/receipt", label: "Receipt", icon: ReceiptText },
   { href: "/accounting/vouchers/payment", label: "Payment", icon: WalletCards },
-  { href: "/accounting/vouchers/sales", label: "Sales", icon: ShoppingCart },
-  { href: "/accounting/vouchers/purchase", label: "Purchase", icon: ShoppingCart },
-  { href: "/accounting/vouchers/expense", label: "Expense", icon: WalletCards },
-  { href: "/accounting/vouchers/income", label: "Income", icon: ReceiptText },
   { href: "/accounting/vouchers/contra", label: "Contra", icon: WalletCards },
-  { href: "/accounting/programs", label: "Program", icon: ReceiptText },
+  { href: "/accounting/vouchers/expense", label: "Expenses", icon: WalletCards },
 ]
 
 export default function AccountingVouchersPage() {

@@ -59,18 +59,20 @@ export function AccountingGateway({ orgName }: { orgName: string }) {
           <div className="space-y-7 p-6">
             <GatewaySection title="Masters">
               <GatewayLink href="/accounting/info" hotkey="A" label="Accounts Info" />
-              <GatewayLink href="/accounting/banking" hotkey="K" label="Banking" />
+              <GatewayLink href="/accounting/inventory" hotkey="I" label="Inventory Info" />
             </GatewaySection>
 
             <GatewaySection title="Transactions">
               <GatewayLink href="/accounting/vouchers" hotkey="V" label="Accounting Vouchers" />
-              <GatewayLink href="/accounting/programs" hotkey="G" label="Programs" />
-              <GatewayLink href="/accounting/inventory" hotkey="I" label="Inventory" />
+              <GatewayLink href="/accounting/inventory-vouchers" hotkey="N" label="Inventory Vouchers" />
             </GatewaySection>
 
             <GatewaySection title="Reports">
-              <GatewayLink href="/accounting/day-book" hotkey="D" label="Day Book" />
-              <GatewayLink href="/reports/trial-balance" hotkey="T" label="Trial Balance" />
+              <GatewayLink href="/accounting/balance-sheet" hotkey="B" label="Balance Sheet" />
+              <GatewayLink href="/accounting/profit-loss" hotkey="P" label="Profit & Loss A/c" />
+              <GatewayLink href="/accounting/stock-summary" hotkey="S" label="Stock Summary" />
+              <GatewayLink href="/accounting/statements" hotkey="T" label="Statements" />
+              <GatewayLink href="/accounting/display" hotkey="D" label="Display" />
             </GatewaySection>
 
             <Link href="/dashboard" className="block rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center font-black text-slate-700 shadow-sm hover:bg-slate-100">
@@ -112,7 +114,7 @@ function GatewayLink({
   return (
     <Link
       href={href}
-      className={`block rounded-lg border border-slate-200 bg-white text-center font-bold text-slate-700 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50 ${compact ? "px-3 py-2 text-sm" : "px-4 py-3"}`}
+      className={`block rounded-md border border-slate-200 bg-white text-center font-bold text-slate-700 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50 ${compact ? "px-3 py-1 text-sm" : "px-4 py-1.5"}`}
     >
       <span className={`font-black ${hotkeyClassName}`}>{hotkey}</span>: {label}
     </Link>

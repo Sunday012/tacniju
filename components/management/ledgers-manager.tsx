@@ -1,12 +1,13 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Trash2 } from "lucide-react"
+import { CreditCard, Landmark, Layers3, Loader2, Plus, Printer, Shield, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -24,6 +25,7 @@ type LedgersManagerMode = "accounts" | "banks"
 
 export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle = false }: { ledgers: LedgerRow[], groups: AccountGroup[], mode?: LedgersManagerMode, hideTitle?: boolean }) {
     const isBankMode = mode === "banks"
+    const pageTitle = isBankMode ? "Bank Accounts" : "Ledgers"
     const router = useRouter()
     const [isOpen, setIsOpen] = useState(false)
     const [editId, setEditId] = useState<string | null>(null)
@@ -43,6 +45,9 @@ export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle =
         if (isBankMode) return Boolean(l.is_cash_bank) || l.ledger_kind === "bank"
         return !l.is_cash_bank && l.ledger_kind !== "party"
     })
+    const groupedLedgers = visibleLedgers.filter((ledger) => ledger.group_id).length
+    const debitLedgers = visibleLedgers.filter((ledger) => ledger.balance_type === "Dr").length
+    const creditLedgers = visibleLedgers.filter((ledger) => ledger.balance_type === "Cr").length
 
     function resetForm() {
         setEditId(null)
@@ -150,8 +155,66 @@ export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle =
     }
 
     return (
-        <div className="space-y-6">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-8">
+            <div className="relative overflow-hidden rounded-3xl border border-indigo-700/40 bg-gradient-to-br from-indigo-900 via-indigo-800 to-violet-900 p-8 shadow-[0_20px_40px_-15px_rgba(49,46,129,0.4)]">
+                <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 opacity-10 pointer-events-none">
+                    <Shield className="h-72 w-72 text-white" />
+                </div>
+                <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex items-center gap-5">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-white/15 text-white shadow-lg backdrop-blur-md">
+                            {isBankMode ? <Landmark className="h-8 w-8" /> : <CreditCard className="h-8 w-8" />}
+                        </div>
+                        <div>
+                            <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white/80">
+                                Accounts Info
+                            </div>
+                            {!hideTitle && <p className="text-sm font-semibold text-indigo-100/85">{isBankMode ? "Banking directory" : "Ledger register"}</p>}
+                            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">{pageTitle}</h1>
+                            <p className="mt-1.5 text-sm text-indigo-200/80">
+                                {visibleLedgers.length} {visibleLedgers.length === 1 ? (isBankMode ? "account" : "ledger") : (isBankMode ? "accounts" : "ledgers")} ready for transactions
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                        <div className="rounded-2xl border border-amber-300/30 bg-amber-400/15 px-4 py-3 backdrop-blur-md">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-200/90">Grouped</p>
+                            <p className="text-sm font-bold text-white">{groupedLedgers}</p>
+                        </div>
+                        <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-md">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-100/90">Debit</p>
+                            <p className="text-sm font-bold text-white">{debitLedgers}</p>
+                        </div>
+                        <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-md">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-100/90">Credit</p>
+                            <p className="text-sm font-bold text-white">{creditLedgers}</p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => window.print()}
+                            className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/15 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur-md transition-colors hover:bg-white/25"
+                        >
+                            <Printer className="h-4 w-4" />
+                            Print
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <Card className="border-indigo-100 shadow-sm">
+                <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex items-start gap-3">
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-800">{isBankMode ? "Account Setup" : "Ledger Setup"}</h3>
+                            <p className="text-xs text-slate-500">
+                                {isBankMode
+                                    ? "Keep your operating, cash, and bank accounts organized for voucher posting."
+                                    : "Create ledgers under the right groups so vouchers and reports stay aligned."}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex flex-col gap-3 sm:flex-row">
                 <Dialog
                     open={isOpen}
                     onOpenChange={(open) => {
@@ -163,12 +226,10 @@ export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle =
                         <button
                             type="button"
                             onClick={openCreate}
-                            className="flex w-full max-w-sm items-center gap-3 rounded-2xl border border-dashed border-indigo-300 bg-white p-6 text-left shadow-sm transition hover:border-indigo-400 hover:bg-indigo-50"
+                            className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-5 py-3 text-sm font-bold text-indigo-800 transition hover:border-indigo-300 hover:bg-indigo-100"
                         >
-                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
-                                <Plus className="h-5 w-5" />
-                            </span>
-                            <span className="text-lg font-black text-slate-800">Create New {isBankMode ? "Bank" : "Ledger"}</span>
+                            <Plus className="h-4 w-4" />
+                            Create New {isBankMode ? "Bank" : "Ledger"}
                         </button>
                     </DialogTrigger>
                     <DialogContent className="bg-white border-slate-200 text-slate-900 max-w-xl">
@@ -274,6 +335,13 @@ export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle =
                             </div>
 
                             <DialogFooter>
+                                {editId ? (
+                                    <Button asChild type="button" variant="outline" className="mr-auto">
+                                        <Link href={isBankMode ? `/accounting/info/bank-account/${editId}` : `/accounting/info/ledger/${editId}`}>
+                                            View Full Page
+                                        </Link>
+                                    </Button>
+                                ) : null}
                                 <Button type="submit" disabled={isSubmitting} className="h-10 bg-indigo-600 px-5 font-bold text-white hover:bg-indigo-700">
                                     {editId ? "Save Changes" : `Create ${isBankMode ? "Bank" : "Ledger"}`}
                                 </Button>
@@ -281,16 +349,17 @@ export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle =
                         </form>
                     </DialogContent>
                 </Dialog>
-            </div>
+                        {visibleLedgers.length === 0 && (
+                            <Button variant="outline" disabled className="rounded-xl border-indigo-200 bg-white px-5 py-3 text-sm font-bold text-indigo-500">
+                                <Layers3 className="mr-2 h-4 w-4" />
+                                {groups.length} Groups Available
+                            </Button>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
 
             <Card className="overflow-hidden bg-white shadow-sm border-slate-200">
-                {!hideTitle && (
-                    <CardHeader className="pb-4">
-                        <div>
-                            <CardTitle className="text-xl">{isBankMode ? "Bank Accounts" : "Ledgers"}</CardTitle>
-                        </div>
-                    </CardHeader>
-                )}
                 <CardContent className="p-0">
                 <Table>
                     <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600 [&_tr]:border-b [&_tr]:border-slate-200">
@@ -316,7 +385,11 @@ export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle =
                         ) : (
                             visibleLedgers.map((ledger) => (
                                 <TableRow key={ledger.id} className="border-slate-200">
-                                    <TableCell className="font-medium text-slate-800">{ledger.name}</TableCell>
+                                    <TableCell className="font-medium text-slate-800">
+                                        <Link href={isBankMode ? `/accounting/info/bank-account/${ledger.id}` : `/accounting/info/ledger/${ledger.id}`} className="transition hover:text-indigo-700">
+                                            {ledger.name}
+                                        </Link>
+                                    </TableCell>
                                     {isBankMode && <TableCell className="text-slate-500">{ledger.bank_name || "-"}</TableCell>}
                                     {isBankMode && <TableCell className="text-slate-500 font-mono text-xs">{ledger.account_number || "-"}</TableCell>}
                                     <TableCell className="text-slate-500">{ledger.account_groups?.name || groups.find((group) => group.id === ledger.group_id)?.name || "-"}</TableCell>
