@@ -1,8 +1,53 @@
+ "use client"
+
 import Link from "next/link"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 export function AccountingGateway({ orgName }: { orgName: string }) {
+  const router = useRouter()
   const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
   const currentPeriod = `1-Jan-${new Date().getFullYear()} to 31-Dec-${new Date().getFullYear()}`
+
+  useEffect(() => {
+    const hotkeys: Record<string, string> = {
+      a: "/accounting/info",
+      i: "/accounting/inventory",
+      v: "/accounting/vouchers",
+      n: "/accounting/inventory-vouchers",
+      b: "/accounting/balance-sheet",
+      p: "/accounting/profit-loss",
+      s: "/accounting/stock-summary",
+      t: "/accounting/statements",
+      d: "/accounting/display",
+      q: "/dashboard",
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.tagName === "SELECT" ||
+        target?.isContentEditable
+      ) {
+        return
+      }
+
+      const destination = hotkeys[event.key.toLowerCase()]
+      if (!destination) return
+
+      event.preventDefault()
+      router.push(destination)
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [router])
 
   return (
     <div className="min-h-screen bg-[#F4F7FA] text-slate-900">

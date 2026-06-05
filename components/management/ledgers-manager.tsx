@@ -1,19 +1,20 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { CreditCard, Landmark, Layers3, Loader2, Plus, Printer, Shield, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog"
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { createLedger, updateLedger, deleteLedger, AccountGroup, Ledger } from "@/app/management/actions"
+import { createLedger, updateLedger, deleteLedger, AccountGroup, Ledger, seedDefaultLedgers } from "@/app/management/actions"
 
 type LedgerRow = Ledger & {
     account_groups?: {
@@ -40,6 +41,7 @@ export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle =
     const [contactPerson, setContactPerson] = useState("")
     const [phoneNumber, setPhoneNumber] = useState("")
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isDesktop, setIsDesktop] = useState(false)
 
     const visibleLedgers = ledgers.filter(l => {
         if (isBankMode) return Boolean(l.is_cash_bank) || l.ledger_kind === "bank"
@@ -48,6 +50,16 @@ export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle =
     const groupedLedgers = visibleLedgers.filter((ledger) => ledger.group_id).length
     const debitLedgers = visibleLedgers.filter((ledger) => ledger.balance_type === "Dr").length
     const creditLedgers = visibleLedgers.filter((ledger) => ledger.balance_type === "Cr").length
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia("(min-width: 768px)")
+        const updateMatch = () => setIsDesktop(mediaQuery.matches)
+
+        updateMatch()
+        mediaQuery.addEventListener("change", updateMatch)
+
+        return () => mediaQuery.removeEventListener("change", updateMatch)
+    }, [])
 
     function resetForm() {
         setEditId(null)
@@ -154,6 +166,149 @@ export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle =
         }
     }
 
+    async function handleSeedDefaults() {
+        setIsSubmitting(true)
+        try {
+            await seedDefaultLedgers()
+            toast.success("Default ledgers added")
+            router.refresh()
+        } catch (error: any) {
+            toast.error(error?.message || "Failed to add default ledgers")
+            console.error("Failed to seed ledgers", error)
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
+    const activeLedger = editId ? visibleLedgers.find((ledger) => ledger.id === editId) ?? null : null
+
+    const ledgerForm = (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+                <Label>{isBankMode ? "Account Display Name" : "Ledger Name"}</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} required className="bg-white border-slate-300" placeholder={isBankMode ? "e.g. Main Operating Account" : ""} />
+            </div>
+
+            {isBankMode && (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                        <Label>Bank Name</Label>
+                        <Input value={bankName} onChange={(e) => setBankName(e.target.value)} className="bg-white border-slate-300" placeholder="e.g. Access Bank" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Account Number</Label>
+                        <Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="bg-white border-slate-300" placeholder="0123456789" />
+                    </div>
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                    <Label>Group</Label>
+                    <Select value={groupId} onValueChange={setGroupId}>
+                        <SelectTrigger className="bg-white border-slate-300">
+                            <SelectValue placeholder="Select a group" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-slate-300 text-slate-900">
+                            {groups.map((group) => (
+                                <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="space-y-2">
+                    <Label>Balance Type</Label>
+                    <Select value={balanceType} onValueChange={(value: "Dr" | "Cr") => setBalanceType(value)}>
+                        <SelectTrigger className="bg-white border-slate-300">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-slate-300 text-slate-900">
+                            <SelectItem value="Dr">Dr</SelectItem>
+                            <SelectItem value="Cr">Cr</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                    <Label>Opening Balance</Label>
+                    <Input
+                        type="number"
+                        step="0.01"
+                        value={openingBalance}
+                        onChange={(e) => setOpeningBalance(e.target.value)}
+                        className="bg-white border-slate-300"
+                    />
+                </div>
+
+                {!isBankMode && (
+                    <div className="space-y-2">
+                        <Label>Ledger Type</Label>
+                        <label className="flex items-center gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500">
+                            <input
+                                type="checkbox"
+                                checked={false}
+                                disabled
+                                className="h-4 w-4"
+                            />
+                            Cash/Bank Ledger
+                            <span className="ml-auto text-[10px] uppercase tracking-wider text-slate-400">Use Banking tab</span>
+                        </label>
+                    </div>
+                )}
+            </div>
+
+            {isBankMode && (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                        <Label>Contact Person</Label>
+                        <Input value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} className="bg-white border-slate-300" placeholder="Optional" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Phone</Label>
+                        <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="bg-white border-slate-300" placeholder="Optional" />
+                    </div>
+                </div>
+            )}
+
+            <div className="space-y-2">
+                <Label>Description</Label>
+                <Input value={description} onChange={(e) => setDescription(e.target.value)} className="bg-white border-slate-300" placeholder="Optional" />
+            </div>
+
+            <div className="flex justify-end">
+                {activeLedger ? (
+                    <div className="mr-auto flex items-center gap-2">
+                        <Button asChild type="button" variant="outline" className="h-10 border-slate-200 bg-white px-3 text-slate-700 hover:bg-slate-50">
+                            <Link href={isBankMode ? `/accounting/info/bank-account/${activeLedger.id}` : `/accounting/info/ledger/${activeLedger.id}`}>
+                                View Full Page
+                            </Link>
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={async () => {
+                                await handleDelete(activeLedger)
+                                setIsOpen(false)
+                            }}
+                            disabled={isSubmitting}
+                            className="h-10 border-red-200 bg-red-50 px-3 text-red-600 hover:border-red-300 hover:bg-red-100 hover:text-red-700"
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete {isBankMode ? "Account" : "Ledger"}
+                        </Button>
+                    </div>
+                ) : null}
+                <Button type="submit" disabled={isSubmitting} className="h-10 bg-indigo-600 px-5 font-bold text-white hover:bg-indigo-700">
+                    {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    {editId ? "Save Changes" : `Create ${isBankMode ? "Bank" : "Ledger"}`}
+                </Button>
+            </div>
+        </form>
+    )
+
     return (
         <div className="space-y-8">
             <div className="relative overflow-hidden rounded-3xl border border-indigo-700/40 bg-gradient-to-br from-indigo-900 via-indigo-800 to-violet-900 p-8 shadow-[0_20px_40px_-15px_rgba(49,46,129,0.4)]">
@@ -215,144 +370,67 @@ export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle =
                         </div>
                     </div>
                     <div className="flex flex-col gap-3 sm:flex-row">
-                <Dialog
-                    open={isOpen}
-                    onOpenChange={(open) => {
-                        setIsOpen(open)
-                        if (!open) resetForm()
-                    }}
-                >
-                    <DialogTrigger asChild>
-                        <button
-                            type="button"
-                            onClick={openCreate}
-                            className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-5 py-3 text-sm font-bold text-indigo-800 transition hover:border-indigo-300 hover:bg-indigo-100"
-                        >
-                            <Plus className="h-4 w-4" />
-                            Create New {isBankMode ? "Bank" : "Ledger"}
-                        </button>
-                    </DialogTrigger>
-                    <DialogContent className="bg-white border-slate-200 text-slate-900 max-w-xl">
-                        <DialogHeader>
-                            <DialogTitle>{editId ? `Edit ${isBankMode ? "Bank" : "Ledger"}` : `Create ${isBankMode ? "Bank" : "Ledger"}`}</DialogTitle>
-                            <DialogDescription>
-                                {editId ? "Update record." : "Create a record."}
-                            </DialogDescription>
-                        </DialogHeader>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label>{isBankMode ? "Account Display Name" : "Ledger Name"}</Label>
-                                <Input value={name} onChange={(e) => setName(e.target.value)} required className="bg-white border-slate-300" placeholder={isBankMode ? "e.g. Main Operating Account" : ""} />
-                            </div>
-
-                            {isBankMode && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Bank Name</Label>
-                                        <Input value={bankName} onChange={(e) => setBankName(e.target.value)} className="bg-white border-slate-300" placeholder="e.g. Access Bank" />
+                        {isDesktop ? (
+                            <Sheet
+                                open={isOpen}
+                                onOpenChange={(open) => {
+                                    setIsOpen(open)
+                                    if (!open) resetForm()
+                                }}
+                            >
+                                <SheetTrigger asChild>
+                                    <button
+                                        type="button"
+                                        onClick={openCreate}
+                                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-5 py-3 text-sm font-bold text-indigo-800 transition hover:border-indigo-300 hover:bg-indigo-100"
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        Create New {isBankMode ? "Bank" : "Ledger"}
+                                    </button>
+                                </SheetTrigger>
+                                <SheetContent side="right" className="w-full overflow-y-auto border-slate-200 bg-slate-50 p-0 text-slate-900 sm:max-w-xl">
+                                    <SheetHeader className="border-b border-slate-200 px-6 py-5">
+                                        <SheetTitle>{editId ? `Edit ${isBankMode ? "Bank" : "Ledger"}` : `Create ${isBankMode ? "Bank" : "Ledger"}`}</SheetTitle>
+                                        <SheetDescription>{editId ? "Update record." : "Create a record."}</SheetDescription>
+                                    </SheetHeader>
+                                    <div className="px-6 py-5">
+                                        {ledgerForm}
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label>Account Number</Label>
-                                        <Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="bg-white border-slate-300" placeholder="0123456789" />
+                                </SheetContent>
+                            </Sheet>
+                        ) : (
+                            <Drawer
+                                open={isOpen}
+                                onOpenChange={(open) => {
+                                    setIsOpen(open)
+                                    if (!open) resetForm()
+                                }}
+                            >
+                                <DrawerTrigger asChild>
+                                    <button
+                                        type="button"
+                                        onClick={openCreate}
+                                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-5 py-3 text-sm font-bold text-indigo-800 transition hover:border-indigo-300 hover:bg-indigo-100"
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        Create New {isBankMode ? "Bank" : "Ledger"}
+                                    </button>
+                                </DrawerTrigger>
+                                <DrawerContent className="border-slate-200 bg-slate-50 text-slate-900">
+                                    <DrawerHeader>
+                                        <DrawerTitle>{editId ? `Edit ${isBankMode ? "Bank" : "Ledger"}` : `Create ${isBankMode ? "Bank" : "Ledger"}`}</DrawerTitle>
+                                        <DrawerDescription>{editId ? "Update record." : "Create a record."}</DrawerDescription>
+                                    </DrawerHeader>
+                                    <div className="px-4 pb-6">
+                                        {ledgerForm}
                                     </div>
-                                </div>
-                            )}
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Group</Label>
-                                    <Select value={groupId} onValueChange={setGroupId}>
-                                        <SelectTrigger className="bg-white border-slate-300">
-                                            <SelectValue placeholder="Select a group" />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-white border-slate-300 text-slate-900">
-                                            {groups.map((group) => (
-                                                <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label>Balance Type</Label>
-                                    <Select value={balanceType} onValueChange={(value: "Dr" | "Cr") => setBalanceType(value)}>
-                                        <SelectTrigger className="bg-white border-slate-300">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent className="bg-white border-slate-300 text-slate-900">
-                                            <SelectItem value="Dr">Dr</SelectItem>
-                                            <SelectItem value="Cr">Cr</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label>Opening Balance</Label>
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        value={openingBalance}
-                                        onChange={(e) => setOpeningBalance(e.target.value)}
-                                        className="bg-white border-slate-300"
-                                    />
-                                </div>
-
-                                {!isBankMode && (
-                                    <div className="space-y-2">
-                                        <Label>Ledger Type</Label>
-                                        <label className="flex items-center gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500">
-                                            <input
-                                                type="checkbox"
-                                                checked={false}
-                                                disabled
-                                                className="h-4 w-4"
-                                            />
-                                            Cash/Bank Ledger
-                                            <span className="ml-auto text-[10px] uppercase tracking-wider text-slate-400">Use Banking tab</span>
-                                        </label>
-                                    </div>
-                                )}
-                            </div>
-
-                            {isBankMode && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label>Contact Person</Label>
-                                        <Input value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} className="bg-white border-slate-300" placeholder="Optional" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label>Phone</Label>
-                                        <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="bg-white border-slate-300" placeholder="Optional" />
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="space-y-2">
-                                <Label>Description</Label>
-                                <Input value={description} onChange={(e) => setDescription(e.target.value)} className="bg-white border-slate-300" placeholder="Optional" />
-                            </div>
-
-                            <DialogFooter>
-                                {editId ? (
-                                    <Button asChild type="button" variant="outline" className="mr-auto">
-                                        <Link href={isBankMode ? `/accounting/info/bank-account/${editId}` : `/accounting/info/ledger/${editId}`}>
-                                            View Full Page
-                                        </Link>
-                                    </Button>
-                                ) : null}
-                                <Button type="submit" disabled={isSubmitting} className="h-10 bg-indigo-600 px-5 font-bold text-white hover:bg-indigo-700">
-                                    {editId ? "Save Changes" : `Create ${isBankMode ? "Bank" : "Ledger"}`}
-                                </Button>
-                            </DialogFooter>
-                        </form>
-                    </DialogContent>
-                </Dialog>
+                                </DrawerContent>
+                            </Drawer>
+                        )}
                         {visibleLedgers.length === 0 && (
-                            <Button variant="outline" disabled className="rounded-xl border-indigo-200 bg-white px-5 py-3 text-sm font-bold text-indigo-500">
-                                <Layers3 className="mr-2 h-4 w-4" />
-                                {groups.length} Groups Available
+                            <Button variant="outline" onClick={handleSeedDefaults} disabled={isSubmitting} className="rounded-xl border-indigo-200 bg-white px-5 py-3 text-sm font-bold text-indigo-700 hover:bg-indigo-50">
+                                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Layers3 className="mr-2 h-4 w-4" />}
+                                Seed Default Ledgers
                             </Button>
                         )}
                     </div>
@@ -370,13 +448,12 @@ export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle =
                             <TableHead className="text-slate-500">Group</TableHead>
                             {!isBankMode && <TableHead className="text-slate-500">Type</TableHead>}
                             <TableHead className="text-slate-500">Opening</TableHead>
-                            <TableHead className="text-right text-slate-500">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
                         {visibleLedgers.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={isBankMode ? 6 : 5} className="text-center text-slate-500 py-6">
+                                <TableCell colSpan={isBankMode ? 5 : 5} className="text-center text-slate-500 py-6">
                                     {isBankMode
                                         ? "No bank accounts yet. Add one to use it on vouchers."
                                         : "No ledgers found yet. Create one to use it in vouchers."}
@@ -384,34 +461,17 @@ export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle =
                             </TableRow>
                         ) : (
                             visibleLedgers.map((ledger) => (
-                                <TableRow key={ledger.id} className="border-slate-200">
+                                <TableRow key={ledger.id} className="cursor-pointer border-slate-200" onClick={() => openEdit(ledger)}>
                                     <TableCell className="font-medium text-slate-800">
-                                        <Link href={isBankMode ? `/accounting/info/bank-account/${ledger.id}` : `/accounting/info/ledger/${ledger.id}`} className="transition hover:text-indigo-700">
+                                        <button type="button" onClick={() => openEdit(ledger)} className="w-full text-left transition hover:text-indigo-700">
                                             {ledger.name}
-                                        </Link>
+                                        </button>
                                     </TableCell>
                                     {isBankMode && <TableCell className="text-slate-500">{ledger.bank_name || "-"}</TableCell>}
                                     {isBankMode && <TableCell className="text-slate-500 font-mono text-xs">{ledger.account_number || "-"}</TableCell>}
                                     <TableCell className="text-slate-500">{ledger.account_groups?.name || groups.find((group) => group.id === ledger.group_id)?.name || "-"}</TableCell>
                                     {!isBankMode && <TableCell className="text-slate-500">{ledger.balance_type}</TableCell>}
                                     <TableCell className="text-slate-500">{Number(ledger.opening_balance || 0).toLocaleString()}</TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-1">
-                                            <Button variant="ghost" size="sm" onClick={() => openEdit(ledger)} className="h-8 text-indigo-700 hover:text-indigo-800 hover:bg-indigo-50">
-                                                Edit
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleDelete(ledger)}
-                                                disabled={isSubmitting}
-                                                className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                title={`Delete ${ledger.name}`}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
                                 </TableRow>
                             ))
                         )}

@@ -335,3 +335,97 @@ export async function seedDefaultGroups() {
     revalidatePath("/management")
     revalidatePath("/accounting")
 }
+
+export async function seedDefaultLedgers() {
+    const supabase = await createClient()
+    const orgId = await getOrgId()
+
+    const defaultGroups = [
+        { name: "Indirect Expenses", nature: "Expense" as const },
+        { name: "Bank charges", nature: "Expense" as const },
+        { name: "Suspense A/c", nature: "Liability" as const },
+    ]
+
+    const groupIds = new Map<string, string>()
+
+    for (const group of defaultGroups) {
+        const { data: existingGroup, error: groupLookupError } = await supabase
+            .from("account_groups")
+            .select("id")
+            .eq("org_id", orgId)
+            .eq("name", group.name)
+            .maybeSingle()
+
+        if (groupLookupError) throw groupLookupError
+
+        if (existingGroup?.id) {
+            groupIds.set(group.name, existingGroup.id as string)
+            continue
+        }
+
+        const { data: createdGroup, error: createGroupError } = await supabase
+            .from("account_groups")
+            .insert({
+                org_id: orgId,
+                name: group.name,
+                nature: group.nature,
+                parent_id: null,
+            })
+            .select("id")
+            .single()
+
+        if (createGroupError) throw createGroupError
+        groupIds.set(group.name, createdGroup.id as string)
+    }
+
+    const defaultLedgers = [
+        { name: "R/off", groupName: "Indirect Expenses", balance_type: "Dr" as const },
+        { name: "Stamp Duty", groupName: "Bank charges", balance_type: "Dr" as const },
+        { name: "Suspense A/c", groupName: "Suspense A/c", balance_type: "Dr" as const },
+    ]
+
+    for (const ledger of defaultLedgers) {
+        const groupId = groupIds.get(ledger.groupName)
+        if (!groupId) continue
+
+        const { data: existingLedger, error: ledgerLookupError } = await supabase
+            .from("ledgers")
+            .select("id")
+            .eq("org_id", orgId)
+            .eq("name", ledger.name)
+            .eq("ledger_kind", "ledger")
+            .maybeSingle()
+
+        if (ledgerLookupError) throw ledgerLookupError
+        if (existingLedger?.id) continue
+
+        const { error: createLedgerError } = await supabase
+            .from("ledgers")
+            .insert({
+                org_id: orgId,
+                group_id: groupId,
+                name: ledger.name,
+                opening_balance: 0,
+                balance_type: ledger.balance_type,
+                is_cash_bank: false,
+                ledger_kind: "ledger",
+                source_context: "accounting",
+                source_profile_id: null,
+                description: "Seeded default ledger",
+                account_number: null,
+                bank_name: null,
+                contact_person: null,
+                phone_number: null,
+                email: null,
+                address: null,
+                tax_id: null,
+                custom_data: {},
+                active: true,
+            })
+
+        if (createLedgerError) throw createLedgerError
+    }
+
+    revalidatePath("/management")
+    revalidatePath("/accounting")
+}

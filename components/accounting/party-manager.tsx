@@ -1,13 +1,15 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { CheckCircle2, Plus, Printer, Shield, UserPlus, Users } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { createAccountingParty } from "@/app/accounting/actions"
@@ -26,9 +28,21 @@ export function PartyManager({ parties, hideTitle = false }: { parties: Party[],
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
+  const [selectedParty, setSelectedParty] = useState<Party | null>(null)
+  const [isDesktop, setIsDesktop] = useState(false)
   const [isPending, startTransition] = useTransition()
   const manualParties = parties.filter((party) => Boolean(party.ledgerId)).length
   const phoneParties = parties.filter((party) => Boolean(party.phone_number)).length
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 768px)")
+    const updateMatch = () => setIsDesktop(mediaQuery.matches)
+
+    updateMatch()
+    mediaQuery.addEventListener("change", updateMatch)
+
+    return () => mediaQuery.removeEventListener("change", updateMatch)
+  }, [])
 
   const filteredParties = parties.filter(party => {
     const query = search.toLowerCase()
@@ -62,8 +76,75 @@ export function PartyManager({ parties, hideTitle = false }: { parties: Party[],
     })
   }
 
+  function openParty(party: Party) {
+    setSelectedParty(party)
+  }
+
+  const partyDetailPanel = selectedParty ? (
+    <div className="space-y-6">
+      <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-500">Party Record</p>
+        <h2 className="mt-2 text-2xl font-extrabold text-slate-900">{selectedParty.name}</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          {selectedParty.ledgerId ? "Manual Party" : "Auto Party"}
+        </p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Phone</p>
+          <p className="mt-2 text-lg font-semibold text-slate-800">{selectedParty.phone_number || "-"}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Reservation</p>
+          <p className="mt-2 text-lg font-semibold text-slate-800">{selectedParty.reservation_number || "-"}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Status</p>
+          <p className="mt-2 text-lg font-semibold text-slate-800">{selectedParty.ledgerId ? "Manual Party" : "Auto Party"}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Linked Ledger</p>
+          <p className="mt-2 text-lg font-semibold text-slate-800">{selectedParty.ledgerId || "-"}</p>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <Button asChild className="bg-indigo-600 text-white hover:bg-indigo-700">
+          <Link href={`/accounting/info/party/${selectedParty.id}`}>View Full Page</Link>
+        </Button>
+      </div>
+    </div>
+  ) : null
+
   return (
     <div className="space-y-8">
+      {isDesktop ? (
+        <Sheet open={Boolean(selectedParty)} onOpenChange={(open) => !open && setSelectedParty(null)}>
+          <SheetContent side="right" className="w-full overflow-y-auto border-slate-200 bg-slate-50 p-0 text-slate-900 sm:max-w-xl">
+            <SheetHeader className="border-b border-slate-200 px-6 py-5">
+              <SheetTitle>{selectedParty?.name || "Party Details"}</SheetTitle>
+              <SheetDescription>Review the selected party record and continue to the full profile page.</SheetDescription>
+            </SheetHeader>
+            <div className="px-6 py-5">
+              {partyDetailPanel}
+            </div>
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Drawer open={Boolean(selectedParty)} onOpenChange={(open) => !open && setSelectedParty(null)}>
+          <DrawerContent className="border-slate-200 bg-slate-50 text-slate-900">
+            <DrawerHeader>
+              <DrawerTitle>{selectedParty?.name || "Party Details"}</DrawerTitle>
+              <DrawerDescription>Review the selected party record and continue to the full profile page.</DrawerDescription>
+            </DrawerHeader>
+            <div className="px-4 pb-6">
+              {partyDetailPanel}
+            </div>
+          </DrawerContent>
+        </Drawer>
+      )}
+
       <div className="relative overflow-hidden rounded-3xl border border-indigo-700/40 bg-gradient-to-br from-indigo-900 via-indigo-800 to-violet-900 p-8 shadow-[0_20px_40px_-15px_rgba(49,46,129,0.4)]">
         <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 opacity-10 pointer-events-none">
           <Shield className="h-72 w-72 text-white" />
@@ -178,11 +259,19 @@ export function PartyManager({ parties, hideTitle = false }: { parties: Party[],
             ) : filteredParties.map(party => {
               const isManual = Boolean(party.ledgerId)
               return (
-                <TableRow key={party.id}>
+                <TableRow
+                  key={party.id}
+                  className="cursor-pointer"
+                  onClick={() => openParty(party)}
+                >
                   <TableCell className="font-semibold text-slate-800">
-                    <Link href={`/accounting/info/party/${party.id}`} className="transition hover:text-indigo-700">
+                    <button
+                      type="button"
+                      onClick={() => openParty(party)}
+                      className="w-full text-left transition hover:text-indigo-700"
+                    >
                       {party.name}
-                    </Link>
+                    </button>
                   </TableCell>
                   <TableCell className="text-slate-500">{party.reservation_number || "-"}</TableCell>
                   <TableCell className="text-slate-500">{party.phone_number || "-"}</TableCell>
