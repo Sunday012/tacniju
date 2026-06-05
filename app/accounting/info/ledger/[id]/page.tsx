@@ -1,14 +1,25 @@
 import { notFound } from "next/navigation"
 import { getAccountGroups, getLedgers } from "@/app/management/actions"
+import { getLedgerTransactions } from "@/app/accounting/actions"
 import { InfoRecordProfile } from "@/components/accounting/info-record-profile"
 
-export default async function LedgerProfilePage({ params }: { params: { id: string } }) {
+export default async function LedgerProfilePage({
+  params,
+  searchParams,
+}: {
+  params: { id: string }
+  searchParams: { start?: string; end?: string }
+}) {
   const [groups, ledgers] = await Promise.all([getAccountGroups(), getLedgers()])
   const ledger = ledgers.find(item => item.id === params.id)
 
   if (!ledger) notFound()
 
   const group = groups.find(item => item.id === ledger.group_id)
+  const currentYear = new Date().getFullYear()
+  const startDate = searchParams.start || `${currentYear}-01-01`
+  const endDate = searchParams.end || `${currentYear}-12-31`
+  const transactions = await getLedgerTransactions(ledger.id, startDate, endDate)
 
   return (
     <InfoRecordProfile
@@ -40,11 +51,9 @@ export default async function LedgerProfilePage({ params }: { params: { id: stri
           ],
         },
       ]}
-      transactionItems={[
-        `Group: ${group?.name || "-"}`,
-        `Balance Type: ${ledger.balance_type}`,
-        `Ledger Kind: ${ledger.ledger_kind || "ledger"}`,
-      ]}
+      transactionRows={transactions}
+      transactionStartDate={startDate}
+      transactionEndDate={endDate}
       comment={ledger.description || "No extra notes added for this ledger yet."}
     />
   )

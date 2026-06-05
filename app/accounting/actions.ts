@@ -204,9 +204,11 @@ export type LedgerTransactionRow = {
   creditAmount: number
 }
 
-export async function getLedgerTransactions(ledgerId: string, startDate?: string, endDate?: string) {
+async function fetchLedgerTransactions(ledgerIds: string[], startDate?: string, endDate?: string) {
   const supabase = await createClient()
   const orgId = await getOrgId()
+
+  if (ledgerIds.length === 0) return []
 
   let query = supabase
     .from("voucher_entries")
@@ -222,7 +224,7 @@ export async function getLedgerTransactions(ledgerId: string, startDate?: string
         voucher_type
       )
     `)
-    .eq("ledger_id", ledgerId)
+    .in("ledger_id", ledgerIds)
     .eq("vouchers.org_id", orgId)
     .order("date", { referencedTable: "vouchers", ascending: false })
 
@@ -245,6 +247,14 @@ export async function getLedgerTransactions(ledgerId: string, startDate?: string
     debitAmount: Number(entry.debit_amount || 0),
     creditAmount: Number(entry.credit_amount || 0),
   })) as LedgerTransactionRow[]
+}
+
+export async function getLedgerTransactions(ledgerId: string, startDate?: string, endDate?: string) {
+  return fetchLedgerTransactions([ledgerId], startDate, endDate)
+}
+
+export async function getTransactionsForLedgers(ledgerIds: string[], startDate?: string, endDate?: string) {
+  return fetchLedgerTransactions(ledgerIds, startDate, endDate)
 }
 
 export type AccountingProgram = {

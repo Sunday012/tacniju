@@ -1,7 +1,13 @@
+"use client"
+
 import Link from "next/link"
-import { ArrowLeft, Building2, FileText, MessageSquareText, Phone, WalletCards } from "lucide-react"
+import { ArrowLeft, Building2, MessageSquareText } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
+import { CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import type { LedgerTransactionRow } from "@/app/accounting/actions"
 
 type Metric = {
   label: string
@@ -25,7 +31,9 @@ export function InfoRecordProfile({
   backLabel,
   metrics,
   details,
-  transactionItems = [],
+  transactionRows = [],
+  transactionStartDate,
+  transactionEndDate,
   comment,
 }: {
   title: string
@@ -34,9 +42,16 @@ export function InfoRecordProfile({
   backLabel: string
   metrics: Metric[]
   details: DetailSection[]
-  transactionItems?: string[]
+  transactionRows?: LedgerTransactionRow[]
+  transactionStartDate?: string
+  transactionEndDate?: string
   comment?: string
 }) {
+  const currentYear = new Date().getFullYear()
+  const startDate = transactionStartDate || `${currentYear}-01-01`
+  const endDate = transactionEndDate || `${currentYear}-12-31`
+  const transactionPeriod = `${new Date(startDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })} to ${new Date(endDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
+
   return (
     <div className="min-h-screen bg-[#F4F7FA] text-slate-900">
       <div className="bg-[#ececff]">
@@ -100,25 +115,65 @@ export function InfoRecordProfile({
           </TabsContent>
 
           <TabsContent value="transactions">
-            <Card className="rounded-[1.75rem] border-slate-200 bg-white shadow-sm">
-              <CardContent className="p-6 sm:p-8">
-                <div className="mb-6 flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                    <WalletCards className="h-5 w-5" />
+            <Card className="overflow-hidden rounded-[1.75rem] border-slate-200 bg-white shadow-sm">
+              <CardHeader className="border-b border-slate-200 pb-4">
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                    <CardTitle className="text-2xl font-semibold text-slate-900">Transactions</CardTitle>
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Period</p>
+                      <p className="mt-1 font-semibold text-slate-800">{transactionPeriod}</p>
+                    </div>
                   </div>
-                  <h2 className="text-2xl font-semibold text-slate-900">Transactions</h2>
+                  <form className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                    <div className="space-y-1.5">
+                      <label htmlFor="start" className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Start</label>
+                      <Input id="start" name="start" type="date" defaultValue={startDate} className="w-full sm:w-[180px]" onChange={(event) => event.currentTarget.form?.requestSubmit()} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label htmlFor="end" className="text-[11px] font-bold uppercase tracking-wider text-slate-500">End</label>
+                      <Input id="end" name="end" type="date" defaultValue={endDate} className="w-full sm:w-[180px]" onChange={(event) => event.currentTarget.form?.requestSubmit()} />
+                    </div>
+                  </form>
                 </div>
-                {transactionItems.length === 0 ? (
-                  <p className="text-base text-slate-500">No transaction items linked yet.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {transactionItems.map(item => (
-                      <div key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-base font-medium text-slate-700">
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                )}
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600">
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead className="pl-8">VCH Type</TableHead>
+                      <TableHead>VCH No.</TableHead>
+                      <TableHead className="text-right">Debit (NGN)</TableHead>
+                      <TableHead className="text-right">Credit (NGN)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
+                    {transactionRows.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="py-8 text-center text-slate-500">
+                          No transactions recorded for this period.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      transactionRows.map(item => (
+                        <TableRow key={item.id}>
+                          <TableCell className="text-slate-500">{new Date(item.date).toLocaleDateString()}</TableCell>
+                          <TableCell className="font-medium text-slate-800">{item.detailName}</TableCell>
+                          <TableCell className="pl-8 text-slate-500">{item.voucherType}</TableCell>
+                          <TableCell className="text-slate-500">{item.voucherNumber || "-"}</TableCell>
+                          <TableCell className="text-right text-slate-700">
+                            {item.debitAmount > 0 ? item.debitAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "-"}
+                          </TableCell>
+                          <TableCell className="text-right text-slate-700">
+                            {item.creditAmount > 0 ? item.creditAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "-"}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           </TabsContent>

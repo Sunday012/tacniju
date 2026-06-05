@@ -1,14 +1,25 @@
 import { notFound } from "next/navigation"
 import { getAccountGroups, getLedgers } from "@/app/management/actions"
+import { getLedgerTransactions } from "@/app/accounting/actions"
 import { InfoRecordProfile } from "@/components/accounting/info-record-profile"
 
-export default async function BankAccountProfilePage({ params }: { params: { id: string } }) {
+export default async function BankAccountProfilePage({
+  params,
+  searchParams,
+}: {
+  params: { id: string }
+  searchParams: { start?: string; end?: string }
+}) {
   const [groups, ledgers] = await Promise.all([getAccountGroups(), getLedgers()])
   const account = ledgers.find(item => item.id === params.id && (item.ledger_kind === "bank" || item.is_cash_bank))
 
   if (!account) notFound()
 
   const group = groups.find(item => item.id === account.group_id)
+  const currentYear = new Date().getFullYear()
+  const startDate = searchParams.start || `${currentYear}-01-01`
+  const endDate = searchParams.end || `${currentYear}-12-31`
+  const transactions = await getLedgerTransactions(account.id, startDate, endDate)
 
   return (
     <InfoRecordProfile
@@ -40,11 +51,9 @@ export default async function BankAccountProfilePage({ params }: { params: { id:
           ],
         },
       ]}
-      transactionItems={[
-        `Bank: ${account.bank_name || "-"}`,
-        `Account Number: ${account.account_number || "-"}`,
-        `Group: ${group?.name || "-"}`,
-      ]}
+      transactionRows={transactions}
+      transactionStartDate={startDate}
+      transactionEndDate={endDate}
       comment={account.description || "No extra notes added for this bank account yet."}
     />
   )

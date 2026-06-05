@@ -1,8 +1,15 @@
 import { notFound } from "next/navigation"
 import { getAccountGroups, getLedgers } from "@/app/management/actions"
+import { getTransactionsForLedgers } from "@/app/accounting/actions"
 import { InfoRecordProfile } from "@/components/accounting/info-record-profile"
 
-export default async function GroupProfilePage({ params }: { params: { id: string } }) {
+export default async function GroupProfilePage({
+  params,
+  searchParams,
+}: {
+  params: { id: string }
+  searchParams: { start?: string; end?: string }
+}) {
   const [groups, ledgers] = await Promise.all([getAccountGroups(), getLedgers()])
   const group = groups.find(item => item.id === params.id)
 
@@ -11,6 +18,10 @@ export default async function GroupProfilePage({ params }: { params: { id: strin
   const childGroups = groups.filter(item => item.parent_id === group.id)
   const linkedLedgers = ledgers.filter(item => item.group_id === group.id)
   const parentGroup = group.parent_id ? groups.find(item => item.id === group.parent_id) : null
+  const currentYear = new Date().getFullYear()
+  const startDate = searchParams.start || `${currentYear}-01-01`
+  const endDate = searchParams.end || `${currentYear}-12-31`
+  const transactions = await getTransactionsForLedgers(linkedLedgers.map(item => item.id), startDate, endDate)
 
   return (
     <InfoRecordProfile
@@ -42,10 +53,9 @@ export default async function GroupProfilePage({ params }: { params: { id: strin
           ],
         },
       ]}
-      transactionItems={[
-        ...linkedLedgers.slice(0, 8).map(item => `Ledger: ${item.name}`),
-        ...childGroups.slice(0, 8).map(item => `Child Group: ${item.name}`),
-      ]}
+      transactionRows={transactions}
+      transactionStartDate={startDate}
+      transactionEndDate={endDate}
       comment="This page gives you a quick view of how the group is structured and what records are tied to it."
     />
   )
