@@ -194,6 +194,54 @@ export async function getOrCreateProfilePartyLedger(profileId: string) {
   return { ledgerId: data.id as string }
 }
 
+export type LedgerTransactionRow = {
+  id: string
+  date: string
+  voucherNumber: string | null
+  voucherType: string
+  detailName: string
+  debitAmount: number
+  creditAmount: number
+}
+
+export async function getLedgerTransactions(ledgerId: string) {
+  const supabase = await createClient()
+  const orgId = await getOrgId()
+
+  const { data, error } = await supabase
+    .from("voucher_entries")
+    .select(`
+      id,
+      debit_amount,
+      credit_amount,
+      ledgers!voucher_entries_ledger_id_fkey(name),
+      vouchers!inner(
+        org_id,
+        date,
+        voucher_number,
+        voucher_type
+      )
+    `)
+    .eq("ledger_id", ledgerId)
+    .eq("vouchers.org_id", orgId)
+    .order("date", { referencedTable: "vouchers", ascending: false })
+
+  if (error) {
+    console.error("Error fetching ledger transactions:", error)
+    return []
+  }
+
+  return (data || []).map((entry: any) => ({
+    id: entry.id as string,
+    date: entry.vouchers?.date as string,
+    voucherNumber: (entry.vouchers?.voucher_number as string | null) || null,
+    voucherType: (entry.vouchers?.voucher_type as string) || "Voucher",
+    detailName: (entry.ledgers?.name as string) || "Ledger",
+    debitAmount: Number(entry.debit_amount || 0),
+    creditAmount: Number(entry.credit_amount || 0),
+  })) as LedgerTransactionRow[]
+}
+
 export type AccountingProgram = {
   id: string
   name: string

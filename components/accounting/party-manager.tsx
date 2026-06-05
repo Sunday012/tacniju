@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { CheckCircle2, Plus, Printer, Shield, UserPlus, Users } from "lucide-react"
+import { Plus, Printer, Shield, UserPlus, Users } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -248,16 +248,14 @@ export function PartyManager({ parties, hideTitle = false }: { parties: Party[],
               <TableHead>Name</TableHead>
               <TableHead>Reservation</TableHead>
               <TableHead>Phone</TableHead>
-              <TableHead>Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
             {filteredParties.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-8 text-center text-slate-500">No parties found.</TableCell>
+                <TableCell colSpan={3} className="py-8 text-center text-slate-500">No parties found.</TableCell>
               </TableRow>
             ) : filteredParties.map(party => {
-              const isManual = Boolean(party.ledgerId)
               return (
                 <TableRow
                   key={party.id}
@@ -275,17 +273,6 @@ export function PartyManager({ parties, hideTitle = false }: { parties: Party[],
                   </TableCell>
                   <TableCell className="text-slate-500">{party.reservation_number || "-"}</TableCell>
                   <TableCell className="text-slate-500">{party.phone_number || "-"}</TableCell>
-                  <TableCell>
-                    {isManual ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-1 text-xs font-bold text-indigo-700">
-                        <UserPlus className="h-3.5 w-3.5" /> Manual
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-700">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Auto Party
-                      </span>
-                    )}
-                  </TableCell>
                 </TableRow>
               )
             })}
