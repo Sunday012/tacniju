@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Printer, Shield, UserPlus, Users } from "lucide-react"
+import { Plus, Printer, Shield, Trash2, UserPlus, Users } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -13,6 +13,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { createAccountingParty } from "@/app/accounting/actions"
+import { deleteLedger } from "@/app/management/actions"
 
 type Party = {
   id: string
@@ -80,6 +81,28 @@ export function PartyManager({ parties, hideTitle = false }: { parties: Party[],
     setSelectedParty(party)
   }
 
+  async function handleDeleteParty(party: Party) {
+    if (!party.ledgerId) {
+      toast.error("Auto parties come from member records and can't be deleted here.")
+      return
+    }
+
+    if (!confirm(`Are you sure you want to delete party "${party.name}"?`)) return
+
+    startTransition(async () => {
+      const result = await deleteLedger(party.ledgerId!)
+
+      if (!result.success) {
+        toast.error(result.error)
+        return
+      }
+
+      toast.success("Party deleted")
+      setSelectedParty(null)
+      router.refresh()
+    })
+  }
+
   const partyDetailPanel = selectedParty ? (
     <div className="space-y-6">
       <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
@@ -110,6 +133,19 @@ export function PartyManager({ parties, hideTitle = false }: { parties: Party[],
       </div>
 
       <div className="flex justify-end">
+        <div className="mr-auto">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleDeleteParty(selectedParty)}
+            disabled={isPending || !selectedParty.ledgerId}
+            className="h-10 border-red-200 bg-red-50 px-3 text-red-600 hover:border-red-300 hover:bg-red-100 hover:text-red-700"
+            title={selectedParty.ledgerId ? `Delete ${selectedParty.name}` : "Auto parties come from member records and can't be deleted here"}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete Party
+          </Button>
+        </div>
         <Button asChild className="bg-indigo-600 text-white hover:bg-indigo-700">
           <Link href={`/accounting/info/party/${selectedParty.id}`}>View Full Page</Link>
         </Button>

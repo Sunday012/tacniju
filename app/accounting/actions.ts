@@ -204,11 +204,11 @@ export type LedgerTransactionRow = {
   creditAmount: number
 }
 
-export async function getLedgerTransactions(ledgerId: string) {
+export async function getLedgerTransactions(ledgerId: string, startDate?: string, endDate?: string) {
   const supabase = await createClient()
   const orgId = await getOrgId()
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("voucher_entries")
     .select(`
       id,
@@ -225,6 +225,11 @@ export async function getLedgerTransactions(ledgerId: string) {
     .eq("ledger_id", ledgerId)
     .eq("vouchers.org_id", orgId)
     .order("date", { referencedTable: "vouchers", ascending: false })
+
+  if (startDate) query = query.gte("vouchers.date", startDate)
+  if (endDate) query = query.lte("vouchers.date", endDate)
+
+  const { data, error } = await query
 
   if (error) {
     console.error("Error fetching ledger transactions:", error)
