@@ -1,10 +1,14 @@
-import { ProductionPlaceholderPage } from "../../production-placeholder"
+import { AccountingShell } from "@/components/accounting/accounting-shell"
+import { ProductionReportView } from "../production-report-view"
 
 export default function ProductionStockReportsPage() {
   return (
-    <ProductionPlaceholderPage
-      title="Stock Reports"
-      description="Review stock movement, balances, and production quantity reports."
-    />
+    <AccountingShell title="Stock Reports" backHref="/accounting/production/reports" backLabel="Production Reports" showTitle={false}>
+      <ProductionReportView
+        title="Stock Reports"
+        columns={["Item", "Category", "Opening Qty", "Inward Qty", "Outward Qty", "Closing Qty"]}
+        emptyMessage="No stock report records found."
+      />
+    </AccountingShell>
   )
 }

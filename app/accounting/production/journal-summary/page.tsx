@@ -1,10 +1,14 @@
-import { ProductionPlaceholderPage } from "../production-placeholder"
+import { AccountingShell } from "@/components/accounting/accounting-shell"
+import { ProductionReportView } from "../reports/production-report-view"
 
 export default function JournalSummaryPage() {
   return (
-    <ProductionPlaceholderPage
-      title="Journal Summary"
-      description="Review summarized production journals by date, item, category, and movement type."
-    />
+    <AccountingShell title="Journal Summary" backHref="/accounting/production" backLabel="Production" showTitle={false}>
+      <ProductionReportView
+        title="Journal Summary"
+        columns={["Voucher No.", "Batch No.", "Journal Type", "Items", "Total Qty", "Narration"]}
+        emptyMessage="No production journals have been summarized yet."
+      />
+    </AccountingShell>
   )
 }
