@@ -53,6 +53,23 @@ export async function getAnnouncements() {
   return { announcements: (data || []) as Announcement[] };
 }
 
+export async function getAnnouncement(id: string) {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("announcements")
+    .select("id, title, body, is_pinned, is_published, created_at, updated_at")
+    .eq("id", id)
+    .eq("is_published", true)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error fetching announcement:", error);
+    return { error: error.message, announcement: null };
+  }
+
+  return { announcement: data as Announcement | null };
+}
+
 export async function getAdminAnnouncements() {
   const { supabase, error } = await requireAdmin();
   if (error) return { error, announcements: [] as Announcement[] };
