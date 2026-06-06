@@ -13,6 +13,7 @@ import { getUserAssetAssignments } from "@/app/actions/assets"
 import { getActiveBattles } from "@/app/actions/battles"
 import { ReceivedGifts } from "@/components/dashboard/received-gifts"
 import { TopNewsBattles } from "@/components/dashboard/top-news-battles"
+import { Utensils } from "lucide-react"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -133,7 +134,28 @@ export default async function DashboardPage() {
         {/* Row 2 Left: Meal Ticket */}
         <MealTicketCard initialTicketCode={ticket?.ticket_code} />
 
-        {/* Row 2 Right: Upcoming Events */}
+        {/* Row 2 Right: Dining Hall */}
+        <Link href="/dashboard/dining-hall">
+          <div className="bg-white/80 backdrop-blur-3xl border border-white/60 rounded-[2rem] p-6 sm:p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] transition-all hover:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.14)] hover:border-indigo-100/80 cursor-pointer group h-full">
+            <div className="flex items-start gap-5">
+              <div className="p-3.5 bg-gradient-to-br from-indigo-50 to-violet-50 rounded-[18px] shadow-sm border border-indigo-100/50 group-hover:from-indigo-100 group-hover:to-violet-100 transition-all shrink-0">
+                <Utensils className="w-7 h-7 text-indigo-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-[20px] text-slate-800 font-extrabold tracking-tight group-hover:text-indigo-700 transition-colors">Dining Hall</h3>
+                <p className="text-slate-500 text-[15px] mt-1.5 font-medium leading-relaxed">View the camp meal timetable and points for each meal.</p>
+                <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-semibold text-indigo-600 group-hover:gap-3 transition-all">
+                  Open Timetable
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+          </div>
+        </Link>
+
+        {/* Row 3 Left: Upcoming Events */}
         <UpcomingEvents />
 
         {/* Row 3 Right: Quick Stats */}

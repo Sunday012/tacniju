@@ -15,6 +15,7 @@ export function AccountingGateway({ orgName }: { orgName: string }) {
       i: "/accounting/inventory",
       v: "/accounting/vouchers",
       n: "/accounting/inventory-vouchers",
+      r: "/accounting/production",
       b: "/accounting/balance-sheet",
       p: "/accounting/profit-loss",
       s: "/accounting/stock-summary",
@@ -110,6 +111,7 @@ export function AccountingGateway({ orgName }: { orgName: string }) {
             <GatewaySection title="Transactions">
               <GatewayLink href="/accounting/vouchers" hotkey="V" label="Accounting Vouchers" />
               <GatewayLink href="/accounting/inventory-vouchers" hotkey="N" label="Inventory Vouchers" />
+              <GatewayLink href="/accounting/production" hotkey="R" label="Production" />
             </GatewaySection>
 
             <GatewaySection title="Reports">

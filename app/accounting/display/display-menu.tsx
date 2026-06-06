@@ -1,0 +1,144 @@
+import Link from "next/link"
+import {
+  AlertTriangle,
+  BookOpen,
+  Boxes,
+  FolderTree,
+  Landmark,
+  Layers,
+  LineChart,
+  Package,
+  Receipt,
+  Scale,
+  ScrollText,
+} from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+
+export type DisplayMenuItem = {
+  label: string
+  icon: LucideIcon
+  href?: string
+  slug?: string
+  children?: DisplayMenuItem[]
+}
+
+export const displayMenuItems: DisplayMenuItem[] = [
+  {
+    label: "Trial Balance",
+    icon: Scale,
+    href: "/reports/trial-balance",
+  },
+  {
+    label: "Day Book",
+    icon: BookOpen,
+    href: "/accounting/day-book",
+  },
+  {
+    label: "Account Book",
+    icon: ScrollText,
+    slug: "account-book",
+    children: [
+      { label: "Cash / Bank Book", icon: Landmark, href: "/accounting/info/bank-account" },
+      { label: "Ledger", icon: BookOpen, href: "/accounting/info/ledger" },
+      { label: "Group Summary", icon: Layers, href: "/accounting/info/group" },
+      { label: "Sales Register", icon: Receipt },
+      { label: "Purchase Register", icon: Receipt },
+      { label: "Payment / Receipt Register", icon: Receipt },
+    ],
+  },
+  {
+    label: "Statement of Accounts",
+    icon: Receipt,
+    slug: "statement-of-accounts",
+    children: [
+      { label: "Outstanding Receivables", icon: Receipt, href: "/accounting/statements/party" },
+      { label: "Outstanding Payables", icon: Receipt, href: "/accounting/statements/party" },
+      { label: "Ledger Monthly Summary", icon: BookOpen, href: "/accounting/info/ledger" },
+      { label: "Statistics", icon: LineChart },
+    ],
+  },
+  {
+    label: "Inventory Book",
+    icon: Package,
+    slug: "inventory-book",
+    children: [
+      { label: "Stock Item", icon: Package, href: "/accounting/inventory" },
+      { label: "Category", icon: FolderTree },
+      { label: "Physical Stock Register", icon: BookOpen },
+      { label: "Batch", icon: Boxes },
+    ],
+  },
+  {
+    label: "Statement of Inventory",
+    icon: Boxes,
+    slug: "statement-of-inventory",
+    children: [
+      { label: "Category Summary", icon: FolderTree, href: "/accounting/stock-summary" },
+      { label: "Sales Bill Pending", icon: Receipt },
+      { label: "Purchase Bill Pending", icon: Receipt },
+    ],
+  },
+  {
+    label: "Cash / Funds Flow",
+    icon: LineChart,
+  },
+  {
+    label: "Chart of Accounts",
+    icon: FolderTree,
+    href: "/accounting/chart-of-accounts",
+  },
+  {
+    label: "Exception Reports",
+    icon: AlertTriangle,
+    slug: "exception-reports",
+    children: [
+      { label: "Negative Stock", icon: AlertTriangle },
+      { label: "Negative Ledgers", icon: AlertTriangle },
+      { label: "Negative Batch", icon: AlertTriangle },
+    ],
+  },
+]
+
+export function getDisplayMenuSection(slug: string) {
+  return displayMenuItems.find(item => item.slug === slug && item.children)
+}
+
+export function DisplayMenuList({ items }: { items: DisplayMenuItem[] }) {
+  return (
+    <div className="flex flex-col gap-3 sm:gap-4">
+      {items.map(item => (
+        <DisplayMenuRow key={item.label} item={item} />
+      ))}
+    </div>
+  )
+}
+
+function DisplayMenuRow({ item }: { item: DisplayMenuItem }) {
+  const Icon = item.icon
+  const href = item.children ? `/accounting/display/${item.slug}` : item.href
+  const content = (
+    <>
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 sm:h-12 sm:w-12">
+        <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+      </div>
+      <h2 className="text-base font-bold text-slate-800 sm:text-lg lg:text-xl">{item.label}</h2>
+    </>
+  )
+
+  if (!href) {
+    return (
+      <div className="flex items-center gap-3 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-slate-400 shadow-sm sm:gap-4 sm:p-5 lg:p-6">
+        {content}
+      </div>
+    )
+  }
+
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:shadow-md sm:gap-4 sm:p-5 lg:p-6"
+    >
+      {content}
+    </Link>
+  )
+}

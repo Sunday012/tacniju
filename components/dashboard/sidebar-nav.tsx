@@ -2,7 +2,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Home, Calendar, Receipt, Settings, Users, MonitorPlay, Shield, Megaphone } from "lucide-react"
+import { Home, Calendar, Receipt, Settings, Users, MonitorPlay, Shield, Megaphone, Utensils } from "lucide-react"
 
 export function SidebarNav() {
   const pathname = usePathname()
@@ -13,6 +13,7 @@ export function SidebarNav() {
     { name: "Diary", href: "/dashboard/diary", icon: Users },
     { name: "Lounge", href: "/dashboard/lounge", icon: Shield },
     { name: "Announcements", href: "/dashboard/announcements", icon: Megaphone },
+    { name: "Dining Hall", href: "/dashboard/dining-hall", icon: Utensils },
     { name: "Stall", href: "/dashboard/stall", icon: Receipt },
     { name: "Live Screen", href: "/present", icon: MonitorPlay },
   ]

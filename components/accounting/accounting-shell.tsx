@@ -5,6 +5,7 @@ const navItems = [
   { href: "/accounting/info", label: "Accounts Info" },
   { href: "/accounting/vouchers", label: "Vouchers" },
   { href: "/accounting/inventory-vouchers", label: "Inventory Vouchers" },
+  { href: "/accounting/production", label: "Production" },
   { href: "/accounting/inventory", label: "Inventory Info" },
   { href: "/accounting/statements", label: "Statements" },
   { href: "/accounting/display", label: "Display" },
