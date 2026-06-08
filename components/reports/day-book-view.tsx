@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { deleteVoucher } from "@/app/vouchers/actions"
 import { useRouter } from "next/navigation"
-import { Eye, Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 // Vouchers are listed serially by type: all Receipts, then Payments, then Sales, etc.
@@ -29,8 +29,8 @@ function formatIsoDate(dateValue: string) {
     return `${day}/${month}/${year}`
 }
 
-function getVoucherHref(voucherType: string, voucherId: string) {
-    return `/accounting/vouchers/${voucherType.toLowerCase()}/${voucherId}`
+function getVoucherHref(voucherType: string, voucherId: string, fromDayBook = false) {
+    return `/accounting/vouchers/${voucherType.toLowerCase()}/${voucherId}${fromDayBook ? "?from=daybook" : ""}`
 }
 
 function getVoucherDisplayAmounts(voucherType: string, debit: number, credit: number) {
@@ -286,7 +286,11 @@ export function DayBookView({
                     const qty = getQtyTotals(v.voucher_items || [])
                     const mainParties = getMainParties(v.voucher_type, entries)
                     return (
-                        <TableRow key={v.id} className="border-slate-200 align-top hover:bg-slate-50">
+                        <TableRow
+                            key={v.id}
+                            onClick={() => router.push(getVoucherHref(v.voucher_type, v.id, true))}
+                            className="cursor-pointer border-slate-200 align-top hover:bg-slate-50"
+                        >
                             <TableCell>
                                 <div className="space-y-0.5">
                                     {mainParties.length === 0 ? (
@@ -304,9 +308,7 @@ export function DayBookView({
                                 </span>
                             </TableCell>
                             <TableCell className="font-bold text-slate-700 text-xs">
-                                <Link href={getVoucherHref(v.voucher_type, v.id)} className="hover:text-indigo-700">
-                                    {v.voucher_no}
-                                </Link>
+                                {v.voucher_no}
                             </TableCell>
                             <TableCell className="text-right font-mono">
                                 <div>
@@ -326,12 +328,11 @@ export function DayBookView({
                             </TableCell>
                             <TableCell className="text-right">
                                 <div className="flex justify-end gap-1">
-                                    <Link href={getVoucherHref(v.voucher_type, v.id)} title="View voucher">
-                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-indigo-700">
-                                            <Eye className="h-4 w-4" />
-                                        </Button>
-                                    </Link>
-                                    <Link href={`${getVoucherHref(v.voucher_type, v.id)}?edit=1`} title="Edit voucher">
+                                    <Link
+                                        href={`${getVoucherHref(v.voucher_type, v.id, true)}&edit=1`}
+                                        title="Edit voucher"
+                                        onClick={(event) => event.stopPropagation()}
+                                    >
                                         <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-amber-700">
                                             <Pencil className="h-4 w-4" />
                                         </Button>
@@ -340,7 +341,10 @@ export function DayBookView({
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        onClick={() => handleDeleteVoucher(v)}
+                                        onClick={(event) => {
+                                            event.stopPropagation()
+                                            handleDeleteVoucher(v)
+                                        }}
                                         className="h-8 w-8 text-slate-500 hover:bg-red-50 hover:text-red-700"
                                         title="Delete voucher"
                                     >

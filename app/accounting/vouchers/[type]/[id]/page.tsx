@@ -31,7 +31,7 @@ export default async function AccountingVoucherDetailPage({
   searchParams,
 }: {
   params: { type: string; id: string }
-  searchParams?: { edit?: string }
+  searchParams?: { edit?: string; from?: string }
 }) {
   const voucherType = typeMap[params.type]
   if (!voucherType) notFound()
@@ -48,6 +48,10 @@ export default async function AccountingVoucherDetailPage({
     0
   )
   const isEditing = searchParams?.edit === "1"
+  const fromDayBook = searchParams?.from === "daybook"
+  const detailHref = `/accounting/vouchers/${params.type}/${params.id}${fromDayBook ? "?from=daybook" : ""}`
+  const backHref = fromDayBook ? "/accounting/day-book" : `/accounting/vouchers/${params.type}`
+  const backLabel = fromDayBook ? "Day Book" : `${voucherType} Vouchers`
 
   if (isEditing) {
     const [ledgers, items, parties, programs, balances] = await Promise.all([
@@ -62,7 +66,7 @@ export default async function AccountingVoucherDetailPage({
       <AccountingShell
         title={`Edit ${voucherType} ${voucher.voucher_no}`}
         framed={false}
-        backHref={`/accounting/vouchers/${params.type}/${params.id}`}
+        backHref={detailHref}
         backLabel="Voucher Details"
         hero={{
           title: `Edit ${voucher.voucher_no}`,
@@ -88,8 +92,8 @@ export default async function AccountingVoucherDetailPage({
     <AccountingShell
       title={`${voucherType} ${voucher.voucher_no}`}
       framed={false}
-      backHref={`/accounting/vouchers/${params.type}`}
-      backLabel={`${voucherType} Vouchers`}
+      backHref={backHref}
+      backLabel={backLabel}
       hero={{
         title: voucher.narration || voucher.voucher_no,
         subtitle: `${voucherType} Voucher`,
@@ -99,7 +103,7 @@ export default async function AccountingVoucherDetailPage({
       <div className="space-y-6">
         <div className="flex justify-end">
           <Link
-            href={`/accounting/vouchers/${params.type}/${params.id}?edit=1`}
+            href={`${detailHref}${fromDayBook ? "&" : "?"}edit=1`}
             className="inline-flex h-10 items-center rounded-xl bg-indigo-600 px-4 text-sm font-black text-white shadow-sm hover:bg-indigo-700"
           >
             Edit Voucher
