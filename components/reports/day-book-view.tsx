@@ -109,6 +109,34 @@ export function DayBookView({
         )
     }
 
+    function getMainParties(voucherType: string, entries: any[] = []) {
+        const preferredSideByType: Record<string, "debit" | "credit" | null> = {
+            Receipt: "credit",
+            Payment: "debit",
+            Sales: "debit",
+            Purchase: "credit",
+            Expense: "debit",
+            Income: "credit",
+            Program: "credit",
+            Contra: null,
+        }
+        const nonCashEntries = entries.filter(entry => !entry.ledgers?.is_cash_bank)
+        const preferredSide = preferredSideByType[voucherType] ?? null
+        const preferredEntries = preferredSide
+            ? nonCashEntries.filter(entry => Number(entry[`${preferredSide}_amount`] || 0) > 0)
+            : nonCashEntries
+        const displayEntries = preferredEntries.length > 0
+            ? preferredEntries
+            : nonCashEntries.length > 0
+                ? nonCashEntries
+                : entries
+        const names = displayEntries
+            .map(entry => entry.ledgers?.name)
+            .filter(Boolean)
+
+        return Array.from(new Set(names))
+    }
+
     const sortedData = [...data].sort((a, b) => {
         const typeDiff = voucherOrder.indexOf(a.voucher_type) - voucherOrder.indexOf(b.voucher_type)
         if (typeDiff !== 0) return typeDiff
@@ -256,18 +284,16 @@ export function DayBookView({
                     const entries = v.voucher_entries || []
                     const eTotals = getEntryTotals(entries)
                     const qty = getQtyTotals(v.voucher_items || [])
+                    const mainParties = getMainParties(v.voucher_type, entries)
                     return (
                         <TableRow key={v.id} className="border-slate-200 align-top hover:bg-slate-50">
                             <TableCell>
-                                <Link href={getVoucherHref(v.voucher_type, v.id)} className="block hover:text-indigo-700">
-                                    <div className="font-medium text-slate-800 italic mb-1">"{v.narration}"</div>
-                                </Link>
                                 <div className="space-y-0.5">
-                                    {entries.length === 0 ? (
+                                    {mainParties.length === 0 ? (
                                         <div className="text-xs text-red-600">No ledger entries saved.</div>
-                                    ) : entries.map((e: any, i: number) => (
-                                        <div key={i} className={`text-xs ${e.debit_amount > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                            {e.debit_amount > 0 ? 'Dr' : 'Cr'} {e.ledgers?.name}
+                                    ) : mainParties.map((name: string) => (
+                                        <div key={name} className="text-sm font-semibold text-emerald-700">
+                                            {name}
                                         </div>
                                     ))}
                                 </div>

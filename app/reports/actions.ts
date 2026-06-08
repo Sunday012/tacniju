@@ -118,7 +118,7 @@ export async function getDayBook(filters?: { date?: string; startDate?: string; 
                 ledger_id,
                 debit_amount,
                 credit_amount,
-                ledgers ( name )
+                ledgers ( name, is_cash_bank )
             ),
             voucher_items (
                 qty,
