@@ -15,6 +15,13 @@ export async function ProductionJournalPage({
   subtitle: string
 }) {
   const items = await getItems()
+  const innerTitle = journalType === "Raw Material" ? "Raw Materials" : "Production"
+  const leftSide = journalType === "Raw Material"
+    ? { title: "Material Received / Source", icon: "in" as const, prefix: "in" as const }
+    : { title: "Raw Materials / Source", icon: "in" as const, prefix: "out" as const }
+  const rightSide = journalType === "Raw Material"
+    ? { title: "Material Issued / Consumed", icon: "out" as const, prefix: "out" as const }
+    : { title: "Produced Items / Output", icon: "out" as const, prefix: "in" as const }
 
   return (
     <AccountingShell title={title} backHref="/accounting/production" backLabel="Production" framed={false}>
@@ -22,12 +29,10 @@ export async function ProductionJournalPage({
         <input type="hidden" name="journal_type" value={journalType} />
         <div className="mb-6 flex flex-col gap-5 border-b border-slate-200 pb-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-indigo-600">
-              <ArrowDownToLine className="h-5 w-5" />
-            </div>
+            <div className="h-11 w-11 rounded-lg border border-slate-200 bg-slate-50" />
             <div>
               <h1 className="text-2xl font-black tracking-tight text-slate-900">{title}</h1>
-              <p className="mt-1 text-sm font-bold text-slate-500">{subtitle}</p>
+              <p className="mt-1 text-sm font-bold text-slate-500">Production</p>
             </div>
           </div>
 
@@ -44,14 +49,37 @@ export async function ProductionJournalPage({
         </div>
 
         {items.length === 0 ? (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm font-bold text-amber-700">
-            Create production items first before saving this journal.
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm font-bold text-amber-800">
+            No production items were found for the selected assembly. Use Production Inventory to create items, or switch to the assembly where the items were created.
+            <div className="mt-4 flex flex-wrap gap-2">
+              <a href="/accounting/production/inventory/items" className="rounded-lg bg-amber-600 px-3 py-2 text-xs font-black text-white hover:bg-amber-700">
+                Create Production Items
+              </a>
+              <a href="/select-church" className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-black text-amber-800 hover:bg-amber-100">
+                Switch Assembly
+              </a>
+            </div>
           </div>
         ) : (
           <>
+            <div className="mb-5 text-center">
+              <h2 className="text-xl font-black text-slate-800">{innerTitle}</h2>
+            </div>
+
             <div className="grid overflow-hidden rounded-2xl border border-slate-200 bg-white lg:grid-cols-2">
-              <JournalSide title={journalType === "Raw Material" ? "Material Issued / Consumed" : "Raw Materials / Source"} icon="out" prefix="out" items={items} />
-              <JournalSide title={journalType === "Raw Material" ? "Material Received / Source" : "Produced Items / Output"} icon="in" prefix="in" items={items} />
+              <JournalSide title={leftSide.title} icon={leftSide.icon} prefix={leftSide.prefix} items={items} />
+              <JournalSide title={rightSide.title} icon={rightSide.icon} prefix={rightSide.prefix} items={items} />
+            </div>
+
+            <div className="grid gap-4 border-x border-b border-slate-200 bg-white p-4 lg:grid-cols-2">
+              <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <span className="text-sm font-black uppercase tracking-widest text-slate-500">Total</span>
+                <input className="h-9 w-32 rounded-lg border border-slate-200 bg-white px-3 text-right text-sm font-bold text-slate-700 outline-none focus:border-indigo-300" />
+              </div>
+              <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <span className="text-sm font-black uppercase tracking-widest text-slate-500">Total</span>
+                <input className="h-9 w-32 rounded-lg border border-slate-200 bg-white px-3 text-right text-sm font-bold text-slate-700 outline-none focus:border-indigo-300" />
+              </div>
             </div>
 
             <div className="mt-5 grid gap-2">

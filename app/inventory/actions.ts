@@ -42,10 +42,10 @@ export async function getItems() {
         .from("items")
         .select("*")
         .eq("org_id", orgId)
-        .eq("source_context", "accounting")
         .order("name", { ascending: true })
 
     if (error) return []
+    const accountingItems = (items || []).filter(item => item.source_context !== "admin" && !item.source_asset_id)
 
     // Calculate current stock using opening_qty + incoming - outgoing
     const { data: movements } = await supabase
@@ -56,7 +56,7 @@ export async function getItems() {
     const stockMap = new Map<string, number>()
 
     // Initialize with opening qty
-    for (const item of items) {
+    for (const item of accountingItems) {
         stockMap.set(item.id, Number(item.opening_qty))
     }
 
@@ -71,7 +71,7 @@ export async function getItems() {
         }
     }
 
-    return items.map(item => ({
+    return accountingItems.map(item => ({
         ...item,
         current_stock: stockMap.get(item.id) || 0
     })) as Item[]
