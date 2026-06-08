@@ -54,7 +54,7 @@ export function AccountingShell({
         </div>
       </div>
 
-      <main className="mx-auto max-w-[1500px] px-4 py-8 sm:px-6 lg:px-10">
+      <main className="mx-auto max-w-[1500px] px-4 py-7 sm:px-6 lg:px-10">
         {hero ? (
           <section className={`relative mb-8 overflow-hidden rounded-[2rem] px-6 py-8 text-white shadow-[0_18px_50px_-22px_rgba(15,23,42,0.35)] sm:px-10 ${hero.className || "bg-gradient-to-br from-indigo-900 via-indigo-800 to-violet-900"}`}>
             <div className="absolute right-0 top-0 h-64 w-64 translate-x-20 -translate-y-16 rounded-full bg-white/10" />
@@ -78,7 +78,7 @@ export function AccountingShell({
           <h1 className="mb-8 text-3xl font-black tracking-tight text-slate-900">{title}</h1>
         ) : null}
         {framed ? (
-          <div className="rounded-[2rem] border border-white/70 bg-white/80 p-6 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] backdrop-blur-3xl sm:p-8">
+          <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] backdrop-blur-3xl sm:p-5">
             {children}
           </div>
         ) : children}
