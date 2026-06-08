@@ -41,9 +41,9 @@ export const displayMenuItems: DisplayMenuItem[] = [
       { label: "Cash / Bank Book", icon: Landmark, href: "/accounting/info/bank-account" },
       { label: "Ledger", icon: BookOpen, href: "/accounting/info/ledger" },
       { label: "Group Summary", icon: Layers, href: "/accounting/info/group" },
-      { label: "Sales Register", icon: Receipt },
-      { label: "Purchase Register", icon: Receipt },
-      { label: "Payment / Receipt Register", icon: Receipt },
+      { label: "Sales Register", icon: Receipt, href: "/accounting/vouchers/sales" },
+      { label: "Purchase Register", icon: Receipt, href: "/accounting/vouchers/purchase" },
+      { label: "Payment / Receipt Register", icon: Receipt, href: "/accounting/day-book" },
     ],
   },
   {
@@ -54,7 +54,7 @@ export const displayMenuItems: DisplayMenuItem[] = [
       { label: "Outstanding Receivables", icon: Receipt, href: "/accounting/statements/party" },
       { label: "Outstanding Payables", icon: Receipt, href: "/accounting/statements/party" },
       { label: "Ledger Monthly Summary", icon: BookOpen, href: "/accounting/info/ledger" },
-      { label: "Statistics", icon: LineChart },
+      { label: "Statistics", icon: LineChart, href: "/accounting/profit-loss" },
     ],
   },
   {
@@ -63,9 +63,9 @@ export const displayMenuItems: DisplayMenuItem[] = [
     slug: "inventory-book",
     children: [
       { label: "Stock Item", icon: Package, href: "/accounting/inventory" },
-      { label: "Category", icon: FolderTree },
-      { label: "Physical Stock Register", icon: BookOpen },
-      { label: "Batch", icon: Boxes },
+      { label: "Category", icon: FolderTree, href: "/accounting/production/inventory/categories" },
+      { label: "Physical Stock Register", icon: BookOpen, href: "/accounting/production/reports/stock" },
+      { label: "Batch", icon: Boxes, href: "/accounting/production/stock-journal" },
     ],
   },
   {
@@ -74,13 +74,14 @@ export const displayMenuItems: DisplayMenuItem[] = [
     slug: "statement-of-inventory",
     children: [
       { label: "Category Summary", icon: FolderTree, href: "/accounting/stock-summary" },
-      { label: "Sales Bill Pending", icon: Receipt },
-      { label: "Purchase Bill Pending", icon: Receipt },
+      { label: "Sales Bill Pending", icon: Receipt, href: "/accounting/vouchers/sales" },
+      { label: "Purchase Bill Pending", icon: Receipt, href: "/accounting/vouchers/purchase" },
     ],
   },
   {
     label: "Cash / Funds Flow",
     icon: LineChart,
+    href: "/accounting/statements/cash-in-hand",
   },
   {
     label: "Chart of Accounts",
@@ -92,9 +93,9 @@ export const displayMenuItems: DisplayMenuItem[] = [
     icon: AlertTriangle,
     slug: "exception-reports",
     children: [
-      { label: "Negative Stock", icon: AlertTriangle },
-      { label: "Negative Ledgers", icon: AlertTriangle },
-      { label: "Negative Batch", icon: AlertTriangle },
+      { label: "Negative Stock", icon: AlertTriangle, href: "/accounting/production/reports/stock" },
+      { label: "Negative Ledgers", icon: AlertTriangle, href: "/reports/trial-balance" },
+      { label: "Negative Batch", icon: AlertTriangle, href: "/accounting/production/reports/stock" },
     ],
   },
 ]

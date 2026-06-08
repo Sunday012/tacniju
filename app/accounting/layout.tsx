@@ -1,13 +1,11 @@
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/server"
+import { getCurrentAccessProfile, isAccounting } from "@/lib/access"
 
 export default async function AccountingLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { user, profile } = await getCurrentAccessProfile()
 
   if (!user) redirect("/auth/admin-login")
+  if (!isAccounting(profile)) redirect("/dashboard")
 
   return children
 }

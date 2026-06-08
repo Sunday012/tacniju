@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/server"
 import { Award, CheckCircle, Users, CalendarCheck, PlusCircle } from "lucide-react"
+import { adjustMemberPoints } from "./actions"
 
 export const dynamic = "force-dynamic"
 
@@ -50,18 +51,32 @@ export default async function PointsAdminPage() {
 
         <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
           <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-extrabold text-slate-800">Create Point Rule</h2>
-            <div className="mt-5 grid gap-4">
-              {["Rule name", "Category", "Default points", "Validation method"].map(label => (
-                <label key={label} className="grid gap-1.5 text-sm font-bold text-slate-600">
-                  {label}
-                  <input className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" placeholder={label} />
-                </label>
-              ))}
+            <h2 className="text-lg font-extrabold text-slate-800">Adjust Member Points</h2>
+            <form action={adjustMemberPoints} className="mt-5 grid gap-4">
+              <label className="grid gap-1.5 text-sm font-bold text-slate-600">
+                Member
+                <select name="profile_id" required className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white">
+                  <option value="">Select member</option>
+                  {(profiles || []).map(profile => (
+                    <option key={profile.id} value={profile.id}>{profile.full_name || "Unnamed"} ({profile.points || 0} pts)</option>
+                  ))}
+                </select>
+              </label>
+              <label className="grid gap-1.5 text-sm font-bold text-slate-600">
+                Points
+                <input name="points" type="number" min="1" required className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" placeholder="10" />
+              </label>
+              <label className="grid gap-1.5 text-sm font-bold text-slate-600">
+                Action
+                <select name="mode" className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white">
+                  <option value="add">Add points</option>
+                  <option value="remove">Remove points</option>
+                </select>
+              </label>
               <button className="mt-2 h-11 rounded-xl bg-indigo-600 font-black text-white shadow-sm hover:bg-indigo-700">
-                Save Point Rule
+                Save Points
               </button>
-            </div>
+            </form>
           </section>
 
           <section className="rounded-[2rem] border border-slate-200 bg-white shadow-sm">

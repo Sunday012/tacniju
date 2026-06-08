@@ -4,6 +4,10 @@ import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { deleteVoucher } from "@/app/vouchers/actions"
+import { useRouter } from "next/navigation"
+import { Eye, Pencil, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 
 // Vouchers are listed serially by type: all Receipts, then Payments, then Sales, etc.
 const voucherOrder = ["Receipt", "Payment", "Sales", "Purchase", "Expense", "Income", "Program", "Contra"]
@@ -65,6 +69,7 @@ export function DayBookView({
     actionPath = "/accounting/day-book",
     onBack,
 }: DayBookViewProps) {
+    const router = useRouter()
     const isPeriodMode = Boolean(startDate || endDate)
 
     function clearPeriod(form: HTMLFormElement) {
@@ -125,6 +130,18 @@ export function DayBookView({
     const groups = voucherOrder
         .map(type => ({ type, vouchers: sortedData.filter(v => v.voucher_type === type) }))
         .filter(group => group.vouchers.length > 0)
+
+    async function handleDeleteVoucher(voucher: any) {
+        if (!confirm(`Delete ${voucher.voucher_type} voucher ${voucher.voucher_no}?`)) return
+
+        try {
+            await deleteVoucher(voucher.id)
+            toast.success("Voucher deleted")
+            router.refresh()
+        } catch (error: any) {
+            toast.error(error?.message || "Failed to delete voucher")
+        }
+    }
 
     return (
         <div className="space-y-7">
@@ -204,12 +221,13 @@ export function DayBookView({
                                 <TableHead className="text-slate-500">Vch No.</TableHead>
                                 <TableHead className="text-slate-500 text-right">Debit (₦)<span className="block text-[10px] font-normal normal-case">Inward Qty</span></TableHead>
                                 <TableHead className="text-slate-500 text-right">Credit (₦)<span className="block text-[10px] font-normal normal-case">Outward Qty</span></TableHead>
+                                <TableHead className="text-right text-slate-500">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody className="[&_td]:px-5 [&_td]:py-3.5">
                             {groups.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center text-slate-500 py-6">
+                                    <TableCell colSpan={6} className="text-center text-slate-500 py-6">
                                         {isPeriodMode ? "No transactions recorded in this period." : "No transactions recorded on this date."}
                                     </TableCell>
                                 </TableRow>
@@ -230,7 +248,7 @@ export function DayBookView({
         return (
             <>
                 <TableRow className="border-slate-200 bg-slate-50">
-                    <TableCell colSpan={5} className="py-2 text-xs font-black uppercase tracking-widest text-slate-500">
+                    <TableCell colSpan={6} className="py-2 text-xs font-black uppercase tracking-widest text-slate-500">
                         {group.type} ({group.vouchers.length})
                     </TableCell>
                 </TableRow>
@@ -279,6 +297,30 @@ export function DayBookView({
                                         : '-'}
                                 </div>
                                 {qty.outward > 0 && <div className="text-[11px] text-slate-400">{qty.outward} out</div>}
+                            </TableCell>
+                            <TableCell className="text-right">
+                                <div className="flex justify-end gap-1">
+                                    <Link href={getVoucherHref(v.voucher_type, v.id)} title="View voucher">
+                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-indigo-700">
+                                            <Eye className="h-4 w-4" />
+                                        </Button>
+                                    </Link>
+                                    <Link href={`${getVoucherHref(v.voucher_type, v.id)}?edit=1`} title="Edit voucher">
+                                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-amber-700">
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                    </Link>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleDeleteVoucher(v)}
+                                        className="h-8 w-8 text-slate-500 hover:bg-red-50 hover:text-red-700"
+                                        title="Delete voucher"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </TableCell>
                         </TableRow>
                     )

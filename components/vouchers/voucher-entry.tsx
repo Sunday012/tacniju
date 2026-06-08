@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ComboboxInput } from "@/components/ui/combobox-input"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { saveVoucher, VoucherType, VoucherItemPayload, VoucherLedgerEntry } from "@/app/vouchers/actions"
+import { saveVoucher, updateVoucher, VoucherType, VoucherItemPayload, VoucherLedgerEntry } from "@/app/vouchers/actions"
 import { Ledger, LedgerBalance } from "@/app/management/actions"
 import { Item } from "@/app/inventory/actions"
 import { getOrCreateProfilePartyLedger } from "@/app/accounting/actions"
@@ -36,6 +36,53 @@ type ProgramOption = {
     amount_to_contribute?: number
 }
 
+function isSingleEntryVoucher(type: VoucherType) {
+    return ["Payment", "Expense", "Receipt", "Income", "Program", "Contra"].includes(type)
+}
+
+function buildInitialItems(voucher: any | null): VoucherItemPayload[] {
+    if (!voucher?.voucher_items?.length) return []
+    return voucher.voucher_items.map((item: any) => ({
+        item_id: item.item_id,
+        qty: Number(item.qty || 0),
+        rate: Number(item.rate || 0),
+        amount: Number(item.amount || 0),
+    }))
+}
+
+function buildInitialLedgerState(voucher: any | null, type: VoucherType, ledgers: LedgerWithGroup[]) {
+    const empty = { masterLedgerId: "", selectedLedgers: [{ ledger_id: "", amount: 0, debit_amount: 0, credit_amount: 0 }] }
+    if (!voucher?.voucher_entries?.length) return empty
+
+    const entries = voucher.voucher_entries.map((entry: any) => ({
+        ledger_id: entry.ledger_id,
+        debit_amount: Number(entry.debit_amount || 0),
+        credit_amount: Number(entry.credit_amount || 0),
+        adjustment_method: entry.adjustment_method || undefined,
+        adjustment_reference: entry.adjustment_reference || undefined,
+        due_date: entry.due_date || undefined,
+    }))
+
+    if (!isSingleEntryVoucher(type)) {
+        return { masterLedgerId: "", selectedLedgers: entries }
+    }
+
+    const masterEntry = entries.find((entry: any) => ledgers.find(ledger => ledger.id === entry.ledger_id)?.is_cash_bank) || entries[0]
+    const detailEntries = entries.filter((entry: any) => entry !== masterEntry)
+    const selectedLedgers = detailEntries.length > 0
+        ? detailEntries.map((entry: any) => ({
+            ...entry,
+            amount: Math.max(Number(entry.debit_amount || 0), Number(entry.credit_amount || 0)),
+            forceVisible: true,
+        }))
+        : [{ ledger_id: "", amount: 0, debit_amount: 0, credit_amount: 0 }]
+
+    return {
+        masterLedgerId: masterEntry?.ledger_id || "",
+        selectedLedgers,
+    }
+}
+
 export function VoucherEntry({
     ledgers,
     recentVouchers,
@@ -44,6 +91,7 @@ export function VoucherEntry({
     parties = [],
     programs = [],
     balances = {},
+    initialVoucher = null,
 }: {
     ledgers: LedgerWithGroup[],
     recentVouchers: any[],
@@ -52,16 +100,20 @@ export function VoucherEntry({
     parties?: PartyOption[],
     programs?: ProgramOption[],
     balances?: Record<string, LedgerBalance>,
+    initialVoucher?: any | null,
 }) {
-    const [voucherType, setVoucherType] = useState<VoucherType>(fixedType || "Payment")
-    const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
-    const [narration, setNarration] = useState("")
-    const [reference, setReference] = useState("")
+    const editingVoucherId = initialVoucher?.id as string | undefined
+    const initialType = (initialVoucher?.voucher_type || fixedType || "Payment") as VoucherType
+    const [voucherType, setVoucherType] = useState<VoucherType>(initialType)
+    const [date, setDate] = useState(initialVoucher?.date || new Date().toISOString().slice(0, 10))
+    const [narration, setNarration] = useState(initialVoucher?.narration || "")
+    const [reference, setReference] = useState(initialVoucher?.reference || "")
 
-    const [selectedItems, setSelectedItems] = useState<VoucherItemPayload[]>([])
+    const [selectedItems, setSelectedItems] = useState<VoucherItemPayload[]>(() => buildInitialItems(initialVoucher))
     // We add 'amount' to support single-entry mode (Payment, Receipt, Contra)
-    const [selectedLedgers, setSelectedLedgers] = useState<any[]>([{ ledger_id: "", amount: 0, debit_amount: 0, credit_amount: 0 }])
-    const [masterLedgerId, setMasterLedgerId] = useState<string>("")
+    const initialLedgerState = buildInitialLedgerState(initialVoucher, initialType, ledgers)
+    const [selectedLedgers, setSelectedLedgers] = useState<any[]>(initialLedgerState.selectedLedgers)
+    const [masterLedgerId, setMasterLedgerId] = useState<string>(initialLedgerState.masterLedgerId)
     const [selectedPartyId, setSelectedPartyId] = useState("")
     const [ledgerLabels, setLedgerLabels] = useState<Record<string, string>>({})
     const [managedLedgerIndex, setManagedLedgerIndex] = useState<number | null>(null)
@@ -179,23 +231,31 @@ export function VoucherEntry({
 
         setIsSubmitting(true)
         try {
-            await saveVoucher({
+            const payload = {
                 voucher_type: voucherType,
                 date,
                 narration,
                 reference,
                 items: needsItems ? validItems : [],
                 ledger_entries: finalLedgers
-            })
+            }
 
-            toast.success(`${voucherType} voucher saved!`)
-            setNarration("")
-            setReference("")
-            setMasterLedgerId("")
-            setSelectedPartyId("")
-            setManagedLedgerIndex(null)
-            setSelectedItems(needsItems ? [{ item_id: "", qty: 1, rate: 0, amount: 0 }] : [])
-            setSelectedLedgers([{ ledger_id: "", amount: 0, debit_amount: 0, credit_amount: 0 }])
+            if (editingVoucherId) {
+                await updateVoucher({ id: editingVoucherId, ...payload })
+            } else {
+                await saveVoucher(payload)
+            }
+
+            toast.success(`${voucherType} voucher ${editingVoucherId ? "updated" : "saved"}!`)
+            if (!editingVoucherId) {
+                setNarration("")
+                setReference("")
+                setMasterLedgerId("")
+                setSelectedPartyId("")
+                setManagedLedgerIndex(null)
+                setSelectedItems(needsItems ? [{ item_id: "", qty: 1, rate: 0, amount: 0 }] : [])
+                setSelectedLedgers([{ ledger_id: "", amount: 0, debit_amount: 0, credit_amount: 0 }])
+            }
             router.refresh()
         } catch (error) {
             console.error(error)
@@ -438,7 +498,7 @@ export function VoucherEntry({
         <div className="w-full">
             <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)]">
                 <div className="border-b border-slate-200 bg-white px-5 py-4">
-                    {!fixedType && (
+                    {!fixedType && !editingVoucherId && (
                         <div className="mb-4 flex justify-end">
                             <Select value={voucherType} onValueChange={(v: VoucherType) => {
                                 setVoucherType(v)
@@ -764,7 +824,7 @@ export function VoucherEntry({
 
                         <div className="flex justify-end pt-4">
                             <Button type="submit" disabled={isSubmitting || !isBalanced} className={`${theme.button} h-11 min-w-[140px] px-6 font-bold text-white`}>
-                                {isSubmitting ? "Saving..." : `Save ${voucherType}`}
+                                {isSubmitting ? "Saving..." : editingVoucherId ? `Update ${voucherType}` : `Save ${voucherType}`}
                             </Button>
                         </div>
                     </form>

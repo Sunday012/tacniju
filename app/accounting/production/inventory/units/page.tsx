@@ -1,58 +1,73 @@
-"use client"
-
 import { AccountingShell } from "@/components/accounting/accounting-shell"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { Plus, Ruler } from "lucide-react"
+import { createProductionUnit, getProductionUnits } from "../../actions"
+import { Ruler } from "lucide-react"
 
-export default function ProductionUnitsPage() {
+export default async function ProductionUnitsPage() {
+  const { rows, error } = await getProductionUnits()
+
   return (
     <AccountingShell title="Units" backHref="/accounting/production/inventory" backLabel="Production Inventory">
       <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-extrabold text-slate-800">Available Units</h2>
-            <p className="mt-1 text-sm font-medium text-slate-500">Units created for production inventory will appear here.</p>
+        <div className="mb-6 flex items-start gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-indigo-100 bg-indigo-50 text-indigo-600">
+            <Ruler className="h-5 w-5" />
           </div>
+          <div>
+            <h2 className="text-lg font-extrabold text-slate-800">Create Unit</h2>
+            <p className="mt-1 text-sm font-medium text-slate-500">Define units such as kg, bag, plate, carton, roll, or piece.</p>
+          </div>
+        </div>
 
-          <Sheet>
-            <SheetTrigger asChild>
-              <button className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 font-black text-white shadow-sm transition hover:bg-indigo-700">
-                <Plus className="h-4 w-4" />
-                Create Unit
+        {error ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm font-bold text-amber-700">
+            Production unit tables are not ready yet. Run `scripts/031_production_access_and_lookup_tables.sql` in Supabase.
+          </div>
+        ) : (
+          <>
+            <form action={createProductionUnit} className="grid gap-4 md:grid-cols-[minmax(0,1fr)_180px_160px_auto]">
+              <label className="grid gap-1.5 text-sm font-bold text-slate-600">
+                Unit name
+                <input name="name" required className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" placeholder="Kilogram" />
+              </label>
+              <label className="grid gap-1.5 text-sm font-bold text-slate-600">
+                Short name
+                <input name="short_name" required className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" placeholder="kg" />
+              </label>
+              <label className="grid gap-1.5 text-sm font-bold text-slate-600">
+                Decimal places
+                <input name="decimal_places" type="number" min="0" max="6" defaultValue="0" className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" />
+              </label>
+              <button className="mt-auto h-11 rounded-xl bg-indigo-600 px-5 font-black text-white shadow-sm hover:bg-indigo-700">
+                Save Unit
               </button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-full overflow-y-auto border-slate-200 bg-slate-50 p-0 text-slate-900 sm:max-w-xl">
-              <SheetHeader className="border-b border-slate-200 bg-white px-6 py-5">
-                <SheetTitle className="flex items-center gap-3 text-xl font-black text-slate-900">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-indigo-100 bg-indigo-50 text-indigo-600">
-                    <Ruler className="h-5 w-5" />
-                  </span>
-                  Create Unit
-                </SheetTitle>
-              </SheetHeader>
+            </form>
 
-              <div className="p-6">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <div className="grid gap-4">
-                    {["Unit name", "Short name", "Decimal places"].map(label => (
-                      <label key={label} className="grid gap-1.5 text-sm font-bold text-slate-600">
-                        {label}
-                        <input className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" placeholder={label} />
-                      </label>
-                    ))}
-                    <button className="mt-2 h-11 rounded-xl bg-indigo-600 font-black text-white shadow-sm hover:bg-indigo-700">
-                      Save Unit
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-6 py-12 text-center">
-          <p className="font-bold text-slate-500">No units have been created yet.</p>
-        </div>
+            <div className="mt-8 overflow-hidden rounded-2xl border border-slate-200">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 text-xs uppercase tracking-widest text-slate-500">
+                  <tr>
+                    <th className="px-5 py-3">Unit</th>
+                    <th className="px-5 py-3">Short Name</th>
+                    <th className="px-5 py-3">Decimals</th>
+                    <th className="px-5 py-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {rows.length === 0 ? (
+                    <tr><td colSpan={4} className="px-5 py-8 text-center font-medium text-slate-500">No units have been created yet.</td></tr>
+                  ) : rows.map(unit => (
+                    <tr key={unit.id}>
+                      <td className="px-5 py-4 font-bold text-slate-800">{unit.name}</td>
+                      <td className="px-5 py-4 font-mono text-slate-600">{unit.short_name}</td>
+                      <td className="px-5 py-4 text-slate-500">{unit.decimal_places}</td>
+                      <td className="px-5 py-4 font-bold text-emerald-600">{unit.active ? "Active" : "Inactive"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </section>
     </AccountingShell>
   )

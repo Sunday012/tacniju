@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog"
@@ -12,7 +12,17 @@ import { useRouter } from "next/navigation"
 import { Bell, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
-export function ItemManager({ items, hideTitle = false }: { items: Item[]; hideTitle?: boolean }) {
+export function ItemManager({
+    items,
+    hideTitle = false,
+    categories = [],
+    units = [],
+}: {
+    items: Item[]
+    hideTitle?: boolean
+    categories?: string[]
+    units?: string[]
+}) {
     const [isOpen, setIsOpen] = useState(false)
     const [name, setName] = useState("")
     const [code, setCode] = useState("")
@@ -29,6 +39,12 @@ export function ItemManager({ items, hideTitle = false }: { items: Item[]; hideT
     const [noStockQuantity, setNoStockQuantity] = useState("0")
     const [isSubmitting, setIsSubmitting] = useState(false)
     const router = useRouter()
+
+    useEffect(() => {
+        if (units.length > 0 && !units.includes(unit)) {
+            setUnit(units[0])
+        }
+    }, [unit, units])
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
@@ -97,29 +113,46 @@ export function ItemManager({ items, hideTitle = false }: { items: Item[]; hideT
                 </div>
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
                     <DialogTrigger asChild>
-                        <Button size="sm" className="h-9 bg-emerald-600 px-4 font-bold text-white hover:bg-emerald-500">Create Stock</Button>
+                        <Button size="sm" className="h-9 bg-emerald-600 px-4 font-bold text-white hover:bg-emerald-500">Create Item</Button>
                     </DialogTrigger>
                     <DialogContent className="bg-slate-50 border-slate-200 text-slate-900 max-w-xl">
                         <DialogHeader>
-                            <DialogTitle>Create Stock</DialogTitle>
-                            <DialogDescription>Accounting-created stock stays inside accounting.</DialogDescription>
+                            <DialogTitle>Create Production Item</DialogTitle>
+                            <DialogDescription>Production items stay separate from admin gift stock.</DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label>Stock</Label>
+                                    <Label>Item</Label>
                                     <Input value={name} onChange={e => setName(e.target.value)} required className="bg-white border-slate-300" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Category</Label>
-                                    <Input value={category} onChange={e => setCategory(e.target.value)} className="bg-white border-slate-300" placeholder="Books, Beverage..." />
+                                    {categories.length > 0 ? (
+                                        <select value={category} onChange={e => setCategory(e.target.value)} className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500">
+                                            <option value="">Select category</option>
+                                            {categories.map(categoryName => (
+                                                <option key={categoryName} value={categoryName}>{categoryName}</option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        <Input value={category} onChange={e => setCategory(e.target.value)} className="bg-white border-slate-300" placeholder="Books, Beverage..." />
+                                    )}
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label>Primary Unit</Label>
-                                    <Input value={unit} onChange={e => setUnit(e.target.value)} required className="bg-white border-slate-300" placeholder="Pack" />
+                                    {units.length > 0 ? (
+                                        <select value={unit} onChange={e => setUnit(e.target.value)} className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-emerald-500">
+                                            {units.map(unitName => (
+                                                <option key={unitName} value={unitName}>{unitName}</option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        <Input value={unit} onChange={e => setUnit(e.target.value)} required className="bg-white border-slate-300" placeholder="Pack" />
+                                    )}
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Secondary Unit</Label>
@@ -213,8 +246,7 @@ export function ItemManager({ items, hideTitle = false }: { items: Item[]; hideT
                             items.map(item => (
                                 <TableRow key={item.id} className="border-slate-200">
                                     <TableCell className="font-medium text-slate-800">
-                                        {item.name}
-                                        {item.source_context === "admin" && <span className="ml-2 text-[10px] text-indigo-600 font-bold">ADMIN</span>}
+                        {item.name}
                                     </TableCell>
                                     <TableCell className="text-slate-500">{item.category || "-"}</TableCell>
                                     <TableCell className="text-center text-slate-500">{item.primary_unit || item.unit}</TableCell>

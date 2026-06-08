@@ -39,6 +39,10 @@ export type VoucherFormPayload = {
     ledger_entries: VoucherLedgerEntry[]
 }
 
+export type VoucherUpdatePayload = VoucherFormPayload & {
+    id: string
+}
+
 async function cleanupVoucherOnFailure(supabase: Awaited<ReturnType<typeof createClient>>, voucherId: string) {
     await supabase
         .from("vouchers")
@@ -128,6 +132,84 @@ export async function saveVoucher(payload: VoucherFormPayload) {
     return header
 }
 
+export async function updateVoucher(payload: VoucherUpdatePayload) {
+    const supabase = await createClient()
+    const orgId = await getOrgId()
+
+    const { data: existing, error: existingError } = await supabase
+        .from("vouchers")
+        .select("id, voucher_type")
+        .eq("id", payload.id)
+        .eq("org_id", orgId)
+        .maybeSingle()
+
+    if (existingError) throw existingError
+    if (!existing) throw new Error("Voucher not found.")
+    if (existing.voucher_type !== payload.voucher_type) {
+        throw new Error("Voucher type cannot be changed while editing.")
+    }
+
+    const { error: headerErr } = await supabase
+        .from("vouchers")
+        .update({
+            date: payload.date,
+            reference: payload.reference || null,
+            narration: payload.narration,
+        })
+        .eq("id", payload.id)
+        .eq("org_id", orgId)
+
+    if (headerErr) throw headerErr
+
+    const { error: deleteEntriesError } = await supabase
+        .from("voucher_entries")
+        .delete()
+        .eq("voucher_id", payload.id)
+
+    if (deleteEntriesError) throw deleteEntriesError
+
+    const { error: deleteItemsError } = await supabase
+        .from("voucher_items")
+        .delete()
+        .eq("voucher_id", payload.id)
+
+    if (deleteItemsError) throw deleteItemsError
+
+    const entries = payload.ledger_entries.map(e => ({
+        voucher_id: payload.id,
+        ledger_id: e.ledger_id,
+        debit_amount: e.debit_amount || 0,
+        credit_amount: e.credit_amount || 0,
+        adjustment_method: e.adjustment_method || null,
+        adjustment_reference: e.adjustment_reference || null,
+        due_date: e.due_date || null,
+    }))
+
+    const { error: lineErr } = await supabase.from("voucher_entries").insert(entries)
+    if (lineErr) throw lineErr
+
+    if (payload.items && payload.items.length > 0) {
+        const movementType = payload.voucher_type === 'Purchase' ? 'IN' : 'OUT'
+        const voucherItems = payload.items.map(item => ({
+            voucher_id: payload.id,
+            item_id: item.item_id,
+            qty: item.qty,
+            rate: item.rate,
+            amount: item.amount,
+            movement_type: movementType
+        }))
+        const { error: itemErr } = await supabase.from("voucher_items").insert(voucherItems)
+        if (itemErr) throw itemErr
+    }
+
+    revalidatePath("/vouchers")
+    revalidatePath("/inventory")
+    revalidatePath("/accounting")
+    revalidatePath("/accounting/day-book")
+    revalidatePath(`/accounting/vouchers/${payload.voucher_type.toLowerCase()}/${payload.id}`)
+    return { id: payload.id }
+}
+
 export async function getRecentVouchers() {
     const supabase = await createClient()
     const orgId = await getOrgId()
@@ -212,4 +294,5 @@ export async function deleteVoucher(id: string) {
     revalidatePath("/vouchers")
     revalidatePath("/inventory")
     revalidatePath("/accounting")
+    revalidatePath("/accounting/day-book")
 }

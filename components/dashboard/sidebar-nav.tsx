@@ -3,9 +3,12 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { Home, Calendar, Receipt, Settings, Users, MonitorPlay, Shield, Megaphone, Utensils } from "lucide-react"
+import { Scan, BookOpen } from "lucide-react"
 
-export function SidebarNav() {
+export function SidebarNav({ profile }: { profile?: { is_admin?: boolean | null; department?: string | null } | null }) {
   const pathname = usePathname()
+  const canScan = !!profile?.is_admin || profile?.department === "Ushering"
+  const canAccount = !!profile?.is_admin || profile?.department === "Account Unit"
 
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
@@ -14,6 +17,8 @@ export function SidebarNav() {
     { name: "Lounge", href: "/dashboard/lounge", icon: Shield },
     { name: "Announcements", href: "/dashboard/announcements", icon: Megaphone },
     { name: "Dining Hall", href: "/dashboard/dining-hall", icon: Utensils },
+    ...(canScan ? [{ name: "Scanner", href: "/dashboard/scanner", icon: Scan }] : []),
+    ...(canAccount ? [{ name: "Accounting", href: "/accounting", icon: BookOpen }] : []),
     { name: "Stall", href: "/dashboard/stall", icon: Receipt },
     { name: "Live Screen", href: "/present", icon: MonitorPlay },
   ]

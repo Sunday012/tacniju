@@ -1,33 +1,23 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { createClient } from "@/lib/server"
+import { getCurrentAccessProfile, isUshering } from "@/lib/access"
 
-async function assertAdmin() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+async function assertDiningHallAccess() {
+  const { supabase, user, profile } = await getCurrentAccessProfile()
   if (!user) {
     return { supabase, user: null, error: "You must be logged in." }
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("is_admin")
-    .eq("id", user.id)
-    .maybeSingle()
-
-  if (!profile?.is_admin) {
-    return { supabase, user: null, error: "Only admins can manage Dining Hall records." }
+  if (!isUshering(profile)) {
+    return { supabase, user: null, error: "Only admins and Ushering can manage Dining Hall records." }
   }
 
   return { supabase, user, error: null }
 }
 
 export async function createDiningHallMeal(formData: FormData) {
-  const { supabase, user, error } = await assertAdmin()
+  const { supabase, user, error } = await assertDiningHallAccess()
   if (error || !user) {
     console.error(error)
     return
@@ -70,7 +60,7 @@ export async function createDiningHallMeal(formData: FormData) {
 }
 
 export async function recordDiningHallServing(formData: FormData) {
-  const { supabase, user, error } = await assertAdmin()
+  const { supabase, user, error } = await assertDiningHallAccess()
   if (error || !user) {
     console.error(error)
     return
@@ -105,4 +95,5 @@ export async function recordDiningHallServing(formData: FormData) {
   }
 
   revalidatePath("/admin/dining-hall")
+  revalidatePath("/dashboard/dining-hall")
 }

@@ -1,8 +1,13 @@
 import { notFound } from "next/navigation"
 import { AccountingShell } from "@/components/accounting/accounting-shell"
+import { VoucherEntry } from "@/components/vouchers/voucher-entry"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { getVoucherById, VoucherType } from "@/app/vouchers/actions"
+import { getLedgers, getLedgerBalances } from "@/app/management/actions"
+import { getItems } from "@/app/inventory/actions"
+import { getAccountingParties, getAccountingPrograms } from "@/app/accounting/actions"
+import Link from "next/link"
 
 const typeMap: Record<string, VoucherType> = {
   payment: "Payment",
@@ -23,8 +28,10 @@ function formatIsoDate(dateValue: string) {
 
 export default async function AccountingVoucherDetailPage({
   params,
+  searchParams,
 }: {
   params: { type: string; id: string }
+  searchParams?: { edit?: string }
 }) {
   const voucherType = typeMap[params.type]
   if (!voucherType) notFound()
@@ -40,6 +47,42 @@ export default async function AccountingVoucherDetailPage({
     (sum: number, entry: any) => sum + Number(entry.credit_amount || 0),
     0
   )
+  const isEditing = searchParams?.edit === "1"
+
+  if (isEditing) {
+    const [ledgers, items, parties, programs, balances] = await Promise.all([
+      getLedgers(),
+      getItems(),
+      getAccountingParties(),
+      getAccountingPrograms(),
+      getLedgerBalances(),
+    ])
+
+    return (
+      <AccountingShell
+        title={`Edit ${voucherType} ${voucher.voucher_no}`}
+        framed={false}
+        backHref={`/accounting/vouchers/${params.type}/${params.id}`}
+        backLabel="Voucher Details"
+        hero={{
+          title: `Edit ${voucher.voucher_no}`,
+          subtitle: voucher.narration || `${voucherType} Voucher`,
+          badge: voucherType,
+        }}
+      >
+        <VoucherEntry
+          fixedType={voucherType}
+          ledgers={ledgers}
+          recentVouchers={[]}
+          items={items}
+          parties={parties}
+          programs={programs}
+          balances={balances}
+          initialVoucher={voucher}
+        />
+      </AccountingShell>
+    )
+  }
 
   return (
     <AccountingShell
@@ -54,6 +97,15 @@ export default async function AccountingVoucherDetailPage({
       }}
     >
       <div className="space-y-6">
+        <div className="flex justify-end">
+          <Link
+            href={`/accounting/vouchers/${params.type}/${params.id}?edit=1`}
+            className="inline-flex h-10 items-center rounded-xl bg-indigo-600 px-4 text-sm font-black text-white shadow-sm hover:bg-indigo-700"
+          >
+            Edit Voucher
+          </Link>
+        </div>
+
         <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
           <CardHeader>
             <CardTitle className="text-xl text-slate-900">Voucher Summary</CardTitle>

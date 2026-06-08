@@ -17,8 +17,21 @@ const BIBLE_BOOKS = [
   "1 John", "2 John", "3 John", "Jude", "Revelation"
 ];
 
+const TRANSLATIONS = [
+  { label: "KJV", value: "kjv" },
+  { label: "WEB", value: "web" },
+  { label: "ASV", value: "asv" },
+  { label: "BBE", value: "bbe" },
+  { label: "YLT", value: "ylt" },
+  { label: "OEB", value: "oeb" },
+];
+
 export function BibleController() {
   const [reference, setReference] = useState("");
+  const [book, setBook] = useState("John");
+  const [chapter, setChapter] = useState("3");
+  const [verseRange, setVerseRange] = useState("16");
+  const [translation, setTranslation] = useState("kjv");
   const [loading, setLoading] = useState(false);
   const [verses, setVerses] = useState<any[]>([]);
   const [bookAndChapter, setBookAndChapter] = useState("");
@@ -66,10 +79,16 @@ export function BibleController() {
   };
 
   const handleSelectBook = (book: string) => {
+    setBook(book);
     setReference(`${book} `);
     setSuggestions([]);
     setShowSuggestions(false);
     document.getElementById('bible-input')?.focus();
+  };
+
+  const applyStructuredReference = (nextBook = book, nextChapter = chapter, nextVerseRange = verseRange) => {
+    const ref = [nextBook, nextChapter].filter(Boolean).join(" ");
+    setReference(nextVerseRange ? `${ref}:${nextVerseRange}` : ref);
   };
 
   const searchBible = async (e: React.FormEvent) => {
@@ -79,7 +98,7 @@ export function BibleController() {
     setLoading(true);
     setShowSuggestions(false);
     try {
-      const res = await fetch(`https://bible-api.com/${encodeURIComponent(reference)}?translation=kjv`);
+      const res = await fetch(`https://bible-api.com/${encodeURIComponent(reference)}?translation=${translation}`);
       const data = await res.json();
       
       if (data.error || !data.verses) {
@@ -103,7 +122,7 @@ export function BibleController() {
       const res = await setPresentationState(true, "bible", {
         reference: `${verse.book_name} ${verse.chapter}:${verse.verse}`,
         text: verse.text.trim(),
-        version: "KJV"
+        version: translation.toUpperCase()
       });
       if (res.error) toast.error(res.error);
       else toast.success("Verse projected");
@@ -164,11 +183,58 @@ export function BibleController() {
         </button>
       </form>
 
+      <div className="mb-6 grid gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-3 sm:grid-cols-[minmax(0,1fr)_90px_120px_110px_auto]">
+        <select
+          value={book}
+          onChange={(e) => {
+            setBook(e.target.value);
+            applyStructuredReference(e.target.value, chapter, verseRange);
+          }}
+          className="h-11 min-w-0 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-amber-400"
+        >
+          {BIBLE_BOOKS.map(bookName => <option key={bookName} value={bookName}>{bookName}</option>)}
+        </select>
+        <input
+          type="number"
+          min="1"
+          value={chapter}
+          onChange={(e) => {
+            setChapter(e.target.value);
+            applyStructuredReference(book, e.target.value, verseRange);
+          }}
+          className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-amber-400"
+          placeholder="Chapter"
+        />
+        <input
+          value={verseRange}
+          onChange={(e) => {
+            setVerseRange(e.target.value);
+            applyStructuredReference(book, chapter, e.target.value);
+          }}
+          className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-amber-400"
+          placeholder="1-5"
+        />
+        <select
+          value={translation}
+          onChange={(e) => setTranslation(e.target.value)}
+          className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-amber-400"
+        >
+          {TRANSLATIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+        </select>
+        <button
+          type="button"
+          onClick={() => applyStructuredReference()}
+          className="h-11 rounded-xl border border-amber-200 bg-white px-4 text-sm font-black text-amber-700 hover:bg-amber-50"
+        >
+          Use
+        </button>
+      </div>
+
       {verses.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between bg-amber-50 border border-amber-100 px-4 py-2 rounded-lg">
             <h3 className="font-bold text-amber-800">{bookAndChapter}</h3>
-            <span className="text-xs font-bold text-amber-600 uppercase tracking-widest">KJV</span>
+            <span className="text-xs font-bold text-amber-600 uppercase tracking-widest">{translation.toUpperCase()}</span>
           </div>
           
           <div className="max-h-[300px] overflow-y-auto space-y-3 pr-2 custom-scrollbar">
