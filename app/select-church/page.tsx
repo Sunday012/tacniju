@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getOrganizations, joinOrganization, createChurch } from "./actions"
+import { getOrganizations, joinOrganization, createChurch, deleteChurch } from "./actions"
 import { toast } from "sonner"
 
 type Organization = {
@@ -15,6 +15,7 @@ export default function SelectChurchPage() {
     const [organizations, setOrganizations] = useState<Organization[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [joiningId, setJoiningId] = useState<string | null>(null)
+    const [deletingId, setDeletingId] = useState<string | null>(null)
     const [passwords, setPasswords] = useState<Record<string, string>>({})
     const [showModal, setShowModal] = useState(false)
     const [creating, setCreating] = useState(false)
@@ -65,6 +66,25 @@ export default function SelectChurchPage() {
         } catch (err: any) {
             setModalError(err.message || "Failed to create church.")
             setCreating(false)
+        }
+    }
+
+    async function handleDelete(org: Organization) {
+        if (!confirm(`Delete "${org.name}"? This will remove the assembly and its accounting records.`)) return
+
+        setDeletingId(org.id)
+        try {
+            const result = await deleteChurch(org.id)
+            if (result?.error) {
+                toast.error(result.error)
+            } else {
+                toast.success("Assembly deleted")
+                setOrganizations(previous => previous.filter(item => item.id !== org.id))
+            }
+        } catch (error: any) {
+            toast.error(error.message || "Failed to delete assembly")
+        } finally {
+            setDeletingId(null)
         }
     }
 
@@ -183,6 +203,13 @@ export default function SelectChurchPage() {
                                         {joiningId === org.id
                                             ? <span className="flex items-center justify-center gap-2"><span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin"></span> Connecting...</span>
                                             : "Enter Portal"}
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(org)}
+                                        disabled={deletingId === org.id}
+                                        className="mt-2 w-full rounded-lg border border-red-200 bg-red-50 py-2 text-sm font-bold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                    >
+                                        {deletingId === org.id ? "Deleting..." : "Delete Assembly"}
                                     </button>
                                 </div>
                             ))}

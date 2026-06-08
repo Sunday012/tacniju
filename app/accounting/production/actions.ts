@@ -113,22 +113,44 @@ export async function saveProductionJournal(formData: FormData) {
   const journalType = String(formData.get("journal_type") || "Production")
   const voucherNo = String(formData.get("voucher_no") || "").trim()
   const batchNo = String(formData.get("batch_no") || "").trim()
-  const narration = String(formData.get("narration") || "").trim()
   const today = new Date().toISOString().slice(0, 10)
 
-  const rows = Array.from({ length: 10 }).flatMap((_, index) => {
-    const result: Array<{ item_id: string; qty: number; movement_type: "IN" | "OUT" }> = []
-    const inItem = String(formData.get(`in_item_${index}`) || "").trim()
+  const rawRows = Array.from({ length: 10 }).flatMap((_, index) => {
+    const result: Array<{ itemRef: string; qty: number; movement_type: "IN" | "OUT" }> = []
+    const inItem = String(formData.get(`in_item_${index}`) || formData.get(`in_item_name_${index}`) || "").trim()
     const inQty = Number(formData.get(`in_qty_${index}`) || 0)
-    const outItem = String(formData.get(`out_item_${index}`) || "").trim()
+    const outItem = String(formData.get(`out_item_${index}`) || formData.get(`out_item_name_${index}`) || "").trim()
     const outQty = Number(formData.get(`out_qty_${index}`) || 0)
 
-    if (inItem && Number.isFinite(inQty) && inQty > 0) result.push({ item_id: inItem, qty: inQty, movement_type: "IN" })
-    if (outItem && Number.isFinite(outQty) && outQty > 0) result.push({ item_id: outItem, qty: outQty, movement_type: "OUT" })
+    if (inItem && Number.isFinite(inQty) && inQty > 0) result.push({ itemRef: inItem, qty: inQty, movement_type: "IN" })
+    if (outItem && Number.isFinite(outQty) && outQty > 0) result.push({ itemRef: outItem, qty: outQty, movement_type: "OUT" })
     return result
   })
 
-  if (rows.length === 0) return
+  if (rawRows.length === 0) return
+
+  const { data: allItems, error: itemsError } = await supabase
+    .from("items")
+    .select("id, name, purchase_rate, selling_rate, source_context, source_asset_id")
+    .eq("org_id", orgId)
+
+  if (itemsError || !allItems?.length) {
+    console.error("Failed to resolve production journal items", itemsError)
+    return
+  }
+
+  const availableItems = allItems.filter(item => item.source_context !== "admin" && !item.source_asset_id)
+  const itemById = new Map(availableItems.map(item => [item.id, item]))
+  const itemByName = new Map(availableItems.map(item => [String(item.name || "").trim().toLowerCase(), item]))
+  const rows = rawRows.flatMap(row => {
+    const item = itemById.get(row.itemRef) || itemByName.get(row.itemRef.toLowerCase())
+    return item ? [{ item_id: item.id, qty: row.qty, movement_type: row.movement_type as "IN" | "OUT" }] : []
+  })
+
+  if (rows.length === 0) {
+    console.error("No matching production items were found for the journal rows.")
+    return
+  }
 
   const prefix = journalType === "Raw Material" ? "RMJ" : "STJ"
   const finalVoucherNo = voucherNo || `${prefix}-${Date.now().toString().slice(-6)}`
@@ -140,7 +162,7 @@ export async function saveProductionJournal(formData: FormData) {
       voucher_no: finalVoucherNo,
       date: today,
       reference: batchNo || null,
-      narration: [journalType, narration].filter(Boolean).join(" - "),
+      narration: journalType,
       created_by: user?.id || null,
     })
     .select("id")
@@ -151,13 +173,7 @@ export async function saveProductionJournal(formData: FormData) {
     return
   }
 
-  const { data: items } = await supabase
-    .from("items")
-    .select("id, purchase_rate, selling_rate")
-    .eq("org_id", orgId)
-    .in("id", rows.map(row => row.item_id))
-
-  const rateMap = new Map((items || []).map(item => [item.id, Number(item.purchase_rate || item.selling_rate || 0)]))
+  const rateMap = new Map(availableItems.map(item => [item.id, Number(item.purchase_rate || item.selling_rate || 0)]))
   const { error: itemError } = await supabase.from("voucher_items").insert(rows.map(row => {
     const rate = rateMap.get(row.item_id) || 0
     return {

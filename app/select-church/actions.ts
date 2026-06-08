@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/server"
 import { redirect } from "next/navigation"
+import { revalidatePath } from "next/cache"
+import { getCurrentAccessProfile, isMainAdmin } from "@/lib/access"
 
 export async function getOrganizations() {
     const supabase = await createClient()
@@ -135,5 +137,43 @@ export async function createChurch(name: string, password?: string) {
     const cookieStore = require('next/headers').cookies()
     cookieStore.set("active_org_id", org.id, { path: "/", maxAge: 2592000 })
 
+    return { success: true }
+}
+
+export async function deleteChurch(orgId: string) {
+    const { supabase, user, profile } = await getCurrentAccessProfile()
+
+    if (!user) {
+        return { error: "You must be logged in to delete an assembly." }
+    }
+
+    const { data: membership } = await supabase
+        .from("org_members")
+        .select("role")
+        .eq("org_id", orgId)
+        .eq("user_id", user.id)
+        .maybeSingle()
+
+    if (!isMainAdmin(profile) && membership?.role !== "admin") {
+        return { error: "Only the assembly admin can delete this assembly." }
+    }
+
+    const { error } = await supabase
+        .from("organizations")
+        .delete()
+        .eq("id", orgId)
+
+    if (error) {
+        console.error("Delete church error:", error)
+        return { error: error.message || "Failed to delete assembly." }
+    }
+
+    const cookieStore = require('next/headers').cookies()
+    if (cookieStore.get("active_org_id")?.value === orgId) {
+        cookieStore.delete("active_org_id")
+    }
+
+    revalidatePath("/select-church")
+    revalidatePath("/accounting")
     return { success: true }
 }

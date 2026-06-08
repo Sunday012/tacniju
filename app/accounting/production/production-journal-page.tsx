@@ -27,15 +27,7 @@ export async function ProductionJournalPage({
     <AccountingShell title={title} backHref="/accounting/production" backLabel="Production" framed={false}>
       <form action={saveProductionJournal} className="rounded-[2rem] border border-white/70 bg-white/85 p-5 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] backdrop-blur-3xl sm:p-7">
         <input type="hidden" name="journal_type" value={journalType} />
-        <div className="mb-6 flex flex-col gap-5 border-b border-slate-200 pb-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex items-start gap-4">
-            <div className="h-11 w-11 rounded-lg border border-slate-200 bg-slate-50" />
-            <div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-900">{title}</h1>
-              <p className="mt-1 text-sm font-bold text-slate-500">Production</p>
-            </div>
-          </div>
-
+        <div className="mb-6 flex justify-end border-b border-slate-200 pb-5">
           <div className="grid w-full min-w-0 gap-3 sm:grid-cols-2 lg:max-w-[420px]">
             <label className="grid min-w-0 gap-1.5 text-xs font-black uppercase tracking-widest text-slate-500">
               Voucher No
@@ -70,6 +62,9 @@ export async function ProductionJournalPage({
               <JournalSide title={leftSide.title} icon={leftSide.icon} prefix={leftSide.prefix} items={items} />
               <JournalSide title={rightSide.title} icon={rightSide.icon} prefix={rightSide.prefix} items={items} />
             </div>
+            <datalist id="production-item-options">
+              {items.map(item => <option key={item.id} value={item.name} />)}
+            </datalist>
 
             <div className="grid gap-4 border-x border-b border-slate-200 bg-white p-4 lg:grid-cols-2">
               <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
@@ -80,11 +75,6 @@ export async function ProductionJournalPage({
                 <span className="text-sm font-black uppercase tracking-widest text-slate-500">Total</span>
                 <input className="h-9 w-32 rounded-lg border border-slate-200 bg-white px-3 text-right text-sm font-bold text-slate-700 outline-none focus:border-indigo-300" />
               </div>
-            </div>
-
-            <div className="mt-5 grid gap-2">
-              <label className="text-sm font-black uppercase tracking-widest text-slate-500">Narration</label>
-              <textarea name="narration" className="min-h-24 rounded-2xl border border-slate-200 bg-white p-4 text-sm font-medium text-slate-700 outline-none focus:border-indigo-300" />
             </div>
 
             <div className="mt-6 flex justify-end">
@@ -116,10 +106,12 @@ function JournalSide({ title, icon, prefix, items }: { title: string; icon: "in"
       <div>
         {entryRows.map(row => (
           <div key={row} className="grid grid-cols-[minmax(0,1fr)_120px] border-b border-slate-100 last:border-b-0">
-            <select name={`${prefix}_item_${row}`} className="h-11 min-w-0 bg-white px-4 text-sm font-medium text-slate-700 outline-none focus:bg-indigo-50/50">
-              <option value="">Select item</option>
-              {items.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
-            </select>
+            <input
+              name={`${prefix}_item_name_${row}`}
+              list="production-item-options"
+              className="h-11 min-w-0 bg-white px-4 text-sm font-medium text-slate-700 outline-none focus:bg-indigo-50/50"
+              autoComplete="off"
+            />
             <input name={`${prefix}_qty_${row}`} type="number" min="0" step="0.01" className="h-11 border-l border-slate-100 px-4 text-right text-sm font-bold text-slate-700 outline-none focus:bg-indigo-50/50" />
           </div>
         ))}
