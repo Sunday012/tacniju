@@ -74,10 +74,10 @@ export const displayMenuItems: DisplayMenuItem[] = [
     slug: "statement-of-inventory",
     children: [
       { label: "Category Summary", icon: FolderTree, href: "/accounting/stock-summary" },
-      { label: "Sales Bill Pending", icon: Receipt, href: "/accounting/vouchers/sales" },
-      { label: "Purchase Bill Pending", icon: Receipt, href: "/accounting/vouchers/purchase" },
-      { label: "Non Allocated Payment", icon: Receipt, href: "/accounting/vouchers/payment" },
-      { label: "Expense Bill Pending", icon: Receipt, href: "/accounting/vouchers/expense" },
+      { label: "Sales Bill Pending", icon: Receipt, href: "/accounting/display/bill-pending/sales" },
+      { label: "Purchase Bill Pending", icon: Receipt, href: "/accounting/display/bill-pending/purchase" },
+      { label: "Non Allocated Payment", icon: Receipt, href: "/accounting/display/bill-pending/payment" },
+      { label: "Expense Bill Pending", icon: Receipt, href: "/accounting/display/bill-pending/expense" },
     ],
   },
   {
