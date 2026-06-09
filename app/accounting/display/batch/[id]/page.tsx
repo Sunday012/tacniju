@@ -3,7 +3,7 @@ import { Save } from "lucide-react"
 import { AccountingShell } from "@/components/accounting/accounting-shell"
 import { getItems } from "@/app/inventory/actions"
 import { getBatch, saveBatch } from "../actions"
-import { BatchForm, SubmitButton } from "./batch-form"
+import { BatchForm, DeleteBatchForm, SubmitButton } from "./batch-form"
 
 export default async function BatchFormPage({ params }: { params: { id: string } }) {
   const [items, batch] = await Promise.all([
