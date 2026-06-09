@@ -127,9 +127,6 @@ export function VoucherEntry({
     })
     const [ledgerLabels, setLedgerLabels] = useState<Record<string, string>>({})
     const [managedLedgerIndex, setManagedLedgerIndex] = useState<number | null>(null)
-    // Percentage charge/discount ledger (Sales/Purchase): a ledger line computed as % of the item subtotal.
-    const [pctLedgerId, setPctLedgerId] = useState("")
-    const [pctValue, setPctValue] = useState<number>(0)
     // Offset: mark party/ledger lines to settle against the party balance (bill-wise "On Account").
     // Sales is always offset against the party, without showing the toggle.
     const [offsetEnabled, setOffsetEnabled] = useState(false)
@@ -375,6 +372,24 @@ export function VoucherEntry({
         setSelectedLedgers(updated)
     }
 
+    // Invoice mode (Sales/Purchase) additional ledgers: edit ledger + a single amount.
+    // index === selectedLedgers.length means the trailing blank row, which appends a new line.
+    // Sales credits the amount (extra income); Purchase debits it (extra cost).
+    function updateInvoiceLedger(index: number, field: string, value: any) {
+        const updated = [...selectedLedgers]
+        if (index >= updated.length) {
+            updated.push({ ledger_id: "", amount: 0, debit_amount: 0, credit_amount: 0, forceVisible: true })
+        }
+        updated[index] = { ...updated[index], [field]: value }
+        if (field === 'amount') {
+            const amt = Number(value) || 0
+            const isCredit = voucherType === "Sales"
+            updated[index].debit_amount = isCredit ? 0 : amt
+            updated[index].credit_amount = isCredit ? amt : 0
+        }
+        setSelectedLedgers(updated)
+    }
+
     async function handlePartyChange(partyId: string) {
         setSelectedPartyId(partyId)
         if (!partyId) return
@@ -425,33 +440,6 @@ export function VoucherEntry({
 
     function removeLedgerLine(index: number) {
         setSelectedLedgers(selectedLedgers.filter((_, idx) => idx !== index))
-    }
-
-    // Add a percentage charge/discount ledger line computed from the item subtotal.
-    // Sales credits the charge (extra income); Purchase debits it (extra cost).
-    function applyPercentageLedger() {
-        if (!pctLedgerId || !pctValue) {
-            toast.error("Pick a ledger and a percentage first.")
-            return
-        }
-        const charge = Number(((itemsSubtotal * pctValue) / 100).toFixed(2))
-        const isCredit = voucherType === "Sales"
-        setSelectedLedgers([
-            ...selectedLedgers,
-            {
-                ledger_id: pctLedgerId,
-                amount: charge,
-                debit_amount: isCredit ? 0 : charge,
-                credit_amount: isCredit ? charge : 0,
-                forceVisible: true,
-            },
-        ])
-        setLedgerLabels(prev => {
-            const rec = ledgers.find(l => l.id === pctLedgerId)
-            return rec ? { ...prev, [pctLedgerId]: `${buildLedgerLabel(rec)} (${pctValue}%)` } : prev
-        })
-        setPctLedgerId("")
-        setPctValue(0)
     }
 
     function handleLedgerKeyDown(e: React.KeyboardEvent, index: number, field: string) {
@@ -723,56 +711,47 @@ export function VoucherEntry({
                                     </TableBody>
                                 </Table>
 
-                                {/* Inline Additional Ledgers for Invoice Mode */}
-                                {isInvoiceMode && selectedLedgers.length > 0 && (
+                                {/* Add Item */}
+                                <div className="flex items-center border-t border-slate-200 bg-slate-50/50 p-2">
+                                    <Button type="button" variant="outline" size="sm" onClick={addItemLine} className="gap-2 h-8">
+                                        <Plus className="h-4 w-4" /> Add Item
+                                    </Button>
+                                </div>
+
+                                {/* Inline Additional Ledgers for Invoice Mode: two-column input (ledger left, amount right) */}
+                                {isInvoiceMode && (
                                     <div className="border-t-2 border-slate-200 bg-slate-50">
-                                        {selectedLedgers.map((sl, idx) => (
-                                            <div key={`add-ledger-${idx}`} className="flex h-9 items-center border-b border-slate-100">
-                                                <div className="flex-1 px-4 text-right text-sm font-semibold text-slate-600">
-                                                    {ledgerLabels[sl.ledger_id] || ledgers.find(l => l.id === sl.ledger_id)?.name}
+                                        <div className="flex items-stretch border-b border-slate-200 bg-slate-100/70 text-xs font-black uppercase tracking-wider text-slate-500">
+                                            <div className="flex-1 border-r border-slate-200 px-4 py-2">Add Ledger</div>
+                                            <div className="w-[200px] px-4 py-2 text-right">Amount</div>
+                                            <div className="w-10" />
+                                        </div>
+                                        {[...selectedLedgers, { ledger_id: "", amount: 0 }].map((sl, idx) => (
+                                            <div key={`add-ledger-${idx}`} className="flex items-stretch border-b border-slate-100">
+                                                <div className="flex flex-1 items-center border-r border-slate-200 px-2 py-2">
+                                                    <ComboboxInput
+                                                        value={sl.ledger_id}
+                                                        onChange={(val) => updateInvoiceLedger(idx, 'ledger_id', val)}
+                                                        options={detailLedgerOptions}
+                                                        placeholder="Charge / discount ledger..."
+                                                        className="h-9 w-full"
+                                                        inputClassName="bg-transparent border-transparent hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-none h-9 px-2"
+                                                    />
                                                 </div>
-                                                <div className="w-[120px] px-2 text-right text-sm text-slate-700">
-                                                    {voucherType === "Sales" ? (sl.credit_amount - sl.debit_amount >= 0 ? "" : "-") : (sl.debit_amount - sl.credit_amount >= 0 ? "" : "-")}
-                                                    {Math.abs(voucherType === "Sales" ? sl.credit_amount - sl.debit_amount : sl.debit_amount - sl.credit_amount).toFixed(2)}
+                                                <div className="flex w-[200px] items-center px-2 py-2">
+                                                    <input type="number" min="0" step="0.01" value={sl.amount || ""} onChange={e => updateInvoiceLedger(idx, 'amount', parseFloat(e.target.value) || 0)} placeholder="0.00" className={`${invisibleInputClass} h-9 text-base font-bold`} />
                                                 </div>
-                                                <div className="w-8 text-center">
-                                                    <button type="button" onClick={() => removeLedgerLine(idx)} className="text-slate-300 hover:text-red-500">
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
+                                                <div className="flex w-10 items-center justify-center">
+                                                    {idx < selectedLedgers.length && (
+                                                        <button type="button" onClick={() => removeLedgerLine(idx)} className="text-slate-300 hover:text-red-500">
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 )}
-
-                                <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/50 p-2 sm:flex-row sm:items-center sm:justify-between">
-                                    <Button type="button" variant="outline" size="sm" onClick={addItemLine} className="gap-2 h-8">
-                                        <Plus className="h-4 w-4" /> Add Item
-                                    </Button>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs font-bold text-slate-500">Add ledger</span>
-                                        <div className="w-56">
-                                            <ComboboxInput
-                                                value={pctLedgerId}
-                                                onChange={setPctLedgerId}
-                                                options={detailLedgerOptions}
-                                                placeholder="Charge / discount ledger..."
-                                                className="h-8"
-                                                inputClassName="border-slate-300 h-8"
-                                            />
-                                        </div>
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            value={pctValue || ""}
-                                            onChange={e => setPctValue(parseFloat(e.target.value) || 0)}
-                                            placeholder="%"
-                                            className="h-8 w-20 rounded-md border border-slate-300 px-2 text-right text-sm"
-                                        />
-                                        <span className="text-xs text-slate-400">% of {itemsSubtotal.toLocaleString()}</span>
-                                        <Button type="button" variant="outline" size="sm" onClick={applyPercentageLedger} className="h-8">Add</Button>
-                                    </div>
-                                </div>
                             </div>
                         )}
 
