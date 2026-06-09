@@ -65,7 +65,7 @@ export const displayMenuItems: DisplayMenuItem[] = [
       { label: "Stock Item", icon: Package, href: "/accounting/inventory" },
       { label: "Category", icon: FolderTree, href: "/accounting/production/inventory/categories" },
       { label: "Physical Stock Register", icon: BookOpen, href: "/accounting/production/reports/stock" },
-      { label: "Batch", icon: Boxes, href: "/accounting/production/stock-journal" },
+      { label: "Batch", icon: Boxes, href: "/accounting/display/batch" },
     ],
   },
   {

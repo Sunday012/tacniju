@@ -34,9 +34,9 @@ const heroStyles: Record<VoucherType, { className: string; eyebrowClassName: str
     badgeClassName: "text-blue-700",
   },
   Purchase: {
-    className: "bg-gradient-to-br from-blue-500 via-sky-500 to-indigo-600",
-    eyebrowClassName: "text-blue-100",
-    badgeClassName: "text-blue-700",
+    className: "bg-gradient-to-br from-emerald-500 via-teal-500 to-green-600",
+    eyebrowClassName: "text-emerald-100",
+    badgeClassName: "text-emerald-700",
   },
   Expense: {
     className: "bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-600",

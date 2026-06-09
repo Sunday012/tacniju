@@ -114,7 +114,17 @@ export function VoucherEntry({
     const initialLedgerState = buildInitialLedgerState(initialVoucher, initialType, ledgers)
     const [selectedLedgers, setSelectedLedgers] = useState<any[]>(initialLedgerState.selectedLedgers)
     const [masterLedgerId, setMasterLedgerId] = useState<string>(initialLedgerState.masterLedgerId)
-    const [selectedPartyId, setSelectedPartyId] = useState("")
+    // In Sales/Purchase, infer the main Sales/Purchase ledger if editing
+    const inferredInvoiceLedger = (initialType === "Sales" || initialType === "Purchase") && initialVoucher?.voucher_entries
+        ? initialVoucher.voucher_entries.find((e: any) => e.ledger_id !== initialVoucher.voucher_entries[0]?.ledger_id)?.ledger_id
+        : ""
+    const [invoiceLedgerId, setInvoiceLedgerId] = useState<string>(inferredInvoiceLedger || "")
+    const [selectedPartyId, setSelectedPartyId] = useState(() => {
+        if ((initialType === "Sales" || initialType === "Purchase") && initialVoucher?.voucher_entries?.length > 0) {
+            return initialVoucher.voucher_entries[0].ledger_id
+        }
+        return ""
+    })
     const [ledgerLabels, setLedgerLabels] = useState<Record<string, string>>({})
     const [managedLedgerIndex, setManagedLedgerIndex] = useState<number | null>(null)
     // Percentage charge/discount ledger (Sales/Purchase): a ledger line computed as % of the item subtotal.
@@ -147,8 +157,9 @@ export function VoucherEntry({
                 e.preventDefault();
                 setVoucherType(newType);
                 setSelectedItems(newType === 'Sales' || newType === 'Purchase' ? [{ item_id: "", qty: 1, rate: 0, amount: 0 }] : []);
-                setSelectedLedgers([{ ledger_id: "", amount: 0, debit_amount: 0, credit_amount: 0 }]);
+                setSelectedLedgers(newType === 'Sales' || newType === 'Purchase' ? [] : [{ ledger_id: "", amount: 0, debit_amount: 0, credit_amount: 0 }]);
                 setMasterLedgerId("");
+                setInvoiceLedgerId("");
             }
         }
         window.addEventListener('keydown', handleKeyDown, { capture: true })
@@ -170,16 +181,37 @@ export function VoucherEntry({
     const isPaymentLike = voucherType === "Payment" || voucherType === "Expense"
     const isReceiptLike = voucherType === "Receipt" || voucherType === "Income" || voucherType === "Program"
     const isSingleEntry = isPaymentLike || isReceiptLike || voucherType === "Contra"
+    const isInvoiceMode = voucherType === "Sales" || voucherType === "Purchase"
     // Sales is always offset against the party; other types offset only when the user ticks it.
     const offsetActive = voucherType === "Sales" ? true : offsetEnabled
 
+    const itemsSubtotal = selectedItems.reduce((sum, item) => sum + (item.amount || 0), 0)
     const totalDebit = selectedLedgers.reduce((sum, l) => sum + (l.debit_amount || 0), 0)
     const totalCredit = selectedLedgers.reduce((sum, l) => sum + (l.credit_amount || 0), 0)
     const totalAmount = selectedLedgers.reduce((sum, l) => sum + (l.amount || 0), 0)
 
+    // Auto-balance logic for invoice mode (calculating total debit/credit)
+    let invoiceAdditionalNet = 0
+    if (isInvoiceMode) {
+        // Evaluate additional ledgers (+ or -)
+        selectedLedgers.forEach(l => {
+            if (l.ledger_id) {
+                if (voucherType === "Sales") {
+                    invoiceAdditionalNet += l.credit_amount - l.debit_amount
+                } else {
+                    invoiceAdditionalNet += l.debit_amount - l.credit_amount
+                }
+            }
+        })
+    }
+    const invoiceTotal = itemsSubtotal + invoiceAdditionalNet
+
+
     const isBalanced = isSingleEntry
         ? (masterLedgerId !== "" && totalAmount > 0)
-        : (totalDebit === totalCredit && totalDebit > 0)
+        : isInvoiceMode
+            ? (selectedPartyId !== "" && invoiceLedgerId !== "" && itemsSubtotal > 0)
+            : (totalDebit === totalCredit && totalDebit > 0)
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
@@ -210,6 +242,29 @@ export function VoucherEntry({
                     adjustment_method: line.adjustment_method || (offsetActive && !isCashBankLine ? "On Account" : undefined),
                     adjustment_reference: line.adjustment_reference,
                     due_date: line.due_date,
+                })
+            })
+        } else if (isInvoiceMode) {
+            if (!selectedPartyId) return toast.error("Please select a Party.")
+            if (!invoiceLedgerId) return toast.error(`Please select a ${voucherType} Account.`)
+            if (itemsSubtotal <= 0) return toast.error("Please enter at least one valid item.")
+
+            const partyLedgerId = ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId
+
+            if (voucherType === "Sales") {
+                finalLedgers.push({ ledger_id: partyLedgerId, debit_amount: invoiceTotal, credit_amount: 0, adjustment_method: "On Account" })
+                finalLedgers.push({ ledger_id: invoiceLedgerId, debit_amount: 0, credit_amount: itemsSubtotal })
+            } else {
+                finalLedgers.push({ ledger_id: partyLedgerId, debit_amount: 0, credit_amount: invoiceTotal, adjustment_method: "On Account" })
+                finalLedgers.push({ ledger_id: invoiceLedgerId, debit_amount: itemsSubtotal, credit_amount: 0 })
+            }
+
+            // Push additional ledgers
+            selectedLedgers.filter(l => l.ledger_id).forEach(line => {
+                finalLedgers.push({
+                    ledger_id: line.ledger_id,
+                    debit_amount: line.debit_amount || 0,
+                    credit_amount: line.credit_amount || 0,
                 })
             })
         } else {
@@ -251,10 +306,11 @@ export function VoucherEntry({
                 setNarration("")
                 setReference("")
                 setMasterLedgerId("")
+                setInvoiceLedgerId("")
                 setSelectedPartyId("")
                 setManagedLedgerIndex(null)
                 setSelectedItems(needsItems ? [{ item_id: "", qty: 1, rate: 0, amount: 0 }] : [])
-                setSelectedLedgers([{ ledger_id: "", amount: 0, debit_amount: 0, credit_amount: 0 }])
+                setSelectedLedgers(isInvoiceMode ? [] : [{ ledger_id: "", amount: 0, debit_amount: 0, credit_amount: 0 }])
             }
             router.refresh()
         } catch (error) {
@@ -335,12 +391,14 @@ export function VoucherEntry({
                     : selectedParty.name
                 : "Selected party"
             const updated = [...selectedLedgers]
-            updated[0] = {
-                ...updated[0],
-                ledger_id: ledgerId,
-                display_label: partyLabel,
+            if (!isInvoiceMode && updated.length > 0) {
+                updated[0] = {
+                    ...updated[0],
+                    ledger_id: ledgerId,
+                    display_label: partyLabel,
+                }
+                setSelectedLedgers(updated)
             }
-            setSelectedLedgers(updated)
             setLedgerLabels(previous => ({ ...previous, [ledgerId]: partyLabel }))
             router.refresh()
         } catch (error: any) {
@@ -365,7 +423,9 @@ export function VoucherEntry({
         ])
     }
 
-    const itemsSubtotal = selectedItems.reduce((sum, item) => sum + (item.amount || 0), 0)
+    function removeLedgerLine(index: number) {
+        setSelectedLedgers(selectedLedgers.filter((_, idx) => idx !== index))
+    }
 
     // Add a percentage charge/discount ledger line computed from the item subtotal.
     // Sales credits the charge (extra income); Purchase debits it (extra cost).
@@ -419,14 +479,14 @@ export function VoucherEntry({
     // Keep voucher color only for the primary action button; the form itself
     // stays neutral across every voucher type.
     const themes = {
-        Payment:  { button: "bg-amber-500 hover:bg-amber-400" },
-        Receipt:  { button: "bg-red-500 hover:bg-red-400" },
-        Sales:    { button: "bg-blue-600 hover:bg-blue-500" },
-        Purchase: { button: "bg-blue-600 hover:bg-blue-500" },
-        Expense:  { button: "bg-amber-500 hover:bg-amber-400" },
-        Income:   { button: "bg-amber-500 hover:bg-amber-400" },
-        Contra:   { button: "bg-slate-900 hover:bg-slate-800" },
-        Program:  { button: "bg-indigo-600 hover:bg-indigo-500" },
+        Payment: { button: "bg-amber-500 hover:bg-amber-400" },
+        Receipt: { button: "bg-red-500 hover:bg-red-400" },
+        Sales: { button: "bg-blue-600 hover:bg-blue-500" },
+        Purchase: { button: "bg-emerald-600 hover:bg-emerald-500" },
+        Expense: { button: "bg-amber-500 hover:bg-amber-400" },
+        Income: { button: "bg-amber-500 hover:bg-amber-400" },
+        Contra: { button: "bg-slate-900 hover:bg-slate-800" },
+        Program: { button: "bg-indigo-600 hover:bg-indigo-500" },
     } as const
     const theme = themes[voucherType]
 
@@ -492,7 +552,7 @@ export function VoucherEntry({
         ledger.debit_amount > 0 ||
         ledger.credit_amount > 0
     ))
-    const showLedgerRows = !isSingleEntry || masterLedgerId || selectedPartyId || hasVisibleLedgerRows
+    const showLedgerRows = (!isSingleEntry && !isInvoiceMode) || masterLedgerId || (!isInvoiceMode && selectedPartyId) || hasVisibleLedgerRows
 
     return (
         <div className="w-full">
@@ -561,7 +621,7 @@ export function VoucherEntry({
                     )}
 
                     {voucherType !== "Contra" && (
-                        <div className="mt-3">
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
                             <div className="flex flex-col gap-2 rounded-md border border-slate-200 bg-white p-2 sm:flex-row sm:items-center sm:gap-3">
                                 <Label className="font-bold text-slate-700 shrink-0 sm:w-24">Party</Label>
                                 <div className="w-full flex-1">
@@ -577,13 +637,31 @@ export function VoucherEntry({
                                         inputClassName="border-slate-300"
                                     />
                                 </div>
-                                {formatBalance(selectedLedgers[0]?.ledger_id) && (
+                                {formatBalance(!isInvoiceMode ? selectedLedgers[0]?.ledger_id : (ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId)) && (
                                     <div className="shrink-0 text-left sm:text-right">
                                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Bal </span>
-                                        <span className="text-sm font-bold text-slate-700">{formatBalance(selectedLedgers[0]?.ledger_id)}</span>
+                                        <span className="text-sm font-bold text-slate-700">{formatBalance(!isInvoiceMode ? selectedLedgers[0]?.ledger_id : (ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId))}</span>
                                     </div>
                                 )}
                             </div>
+
+                            {isInvoiceMode && (
+                                <div className="flex flex-col gap-2 rounded-md border border-slate-200 bg-white p-2 sm:flex-row sm:items-center sm:gap-3">
+                                    <Label className="font-bold text-slate-700 shrink-0 sm:w-24">
+                                        {voucherType === "Sales" ? "Sales A/c" : "Purchase A/c"}
+                                    </Label>
+                                    <div className="w-full flex-1">
+                                        <ComboboxInput
+                                            value={invoiceLedgerId}
+                                            onChange={setInvoiceLedgerId}
+                                            options={detailLedgerOptions}
+                                            placeholder={`Select ${voucherType.toLowerCase()} account...`}
+                                            className="h-10 w-full"
+                                            inputClassName="border-slate-300"
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -609,40 +687,64 @@ export function VoucherEntry({
                                         {selectedItems.map((pi, idx) => {
                                             const itemDef = items.find(i => i.id === pi.item_id)
                                             return (
-                                            <TableRow key={`item-${idx}`} className="h-10 border-b-slate-100 hover:bg-slate-50/60">
-                                                <TableCell className="p-1 relative group">
-                                                    <ComboboxInput
-                                                        value={pi.item_id}
-                                                        onChange={(val) => updateItem(idx, 'item_id', val)}
-                                                        options={items.map(i => ({ value: i.id, label: i.name }))}
-                                                        placeholder="Type item..."
-                                                        className="h-8"
-                                                        inputClassName="h-8 bg-transparent border-transparent px-2 shadow-none hover:border-slate-300 focus:border-slate-400 focus:ring-1 focus:ring-slate-300"
-                                                    />
-                                                </TableCell>
-                                                <TableCell className="p-1">
-                                                    <input type="number" min="0" step="0.01" value={pi.qty || ""} onChange={e => updateItem(idx, 'qty', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleItemKeyDown(e, idx, 'qty')} className={invisibleInputClass} />
-                                                </TableCell>
-                                                <TableCell className="p-1">
-                                                    <input type="number" min="0" step="0.01" value={pi.rate || ""} onChange={e => updateItem(idx, 'rate', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleItemKeyDown(e, idx, 'rate')} className={invisibleInputClass} />
-                                                </TableCell>
-                                                <TableCell className="p-1 text-sm font-semibold text-slate-500">
-                                                    {itemDef?.unit || "—"}
-                                                </TableCell>
-                                                <TableCell className="p-1">
-                                                    <input type="number" min="0" step="0.01" value={pi.amount || ""} onChange={e => updateItem(idx, 'amount', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleItemKeyDown(e, idx, 'amount')} className={invisibleInputClass} readOnly />
-                                                </TableCell>
-                                                <TableCell className="p-1 text-center">
-                                                    {selectedItems.length > 1 && (
-                                                        <button type="button" onClick={() => removeItem(idx)} className="text-slate-300 hover:text-red-500">
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </button>
-                                                    )}
-                                                </TableCell>
-                                            </TableRow>
-                                        )})}
+                                                <TableRow key={`item-${idx}`} className="h-10 border-b-slate-100 hover:bg-slate-50/60">
+                                                    <TableCell className="p-1 relative group">
+                                                        <ComboboxInput
+                                                            value={pi.item_id}
+                                                            onChange={(val) => updateItem(idx, 'item_id', val)}
+                                                            options={items.map(i => ({ value: i.id, label: i.name }))}
+                                                            placeholder="Type item..."
+                                                            className="h-8"
+                                                            inputClassName="h-8 bg-transparent border-transparent px-2 shadow-none hover:border-slate-300 focus:border-slate-400 focus:ring-1 focus:ring-slate-300"
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell className="p-1">
+                                                        <input type="number" min="0" step="0.01" value={pi.qty || ""} onChange={e => updateItem(idx, 'qty', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleItemKeyDown(e, idx, 'qty')} className={invisibleInputClass} />
+                                                    </TableCell>
+                                                    <TableCell className="p-1">
+                                                        <input type="number" min="0" step="0.01" value={pi.rate || ""} onChange={e => updateItem(idx, 'rate', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleItemKeyDown(e, idx, 'rate')} className={invisibleInputClass} />
+                                                    </TableCell>
+                                                    <TableCell className="p-1 text-sm font-semibold text-slate-500">
+                                                        {itemDef?.unit || "—"}
+                                                    </TableCell>
+                                                    <TableCell className="p-1">
+                                                        <input type="number" min="0" step="0.01" value={pi.amount || ""} onChange={e => updateItem(idx, 'amount', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleItemKeyDown(e, idx, 'amount')} className={invisibleInputClass} readOnly />
+                                                    </TableCell>
+                                                    <TableCell className="p-1 text-center">
+                                                        {selectedItems.length > 1 && (
+                                                            <button type="button" onClick={() => removeItem(idx)} className="text-slate-300 hover:text-red-500">
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </button>
+                                                        )}
+                                                    </TableCell>
+                                                </TableRow>
+                                            )
+                                        })}
                                     </TableBody>
                                 </Table>
+
+                                {/* Inline Additional Ledgers for Invoice Mode */}
+                                {isInvoiceMode && selectedLedgers.length > 0 && (
+                                    <div className="border-t-2 border-slate-200 bg-slate-50">
+                                        {selectedLedgers.map((sl, idx) => (
+                                            <div key={`add-ledger-${idx}`} className="flex h-9 items-center border-b border-slate-100">
+                                                <div className="flex-1 px-4 text-right text-sm font-semibold text-slate-600">
+                                                    {ledgerLabels[sl.ledger_id] || ledgers.find(l => l.id === sl.ledger_id)?.name}
+                                                </div>
+                                                <div className="w-[120px] px-2 text-right text-sm text-slate-700">
+                                                    {voucherType === "Sales" ? (sl.credit_amount - sl.debit_amount >= 0 ? "" : "-") : (sl.debit_amount - sl.credit_amount >= 0 ? "" : "-")}
+                                                    {Math.abs(voucherType === "Sales" ? sl.credit_amount - sl.debit_amount : sl.debit_amount - sl.credit_amount).toFixed(2)}
+                                                </div>
+                                                <div className="w-8 text-center">
+                                                    <button type="button" onClick={() => removeLedgerLine(idx)} className="text-slate-300 hover:text-red-500">
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
                                 <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50/50 p-2 sm:flex-row sm:items-center sm:justify-between">
                                     <Button type="button" variant="outline" size="sm" onClick={addItemLine} className="gap-2 h-8">
                                         <Plus className="h-4 w-4" /> Add Item
@@ -661,7 +763,6 @@ export function VoucherEntry({
                                         </div>
                                         <input
                                             type="number"
-                                            min="0"
                                             step="0.01"
                                             value={pctValue || ""}
                                             onChange={e => setPctValue(parseFloat(e.target.value) || 0)}
@@ -675,159 +776,165 @@ export function VoucherEntry({
                             </div>
                         )}
 
-                        {/* LEDGER TABLE (For all vouchers) */}
-                        <div className="rounded-md border border-slate-200 overflow-hidden">
-                            <Table>
-                                <TableHeader className="bg-slate-50">
-                                    <TableRow className="border-b-slate-200">
-                                        <TableHead className={`${isSingleEntry ? 'w-[50%]' : 'w-[40%]'} text-slate-500 font-semibold h-9 px-2`}>
-                                            {isSingleEntry ? "Party / Ledger" : "Ledger"}
-                                        </TableHead>
-                                        {isSingleEntry && (
-                                            <>
-                                                <TableHead className="text-slate-500 font-semibold h-9 px-2">Manage</TableHead>
-                                                <TableHead className="text-right text-slate-500 font-semibold h-9 px-4">Amount</TableHead>
-                                            </>
-                                        )}
-                                        {!isSingleEntry && (
-                                            <>
-                                                <TableHead className="text-right text-slate-500 font-semibold h-9 px-4">Debit</TableHead>
-                                                <TableHead className="text-right text-slate-500 font-semibold h-9 px-4">Credit</TableHead>
-                                            </>
-                                        )}
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {showLedgerRows ? selectedLedgers
-                                      .map((sl, index) => ({ sl, index }))
-                                      .filter(({ sl, index }) => index === 0 || sl.forceVisible || sl.ledger_id || sl.amount > 0 || sl.debit_amount > 0 || sl.credit_amount > 0)
-                                      .map(({ sl, index }) => (
-                                        <TableRow key={`ledger-${index}`} className="h-10 border-b-slate-100 hover:bg-slate-50/60">
-                                            <TableCell className="p-1 relative group">
-                                                {sl.display_label || ledgerLabels[sl.ledger_id] ? (
-                                                    <div className="flex h-8 items-center rounded-md px-2 font-semibold text-slate-700">
-                                                        {sl.display_label || ledgerLabels[sl.ledger_id]}
-                                                    </div>
-                                                ) : (
-                                                    <ComboboxInput
-                                                        value={sl.ledger_id}
-                                                        onChange={(val) => updateLedger(index, 'ledger_id', val)}
-                                                        options={detailLedgerOptions}
-                                                        placeholder={detailLedgerOptions.length > 0 ? detailPlaceholder : "Select party above or create a ledger in Accounts Info"}
-                                                        className="h-8"
-                                                        inputClassName="bg-transparent border-transparent hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-none h-8 px-2"
-                                                    />
-                                                )}
-                                                {formatBalance(sl.ledger_id) && (
-                                                    <p className="px-2 text-[11px] font-semibold text-slate-400">Current Bal: {formatBalance(sl.ledger_id)}</p>
-                                                )}
-                                            </TableCell>
+                        {/* LEDGER TABLE (For all vouchers except Invoice Mode) */}
+                        {!isInvoiceMode && (
+                            <div className="rounded-md border border-slate-200 overflow-hidden">
+                                <Table>
+                                    <TableHeader className="bg-slate-50">
+                                        <TableRow className="border-b-slate-200">
+                                            <TableHead className={`${isSingleEntry ? 'w-[50%]' : 'w-[40%]'} text-slate-500 font-semibold h-9 px-2`}>
+                                                {isSingleEntry ? "Party / Ledger" : "Ledger"}
+                                            </TableHead>
                                             {isSingleEntry && (
                                                 <>
-                                                    <TableCell className="p-1">
-                                                        {sl.ledger_id && (!ledgers.find(l => l.id === sl.ledger_id)?.is_cash_bank) ? (
-                                                            <Button
-                                                                type="button"
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => openBillWiseManager(index)}
-                                                                className="h-8 px-3 text-xs font-bold"
-                                                            >
-                                                                Manage
-                                                            </Button>
-                                                        ) : <span className="px-2 text-slate-300">-</span>}
-                                                        {sl.adjustment_method && (
-                                                            <span className="ml-2 text-xs font-semibold text-slate-400">
-                                                                {sl.adjustment_method}
-                                                            </span>
-                                                        )}
-                                                    </TableCell>
-                                                    <TableCell className="p-1">
-                                                        <input type="number" min="0" step="0.01" value={sl.amount || ""} onChange={e => updateLedger(index, 'amount', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleLedgerKeyDown(e, index, 'amount')} className={invisibleInputClass} />
-                                                    </TableCell>
+                                                    <TableHead className="text-slate-500 font-semibold h-9 px-2">Manage</TableHead>
+                                                    <TableHead className="text-right text-slate-500 font-semibold h-9 px-4">Amount</TableHead>
                                                 </>
                                             )}
                                             {!isSingleEntry && (
                                                 <>
-                                                    <TableCell className="p-1">
-                                                        <input type="number" min="0" step="0.01" value={sl.debit_amount || ""} onChange={e => updateLedger(index, 'debit_amount', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleLedgerKeyDown(e, index, 'debit_amount')} className={invisibleInputClass} disabled={sl.credit_amount > 0} />
-                                                    </TableCell>
-                                                    <TableCell className="p-1">
-                                                        <input type="number" min="0" step="0.01" value={sl.credit_amount || ""} onChange={e => updateLedger(index, 'credit_amount', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleLedgerKeyDown(e, index, 'credit_amount')} className={invisibleInputClass} disabled={sl.debit_amount > 0} />
-                                                    </TableCell>
+                                                    <TableHead className="text-right text-slate-500 font-semibold h-9 px-4">Debit</TableHead>
+                                                    <TableHead className="text-right text-slate-500 font-semibold h-9 px-4">Credit</TableHead>
                                                 </>
                                             )}
                                         </TableRow>
-                                    )) : (
-                                        <TableRow>
-                                            <TableCell colSpan={3} className="h-24 text-center text-slate-400">
-                                                Select an account or party above to begin entries
-                                            </TableCell>
-                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {showLedgerRows ? selectedLedgers
+                                            .map((sl, index) => ({ sl, index }))
+                                            .filter(({ sl, index }) => index === 0 || sl.forceVisible || sl.ledger_id || sl.amount > 0 || sl.debit_amount > 0 || sl.credit_amount > 0)
+                                            .map(({ sl, index }) => (
+                                                <TableRow key={`ledger-${index}`} className="h-10 border-b-slate-100 hover:bg-slate-50/60">
+                                                    <TableCell className="p-1 relative group">
+                                                        {sl.display_label || ledgerLabels[sl.ledger_id] ? (
+                                                            <div className="flex h-8 items-center rounded-md px-2 font-semibold text-slate-700">
+                                                                {sl.display_label || ledgerLabels[sl.ledger_id]}
+                                                            </div>
+                                                        ) : (
+                                                            <ComboboxInput
+                                                                value={sl.ledger_id}
+                                                                onChange={(val) => updateLedger(index, 'ledger_id', val)}
+                                                                options={detailLedgerOptions}
+                                                                placeholder={detailLedgerOptions.length > 0 ? detailPlaceholder : "Select party above or create a ledger in Accounts Info"}
+                                                                className="h-8"
+                                                                inputClassName="bg-transparent border-transparent hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-none h-8 px-2"
+                                                            />
+                                                        )}
+                                                        {formatBalance(sl.ledger_id) && (
+                                                            <p className="px-2 text-[11px] font-semibold text-slate-400">Current Bal: {formatBalance(sl.ledger_id)}</p>
+                                                        )}
+                                                    </TableCell>
+                                                    {isSingleEntry && (
+                                                        <>
+                                                            <TableCell className="p-1">
+                                                                {sl.ledger_id && (!ledgers.find(l => l.id === sl.ledger_id)?.is_cash_bank) ? (
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="outline"
+                                                                        size="sm"
+                                                                        onClick={() => openBillWiseManager(index)}
+                                                                        className="h-8 px-3 text-xs font-bold"
+                                                                    >
+                                                                        Manage
+                                                                    </Button>
+                                                                ) : <span className="px-2 text-slate-300">-</span>}
+                                                                {sl.adjustment_method && (
+                                                                    <span className="ml-2 text-xs font-semibold text-slate-400">
+                                                                        {sl.adjustment_method}
+                                                                    </span>
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell className="p-1">
+                                                                <input type="number" min="0" step="0.01" value={sl.amount || ""} onChange={e => updateLedger(index, 'amount', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleLedgerKeyDown(e, index, 'amount')} className={invisibleInputClass} />
+                                                            </TableCell>
+                                                        </>
+                                                    )}
+                                                    {!isSingleEntry && (
+                                                        <>
+                                                            <TableCell className="p-1">
+                                                                <input type="number" min="0" step="0.01" value={sl.debit_amount || ""} onChange={e => updateLedger(index, 'debit_amount', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleLedgerKeyDown(e, index, 'debit_amount')} className={invisibleInputClass} disabled={sl.credit_amount > 0} />
+                                                            </TableCell>
+                                                            <TableCell className="p-1">
+                                                                <input type="number" min="0" step="0.01" value={sl.credit_amount || ""} onChange={e => updateLedger(index, 'credit_amount', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleLedgerKeyDown(e, index, 'credit_amount')} className={invisibleInputClass} disabled={sl.debit_amount > 0} />
+                                                            </TableCell>
+                                                        </>
+                                                    )}
+                                                </TableRow>
+                                            )) : (
+                                            <TableRow>
+                                                <TableCell colSpan={3} className="h-24 text-center text-slate-400">
+                                                    Select an account or party above to begin entries
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+
+                                {/* Action bar: Offset + Add Ledger sit below the rows and move down as rows grow */}
+                                <div className="flex items-center gap-4 border-t border-slate-200 bg-white px-4 py-2">
+                                    {voucherType !== "Contra" && (
+                                        <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-slate-600">
+                                            <input
+                                                type="checkbox"
+                                                checked={offsetEnabled}
+                                                onChange={e => setOffsetEnabled(e.target.checked)}
+                                                className="h-4 w-4 accent-slate-700"
+                                            />
+                                            Offset against party
+                                        </label>
                                     )}
-                                </TableBody>
-                            </Table>
-
-                            {/* Action bar: Offset + Add Ledger sit below the rows and move down as rows grow */}
-                            <div className="flex items-center gap-4 border-t border-slate-200 bg-white px-4 py-2">
-                                {voucherType !== "Sales" && voucherType !== "Contra" && (
-                                    <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-slate-600">
-                                        <input
-                                            type="checkbox"
-                                            checked={offsetEnabled}
-                                            onChange={e => setOffsetEnabled(e.target.checked)}
-                                            className="h-4 w-4 accent-slate-700"
-                                        />
-                                        Offset against party
-                                    </label>
-                                )}
-                                {voucherType !== "Contra" && (
-                                    <Button type="button" variant="outline" size="sm" onClick={addLedgerLine} className="gap-2 h-8">
-                                        <Plus className="h-4 w-4" /> Add Ledger
-                                    </Button>
-                                )}
-                            </div>
-
-                            {/* Footer: Narration & Totals */}
-                            <div className="flex flex-col gap-4 bg-slate-50/50 border-t border-slate-300 px-4 py-4 sm:flex-row sm:items-end sm:justify-between">
-                                {/* Narration - Left Side */}
-                                <div className="w-full flex gap-2 items-center sm:w-[60%]">
-                                    <Label className="text-slate-700 font-semibold whitespace-nowrap">Narration:</Label>
-                                    <Input
-                                        value={narration}
-                                        onChange={e => setNarration(e.target.value)}
-                                        required
-                                        className="h-8 bg-transparent border-t-0 border-x-0 border-b-slate-400 rounded-none focus-visible:ring-0 focus-visible:border-slate-600 px-1 shadow-none w-full"
-                                    />
+                                    {voucherType !== "Contra" && (
+                                        <Button type="button" variant="outline" size="sm" onClick={addLedgerLine} className="gap-2 h-8">
+                                            <Plus className="h-4 w-4" /> Add Ledger
+                                        </Button>
+                                    )}
                                 </div>
+                            </div>
+                        )}
 
-                                {/* Totals - Right Side */}
-                                <div className="flex justify-end gap-6 text-sm font-bold text-slate-800 items-center">
-                                    <div className="text-slate-500 mr-2 border-b border-transparent">Total:</div>
-                                    {isSingleEntry ? (
+                                {/* Footer: Narration & Totals */}
+                                <div className="flex flex-col gap-4 bg-slate-50/50 border-t border-slate-300 px-4 py-4 sm:flex-row sm:items-end sm:justify-between">
+                                    {/* Narration - Left Side */}
+                                    <div className="w-full flex gap-2 items-center sm:w-[60%]">
+                                        <Label className="text-slate-700 font-semibold whitespace-nowrap">Narration:</Label>
+                                        <Input
+                                            value={narration}
+                                            onChange={e => setNarration(e.target.value)}
+                                            required
+                                            className="h-8 bg-transparent border-t-0 border-x-0 border-b-slate-400 rounded-none focus-visible:ring-0 focus-visible:border-slate-600 px-1 shadow-none w-full"
+                                        />
+                                    </div>
+
+                                    {/* Totals - Right Side */}
+                                    <div className="flex justify-end gap-6 text-sm font-bold text-slate-800 items-center">
+                                        <div className="text-slate-500 mr-2 border-b border-transparent">Total:</div>
+                                        {isSingleEntry ? (
                                             <div className="min-w-[120px] border-t border-b-4 border-double border-slate-900 py-1 px-2 text-right text-slate-900">
                                                 {totalAmount.toFixed(2)}
                                             </div>
+                                        ) : isInvoiceMode ? (
+                                            <div className="min-w-[120px] border-t border-b-4 border-double border-slate-900 py-1 px-2 text-right text-slate-900 font-bold">
+                                                {invoiceTotal.toFixed(2)}
+                                            </div>
                                         ) : (
                                             <>
-                                            <div className={`min-w-[120px] text-right border-t border-b-4 border-double py-1 px-2 ${totalDebit !== totalCredit ? 'border-red-600 text-red-600' : 'border-slate-900 text-slate-900'}`}>
-                                                {totalDebit.toFixed(2)}
-                                            </div>
-                                            <div className={`min-w-[120px] text-right border-t border-b-4 border-double py-1 px-2 ${totalDebit !== totalCredit ? 'border-red-600 text-red-600' : 'border-slate-900 text-slate-900'}`}>
-                                                {totalCredit.toFixed(2)}
-                                            </div>
+                                                <div className={`min-w-[120px] text-right border-t border-b-4 border-double py-1 px-2 ${totalDebit !== totalCredit ? 'border-red-600 text-red-600' : 'border-slate-900 text-slate-900'}`}>
+                                                    {totalDebit.toFixed(2)}
+                                                </div>
+                                                <div className={`min-w-[120px] text-right border-t border-b-4 border-double py-1 px-2 ${totalDebit !== totalCredit ? 'border-red-600 text-red-600' : 'border-slate-900 text-slate-900'}`}>
+                                                    {totalCredit.toFixed(2)}
+                                                </div>
                                             </>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div className="flex justify-end pt-4">
-                            <Button type="submit" disabled={isSubmitting || !isBalanced} className={`${theme.button} h-11 min-w-[140px] px-6 font-bold text-white`}>
-                                {isSubmitting ? "Saving..." : editingVoucherId ? `Update ${voucherType}` : `Save ${voucherType}`}
-                            </Button>
-                        </div>
-                    </form>
+                                <div className="flex justify-end pt-4">
+                                    <Button type="submit" disabled={isSubmitting || !isBalanced} className={`${theme.button} h-11 min-w-[140px] px-6 font-bold text-white`}>
+                                        {isSubmitting ? "Saving..." : editingVoucherId ? `Update ${voucherType}` : `Save ${voucherType}`}
+                                    </Button>
+                                </div>
+                            </form>
                 </div>
             </section>
 

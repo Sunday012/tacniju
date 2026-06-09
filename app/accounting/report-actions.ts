@@ -151,10 +151,38 @@ export async function getProfitLossReport(): Promise<ProfitLossReport> {
 
 export async function getStockSummaryReport(): Promise<StockSummaryRow[]> {
   const items = await getItems()
+  const supabase = await createClient()
+  const orgId = await getOrgId()
+
+  const { data: movements } = await supabase
+    .from("voucher_items")
+    .select("item_id, qty, amount, movement_type, vouchers!inner(org_id)")
+    .eq("vouchers.org_id", orgId)
+
+  const avgRateMap = new Map<string, number>()
+  if (movements) {
+    const inQty = new Map<string, number>()
+    const inAmount = new Map<string, number>()
+    for (const m of movements) {
+      if (m.movement_type === 'IN' && Number(m.qty) > 0) {
+        inQty.set(m.item_id, (inQty.get(m.item_id) || 0) + Number(m.qty))
+        inAmount.set(m.item_id, (inAmount.get(m.item_id) || 0) + Number(m.amount))
+      }
+    }
+    for (const [itemId, qty] of Array.from(inQty.entries())) {
+      if (qty > 0) {
+        avgRateMap.set(itemId, (inAmount.get(itemId) || 0) / qty)
+      }
+    }
+  }
+
   return items
     .map(item => {
       const quantity = Number(item.current_stock || 0)
-      const rate = Number(item.purchase_rate || item.selling_rate || 0)
+      let rate = avgRateMap.get(item.id)
+      if (rate === undefined || isNaN(rate)) {
+        rate = Number(item.purchase_rate || item.selling_rate || 0)
+      }
       return {
         name: item.name,
         quantity,
