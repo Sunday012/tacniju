@@ -51,16 +51,13 @@ export default async function BillPendingPage({ params }: { params: { kind: Bill
                   <TableHead>Date</TableHead>
                   <TableHead>Tracking Number</TableHead>
                   <TableHead>{isInventoryReport ? "Name of Item" : "Party"}</TableHead>
-                  <TableHead>{isInventoryReport ? "Party" : "Reference"}</TableHead>
-                  <TableHead className="text-right">Qty</TableHead>
-                  <TableHead className="text-right">Rate</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody className="divide-y divide-slate-100 [&_td]:px-3 [&_td]:py-2.5">
                 {rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-8 text-center text-sm font-semibold text-slate-500">
+                    <TableCell colSpan={4} className="py-8 text-center text-sm font-semibold text-slate-500">
                       No pending records found.
                     </TableCell>
                   </TableRow>
@@ -72,14 +69,16 @@ export default async function BillPendingPage({ params }: { params: { kind: Bill
                         {row.voucherNo}
                       </Link>
                     </TableCell>
-                    <TableCell className="min-w-[220px] text-sm font-bold text-slate-800">
-                      {isInventoryReport ? row.itemName : row.party}
+                    <TableCell className="min-w-[260px] text-sm">
+                      <div className="font-bold text-slate-800">{isInventoryReport ? row.itemName : row.party}</div>
+                      {isInventoryReport ? (
+                        <div className="mt-0.5 text-xs italic text-slate-500">
+                          {params.kind === "sales" ? "To:" : "From:"} {row.party}
+                        </div>
+                      ) : (
+                        <div className="mt-0.5 text-xs italic text-slate-500">Ref: {row.voucherNo}</div>
+                      )}
                     </TableCell>
-                    <TableCell className="min-w-[180px] text-xs font-semibold text-slate-500">
-                      {isInventoryReport ? row.party : row.voucherNo}
-                    </TableCell>
-                    <TableCell className="text-right font-mono text-xs font-bold text-slate-800">{formatNumber(row.pendingQty || row.initialQty, 0)}</TableCell>
-                    <TableCell className="text-right font-mono text-xs text-slate-700">{formatNumber(row.rate)}</TableCell>
                     <TableCell className="text-right font-mono text-xs font-bold text-slate-900">{formatNumber(row.pendingValue)}</TableCell>
                   </TableRow>
                 ))}

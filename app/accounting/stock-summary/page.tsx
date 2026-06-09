@@ -1,10 +1,47 @@
 import { AccountingShell } from "@/components/accounting/accounting-shell"
+import { getStockSummaryReport } from "../report-actions"
 
-export default function StockSummaryPage() {
+function money(value: number) {
+  return value ? value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"
+}
+
+function qty(value: number) {
+  return value ? value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "-"
+}
+
+export default async function StockSummaryPage() {
+  const rows = await getStockSummaryReport()
+  const totalValue = rows.reduce((sum, row) => sum + row.value, 0)
+
   return (
-    <AccountingShell title="Stock Summary">
-      <div className="rounded-xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">
-        Stock Summary report setup is ready.
+    <AccountingShell title="Stock Summary" framed={false}>
+      <div className="overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
+        <div className="grid grid-cols-[1fr_150px_120px_160px] border-b border-slate-300 bg-slate-50 px-3 py-2 text-xs font-black uppercase tracking-widest text-slate-700">
+          <div>Particulars</div>
+          <div className="text-right">Quantity</div>
+          <div className="text-right">Rate</div>
+          <div className="text-right">Value</div>
+        </div>
+        <div className="min-h-[560px] divide-y divide-slate-100">
+          {rows.length === 0 ? (
+            <div className="px-3 py-8 text-center text-sm font-semibold text-slate-500">No stock entries found.</div>
+          ) : rows.map(row => (
+            <div key={row.name} className="grid grid-cols-[1fr_150px_120px_160px] px-3 py-1.5 text-sm">
+              <div className="font-semibold text-slate-800">{row.name}</div>
+              <div className="text-right font-mono text-slate-700">
+                {qty(row.quantity)} {row.unit}
+              </div>
+              <div className="text-right font-mono text-slate-700">{money(row.rate)}</div>
+              <div className="text-right font-mono font-semibold text-slate-900">{money(row.value)}</div>
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-[1fr_150px_120px_160px] border-t border-slate-300 bg-slate-50 px-3 py-2 text-sm font-black">
+          <div>Grand Total</div>
+          <div />
+          <div />
+          <div className="text-right font-mono">{money(totalValue)}</div>
+        </div>
       </div>
     </AccountingShell>
   )
