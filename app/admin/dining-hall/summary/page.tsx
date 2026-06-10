@@ -9,6 +9,7 @@ export default async function DiningHallSummaryPage() {
   const { data: meals } = await supabase
     .from("dining_hall_meals")
     .select("id, meal_name, camp_day, meal_time, points, unit_name, active")
+    .eq("active", true)
     .order("camp_day", { ascending: true })
     .order("meal_time", { ascending: true })
 

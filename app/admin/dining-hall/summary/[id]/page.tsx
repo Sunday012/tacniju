@@ -11,8 +11,9 @@ export default async function DiningHallMealSummaryPage({ params }: { params: { 
   const [{ data: meal }, { data: servings }] = await Promise.all([
     supabase
       .from("dining_hall_meals")
-      .select("id, meal_name, camp_day, meal_time, points, unit_name")
+      .select("id, meal_name, camp_day, meal_time, points, unit_name, active")
       .eq("id", params.id)
+      .eq("active", true)
       .maybeSingle(),
     supabase
       .from("dining_hall_servings")
