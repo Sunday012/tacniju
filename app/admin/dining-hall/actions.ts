@@ -63,7 +63,7 @@ export async function recordDiningHallServing(formData: FormData) {
   const { supabase, user, error } = await assertDiningHallAccess()
   if (error || !user) {
     console.error(error)
-    return
+    return { error: error || "You must be logged in." }
   }
 
   const mealId = String(formData.get("meal_id") || "").trim()
@@ -73,12 +73,12 @@ export async function recordDiningHallServing(formData: FormData) {
 
   if (!mealId || !profileId) {
     console.error("Select a meal and person before recording food.")
-    return
+    return { error: "Select a meal before recording food." }
   }
 
   if (!Number.isFinite(plates) || plates <= 0) {
     console.error("Plate quantity must be greater than zero.")
-    return
+    return { error: "Plate quantity must be greater than zero." }
   }
 
   const { error: insertError } = await supabase.from("dining_hall_servings").insert({
@@ -91,11 +91,13 @@ export async function recordDiningHallServing(formData: FormData) {
 
   if (insertError) {
     console.error("Failed to record dining hall serving", insertError)
-    return
+    return { error: "Failed to record food. Please try again." }
   }
 
   revalidatePath("/admin/dining-hall")
   revalidatePath("/dashboard/dining-hall")
+
+  return { success: true }
 }
 
 export async function deleteDiningHallMeal(mealId: string) {

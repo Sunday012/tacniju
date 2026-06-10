@@ -34,8 +34,8 @@ export default async function MemberDiningHallPage() {
         </div>
       </div>
 
-      <section className="rounded-[2rem] border border-white/60 bg-white/80 p-5 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] backdrop-blur-3xl sm:p-6">
-        <div className="mb-5 flex items-center gap-3">
+      <section className="rounded-2xl border border-white/60 bg-white/80 p-4 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] backdrop-blur-3xl sm:p-5">
+        <div className="mb-4 flex items-center gap-3">
           <CalendarDays className="h-5 w-5 text-indigo-600" />
           <h2 className="text-lg font-extrabold text-slate-800">Meal Timetable</h2>
         </div>
@@ -48,17 +48,33 @@ export default async function MemberDiningHallPage() {
             <p className="font-bold text-slate-500">No meals have been added to the timetable yet.</p>
           </div>
         ) : (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {mealRows.map(meal => (
-              <div key={meal.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <span className="rounded-lg bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-widest text-slate-500">{meal.camp_day}</span>
-                  <span className="text-sm font-bold text-indigo-600">{meal.points} pts</span>
-                </div>
-                <h3 className="text-xl font-black text-slate-800">{meal.meal_name}</h3>
-                <p className="mt-1 text-sm font-bold text-slate-500">{meal.meal_time} · {meal.unit_name}</p>
-              </div>
-            ))}
+          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+            <table className="w-full min-w-[620px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-widest text-slate-500">
+                  <th className="px-4 py-3 font-black">Day</th>
+                  <th className="px-4 py-3 font-black">Meal</th>
+                  <th className="px-4 py-3 font-black">Time</th>
+                  <th className="px-4 py-3 font-black">Points</th>
+                  <th className="px-4 py-3 font-black">Unit</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {mealRows.map(meal => (
+                  <tr key={meal.id} className="font-bold text-slate-700">
+                    <td className="px-4 py-3">
+                      <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-black uppercase tracking-wider text-slate-500">
+                        {meal.camp_day}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-black text-slate-800">{meal.meal_name}</td>
+                    <td className="px-4 py-3">{meal.meal_time}</td>
+                    <td className="px-4 py-3 text-indigo-600">{meal.points} pts</td>
+                    <td className="px-4 py-3">{meal.unit_name}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>

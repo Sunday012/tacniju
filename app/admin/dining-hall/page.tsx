@@ -1,9 +1,11 @@
 import { createClient } from "@/lib/server"
 import { isGuestProfile } from "@/lib/profile-kind"
-import { Utensils, CalendarDays, Users, ClipboardCheck } from "lucide-react"
-import { createDiningHallMeal, recordDiningHallServing } from "./actions"
+import { Utensils, CalendarDays, Users, ClipboardCheck, FileText } from "lucide-react"
+import Link from "next/link"
+import { createDiningHallMeal } from "./actions"
 import { DeleteAllMealsButton } from "@/components/admin/dining-hall/DeleteAllMealsButton"
 import { DeleteMealButton } from "@/components/admin/dining-hall/DeleteMealButton"
+import { RecordServingForm } from "@/components/admin/dining-hall/RecordServingForm"
 
 export const dynamic = "force-dynamic"
 
@@ -20,14 +22,20 @@ export default async function DiningHallAdminPage() {
     .eq("active", true)
     .order("camp_day", { ascending: true })
     .order("meal_time", { ascending: true })
-  const { data: servings } = await supabase
+  const { data: servings, error: servingsError } = await supabase
     .from("dining_hall_servings")
-    .select("id, plates, served_at, meal:dining_hall_meals(meal_name), profile:profiles(full_name)")
+    .select("id, profile_id, plates, served_at, meal:dining_hall_meals(meal_name), profile:profiles!profile_id(full_name)")
     .order("served_at", { ascending: false })
-    .limit(8)
+    .limit(500)
   const people = profiles || []
   const mealRows = meals || []
   const servingRows = (servings || []) as any[]
+  const latestServingByProfile = new Map<string, any>()
+  servingRows.forEach(serving => {
+    if (serving.profile_id && !latestServingByProfile.has(serving.profile_id)) {
+      latestServingByProfile.set(serving.profile_id, serving)
+    }
+  })
 
   return (
     <div className="p-6 md:p-10">
@@ -42,7 +50,7 @@ export default async function DiningHallAdminPage() {
               <p className="mt-1 font-medium text-slate-500">Register camp meals, meal points, and manual plate serving per person.</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3 text-sm font-bold text-slate-600 sm:min-w-[260px]">
+          <div className="grid grid-cols-3 gap-3 text-sm font-bold text-slate-600 sm:min-w-[390px]">
             <div className="rounded-xl border border-slate-200 bg-white p-3">
               <p className="text-xs uppercase tracking-widest text-slate-400">People</p>
               <p className="mt-1 text-2xl text-indigo-600">{people.length}</p>
@@ -51,6 +59,16 @@ export default async function DiningHallAdminPage() {
               <p className="text-xs uppercase tracking-widest text-slate-400">Unit</p>
               <p className="mt-1 text-2xl text-indigo-600">Plate</p>
             </div>
+            <Link
+              href="/admin/dining-hall/summary"
+              className="flex flex-col justify-center rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-indigo-700 transition-colors hover:bg-indigo-100"
+            >
+              <span className="flex items-center gap-2 text-xs uppercase tracking-widest text-indigo-400">
+                <FileText className="h-4 w-4" />
+                Summary
+              </span>
+              <span className="mt-1 text-lg font-black">Open</span>
+            </Link>
           </div>
         </div>
 
@@ -154,52 +172,47 @@ export default async function DiningHallAdminPage() {
                   <th className="px-6 py-4">Type</th>
                   <th className="px-6 py-4">Phone</th>
                   <th className="px-6 py-4">Plate Unit</th>
+                  <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {people.map(profile => (
-                  <tr key={profile.id} className="font-medium text-slate-600">
-                    <td className="px-6 py-4 font-bold text-slate-800">{profile.full_name || "Unnamed"}</td>
-                    <td className="px-6 py-4 font-mono">{profile.reservation_number || "-"}</td>
-                    <td className="px-6 py-4">{isGuestProfile(profile) ? "Guest" : (profile.member_role || profile.department || "Member")}</td>
-                    <td className="px-6 py-4">{profile.phone_number || "-"}</td>
-                    <td className="px-6 py-4">1 plate</td>
-                    <td className="px-6 py-4 text-right">
-                      <form action={recordDiningHallServing} className="flex justify-end gap-2">
-                        <input type="hidden" name="profile_id" value={profile.id} />
-                        <select name="meal_id" className="h-9 max-w-[180px] rounded-lg border border-slate-200 bg-white px-2 text-xs font-bold text-slate-600" disabled={mealRows.length === 0} required>
-                          <option value="">Select meal</option>
-                          {mealRows.map(meal => (
-                            <option key={meal.id} value={meal.id}>{meal.camp_day} - {meal.meal_name}</option>
-                          ))}
-                        </select>
-                        <input name="plates" type="number" min="0.5" step="0.5" defaultValue="1" className="h-9 w-16 rounded-lg border border-slate-200 bg-white px-2 text-xs font-bold text-slate-600" disabled={mealRows.length === 0} />
-                        <button disabled={mealRows.length === 0} className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-black text-indigo-700 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400">Record Food</button>
-                      </form>
-                    </td>
-                  </tr>
-                ))}
+                {people.map(profile => {
+                  const latestServing = latestServingByProfile.get(profile.id)
+                  return (
+                    <tr key={profile.id} className="font-medium text-slate-600">
+                      <td className="px-6 py-4 font-bold text-slate-800">{profile.full_name || "Unnamed"}</td>
+                      <td className="px-6 py-4 font-mono">{profile.reservation_number || "-"}</td>
+                      <td className="px-6 py-4">{isGuestProfile(profile) ? "Guest" : (profile.member_role || profile.department || "Member")}</td>
+                      <td className="px-6 py-4">{profile.phone_number || "-"}</td>
+                      <td className="px-6 py-4">1 plate</td>
+                      <td className="px-6 py-4">
+                        {latestServing ? (
+                          <div className="inline-flex flex-col rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">
+                            <span>Recorded</span>
+                            <span className="mt-0.5 text-[11px] font-semibold text-emerald-600">
+                              {latestServing.meal?.meal_name || "Meal"} · {new Date(latestServing.served_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs font-bold text-slate-400">Not recorded</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <RecordServingForm profileId={profile.id} meals={mealRows} />
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
         </section>
-
-        <section className="rounded-[2rem] border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-100 p-6">
-            <h2 className="text-lg font-extrabold text-slate-800">Recent Servings</h2>
+        {servingsError ? (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm font-bold text-rose-700">
+            Could not load serving status: {servingsError.message}
           </div>
-          <div className="divide-y divide-slate-100">
-            {servingRows.length === 0 ? (
-              <div className="p-6 text-center font-medium text-slate-500">No servings have been recorded yet.</div>
-            ) : servingRows.map(serving => (
-              <div key={serving.id} className="flex flex-col gap-1 p-4 text-sm font-bold text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-                <span>{serving.profile?.full_name || "Person"} received {serving.plates} plate(s) for {serving.meal?.meal_name || "meal"}</span>
-                <span className="text-xs text-slate-400">{new Date(serving.served_at).toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
-        </section>
+        ) : null}
       </div>
     </div>
   )
