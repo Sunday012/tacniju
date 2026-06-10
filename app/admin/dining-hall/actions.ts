@@ -97,3 +97,60 @@ export async function recordDiningHallServing(formData: FormData) {
   revalidatePath("/admin/dining-hall")
   revalidatePath("/dashboard/dining-hall")
 }
+
+export async function deleteDiningHallMeal(mealId: string) {
+  const { supabase, user, error } = await assertDiningHallAccess()
+  if (error || !user) {
+    return { error: error || "You must be logged in." }
+  }
+
+  const id = mealId.trim()
+  if (!id) {
+    return { error: "Meal ID is required." }
+  }
+
+  const { error: updateError } = await supabase
+    .from("dining_hall_meals")
+    .update({
+      active: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+
+  if (updateError) {
+    console.error("Failed to delete dining hall meal", updateError)
+    return { error: "Failed to delete meal. Please try again." }
+  }
+
+  revalidatePath("/admin/dining-hall")
+  revalidatePath("/dashboard/dining-hall")
+  revalidatePath("/dashboard")
+
+  return { success: true }
+}
+
+export async function deleteAllDiningHallMeals() {
+  const { supabase, user, error } = await assertDiningHallAccess()
+  if (error || !user) {
+    return { error: error || "You must be logged in." }
+  }
+
+  const { error: updateError } = await supabase
+    .from("dining_hall_meals")
+    .update({
+      active: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("active", true)
+
+  if (updateError) {
+    console.error("Failed to delete all dining hall meals", updateError)
+    return { error: "Failed to delete all meals. Please try again." }
+  }
+
+  revalidatePath("/admin/dining-hall")
+  revalidatePath("/dashboard/dining-hall")
+  revalidatePath("/dashboard")
+
+  return { success: true }
+}

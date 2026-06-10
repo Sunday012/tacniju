@@ -2,6 +2,8 @@ import { createClient } from "@/lib/server"
 import { isGuestProfile } from "@/lib/profile-kind"
 import { Utensils, CalendarDays, Users, ClipboardCheck } from "lucide-react"
 import { createDiningHallMeal, recordDiningHallServing } from "./actions"
+import { DeleteAllMealsButton } from "@/components/admin/dining-hall/DeleteAllMealsButton"
+import { DeleteMealButton } from "@/components/admin/dining-hall/DeleteMealButton"
 
 export const dynamic = "force-dynamic"
 
@@ -88,9 +90,12 @@ export default async function DiningHallAdminPage() {
           </section>
 
           <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="mb-5 flex items-center gap-3">
-              <ClipboardCheck className="h-5 w-5 text-indigo-600" />
-              <h2 className="text-lg font-extrabold text-slate-800">Meal Timetable</h2>
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <ClipboardCheck className="h-5 w-5 text-indigo-600" />
+                <h2 className="text-lg font-extrabold text-slate-800">Meal Timetable</h2>
+              </div>
+              <DeleteAllMealsButton mealCount={mealRows.length} />
             </div>
             {mealsError ? (
               <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm font-bold text-amber-700">
@@ -106,12 +111,13 @@ export default async function DiningHallAdminPage() {
                     <th>Time</th>
                     <th>Points</th>
                     <th>Unit</th>
+                    <th className="text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-bold text-slate-700">
                   {mealRows.length === 0 ? (
                     <tr>
-                    <td colSpan={5} className="py-12 text-center font-medium text-slate-500">
+                    <td colSpan={6} className="py-12 text-center font-medium text-slate-500">
                       No meals have been created yet.
                     </td>
                   </tr>
@@ -122,6 +128,9 @@ export default async function DiningHallAdminPage() {
                       <td>{meal.meal_time}</td>
                       <td className="text-indigo-600">{meal.points}</td>
                       <td>{meal.unit_name}</td>
+                      <td className="text-right">
+                        <DeleteMealButton mealId={meal.id} mealName={meal.meal_name} />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
