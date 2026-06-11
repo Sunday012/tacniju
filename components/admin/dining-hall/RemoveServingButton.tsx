@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Loader2, Undo2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { deleteDiningHallServing } from "@/app/admin/dining-hall/actions"
+import { deleteDiningHallServingsForProfile } from "@/app/admin/dining-hall/actions"
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
-export function RemoveServingButton({ servingId, personName }: { servingId: string; personName: string }) {
+export function RemoveServingButton({ profileId, personName }: { profileId: string; personName: string }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -23,11 +23,11 @@ export function RemoveServingButton({ servingId, personName }: { servingId: stri
   async function handleRemove() {
     setLoading(true)
     try {
-      const result = await deleteDiningHallServing(servingId)
+      const result = await deleteDiningHallServingsForProfile(profileId)
       if (result?.error) {
         toast.error(result.error)
       } else {
-        toast.success("Food record removed.")
+        toast.success("User removed from recorded list.")
         setOpen(false)
         router.refresh()
       }
@@ -54,10 +54,11 @@ export function RemoveServingButton({ servingId, personName }: { servingId: stri
           <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
             <Undo2 className="h-5 w-5" />
           </div>
-          <DialogTitle className="text-xl font-extrabold text-slate-900">Remove food record?</DialogTitle>
+          <DialogTitle className="text-xl font-extrabold text-slate-900">Remove user from recorded?</DialogTitle>
           <DialogDescription className="text-sm font-medium leading-6 text-slate-500">
-            This will remove the latest recorded food entry for{" "}
-            <span className="font-extrabold text-slate-700">{personName || "this person"}</span>.
+            This will clear all dining hall food records for{" "}
+            <span className="font-extrabold text-slate-700">{personName || "this person"}</span>, so their row returns
+            to Not recorded.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-3 px-6 py-5 sm:space-x-0">
@@ -76,7 +77,7 @@ export function RemoveServingButton({ servingId, personName }: { servingId: stri
             className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-rose-600 px-5 text-sm font-black text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Undo2 className="h-4 w-4" />}
-            Remove Record
+            Remove User
           </button>
         </DialogFooter>
       </DialogContent>

@@ -93,7 +93,7 @@ export default async function DiningHallRegisterPage() {
                           <RecordServingForm profileId={profile.id} meals={mealRows} />
                           {latestServing ? (
                             <RemoveServingButton
-                              servingId={latestServing.id}
+                              profileId={profile.id}
                               personName={profile.full_name || "this person"}
                             />
                           ) : null}
