@@ -50,15 +50,14 @@ export default async function MemberDiningHallPage() {
         ) : (
           <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
             {mealRows.map(meal => (
-              <div key={meal.id} className="rounded-xl border border-slate-200 bg-white px-3.5 py-3 shadow-sm">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-slate-500">
+              <div key={meal.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
+                <div className="mb-1.5 flex items-center justify-between gap-3">
+                  <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-slate-500">
                     {meal.camp_day}
                   </span>
-                  <span className="text-xs font-black text-indigo-600">{meal.points} pts</span>
+                  <span className="text-[11px] font-black text-slate-500">{meal.meal_time} · {meal.unit_name} · <span className="text-indigo-600">{meal.points} pts</span></span>
                 </div>
-                <h3 className="truncate text-base font-black text-slate-800">{meal.meal_name}</h3>
-                <p className="mt-0.5 text-xs font-bold text-slate-500">{meal.meal_time} · {meal.unit_name}</p>
+                <h3 className="truncate text-sm font-black text-slate-800">{meal.meal_name}</h3>
               </div>
             ))}
           </div>
