@@ -77,7 +77,11 @@ export default async function MemberDiningHallPage() {
                         <CheckCircle2 className="h-3 w-3" />
                         Recorded
                       </span>
-                    ) : null}
+                    ) : (
+                      <span className="inline-flex shrink-0 items-center rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-black text-slate-400">
+                        Not recorded
+                      </span>
+                    )}
                   </div>
                 </div>
               )
