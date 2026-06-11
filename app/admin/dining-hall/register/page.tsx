@@ -3,6 +3,7 @@ import { ArrowLeft, Users } from "lucide-react"
 import { createClient } from "@/lib/server"
 import { isGuestProfile } from "@/lib/profile-kind"
 import { RecordServingForm } from "@/components/admin/dining-hall/RecordServingForm"
+import { RemoveServingButton } from "@/components/admin/dining-hall/RemoveServingButton"
 
 export const dynamic = "force-dynamic"
 
@@ -10,7 +11,7 @@ export default async function DiningHallRegisterPage() {
   const supabase = await createClient()
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, email, full_name, reservation_number, rank, district, assembly, member_role, department, phone_number, points")
+    .select("id, email, full_name, reservation_number, rank, district, assembly, member_role, department, points")
     .order("full_name", { ascending: true })
     .limit(80)
   const { data: meals } = await supabase
@@ -61,7 +62,6 @@ export default async function DiningHallRegisterPage() {
                   <th className="px-6 py-4">Name</th>
                   <th className="px-6 py-4">Reservation</th>
                   <th className="px-6 py-4">Type</th>
-                  <th className="px-6 py-4">Phone</th>
                   <th className="px-6 py-4">Plate Unit</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4 text-right">Action</th>
@@ -75,7 +75,6 @@ export default async function DiningHallRegisterPage() {
                       <td className="px-6 py-4 font-bold text-slate-800">{profile.full_name || "Unnamed"}</td>
                       <td className="px-6 py-4 font-mono">{profile.reservation_number || "-"}</td>
                       <td className="px-6 py-4">{isGuestProfile(profile) ? "Guest" : (profile.member_role || profile.department || "Member")}</td>
-                      <td className="px-6 py-4">{profile.phone_number || "-"}</td>
                       <td className="px-6 py-4">1 plate</td>
                       <td className="px-6 py-4">
                         {latestServing ? (
@@ -90,7 +89,15 @@ export default async function DiningHallRegisterPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <RecordServingForm profileId={profile.id} meals={mealRows} />
+                        <div className="flex justify-end gap-2">
+                          <RecordServingForm profileId={profile.id} meals={mealRows} />
+                          {latestServing ? (
+                            <RemoveServingButton
+                              servingId={latestServing.id}
+                              personName={profile.full_name || "this person"}
+                            />
+                          ) : null}
+                        </div>
                       </td>
                     </tr>
                   )

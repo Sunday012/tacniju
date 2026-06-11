@@ -105,6 +105,35 @@ export async function recordDiningHallServing(formData: FormData) {
   return { success: true }
 }
 
+export async function deleteDiningHallServing(servingId: string) {
+  const { supabase, user, error } = await assertDiningHallAccess()
+  if (error || !user) {
+    return { error: error || "You must be logged in." }
+  }
+
+  const id = servingId.trim()
+  if (!id) {
+    return { error: "Serving record ID is required." }
+  }
+
+  const { error: deleteError } = await supabase
+    .from("dining_hall_servings")
+    .delete()
+    .eq("id", id)
+
+  if (deleteError) {
+    console.error("Failed to remove dining hall serving", deleteError)
+    return { error: "Failed to remove food record. Please try again." }
+  }
+
+  revalidatePath("/admin/dining-hall")
+  revalidatePath("/admin/dining-hall/register")
+  revalidatePath("/admin/dining-hall/summary")
+  revalidatePath("/dashboard/dining-hall")
+
+  return { success: true }
+}
+
 export async function deleteDiningHallMeal(mealId: string) {
   const { supabase, user, error } = await assertDiningHallAccess()
   if (error || !user) {
