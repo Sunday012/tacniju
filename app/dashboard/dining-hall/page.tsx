@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/server"
 import { redirect } from "next/navigation"
-import { CalendarDays, Utensils } from "lucide-react"
+import { CalendarDays, CheckCircle2, Utensils } from "lucide-react"
 
 export default async function MemberDiningHallPage() {
   const supabase = await createClient()
@@ -18,7 +18,18 @@ export default async function MemberDiningHallPage() {
     .eq("active", true)
     .order("camp_day", { ascending: true })
     .order("meal_time", { ascending: true })
+  const { data: servings } = await supabase
+    .from("dining_hall_servings")
+    .select("meal_id, plates, served_at")
+    .eq("profile_id", user.id)
+    .order("served_at", { ascending: false })
   const mealRows = meals || []
+  const latestServingByMeal = new Map<string, any>()
+  ;(servings || []).forEach(serving => {
+    if (serving.meal_id && !latestServingByMeal.has(serving.meal_id)) {
+      latestServingByMeal.set(serving.meal_id, serving)
+    }
+  })
 
   return (
     <div className="space-y-8">
@@ -49,17 +60,28 @@ export default async function MemberDiningHallPage() {
           </div>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-            {mealRows.map(meal => (
-              <div key={meal.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
-                <div className="mb-1.5 flex items-center justify-between gap-3">
-                  <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                    {meal.camp_day}
-                  </span>
-                  <span className="text-[11px] font-black text-slate-500">{meal.meal_time} · {meal.unit_name} · <span className="text-indigo-600">{meal.points} pts</span></span>
+            {mealRows.map(meal => {
+              const serving = latestServingByMeal.get(meal.id)
+              return (
+                <div key={meal.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm">
+                  <div className="mb-1.5 flex items-center justify-between gap-3">
+                    <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                      {meal.camp_day}
+                    </span>
+                    <span className="text-[11px] font-black text-slate-500">{meal.meal_time} · {meal.unit_name} · <span className="text-indigo-600">{meal.points} pts</span></span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="truncate text-sm font-black text-slate-800">{meal.meal_name}</h3>
+                    {serving ? (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-700">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Recorded
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
-                <h3 className="truncate text-sm font-black text-slate-800">{meal.meal_name}</h3>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </section>
