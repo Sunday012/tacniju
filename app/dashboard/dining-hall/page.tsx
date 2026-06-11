@@ -48,33 +48,19 @@ export default async function MemberDiningHallPage() {
             <p className="font-bold text-slate-500">No meals have been added to the timetable yet.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-            <table className="w-full min-w-[620px] text-left text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-widest text-slate-500">
-                  <th className="px-4 py-3 font-black">Day</th>
-                  <th className="px-4 py-3 font-black">Meal</th>
-                  <th className="px-4 py-3 font-black">Time</th>
-                  <th className="px-4 py-3 font-black">Points</th>
-                  <th className="px-4 py-3 font-black">Unit</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {mealRows.map(meal => (
-                  <tr key={meal.id} className="font-bold text-slate-700">
-                    <td className="px-4 py-3">
-                      <span className="rounded-md bg-slate-100 px-2.5 py-1 text-xs font-black uppercase tracking-wider text-slate-500">
-                        {meal.camp_day}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-black text-slate-800">{meal.meal_name}</td>
-                    <td className="px-4 py-3">{meal.meal_time}</td>
-                    <td className="px-4 py-3 text-indigo-600">{meal.points} pts</td>
-                    <td className="px-4 py-3">{meal.unit_name}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+            {mealRows.map(meal => (
+              <div key={meal.id} className="rounded-xl border border-slate-200 bg-white px-3.5 py-3 shadow-sm">
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                    {meal.camp_day}
+                  </span>
+                  <span className="text-xs font-black text-indigo-600">{meal.points} pts</span>
+                </div>
+                <h3 className="truncate text-base font-black text-slate-800">{meal.meal_name}</h3>
+                <p className="mt-0.5 text-xs font-bold text-slate-500">{meal.meal_time} · {meal.unit_name}</p>
+              </div>
+            ))}
           </div>
         )}
       </section>
