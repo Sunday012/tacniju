@@ -96,6 +96,27 @@ export async function createItem(payload: Omit<Item, "id" | "current_stock" | "a
     revalidatePath("/accounting/production")
 }
 
+export async function updateItem(id: string, payload: Omit<Item, "id" | "current_stock" | "active">) {
+    const supabase = await createClient()
+    const orgId = await getOrgId()
+
+    const { error } = await supabase
+        .from("items")
+        .update({
+            ...payload,
+            unit: payload.primary_unit || payload.unit,
+        })
+        .eq("id", id)
+        .eq("org_id", orgId)
+
+    if (error) throw error
+    revalidatePath("/inventory")
+    revalidatePath("/accounting")
+    revalidatePath("/accounting/production")
+    revalidatePath("/accounting/production/inventory/items")
+    revalidatePath("/accounting/production/reports")
+}
+
 export async function deleteItem(id: string) {
     const supabase = await createClient()
     const orgId = await getOrgId()

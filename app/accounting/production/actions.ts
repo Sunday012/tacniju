@@ -64,6 +64,66 @@ export async function createProductionCategory(formData: FormData) {
   revalidatePath("/accounting/production/inventory/items")
 }
 
+export async function updateProductionCategory(formData: FormData) {
+  const supabase = await createClient()
+  const orgId = await getOrgId()
+  const id = String(formData.get("id") || "").trim()
+  const name = String(formData.get("name") || "").trim()
+  const description = String(formData.get("description") || "").trim()
+  const active = String(formData.get("active") || "true") === "true"
+
+  if (!id) return { error: "Category ID is required." }
+  if (!name) return { error: "Category name is required." }
+
+  const { error } = await supabase
+    .from("production_categories")
+    .update({
+      name,
+      description: description || null,
+      active,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .eq("org_id", orgId)
+
+  if (error) {
+    console.error("Failed to update production category", error)
+    return { error: "Failed to update category." }
+  }
+
+  revalidatePath("/accounting/production/inventory/categories")
+  revalidatePath("/accounting/production/inventory/items")
+  revalidatePath("/accounting/production/reports/category")
+  return { success: true }
+}
+
+export async function deleteProductionCategory(categoryId: string) {
+  const supabase = await createClient()
+  const orgId = await getOrgId()
+  const id = categoryId.trim()
+
+  if (!id) return { error: "Category ID is required." }
+
+  const { error } = await supabase
+    .from("production_categories")
+    .update({
+      active: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .eq("org_id", orgId)
+
+  if (error) {
+    console.error("Failed to delete production category", error)
+    return { error: "Failed to delete category." }
+  }
+
+  revalidatePath("/accounting/production/inventory/categories")
+  revalidatePath("/accounting/production/inventory/items")
+  revalidatePath("/accounting/production/reports/category")
+  return { success: true }
+}
+
 export async function getProductionUnits() {
   const supabase = await createClient()
   const orgId = await getOrgId()
@@ -104,6 +164,69 @@ export async function createProductionUnit(formData: FormData) {
   }
   revalidatePath("/accounting/production/inventory/units")
   revalidatePath("/accounting/production/inventory/items")
+}
+
+export async function updateProductionUnit(formData: FormData) {
+  const supabase = await createClient()
+  const orgId = await getOrgId()
+  const id = String(formData.get("id") || "").trim()
+  const name = String(formData.get("name") || "").trim()
+  const shortName = String(formData.get("short_name") || "").trim()
+  const decimalPlaces = Number(formData.get("decimal_places") || 0)
+  const active = String(formData.get("active") || "true") === "true"
+
+  if (!id) return { error: "Unit ID is required." }
+  if (!name || !shortName) return { error: "Unit name and short name are required." }
+  if (!Number.isInteger(decimalPlaces) || decimalPlaces < 0 || decimalPlaces > 6) {
+    return { error: "Decimal places must be between 0 and 6." }
+  }
+
+  const { error } = await supabase
+    .from("production_units")
+    .update({
+      name,
+      short_name: shortName,
+      decimal_places: decimalPlaces,
+      active,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .eq("org_id", orgId)
+
+  if (error) {
+    console.error("Failed to update production unit", error)
+    return { error: "Failed to update unit." }
+  }
+
+  revalidatePath("/accounting/production/inventory/units")
+  revalidatePath("/accounting/production/inventory/items")
+  return { success: true }
+}
+
+export async function deleteProductionUnit(unitId: string) {
+  const supabase = await createClient()
+  const orgId = await getOrgId()
+  const id = unitId.trim()
+
+  if (!id) return { error: "Unit ID is required." }
+
+  const { error } = await supabase
+    .from("production_units")
+    .update({
+      active: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .eq("org_id", orgId)
+
+  if (error) {
+    console.error("Failed to delete production unit", error)
+    return { error: "Failed to delete unit." }
+  }
+
+  revalidatePath("/accounting/production/inventory/units")
+  revalidatePath("/accounting/production/inventory/items")
+  return { success: true }
 }
 
 export async function saveProductionJournal(formData: FormData) {

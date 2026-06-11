@@ -1,6 +1,7 @@
 import { AccountingShell } from "@/components/accounting/accounting-shell"
 import { createProductionCategory, getProductionCategories } from "../../actions"
 import { FolderTree } from "lucide-react"
+import { CategoryActions } from "@/components/accounting/production/CategoryActions"
 
 export default async function ProductionCategoriesPage() {
   const { rows, error } = await getProductionCategories()
@@ -45,16 +46,20 @@ export default async function ProductionCategoriesPage() {
                     <th className="px-5 py-3">Category</th>
                     <th className="px-5 py-3">Description</th>
                     <th className="px-5 py-3">Status</th>
+                    <th className="px-5 py-3 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {rows.length === 0 ? (
-                    <tr><td colSpan={3} className="px-5 py-8 text-center font-medium text-slate-500">No categories have been created yet.</td></tr>
+                    <tr><td colSpan={4} className="px-5 py-8 text-center font-medium text-slate-500">No categories have been created yet.</td></tr>
                   ) : rows.map(category => (
                     <tr key={category.id}>
                       <td className="px-5 py-4 font-bold text-slate-800">{category.name}</td>
                       <td className="px-5 py-4 text-slate-500">{category.description || "-"}</td>
                       <td className="px-5 py-4 font-bold text-emerald-600">{category.active ? "Active" : "Inactive"}</td>
+                      <td className="px-5 py-4 text-right">
+                        <CategoryActions category={category} />
+                      </td>
                     </tr>
                   ))}
                 </tbody>

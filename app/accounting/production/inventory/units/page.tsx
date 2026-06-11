@@ -1,6 +1,7 @@
 import { AccountingShell } from "@/components/accounting/accounting-shell"
 import { createProductionUnit, getProductionUnits } from "../../actions"
 import { Ruler } from "lucide-react"
+import { UnitActions } from "@/components/accounting/production/UnitActions"
 
 export default async function ProductionUnitsPage() {
   const { rows, error } = await getProductionUnits()
@@ -50,17 +51,21 @@ export default async function ProductionUnitsPage() {
                     <th className="px-5 py-3">Short Name</th>
                     <th className="px-5 py-3">Decimals</th>
                     <th className="px-5 py-3">Status</th>
+                    <th className="px-5 py-3 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {rows.length === 0 ? (
-                    <tr><td colSpan={4} className="px-5 py-8 text-center font-medium text-slate-500">No units have been created yet.</td></tr>
+                    <tr><td colSpan={5} className="px-5 py-8 text-center font-medium text-slate-500">No units have been created yet.</td></tr>
                   ) : rows.map(unit => (
                     <tr key={unit.id}>
                       <td className="px-5 py-4 font-bold text-slate-800">{unit.name}</td>
                       <td className="px-5 py-4 font-mono text-slate-600">{unit.short_name}</td>
                       <td className="px-5 py-4 text-slate-500">{unit.decimal_places}</td>
                       <td className="px-5 py-4 font-bold text-emerald-600">{unit.active ? "Active" : "Inactive"}</td>
+                      <td className="px-5 py-4 text-right">
+                        <UnitActions unit={unit} />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
