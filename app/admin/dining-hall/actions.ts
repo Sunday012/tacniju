@@ -54,6 +54,9 @@ export async function createDiningHallMeal(formData: FormData) {
   }
 
   revalidatePath("/admin/dining-hall")
+  revalidatePath("/admin/dining-hall/timetable")
+  revalidatePath("/admin/dining-hall/register")
+  revalidatePath("/admin/dining-hall/summary")
   revalidatePath("/dashboard/dining-hall")
   revalidatePath("/dashboard")
 
@@ -95,6 +98,8 @@ export async function recordDiningHallServing(formData: FormData) {
   }
 
   revalidatePath("/admin/dining-hall")
+  revalidatePath("/admin/dining-hall/register")
+  revalidatePath("/admin/dining-hall/summary")
   revalidatePath("/dashboard/dining-hall")
 
   return { success: true }
@@ -125,6 +130,9 @@ export async function deleteDiningHallMeal(mealId: string) {
   }
 
   revalidatePath("/admin/dining-hall")
+  revalidatePath("/admin/dining-hall/timetable")
+  revalidatePath("/admin/dining-hall/register")
+  revalidatePath("/admin/dining-hall/summary")
   revalidatePath("/dashboard/dining-hall")
   revalidatePath("/dashboard")
 
@@ -151,6 +159,9 @@ export async function deleteAllDiningHallMeals() {
   }
 
   revalidatePath("/admin/dining-hall")
+  revalidatePath("/admin/dining-hall/timetable")
+  revalidatePath("/admin/dining-hall/register")
+  revalidatePath("/admin/dining-hall/summary")
   revalidatePath("/dashboard/dining-hall")
   revalidatePath("/dashboard")
 
