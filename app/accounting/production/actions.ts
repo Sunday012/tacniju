@@ -433,9 +433,10 @@ export async function saveProductionJournal(formData: FormData) {
 
   revalidatePath("/accounting/production")
   revalidatePath("/accounting/production/journal-summary")
-  revalidatePath("/accounting/production/kitchen")
   revalidatePath("/accounting/production/reports")
   revalidatePath("/accounting/production/reports/stock")
   revalidatePath("/accounting/production/inventory/items")
+  revalidatePath("/admin/dining-hall")
+  revalidatePath("/admin/dining-hall/kitchen")
   revalidatePath("/admin/dining-hall/timetable")
 }

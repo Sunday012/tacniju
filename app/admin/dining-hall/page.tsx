@@ -1,7 +1,8 @@
 import Link from "next/link"
-import { ClipboardCheck, FileText, Utensils, Users } from "lucide-react"
+import { ChefHat, ClipboardCheck, FileText, Utensils, Users } from "lucide-react"
 import { createClient } from "@/lib/server"
 import { CreateMealSheet } from "@/components/admin/dining-hall/CreateMealSheet"
+import { getKitchenStockRows } from "@/app/accounting/production/actions"
 
 export const dynamic = "force-dynamic"
 
@@ -10,6 +11,11 @@ const menuItems = [
     href: "/admin/dining-hall/timetable",
     label: "Meal Timetable",
     icon: ClipboardCheck,
+  },
+  {
+    href: "/admin/dining-hall/kitchen",
+    label: "Kitchen",
+    icon: ChefHat,
   },
   {
     href: "/admin/dining-hall/register",
@@ -25,6 +31,7 @@ const menuItems = [
 
 export default async function DiningHallAdminPage() {
   const supabase = await createClient()
+  const kitchenRows = await getKitchenStockRows()
   const { count: peopleCount } = await supabase
     .from("profiles")
     .select("id", { count: "exact", head: true })
@@ -52,7 +59,11 @@ export default async function DiningHallAdminPage() {
               <p className="mt-1 text-2xl text-indigo-600">Plate</p>
             </div>
             <div className="flex items-center">
-              <CreateMealSheet />
+              <CreateMealSheet kitchenItems={kitchenRows.map(row => ({
+                name: row.name,
+                quantity: row.quantity,
+                unit: row.unit,
+              }))} />
             </div>
           </div>
         </div>
