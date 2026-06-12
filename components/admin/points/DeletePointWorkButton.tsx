@@ -2,10 +2,12 @@
 
 import { useState } from "react"
 import { Loader2, Trash2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { deletePointWorkRecord } from "@/app/admin/points/actions"
 
 export function DeletePointWorkButton({ recordId }: { recordId: string }) {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
 
   async function handleDelete() {
@@ -18,6 +20,7 @@ export function DeletePointWorkButton({ recordId }: { recordId: string }) {
         toast.error(result.error)
       } else {
         toast.success("Work deleted.")
+        router.refresh()
       }
     } catch (error) {
       toast.error("Something went wrong")

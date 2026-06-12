@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Loader2, Plus } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { createPointWorkRecord } from "@/app/admin/points/actions"
 import {
@@ -30,6 +31,7 @@ export function CreatePointWorkSheet({
   defaultMode: "add" | "remove"
   members: MemberOption[]
 }) {
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -44,6 +46,7 @@ export function CreatePointWorkSheet({
       } else {
         toast.success("Work created.")
         setOpen(false)
+        router.refresh()
       }
     } catch (error) {
       toast.error("Something went wrong")

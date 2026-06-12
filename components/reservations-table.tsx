@@ -1,11 +1,12 @@
 "use client"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Search, Loader2, Printer, Trash2 } from "lucide-react"
-import { generateReservationNumberAction, bulkGenerateReservationNumbersAction, deleteReservationNumberAction } from "@/app/actions"
+import { assignReservationNumberAction, generateReservationNumberAction, bulkGenerateReservationNumbersAction, deleteReservationNumberAction } from "@/app/actions"
 import Link from "next/link"
 import { toast } from "sonner"
 
@@ -22,8 +23,11 @@ interface ReservationsTableProps {
 }
 
 export function ReservationsTable({ members }: ReservationsTableProps) {
+  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
   const [generatingId, setGeneratingId] = useState<string | null>(null)
+  const [manualNumbers, setManualNumbers] = useState<Record<string, string>>({})
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [isBulkGenerating, setIsBulkGenerating] = useState(false)
 
   const filteredMembers = members.filter((member) =>
@@ -39,6 +43,7 @@ export function ReservationsTable({ members }: ReservationsTableProps) {
         toast.error(result.message)
       } else {
         toast.success(result.message || "Generated successfully")
+        router.refresh()
       }
     } catch (error) {
       console.error(error)
@@ -57,6 +62,43 @@ export function ReservationsTable({ members }: ReservationsTableProps) {
         toast.error(result.message)
       } else {
         toast.success(result.message || "Deleted successfully")
+        router.refresh()
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error("An error occurred")
+    } finally {
+      setGeneratingId(null)
+    }
+  }
+
+  const startEdit = (member: Profile) => {
+    setEditingId(member.id)
+    setManualNumbers(current => ({ ...current, [member.id]: member.reservation_number || "" }))
+  }
+
+  const cancelEdit = (id: string) => {
+    setEditingId(null)
+    setManualNumbers(current => ({ ...current, [id]: "" }))
+  }
+
+  const handleManualAssign = async (id: string) => {
+    const reservationNumber = (manualNumbers[id] || "").trim()
+    if (!reservationNumber) {
+      toast.error("Enter a reservation number first.")
+      return
+    }
+
+    setGeneratingId(id)
+    try {
+      const result = await assignReservationNumberAction(id, reservationNumber)
+      if (!result.success) {
+        toast.error(result.message)
+      } else {
+        toast.success(result.message || "Reservation number assigned")
+        setManualNumbers(current => ({ ...current, [id]: "" }))
+        setEditingId(null)
+        router.refresh()
       }
     } catch (error) {
       console.error(error)
@@ -73,6 +115,7 @@ export function ReservationsTable({ members }: ReservationsTableProps) {
       const result = await bulkGenerateReservationNumbersAction()
       if (result.success) {
         toast.success(result.message)
+        router.refresh()
       } else {
         toast.error(result.message)
       }
@@ -148,7 +191,14 @@ export function ReservationsTable({ members }: ReservationsTableProps) {
                   </TableCell>
                   <TableCell className="text-slate-600">{member.assembly || "N/A"}</TableCell>
                   <TableCell>
-                    {member.reservation_number ? (
+                    {editingId === member.id ? (
+                      <Input
+                        value={manualNumbers[member.id] || ""}
+                        onChange={(event) => setManualNumbers(current => ({ ...current, [member.id]: event.target.value }))}
+                        className="h-9 w-36 font-mono text-sm"
+                        disabled={generatingId === member.id || isBulkGenerating}
+                      />
+                    ) : member.reservation_number ? (
                       <span className="font-mono text-indigo-700 font-bold bg-indigo-50 px-2 py-1 rounded">
                         {member.reservation_number}
                       </span>
@@ -158,27 +208,76 @@ export function ReservationsTable({ members }: ReservationsTableProps) {
                   </TableCell>
                   <TableCell className="text-right print:hidden">
                     <div className="flex justify-end gap-2">
-                      {!member.reservation_number ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleGenerate(member.id)}
-                          disabled={generatingId === member.id || isBulkGenerating}
-                          className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                        >
-                          {generatingId === member.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Generate"}
-                        </Button>
+                      {editingId === member.id ? (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleManualAssign(member.id)}
+                            disabled={generatingId === member.id || isBulkGenerating}
+                            className="text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                          >
+                            {generatingId === member.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => cancelEdit(member.id)}
+                            disabled={generatingId === member.id || isBulkGenerating}
+                          >
+                            Cancel
+                          </Button>
+                        </>
+                      ) : !member.reservation_number ? (
+                        <>
+                          <Input
+                            value={manualNumbers[member.id] || ""}
+                            onChange={(event) => setManualNumbers(current => ({ ...current, [member.id]: event.target.value }))}
+                            placeholder="Enter number"
+                            disabled={generatingId === member.id || isBulkGenerating}
+                            className="h-9 w-32 text-sm"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleManualAssign(member.id)}
+                            disabled={generatingId === member.id || isBulkGenerating}
+                            className="text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                          >
+                            {generatingId === member.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleGenerate(member.id)}
+                            disabled={generatingId === member.id || isBulkGenerating}
+                            className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                          >
+                            {generatingId === member.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Generate"}
+                          </Button>
+                        </>
                       ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(member.id)}
-                          disabled={generatingId === member.id || isBulkGenerating}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          title="Delete Reservation Number"
-                        >
-                          {generatingId === member.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                        </Button>
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => startEdit(member)}
+                            disabled={generatingId === member.id || isBulkGenerating}
+                            className="text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700"
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(member.id)}
+                            disabled={generatingId === member.id || isBulkGenerating}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            title="Delete Reservation Number"
+                          >
+                            {generatingId === member.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                          </Button>
+                        </>
                       )}
                     </div>
                   </TableCell>

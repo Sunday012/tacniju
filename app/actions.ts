@@ -287,6 +287,58 @@ export async function generateReservationNumberAction(memberId: string) {
     return { success: true, message: `Assigned number ${newNum}` }
 }
 
+export async function assignReservationNumberAction(memberId: string, reservationNumber: string) {
+    const supabase = await createClient()
+
+    // Verify Admin
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, message: "Unauthorized. Please login." }
+
+    const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
+    if (!profile?.is_admin && user.email !== "sundayfavour997@gmail.com") {
+        return { success: false, message: "Access denied. Admins only." }
+    }
+
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceRoleKey) return { success: false, message: "Server configuration error." }
+    const adminSupabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
+
+    const cleanNumber = reservationNumber.trim()
+    if (!memberId.trim()) return { success: false, message: "Member is required." }
+    if (!cleanNumber) return { success: false, message: "Reservation number is required." }
+
+    const { data: existingOwner, error: existingError } = await adminSupabase
+        .from("profiles")
+        .select("id, full_name")
+        .eq("reservation_number", cleanNumber)
+        .maybeSingle()
+
+    if (existingError) {
+        console.error("Failed to check reservation number:", existingError)
+        return { success: false, message: "Failed to check reservation number." }
+    }
+
+    if (existingOwner && existingOwner.id !== memberId) {
+        const ownerName = existingOwner.full_name ? ` by ${existingOwner.full_name}` : ""
+        return { success: false, message: `Reservation number ${cleanNumber} is already used${ownerName}.` }
+    }
+
+    const { error } = await adminSupabase
+        .from("profiles")
+        .update({ reservation_number: cleanNumber })
+        .eq("id", memberId)
+
+    if (error) {
+        console.error("Failed to assign reservation number:", error)
+        return { success: false, message: "Failed to assign reservation number." }
+    }
+
+    revalidatePath("/admin")
+    revalidatePath("/admin/reservations")
+    revalidatePath(`/admin/reservations/${memberId}`)
+    return { success: true, message: `Assigned number ${cleanNumber}` }
+}
+
 export async function bulkGenerateReservationNumbersAction() {
     const supabase = await createClient()
 
