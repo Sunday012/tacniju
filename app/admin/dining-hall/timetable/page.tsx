@@ -4,11 +4,13 @@ import { createClient } from "@/lib/server"
 import { CreateMealSheet } from "@/components/admin/dining-hall/CreateMealSheet"
 import { DeleteAllMealsButton } from "@/components/admin/dining-hall/DeleteAllMealsButton"
 import { DeleteMealButton } from "@/components/admin/dining-hall/DeleteMealButton"
+import { getKitchenStockRows } from "@/app/accounting/production/actions"
 
 export const dynamic = "force-dynamic"
 
 export default async function DiningHallTimetablePage() {
   const supabase = await createClient()
+  const kitchenRows = await getKitchenStockRows()
   const { data: meals, error: mealsError } = await supabase
     .from("dining_hall_meals")
     .select("id, meal_name, camp_day, meal_time, points, unit_name, active, created_at")
@@ -31,7 +33,11 @@ export default async function DiningHallTimetablePage() {
             </Link>
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Meal Timetable</h1>
           </div>
-          <CreateMealSheet />
+          <CreateMealSheet kitchenItems={kitchenRows.map(row => ({
+            name: row.name,
+            quantity: row.quantity,
+            unit: row.unit,
+          }))} />
         </div>
 
         <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">

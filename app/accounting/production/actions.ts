@@ -27,6 +27,25 @@ export type ProductionUnit = {
   active: boolean
 }
 
+export type ProductionJournalSummary = {
+  id: string
+  voucherNo: string
+  batchNo: string
+  journalType: string
+  itemCount: number
+  totalQty: number
+  narration: string
+}
+
+export type KitchenStockRow = {
+  itemId: string
+  name: string
+  quantity: number
+  unit: string
+  rate: number
+  value: number
+}
+
 export async function getProductionCategories() {
   const supabase = await createClient()
   const orgId = await getOrgId()
@@ -229,6 +248,103 @@ export async function deleteProductionUnit(unitId: string) {
   return { success: true }
 }
 
+export async function getProductionJournalSummaries(): Promise<ProductionJournalSummary[]> {
+  const supabase = await createClient()
+  const orgId = await getOrgId()
+
+  const { data, error } = await supabase
+    .from("vouchers")
+    .select(`
+      id,
+      voucher_no,
+      reference,
+      narration,
+      voucher_items (
+        qty
+      )
+    `)
+    .eq("org_id", orgId)
+    .eq("voucher_type", "Purchase")
+    .in("narration", ["Production", "Raw Material"])
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("Failed to fetch production journal summaries", error)
+    return []
+  }
+
+  return (data || []).map((voucher: any) => ({
+    id: voucher.id,
+    voucherNo: voucher.voucher_no || "-",
+    batchNo: voucher.reference || "-",
+    journalType: voucher.narration || "-",
+    itemCount: (voucher.voucher_items || []).length,
+    totalQty: (voucher.voucher_items || []).reduce((sum: number, item: any) => sum + Number(item.qty || 0), 0),
+    narration: voucher.narration || "-",
+  }))
+}
+
+export async function getKitchenStockRows(): Promise<KitchenStockRow[]> {
+  const supabase = await createClient()
+  const orgId = await getOrgId()
+
+  const { data, error } = await supabase
+    .from("voucher_items")
+    .select(`
+      item_id,
+      qty,
+      amount,
+      items (
+        name,
+        unit,
+        primary_unit,
+        purchase_rate,
+        selling_rate
+      ),
+      vouchers!inner (
+        org_id,
+        voucher_type,
+        narration
+      )
+    `)
+    .eq("vouchers.org_id", orgId)
+    .eq("vouchers.voucher_type", "Purchase")
+    .eq("vouchers.narration", "Production")
+    .eq("movement_type", "IN")
+
+  if (error) {
+    console.error("Failed to fetch kitchen stock rows", error)
+    return []
+  }
+
+  const rows = new Map<string, KitchenStockRow>()
+  for (const movement of data || []) {
+    const item = Array.isArray((movement as any).items) ? (movement as any).items[0] : (movement as any).items
+    if (!item) continue
+
+    const itemId = String((movement as any).item_id)
+    const qty = Number((movement as any).qty || 0)
+    const amount = Number((movement as any).amount || 0)
+    const current = rows.get(itemId)
+    const quantity = (current?.quantity || 0) + qty
+    const value = (current?.value || 0) + amount
+    const fallbackRate = Number(item.purchase_rate || item.selling_rate || 0)
+
+    rows.set(itemId, {
+      itemId,
+      name: String(item.name || "-"),
+      quantity,
+      unit: String(item.primary_unit || item.unit || ""),
+      rate: quantity > 0 && value > 0 ? value / quantity : fallbackRate,
+      value,
+    })
+  }
+
+  return Array.from(rows.values())
+    .filter(row => row.quantity > 0)
+    .sort((a, b) => a.name.localeCompare(b.name))
+}
+
 export async function saveProductionJournal(formData: FormData) {
   const supabase = await createClient()
   const orgId = await getOrgId()
@@ -316,7 +432,10 @@ export async function saveProductionJournal(formData: FormData) {
   }
 
   revalidatePath("/accounting/production")
+  revalidatePath("/accounting/production/journal-summary")
+  revalidatePath("/accounting/production/kitchen")
   revalidatePath("/accounting/production/reports")
   revalidatePath("/accounting/production/reports/stock")
   revalidatePath("/accounting/production/inventory/items")
+  revalidatePath("/admin/dining-hall/timetable")
 }

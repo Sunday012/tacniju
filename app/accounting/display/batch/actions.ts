@@ -37,6 +37,7 @@ export async function getBatches(): Promise<BatchListItem[]> {
     `)
     .eq("org_id", orgId)
     .eq("voucher_type", "Purchase")
+    .like("voucher_no", "BAT-%")
     .not("reference", "is", null)
     .order("created_at", { ascending: true })
 

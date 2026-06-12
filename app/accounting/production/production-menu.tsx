@@ -1,4 +1,4 @@
-import { Boxes, ClipboardList, FileBarChart, FolderTree, Package, ReceiptText, Ruler, ScrollText } from "lucide-react"
+import { Boxes, ChefHat, ClipboardList, FileBarChart, FolderTree, Package, ReceiptText, Ruler, ScrollText } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { AccountingMenuList } from "@/components/accounting/accounting-menu-list"
 
@@ -11,6 +11,7 @@ type ProductionMenuItem = {
 export const productionMenuItems: ProductionMenuItem[] = [
   { label: "Stock Journal", href: "/accounting/production/stock-journal", icon: ClipboardList },
   { label: "Raw Material Journal", href: "/accounting/production/raw-material-journal", icon: ScrollText },
+  { label: "Kitchen", href: "/accounting/production/kitchen", icon: ChefHat },
   { label: "Inventory", href: "/accounting/production/inventory", icon: Boxes },
   { label: "Journal Summary", href: "/accounting/production/journal-summary", icon: ReceiptText },
   { label: "Reports", href: "/accounting/production/reports", icon: FileBarChart },

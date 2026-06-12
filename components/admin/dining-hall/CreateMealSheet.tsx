@@ -11,7 +11,13 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 
-export function CreateMealSheet() {
+type KitchenMealOption = {
+  name: string
+  quantity: number
+  unit: string
+}
+
+export function CreateMealSheet({ kitchenItems = [] }: { kitchenItems?: KitchenMealOption[] }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -33,8 +39,17 @@ export function CreateMealSheet() {
         <form action={createDiningHallMeal} className="grid gap-4 px-6 py-5">
           <label className="grid gap-1.5 text-sm font-bold text-slate-600">
             Meal name
-            <input name="meal_name" className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" placeholder="Meal name" required />
+            <input name="meal_name" list="kitchen-meal-options" className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" placeholder="Meal name" required />
           </label>
+          <datalist id="kitchen-meal-options">
+            {kitchenItems.map(item => (
+              <option
+                key={item.name}
+                value={item.name}
+                label={`${item.quantity.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${item.unit}`}
+              />
+            ))}
+          </datalist>
           <label className="grid gap-1.5 text-sm font-bold text-slate-600">
             Camp day
             <input name="camp_day" className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" placeholder="Camp day" required />
