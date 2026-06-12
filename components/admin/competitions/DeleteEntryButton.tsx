@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { Trash2, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { removeCompetitionEntry } from "@/app/actions/competitions";
 import { toast } from "sonner";
 
 export function DeleteEntryButton({ entryId, competitionId }: { entryId: string, competitionId: string }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   async function handleDelete() {
@@ -20,6 +22,7 @@ export function DeleteEntryButton({ entryId, competitionId }: { entryId: string,
         toast.error(res.error);
       } else {
         toast.success("Entry removed successfully.");
+        router.refresh();
       }
     } catch (error) {
       toast.error("Something went wrong");

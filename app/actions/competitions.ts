@@ -100,12 +100,29 @@ export async function enterCompetition(formData: FormData) {
   const profile = profiles[0];
   const cost = competition.registration_points || 0;
 
-  // 3. Check points
+  // 3. Check for an existing entry before touching points.
+  const { data: existingEntry, error: existingEntryError } = await supabase
+    .from("competition_entries")
+    .select("id")
+    .eq("competition_id", competitionId)
+    .eq("profile_id", profile.id)
+    .maybeSingle();
+
+  if (existingEntryError) {
+    console.error("Error checking competition entry:", existingEntryError);
+    return { error: "Could not verify existing entry." };
+  }
+
+  if (existingEntry) {
+    return { error: "This person is already entered into this competition." };
+  }
+
+  // 4. Check points
   if (profile.points < cost) {
     return { error: `Insufficient points. Member has ${profile.points} but needs ${cost}.` };
   }
 
-  // 4. Use a transaction-like approach (Supabase RPC would be better, but we can do it sequentially)
+  // 5. Use a transaction-like approach (Supabase RPC would be better, but we can do it sequentially)
   // Deduct points
   const { error: updateError } = await supabase
     .from("profiles")
@@ -116,7 +133,7 @@ export async function enterCompetition(formData: FormData) {
     return { error: "Failed to deduct points." };
   }
 
-  // 5. Insert into competition_entries
+  // 6. Insert into competition_entries
   const { error: insertError } = await supabase
     .from("competition_entries")
     .insert([{ competition_id: competitionId, profile_id: profile.id }]);
@@ -136,6 +153,8 @@ export async function enterCompetition(formData: FormData) {
   }
 
   revalidatePath(`/admin/competitions/${competitionId}`);
+  revalidatePath("/admin/competitions");
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
@@ -181,6 +200,7 @@ export async function generateTeams(competitionId: string, teamCount: number) {
   if (memberError) return { error: "Failed to assign team members." };
 
   revalidatePath(`/admin/competitions/${competitionId}`);
+  revalidatePath("/admin/competitions");
   return { success: true };
 }
 
@@ -235,4 +255,3 @@ export async function deleteCompetition(competitionId: string) {
   revalidatePath("/admin/competitions");
   return { success: true };
 }
-

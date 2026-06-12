@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { Trash2, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { deleteMealTicket } from "@/app/actions/meal-tickets";
 import { toast } from "sonner";
 
 export function DeleteTicketButton({ ticketId }: { ticketId: string }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   async function handleDelete() {
@@ -20,6 +22,7 @@ export function DeleteTicketButton({ ticketId }: { ticketId: string }) {
         toast.error(res.error);
       } else {
         toast.success("Meal ticket deleted successfully.");
+        router.refresh();
       }
     } catch (error) {
       toast.error("Something went wrong");

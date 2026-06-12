@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Loader2, ShoppingCart, Info } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
 export function RequestItemModal({ asset, profilePoints }: { asset: any, profilePoints: number }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"points" | "money">("points");
@@ -33,6 +35,7 @@ export function RequestItemModal({ asset, profilePoints }: { asset: any, profile
       } else {
         toast.success("Request placed successfully!");
         setOpen(false);
+        router.refresh();
       }
     } catch (error) {
       toast.error("Something went wrong");

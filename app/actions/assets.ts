@@ -391,6 +391,9 @@ export async function updateStallOrderStatus(orderId: string, status: string, as
   }
 
   revalidatePath("/admin/stock");
+  revalidatePath("/admin/stalls");
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/stall");
   return { success: true };
 }
 
@@ -409,6 +412,9 @@ export async function createStallOrder(assetId: string, paymentMethod: string) {
   if (assetError || !asset) return { error: "Item not found" };
   if (asset.available_quantity <= 0) return { error: "Item is out of stock" };
 
+  let originalPoints: number | null = null;
+  let deductedPoints = 0;
+
   // If paying with points, deduct points
   if (paymentMethod === "points") {
     const { data: profile, error: profileError } = await supabase
@@ -422,10 +428,13 @@ export async function createStallOrder(assetId: string, paymentMethod: string) {
       return { error: "You do not have enough points for this item." };
     }
 
+    originalPoints = Number(profile.points || 0);
+    deductedPoints = Number(asset.point_price || 0);
+
     // Deduct points
     const { error: deductError } = await supabase
       .from("profiles")
-      .update({ points: profile.points - asset.point_price })
+      .update({ points: originalPoints - deductedPoints })
       .eq("id", user.id);
 
     if (deductError) return { error: "Failed to deduct points" };
@@ -440,13 +449,20 @@ export async function createStallOrder(assetId: string, paymentMethod: string) {
   });
 
   if (orderError) {
-    // Note: if order fails after deducting points, we should ideally refund them, but keeping it simple for now.
+    if (paymentMethod === "points" && originalPoints !== null) {
+      await supabase
+        .from("profiles")
+        .update({ points: originalPoints })
+        .eq("id", user.id);
+    }
     console.error("Error creating order:", orderError);
     return { error: "Failed to place request" };
   }
 
   revalidatePath("/dashboard/stall");
+  revalidatePath("/dashboard");
   revalidatePath("/admin/stock");
+  revalidatePath("/admin/stalls");
   return { success: true };
 }
 
@@ -463,5 +479,6 @@ export async function deleteStallOrder(orderId: string) {
   }
 
   revalidatePath("/admin/stalls");
+  revalidatePath("/admin/stock");
   return { success: true };
 }

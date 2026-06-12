@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Loader2, Ticket, Search, UserPlus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,7 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/client";
 
 export function GenerateTicketModal() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
@@ -70,6 +72,7 @@ export function GenerateTicketModal() {
         setSelectedMember(null);
         setSearchQuery("");
         setSearchResults([]);
+        router.refresh();
       }
     } catch (error) {
       toast.error("Something went wrong");

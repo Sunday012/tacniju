@@ -2,11 +2,13 @@
 
 import { Check, X, Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { updateStallOrderStatus } from "@/app/actions/assets";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
 export function StallOrdersTable({ orders }: { orders: any[] }) {
+  const router = useRouter();
   const [processing, setProcessing] = useState<string | null>(null);
 
   async function handleStatusUpdate(orderId: string, status: string, assetId: string, paymentMethod: string, profileId: string, pointPrice: number) {
@@ -14,7 +16,10 @@ export function StallOrdersTable({ orders }: { orders: any[] }) {
     try {
       const res = await updateStallOrderStatus(orderId, status, assetId, paymentMethod, profileId, pointPrice);
       if (res.error) toast.error(res.error);
-      else toast.success(`Order ${status} successfully`);
+      else {
+        toast.success(`Order ${status} successfully`);
+        router.refresh();
+      }
     } catch (err) {
       toast.error("An error occurred");
     } finally {
@@ -29,7 +34,10 @@ export function StallOrdersTable({ orders }: { orders: any[] }) {
       const { deleteStallOrder } = await import("@/app/actions/assets");
       const res = await deleteStallOrder(orderId);
       if (res.error) toast.error(res.error);
-      else toast.success("Order deleted successfully");
+      else {
+        toast.success("Order deleted successfully");
+        router.refresh();
+      }
     } catch (err) {
       toast.error("An error occurred");
     } finally {

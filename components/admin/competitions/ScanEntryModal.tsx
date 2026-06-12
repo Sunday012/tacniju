@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Loader2, ScanBarcode, Camera, UserPlus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Html5QrcodeScanner } from "html5-qrcode";
 import {
   Dialog,
@@ -15,6 +16,7 @@ import { enterCompetition } from "@/app/actions/competitions";
 import { toast } from "sonner";
 
 export function ScanEntryModal({ competitionId }: { competitionId: string }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [useCamera, setUseCamera] = useState(false);
@@ -96,6 +98,7 @@ export function ScanEntryModal({ competitionId }: { competitionId: string }) {
       } else {
         toast.success("Successfully entered into competition!");
         setReservationNumber("");
+        router.refresh();
         // Note: we don't close the modal so they can keep scanning multiple people
       }
     } catch (error) {
