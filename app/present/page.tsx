@@ -8,7 +8,37 @@ type PresentationState = {
   is_active: boolean;
   type: "text" | "bible" | "lyrics" | "media";
   content: any;
+  timer_state?: PresentationTimerState | null;
 };
+
+type PresentationTimerState = {
+  active: boolean;
+  mode: "timer" | "stopwatch";
+  fullscreen?: boolean;
+  durationSeconds?: number;
+  startedAt?: string | null;
+  pausedSeconds?: number;
+  corner?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+};
+
+function getElapsedSeconds(timerState?: PresentationTimerState | null) {
+  if (!timerState?.active || !timerState.startedAt) return Number(timerState?.pausedSeconds || 0);
+  return Math.max(0, Math.floor((Date.now() - new Date(timerState.startedAt).getTime()) / 1000) + Number(timerState.pausedSeconds || 0));
+}
+
+function formatClock(totalSeconds: number) {
+  const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  const seconds = safeSeconds % 60;
+  const parts = hours > 0 ? [hours, minutes, seconds] : [minutes, seconds];
+  return parts.map(part => String(part).padStart(2, "0")).join(":");
+}
+
+function getRemainingSeconds(timerState?: PresentationTimerState | null) {
+  const duration = Number(timerState?.durationSeconds || 0);
+  return Math.max(0, duration - getElapsedSeconds(timerState));
+}
 
 export default function PresentationDisplay() {
   const [state, setState] = useState<PresentationState>({
@@ -18,7 +48,13 @@ export default function PresentationDisplay() {
   });
   
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [, setNow] = useState(Date.now());
   const supabase = createClient();
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const fetchState = async () => {
@@ -33,6 +69,7 @@ export default function PresentationDisplay() {
           is_active: data.is_active,
           type: data.type as any,
           content: data.content,
+          timer_state: data.timer_state || null,
         });
       }
     };
@@ -56,6 +93,7 @@ export default function PresentationDisplay() {
             is_active: payload.new.is_active,
             type: payload.new.type,
             content: payload.new.content,
+            timer_state: payload.new.timer_state || null,
           });
         }
       )
@@ -91,6 +129,20 @@ export default function PresentationDisplay() {
 
   // Render logic based on state type
   const renderContent = () => {
+    const timerState = state.timer_state;
+    if (timerState?.active && timerState.mode === "stopwatch" && timerState.fullscreen) {
+      return (
+        <div className="flex h-full w-full flex-col items-center justify-center px-12 text-center animate-in fade-in duration-500">
+          <p className="mb-8 text-3xl font-black uppercase tracking-[0.3em] text-amber-400 drop-shadow-lg">
+            Stopwatch
+          </p>
+          <div className="font-mono text-[18vw] font-black leading-none text-white drop-shadow-2xl">
+            {formatClock(getElapsedSeconds(timerState))}
+          </div>
+        </div>
+      );
+    }
+
     if (!state.is_active || !state.content) {
       return (
         <div className="flex items-center justify-center h-full w-full opacity-30">
@@ -195,6 +247,32 @@ export default function PresentationDisplay() {
     }
   };
 
+  const renderTimerOverlay = () => {
+    const timerState = state.timer_state;
+    if (!timerState?.active || (timerState.mode === "stopwatch" && timerState.fullscreen)) return null;
+
+    const remaining = timerState.mode === "timer" ? getRemainingSeconds(timerState) : getElapsedSeconds(timerState);
+    const corner = timerState.corner || "top-right";
+    const cornerClass = {
+      "top-left": "top-8 left-8",
+      "top-right": "top-8 right-8",
+      "bottom-left": "bottom-8 left-8",
+      "bottom-right": "bottom-8 right-8",
+    }[corner];
+    const isDone = timerState.mode === "timer" && remaining <= 0;
+
+    return (
+      <div className={`absolute z-40 ${cornerClass} rounded-2xl border border-white/20 bg-black/65 px-6 py-4 text-right shadow-2xl backdrop-blur-md`}>
+        <p className="mb-1 text-xs font-black uppercase tracking-[0.25em] text-slate-300">
+          {timerState.mode === "timer" ? "Timer" : "Stopwatch"}
+        </p>
+        <div className={`font-mono text-5xl font-black leading-none ${isDone ? "text-rose-300" : "text-white"}`}>
+          {formatClock(remaining)}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 bg-black text-white overflow-hidden font-sans">
       {/* Subtle Background Elements */}
@@ -205,6 +283,7 @@ export default function PresentationDisplay() {
       <div className="relative z-10 w-full h-full flex flex-col">
         {renderContent()}
       </div>
+      {renderTimerOverlay()}
 
       {/* Hover Controls (Hidden during presentation unless hovered) */}
       <div className="absolute top-4 right-4 z-50 opacity-0 hover:opacity-100 transition-opacity duration-300">

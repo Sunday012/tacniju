@@ -1,5 +1,8 @@
 import { AccountingShell } from "@/components/accounting/accounting-shell"
+import Link from "next/link"
+import { Edit3 } from "lucide-react"
 import { getProductionJournalSummaries } from "../actions"
+import { DeleteProductionJournalButton } from "@/components/accounting/production/DeleteProductionJournalButton"
 
 export default async function JournalSummaryPage() {
   const rows = await getProductionJournalSummaries()
@@ -47,12 +50,13 @@ function JournalSummaryTable({
               <th className="px-5 py-3 text-right">Items</th>
               <th className="px-5 py-3 text-right">Total Qty</th>
               <th className="px-5 py-3">Narration</th>
+              <th className="px-5 py-3 text-right">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-5 py-8 text-center font-medium text-slate-500">
+                <td colSpan={7} className="px-5 py-8 text-center font-medium text-slate-500">
                   {emptyMessage}
                 </td>
               </tr>
@@ -64,6 +68,18 @@ function JournalSummaryTable({
                 <td className="px-5 py-4 text-right font-black text-slate-800">{row.itemCount}</td>
                 <td className="px-5 py-4 text-right font-black text-indigo-600">{row.totalQty.toLocaleString()}</td>
                 <td className="px-5 py-4">{row.narration}</td>
+                <td className="px-5 py-4">
+                  <div className="flex justify-end gap-2">
+                    <Link
+                      href={`${row.journalType === "Raw Material" ? "/accounting/production/raw-material-journal" : "/accounting/production/stock-journal"}?edit=${row.id}`}
+                      className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-indigo-200 bg-white px-3 text-xs font-black text-indigo-600 hover:bg-indigo-50"
+                    >
+                      <Edit3 className="h-3.5 w-3.5" />
+                      Edit
+                    </Link>
+                    <DeleteProductionJournalButton journalId={row.id} />
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>

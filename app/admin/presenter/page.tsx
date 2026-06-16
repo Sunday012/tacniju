@@ -3,6 +3,7 @@ import { CustomTextController } from "@/components/presenter/CustomTextControlle
 import { BibleController } from "@/components/presenter/BibleController";
 import { SongsController } from "@/components/presenter/SongsController";
 import { ActiveScreenStatus } from "@/components/presenter/ActiveScreenStatus";
+import { TimerController } from "@/components/presenter/TimerController";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,7 @@ export default function PresenterDashboard() {
             <SongsController />
           </div>
           <div className="space-y-8">
+            <TimerController />
             <CustomTextController />
             
             <div className="bg-slate-50 border border-slate-200 p-6 rounded-3xl">

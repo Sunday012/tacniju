@@ -121,6 +121,55 @@ export async function updateMemberRankAction(memberId: string, newRank: string) 
     return { success: true }
 }
 
+export async function updateAwardAction(id: string, name: string) {
+    const supabase = await createClient()
+
+    const cleanName = name.trim()
+    if (!id || !cleanName) return { success: false, message: "Award name is required." }
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, message: "Unauthorized." }
+
+    const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
+    if (!profile?.is_admin && user.email !== "sundayfavour997@gmail.com") {
+        return { success: false, message: "Access denied." }
+    }
+
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceRoleKey) return { success: false, message: "Server configuration error." }
+
+    const adminSupabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
+    const { data: awardData } = await adminSupabase.from("awards").select("name").eq("id", id).single()
+    const oldName = awardData?.name
+
+    const { error } = await adminSupabase.from("awards").update({ name: cleanName }).eq("id", id)
+
+    if (error) {
+        console.error("Failed to update award:", error)
+        return { success: false, message: error.code === '23505' ? "Award already exists." : "Failed to update award." }
+    }
+
+    if (oldName && oldName !== cleanName) {
+        const { data: profilesWithAwards } = await adminSupabase.from("profiles").select("id, awards").not("awards", "is", null).not("awards", "eq", "");
+        if (profilesWithAwards) {
+            for (const p of profilesWithAwards) {
+                const awards = String(p.awards || "").split(",").map((a: string) => a.trim()).filter(Boolean)
+                if (awards.includes(oldName)) {
+                    const newAwards = awards.map((award: string) => award === oldName ? cleanName : award).join(", ")
+                    await adminSupabase.from("profiles").update({ awards: newAwards || null }).eq("id", p.id);
+                }
+            }
+        }
+    }
+
+    revalidatePath("/admin")
+    revalidatePath("/admin/awards")
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/diary")
+    revalidatePath("/admin/diary")
+    return { success: true }
+}
+
 export async function updateMemberDiaryDetailsAction(memberId: string, data: { office_position?: string, member_role?: string, member_status?: string, status_reason?: string, awards?: string }) {
     const supabase = await createClient()
 
@@ -190,6 +239,7 @@ export async function createAwardAction(name: string) {
     }
 
     revalidatePath("/admin")
+    revalidatePath("/admin/awards")
     return { success: true }
 }
 
@@ -237,6 +287,7 @@ export async function deleteAwardAction(id: string) {
     }
 
     revalidatePath("/admin")
+    revalidatePath("/admin/awards")
     revalidatePath("/dashboard")
     return { success: true }
 }

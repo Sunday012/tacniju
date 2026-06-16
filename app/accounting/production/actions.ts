@@ -37,6 +37,15 @@ export type ProductionJournalSummary = {
   narration: string
 }
 
+export type ProductionJournalDetail = {
+  id: string
+  voucherNo: string
+  batchNo: string
+  journalType: "Production" | "Raw Material"
+  inRows: Array<{ itemName: string; qty: number }>
+  outRows: Array<{ itemName: string; qty: number }>
+}
+
 export type KitchenStockRow = {
   itemId: string
   name: string
@@ -44,6 +53,7 @@ export type KitchenStockRow = {
   unit: string
   rate: number
   value: number
+  isVisible: boolean
 }
 
 export async function getProductionCategories() {
@@ -116,7 +126,7 @@ export async function updateProductionCategory(formData: FormData) {
   return { success: true }
 }
 
-export async function deleteProductionCategory(categoryId: string) {
+export async function setProductionCategoryActive(categoryId: string, active: boolean) {
   const supabase = await createClient()
   const orgId = await getOrgId()
   const id = categoryId.trim()
@@ -126,15 +136,39 @@ export async function deleteProductionCategory(categoryId: string) {
   const { error } = await supabase
     .from("production_categories")
     .update({
-      active: false,
+      active,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
     .eq("org_id", orgId)
 
   if (error) {
-    console.error("Failed to delete production category", error)
-    return { error: "Failed to delete category." }
+    console.error("Failed to update production category status", error)
+    return { error: "Failed to update category status." }
+  }
+
+  revalidatePath("/accounting/production/inventory/categories")
+  revalidatePath("/accounting/production/inventory/items")
+  revalidatePath("/accounting/production/reports/category")
+  return { success: true }
+}
+
+export async function deleteProductionCategory(categoryId: string) {
+  const supabase = await createClient()
+  const orgId = await getOrgId()
+  const id = categoryId.trim()
+
+  if (!id) return { error: "Category ID is required." }
+
+  const { error } = await supabase
+    .from("production_categories")
+    .delete()
+    .eq("id", id)
+    .eq("org_id", orgId)
+
+  if (error) {
+    console.error("Failed to permanently delete production category", error)
+    return { error: "Failed to delete category. It may still be used by existing items." }
   }
 
   revalidatePath("/accounting/production/inventory/categories")
@@ -265,7 +299,6 @@ export async function getProductionJournalSummaries(): Promise<ProductionJournal
     `)
     .eq("org_id", orgId)
     .eq("voucher_type", "Purchase")
-    .in("narration", ["Production", "Raw Material"])
     .order("created_at", { ascending: false })
 
   if (error) {
@@ -273,18 +306,30 @@ export async function getProductionJournalSummaries(): Promise<ProductionJournal
     return []
   }
 
-  return (data || []).map((voucher: any) => ({
-    id: voucher.id,
-    voucherNo: voucher.voucher_no || "-",
-    batchNo: voucher.reference || "-",
-    journalType: voucher.narration || "-",
-    itemCount: (voucher.voucher_items || []).length,
-    totalQty: (voucher.voucher_items || []).reduce((sum: number, item: any) => sum + Number(item.qty || 0), 0),
-    narration: voucher.narration || "-",
-  }))
+  return (data || [])
+    .filter((voucher: any) => {
+      const narration = String(voucher.narration || "")
+      const voucherNo = String(voucher.voucher_no || "")
+      return narration === "Production" || narration === "Raw Material" || voucherNo.startsWith("STJ-") || voucherNo.startsWith("RMJ-")
+    })
+    .map((voucher: any) => {
+      const voucherNo = String(voucher.voucher_no || "")
+      const narration = String(voucher.narration || "")
+      const journalType = narration === "Raw Material" || voucherNo.startsWith("RMJ-") ? "Raw Material" : "Production"
+
+      return {
+        id: voucher.id,
+        voucherNo: voucher.voucher_no || "-",
+        batchNo: voucher.reference || "-",
+        journalType,
+        itemCount: (voucher.voucher_items || []).length,
+        totalQty: (voucher.voucher_items || []).reduce((sum: number, item: any) => sum + Number(item.qty || 0), 0),
+        narration: voucher.narration || journalType,
+      }
+    })
 }
 
-export async function getKitchenStockRows(): Promise<KitchenStockRow[]> {
+export async function getKitchenStockRows(options: { visibleOnly?: boolean } = {}): Promise<KitchenStockRow[]> {
   const supabase = await createClient()
   const orgId = await getOrgId()
 
@@ -317,12 +362,31 @@ export async function getKitchenStockRows(): Promise<KitchenStockRow[]> {
     return []
   }
 
+  const { data: settings, error: settingsError } = await supabase
+    .from("kitchen_food_items")
+    .select("item_id, is_visible, deleted_at")
+    .eq("org_id", orgId)
+
+  if (settingsError) {
+    console.error("Failed to fetch kitchen food visibility", settingsError)
+  }
+
+  const settingsByItem = new Map((settings || []).map((setting: any) => [
+    String(setting.item_id),
+    {
+      isVisible: Boolean(setting.is_visible),
+      deleted: Boolean(setting.deleted_at),
+    },
+  ]))
+
   const rows = new Map<string, KitchenStockRow>()
   for (const movement of data || []) {
     const item = Array.isArray((movement as any).items) ? (movement as any).items[0] : (movement as any).items
     if (!item) continue
 
     const itemId = String((movement as any).item_id)
+    const setting = settingsByItem.get(itemId)
+    if (setting?.deleted) continue
     const qty = Number((movement as any).qty || 0)
     const amount = Number((movement as any).amount || 0)
     const current = rows.get(itemId)
@@ -337,12 +401,130 @@ export async function getKitchenStockRows(): Promise<KitchenStockRow[]> {
       unit: String(item.primary_unit || item.unit || ""),
       rate: quantity > 0 && value > 0 ? value / quantity : fallbackRate,
       value,
+      isVisible: setting?.isVisible || false,
     })
   }
 
   return Array.from(rows.values())
     .filter(row => row.quantity > 0)
+    .filter(row => options.visibleOnly ? row.isVisible : true)
     .sort((a, b) => a.name.localeCompare(b.name))
+}
+
+export async function toggleKitchenFoodVisibility(itemId: string, currentVisibility: boolean) {
+  const supabase = await createClient()
+  const orgId = await getOrgId()
+  const { data: { user } } = await supabase.auth.getUser()
+  const id = itemId.trim()
+
+  if (!id) return { error: "Food item is required." }
+
+  const { error } = await supabase
+    .from("kitchen_food_items")
+    .upsert({
+      org_id: orgId,
+      item_id: id,
+      is_visible: !currentVisibility,
+      deleted_at: null,
+      updated_by: user?.id || null,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "org_id,item_id" })
+
+  if (error) {
+    console.error("Failed to toggle kitchen food visibility", error)
+    return { error: "Failed to update kitchen food visibility. Run scripts/038_create_kitchen_food_items.sql first." }
+  }
+
+  revalidatePath("/admin/dining-hall")
+  revalidatePath("/admin/dining-hall/kitchen")
+  revalidatePath("/admin/dining-hall/timetable")
+  return { success: true }
+}
+
+export async function deleteKitchenFoodItem(itemId: string) {
+  const supabase = await createClient()
+  const orgId = await getOrgId()
+  const { data: { user } } = await supabase.auth.getUser()
+  const id = itemId.trim()
+
+  if (!id) return { error: "Food item is required." }
+
+  const { error } = await supabase
+    .from("kitchen_food_items")
+    .upsert({
+      org_id: orgId,
+      item_id: id,
+      is_visible: false,
+      deleted_at: new Date().toISOString(),
+      updated_by: user?.id || null,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "org_id,item_id" })
+
+  if (error) {
+    console.error("Failed to delete kitchen food item", error)
+    return { error: "Failed to delete kitchen food item. Run scripts/038_create_kitchen_food_items.sql first." }
+  }
+
+  revalidatePath("/admin/dining-hall")
+  revalidatePath("/admin/dining-hall/kitchen")
+  revalidatePath("/admin/dining-hall/timetable")
+  return { success: true }
+}
+
+export async function getProductionJournalById(voucherId: string, journalType: "Production" | "Raw Material"): Promise<ProductionJournalDetail | null> {
+  const supabase = await createClient()
+  const orgId = await getOrgId()
+  const id = voucherId.trim()
+  if (!id) return null
+
+  const { data, error } = await supabase
+    .from("vouchers")
+    .select(`
+      id,
+      voucher_no,
+      reference,
+      narration,
+      voucher_items (
+        qty,
+        movement_type,
+        items (
+          name
+        )
+      )
+    `)
+    .eq("id", id)
+    .eq("org_id", orgId)
+    .eq("voucher_type", "Purchase")
+    .maybeSingle()
+
+  const voucherNo = String((data as any)?.voucher_no || "")
+  const narration = String((data as any)?.narration || "")
+  const matchesJournalType = journalType === "Raw Material"
+    ? narration === "Raw Material" || voucherNo.startsWith("RMJ-")
+    : narration === "Production" || voucherNo.startsWith("STJ-")
+
+  if (error || !data || !matchesJournalType) {
+    console.error("Failed to fetch production journal", error)
+    return null
+  }
+
+  const rows: Array<{ itemName: string; qty: number; movementType: "IN" | "OUT" }> = ((data as any).voucher_items || []).map((item: any) => {
+    const linkedItem = Array.isArray(item.items) ? item.items[0] : item.items
+    return {
+      itemName: String(linkedItem?.name || ""),
+      qty: Number(item.qty || 0),
+      movementType: item.movement_type as "IN" | "OUT",
+    }
+  })
+
+  return {
+    id: data.id,
+    voucherNo: data.voucher_no || "",
+    batchNo: data.reference || "",
+    journalType: data.narration as "Production" | "Raw Material",
+    inRows: rows.filter(row => row.movementType === "IN").map(({ itemName, qty }) => ({ itemName, qty })),
+    outRows: rows.filter(row => row.movementType === "OUT").map(({ itemName, qty }) => ({ itemName, qty })),
+  }
 }
 
 export async function saveProductionJournal(formData: FormData) {
@@ -350,6 +532,7 @@ export async function saveProductionJournal(formData: FormData) {
   const orgId = await getOrgId()
   const { data: { user } } = await supabase.auth.getUser()
   const journalType = String(formData.get("journal_type") || "Production")
+  const journalId = String(formData.get("journal_id") || "").trim()
   const voucherNo = String(formData.get("voucher_no") || "").trim()
   const batchNo = String(formData.get("batch_no") || "").trim()
   const today = new Date().toISOString().slice(0, 10)
@@ -393,30 +576,60 @@ export async function saveProductionJournal(formData: FormData) {
 
   const prefix = journalType === "Raw Material" ? "RMJ" : "STJ"
   const finalVoucherNo = voucherNo || `${prefix}-${Date.now().toString().slice(-6)}`
-  const { data: voucher, error: voucherError } = await supabase
-    .from("vouchers")
-    .insert({
-      org_id: orgId,
-      voucher_type: "Purchase",
-      voucher_no: finalVoucherNo,
-      date: today,
-      reference: batchNo || null,
-      narration: journalType,
-      created_by: user?.id || null,
-    })
-    .select("id")
-    .single()
+  let voucherId = journalId
+  if (journalId) {
+    const { error: updateVoucherError } = await supabase
+      .from("vouchers")
+      .update({
+        voucher_no: finalVoucherNo,
+        reference: batchNo || null,
+      })
+      .eq("id", journalId)
+      .eq("org_id", orgId)
+      .eq("voucher_type", "Purchase")
+      .eq("narration", journalType)
 
-  if (voucherError) {
-    console.error("Failed to create production journal voucher", voucherError)
-    return
+    if (updateVoucherError) {
+      console.error("Failed to update production journal voucher", updateVoucherError)
+      return
+    }
+
+    const { error: deleteItemsError } = await supabase
+      .from("voucher_items")
+      .delete()
+      .eq("voucher_id", journalId)
+
+    if (deleteItemsError) {
+      console.error("Failed to clear production journal items", deleteItemsError)
+      return
+    }
+  } else {
+    const { data: voucher, error: voucherError } = await supabase
+      .from("vouchers")
+      .insert({
+        org_id: orgId,
+        voucher_type: "Purchase",
+        voucher_no: finalVoucherNo,
+        date: today,
+        reference: batchNo || null,
+        narration: journalType,
+        created_by: user?.id || null,
+      })
+      .select("id")
+      .single()
+
+    if (voucherError) {
+      console.error("Failed to create production journal voucher", voucherError)
+      return
+    }
+    voucherId = voucher.id
   }
 
   const rateMap = new Map(availableItems.map(item => [item.id, Number(item.purchase_rate || item.selling_rate || 0)]))
   const { error: itemError } = await supabase.from("voucher_items").insert(rows.map(row => {
     const rate = rateMap.get(row.item_id) || 0
     return {
-      voucher_id: voucher.id,
+      voucher_id: voucherId,
       item_id: row.item_id,
       qty: row.qty,
       rate,
@@ -426,7 +639,7 @@ export async function saveProductionJournal(formData: FormData) {
   }))
 
   if (itemError) {
-    await supabase.from("vouchers").delete().eq("id", voucher.id)
+    if (!journalId) await supabase.from("vouchers").delete().eq("id", voucherId)
     console.error("Failed to create production journal items", itemError)
     return
   }
@@ -439,4 +652,51 @@ export async function saveProductionJournal(formData: FormData) {
   revalidatePath("/admin/dining-hall")
   revalidatePath("/admin/dining-hall/kitchen")
   revalidatePath("/admin/dining-hall/timetable")
+  redirect("/accounting/production/journal-summary")
+}
+
+export async function deleteProductionJournal(voucherId: string) {
+  const supabase = await createClient()
+  const orgId = await getOrgId()
+  const id = voucherId.trim()
+  if (!id) return { error: "Journal ID is required." }
+
+  const { data: voucher, error: fetchError } = await supabase
+    .from("vouchers")
+    .select("id, voucher_no, narration")
+    .eq("id", id)
+    .eq("org_id", orgId)
+    .eq("voucher_type", "Purchase")
+    .maybeSingle()
+
+  const voucherNo = String((voucher as any)?.voucher_no || "")
+  const narration = String((voucher as any)?.narration || "")
+  const isProductionJournal = narration === "Production" || narration === "Raw Material" || voucherNo.startsWith("STJ-") || voucherNo.startsWith("RMJ-")
+
+  if (fetchError || !voucher || !isProductionJournal) {
+    console.error("Failed to find production journal for delete", fetchError)
+    return { error: "Could not find journal." }
+  }
+
+  const { error: itemError } = await supabase.from("voucher_items").delete().eq("voucher_id", id)
+  if (itemError) {
+    console.error("Failed to delete production journal items", itemError)
+    return { error: "Failed to delete journal items." }
+  }
+
+  const { error: voucherError } = await supabase.from("vouchers").delete().eq("id", id).eq("org_id", orgId)
+  if (voucherError) {
+    console.error("Failed to delete production journal", voucherError)
+    return { error: "Failed to delete journal." }
+  }
+
+  revalidatePath("/accounting/production")
+  revalidatePath("/accounting/production/journal-summary")
+  revalidatePath("/accounting/production/reports")
+  revalidatePath("/accounting/production/reports/stock")
+  revalidatePath("/accounting/production/inventory/items")
+  revalidatePath("/admin/dining-hall")
+  revalidatePath("/admin/dining-hall/kitchen")
+  revalidatePath("/admin/dining-hall/timetable")
+  return { success: true }
 }

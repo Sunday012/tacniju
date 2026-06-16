@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic"
 
 export default async function DiningHallTimetablePage() {
   const supabase = await createClient()
-  const kitchenRows = await getKitchenStockRows()
+  const kitchenRows = await getKitchenStockRows({ visibleOnly: true })
   const { data: meals, error: mealsError } = await supabase
     .from("dining_hall_meals")
     .select("id, meal_name, camp_day, meal_time, points, unit_name, active, created_at")

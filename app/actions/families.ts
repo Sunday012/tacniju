@@ -136,7 +136,7 @@ export async function getFamilyDetails(familyId: string) {
     adminSupabase.from("families").select("*").eq("id", familyId).maybeSingle(),
     adminSupabase
       .from("profiles")
-      .select("id, full_name, reservation_number, avatar_url, rank, department, office_position, member_role, member_status")
+      .select("id, full_name, reservation_number, avatar_url, rank, department, office_position, member_role, member_status, points")
       .eq("family_id", familyId)
       .order("full_name", { ascending: true }),
   ])

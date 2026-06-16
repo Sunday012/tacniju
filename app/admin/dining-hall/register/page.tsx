@@ -9,11 +9,16 @@ export const dynamic = "force-dynamic"
 
 export default async function DiningHallRegisterPage() {
   const supabase = await createClient()
-  const { data: profiles } = await supabase
+  const [{ data: profiles }, { data: tickets }] = await Promise.all([
+    supabase
     .from("profiles")
     .select("id, email, full_name, reservation_number, rank, district, assembly, member_role, department, points")
     .order("full_name", { ascending: true })
-    .limit(80)
+    .limit(500),
+    supabase
+      .from("meal_tickets")
+      .select("profile_id, ticket_code"),
+  ])
   const { data: meals } = await supabase
     .from("dining_hall_meals")
     .select("id, meal_name, camp_day, meal_time, points, unit_name, active, created_at")
@@ -26,7 +31,8 @@ export default async function DiningHallRegisterPage() {
     .order("served_at", { ascending: false })
     .limit(500)
 
-  const people = profiles || []
+  const ticketByProfile = new Map((tickets || []).map(ticket => [ticket.profile_id, ticket]))
+  const people = (profiles || []).filter(profile => ticketByProfile.has(profile.id))
   const mealRows = meals || []
   const servingRows = (servings || []) as any[]
   const latestServingByProfile = new Map<string, any>()
@@ -70,10 +76,14 @@ export default async function DiningHallRegisterPage() {
               <tbody className="divide-y divide-slate-100">
                 {people.map(profile => {
                   const latestServing = latestServingByProfile.get(profile.id)
+                  const ticket = ticketByProfile.get(profile.id)
                   return (
                     <tr key={profile.id} className="font-medium text-slate-600">
                       <td className="px-6 py-4 font-bold text-slate-800">{profile.full_name || "Unnamed"}</td>
-                      <td className="px-6 py-4 font-mono">{profile.reservation_number || "-"}</td>
+                      <td className="px-6 py-4">
+                        <div className="font-mono">{profile.reservation_number || "-"}</div>
+                        <div className="mt-1 text-[11px] font-black text-indigo-600">{ticket?.ticket_code || "Meal ticket"}</div>
+                      </td>
                       <td className="px-6 py-4">{isGuestProfile(profile) ? "Guest" : (profile.member_role || profile.department || "Member")}</td>
                       <td className="px-6 py-4">1 plate</td>
                       <td className="px-6 py-4">
@@ -102,6 +112,13 @@ export default async function DiningHallRegisterPage() {
                     </tr>
                   )
                 })}
+                {people.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-sm font-bold text-slate-500">
+                      No active meal-ticket holders found.
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>

@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/server"
 import { redirect } from "next/navigation"
-import { CalendarDays, CheckCircle2, Utensils } from "lucide-react"
+import { CalendarDays, CheckCircle2, Ticket, Utensils } from "lucide-react"
 
 export default async function MemberDiningHallPage() {
   const supabase = await createClient()
@@ -12,17 +12,23 @@ export default async function MemberDiningHallPage() {
     redirect("/auth/login")
   }
 
-  const { data: meals, error: mealsError } = await supabase
+  const { data: ticket } = await supabase
+    .from("meal_tickets")
+    .select("ticket_code")
+    .eq("profile_id", user.id)
+    .maybeSingle()
+
+  const { data: meals, error: mealsError } = ticket ? await supabase
     .from("dining_hall_meals")
     .select("id, meal_name, camp_day, meal_time, points, unit_name")
     .eq("active", true)
     .order("camp_day", { ascending: true })
-    .order("meal_time", { ascending: true })
-  const { data: servings } = await supabase
+    .order("meal_time", { ascending: true }) : { data: [], error: null }
+  const { data: servings } = ticket ? await supabase
     .from("dining_hall_servings")
     .select("meal_id, plates, served_at")
     .eq("profile_id", user.id)
-    .order("served_at", { ascending: false })
+    .order("served_at", { ascending: false }) : { data: [] }
   const mealRows = meals || []
   const latestServingByMeal = new Map<string, any>()
   ;(servings || []).forEach(serving => {
@@ -50,7 +56,12 @@ export default async function MemberDiningHallPage() {
           <CalendarDays className="h-5 w-5 text-indigo-600" />
           <h2 className="text-lg font-extrabold text-slate-800">Meal Timetable</h2>
         </div>
-        {mealsError ? (
+        {!ticket ? (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-6 py-12 text-center">
+            <Ticket className="mx-auto mb-3 h-8 w-8 text-amber-600" />
+            <p className="font-bold text-amber-700">Your meals will appear after your meal ticket has been generated.</p>
+          </div>
+        ) : mealsError ? (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 px-6 py-12 text-center">
             <p className="font-bold text-amber-700">Dining Hall timetable is not ready yet.</p>
           </div>

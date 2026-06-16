@@ -84,6 +84,16 @@ export async function recordDiningHallServing(formData: FormData) {
     return { error: "Plate quantity must be greater than zero." }
   }
 
+  const { data: ticket } = await supabase
+    .from("meal_tickets")
+    .select("id")
+    .eq("profile_id", profileId)
+    .maybeSingle()
+
+  if (!ticket) {
+    return { error: "This person does not have a meal ticket." }
+  }
+
   const { error: insertError } = await supabase.from("dining_hall_servings").insert({
     meal_id: mealId,
     profile_id: profileId,

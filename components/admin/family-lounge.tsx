@@ -18,6 +18,7 @@ type Member = {
   department?: string | null
   office_position?: string | null
   member_role?: string | null
+  points?: number | null
 }
 
 type Family = {
@@ -65,6 +66,7 @@ export function FamilyLounge({ family, members, head, isAdmin = false }: Props) 
     if (b.id === family.head_id) return 1
     return 0
   })
+  const totalFamilyPoints = members.reduce((sum, member) => sum + Number(member.points || 0), 0)
 
   return (
     <div className="space-y-8 print:space-y-4">
@@ -91,6 +93,13 @@ export function FamilyLounge({ family, members, head, isAdmin = false }: Props) 
           </div>
 
           <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md print:bg-indigo-50 print:border-indigo-100">
+              <Shield className="w-5 h-5 text-indigo-200 print:text-indigo-700" />
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-100/90 print:text-indigo-700">Family Points</p>
+                <p className="text-sm font-bold text-white print:text-slate-900">{totalFamilyPoints.toLocaleString()} pts</p>
+              </div>
+            </div>
             {head && (
               <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-amber-400/15 border border-amber-300/30 backdrop-blur-md print:bg-amber-50 print:border-amber-200">
                 <Crown className="w-5 h-5 text-amber-300 print:text-amber-600" />

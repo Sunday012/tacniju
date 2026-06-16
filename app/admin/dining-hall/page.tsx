@@ -31,7 +31,7 @@ const menuItems = [
 
 export default async function DiningHallAdminPage() {
   const supabase = await createClient()
-  const kitchenRows = await getKitchenStockRows()
+  const kitchenRows = await getKitchenStockRows({ visibleOnly: true })
   const { count: peopleCount } = await supabase
     .from("profiles")
     .select("id", { count: "exact", head: true })

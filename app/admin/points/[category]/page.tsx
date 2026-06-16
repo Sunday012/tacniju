@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeft, ClipboardList, FileText } from "lucide-react"
-import { createClient } from "@/lib/server"
 import { CreatePointWorkSheet } from "@/components/admin/points/CreatePointWorkSheet"
 import { getPointCategory } from "@/lib/point-categories"
 
@@ -11,15 +10,9 @@ export default async function PointCategoryPage({ params }: { params: { category
   const category = getPointCategory(params.category)
   if (!category) notFound()
 
-  const supabase = await createClient()
-  const { data: members } = await supabase
-    .from("profiles")
-    .select("id, full_name, points")
-    .order("full_name", { ascending: true })
-    .limit(200)
-
   const menuItems = [
     { href: `/admin/points/${category.slug}/works`, label: "List of Works", icon: ClipboardList },
+    { href: `/admin/points/${category.slug}/members`, label: "Add Members", icon: ClipboardList },
     { href: `/admin/points/${category.slug}/summary`, label: "Summary", icon: FileText },
   ]
 
@@ -41,7 +34,6 @@ export default async function PointCategoryPage({ params }: { params: { category
             category={category.slug}
             categoryName={category.name}
             defaultMode={category.defaultMode}
-            members={members || []}
           />
         </div>
 

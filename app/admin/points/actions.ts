@@ -9,9 +9,11 @@ function revalidatePointPaths(category?: string) {
   if (category) {
     revalidatePath(`/admin/points/${category}`)
     revalidatePath(`/admin/points/${category}/works`)
+    revalidatePath(`/admin/points/${category}/members`)
     revalidatePath(`/admin/points/${category}/summary`)
   }
   revalidatePath("/dashboard")
+  revalidatePath("/admin")
 }
 
 export async function adjustMemberPoints(formData: FormData) {
@@ -50,7 +52,7 @@ export async function adjustMemberPoints(formData: FormData) {
   revalidatePointPaths()
 }
 
-export async function createPointWorkRecord(formData: FormData) {
+export async function createPointWork(formData: FormData) {
   const { supabase, user, profile } = await getCurrentAccessProfile()
   if (!user || !isMainAdmin(profile)) {
     return { error: "Only admins can manage points." }
@@ -59,32 +61,18 @@ export async function createPointWorkRecord(formData: FormData) {
   const category = String(formData.get("category") || "").trim()
   const categoryConfig = getPointCategory(category)
   const title = String(formData.get("title") || "").trim()
-  const profileId = String(formData.get("profile_id") || "").trim()
   const points = Number(formData.get("points") || 0)
   const mode = String(formData.get("mode") || categoryConfig?.defaultMode || "add")
   const note = String(formData.get("note") || "").trim()
 
   if (!categoryConfig) return { error: "Select a valid point category." }
   if (!title) return { error: "Work title is required." }
-  if (!profileId) return { error: "Select a member." }
   if (!Number.isFinite(points) || points <= 0) return { error: "Points must be greater than zero." }
   if (mode !== "add" && mode !== "remove") return { error: "Select a valid point action." }
 
-  const { data: member, error: fetchError } = await supabase
-    .from("profiles")
-    .select("points")
-    .eq("id", profileId)
-    .maybeSingle()
-
-  if (fetchError || !member) {
-    console.error("Failed to fetch member for point work", fetchError)
-    return { error: "Could not find selected member." }
-  }
-
-  const { error: insertError } = await supabase.from("point_work_records").insert({
+  const { error: insertError } = await supabase.from("point_works").insert({
     category,
     title,
-    profile_id: profileId,
     points,
     mode,
     note: note || null,
@@ -92,24 +80,94 @@ export async function createPointWorkRecord(formData: FormData) {
   })
 
   if (insertError) {
-    console.error("Failed to create point work record", insertError)
-    return { error: "Failed to create work. Run scripts/034_create_point_work_records.sql if the table is not ready." }
-  }
-
-  const current = Number(member.points || 0)
-  const nextPoints = mode === "remove" ? Math.max(0, current - points) : current + points
-  const { error: updateError } = await supabase
-    .from("profiles")
-    .update({ points: nextPoints })
-    .eq("id", profileId)
-
-  if (updateError) {
-    console.error("Failed to apply point work record", updateError)
-    return { error: "Work was saved but points could not be applied." }
+    console.error("Failed to create point work", insertError)
+    return { error: "Failed to create work. Run scripts/037_point_works_and_bulk_members.sql if the table is not ready." }
   }
 
   revalidatePointPaths(category)
   return { success: true }
+}
+
+export async function createPointWorkRecord(formData: FormData) {
+  return createPointWork(formData)
+}
+
+export async function addMembersToPointWork(formData: FormData) {
+  const { supabase, user, profile } = await getCurrentAccessProfile()
+  if (!user || !isMainAdmin(profile)) {
+    return { error: "Only admins can manage points." }
+  }
+
+  const workId = String(formData.get("work_id") || "").trim()
+  const memberIds = formData.getAll("profile_ids").map(value => String(value).trim()).filter(Boolean)
+
+  if (!workId) return { error: "Select a work." }
+  if (memberIds.length === 0) return { error: "Select at least one member." }
+
+  const { data: work, error: workError } = await supabase
+    .from("point_works")
+    .select("id, category, title, points, mode, note")
+    .eq("id", workId)
+    .maybeSingle()
+
+  if (workError || !work) {
+    console.error("Failed to fetch point work", workError)
+    return { error: "Could not find selected work." }
+  }
+
+  const { data: existing } = await supabase
+    .from("point_work_records")
+    .select("profile_id")
+    .eq("work_id", workId)
+    .in("profile_id", memberIds)
+
+  const existingIds = new Set((existing || []).map(row => row.profile_id))
+  const newMemberIds = memberIds.filter(id => !existingIds.has(id))
+  if (newMemberIds.length === 0) return { error: "Selected members are already under this work." }
+
+  const { data: members, error: memberError } = await supabase
+    .from("profiles")
+    .select("id, points")
+    .in("id", newMemberIds)
+
+  if (memberError || !members?.length) {
+    console.error("Failed to fetch members for point work", memberError)
+    return { error: "Could not find selected members." }
+  }
+
+  const records = members.map(member => ({
+    category: work.category,
+    title: work.title,
+    work_id: work.id,
+    profile_id: member.id,
+    points: work.points,
+    mode: work.mode,
+    note: work.note || null,
+    created_by: user.id,
+  }))
+
+  const { error: insertError } = await supabase.from("point_work_records").insert(records)
+  if (insertError) {
+    console.error("Failed to add members to point work", insertError)
+    return { error: "Failed to add members to work." }
+  }
+
+  for (const member of members) {
+    const current = Number(member.points || 0)
+    const nextPoints = work.mode === "remove" ? Math.max(0, current - Number(work.points || 0)) : current + Number(work.points || 0)
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ points: nextPoints })
+      .eq("id", member.id)
+
+    if (updateError) {
+      console.error("Failed to apply points to member", updateError)
+      return { error: "Members were added, but some points could not be applied." }
+    }
+  }
+
+  revalidatePointPaths(work.category)
+  return { success: true, added: members.length }
 }
 
 export async function deletePointWorkRecord(recordId: string) {

@@ -38,18 +38,21 @@ export function CreateMealSheet({ kitchenItems = [] }: { kitchenItems?: KitchenM
         </SheetHeader>
         <form action={createDiningHallMeal} className="grid gap-4 px-6 py-5">
           <label className="grid gap-1.5 text-sm font-bold text-slate-600">
-            Meal name
-            <input name="meal_name" list="kitchen-meal-options" className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" placeholder="Meal name" required />
+            Ready food
+            <select name="meal_name" className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" required>
+              <option value="">Select food from Kitchen</option>
+              {kitchenItems.map(item => (
+                <option key={item.name} value={item.name}>
+                  {item.name} ({item.quantity.toLocaleString(undefined, { maximumFractionDigits: 2 })} {item.unit})
+                </option>
+              ))}
+            </select>
           </label>
-          <datalist id="kitchen-meal-options">
-            {kitchenItems.map(item => (
-              <option
-                key={item.name}
-                value={item.name}
-                label={`${item.quantity.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${item.unit}`}
-              />
-            ))}
-          </datalist>
+          {kitchenItems.length === 0 ? (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700">
+              No kitchen food is marked as seen yet.
+            </div>
+          ) : null}
           <label className="grid gap-1.5 text-sm font-bold text-slate-600">
             Camp day
             <input name="camp_day" className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" placeholder="Camp day" required />
@@ -68,7 +71,7 @@ export function CreateMealSheet({ kitchenItems = [] }: { kitchenItems?: KitchenM
               <input name="unit_name" className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" placeholder="Plate" defaultValue="Plate" required />
             </label>
           </div>
-          <button className="mt-2 h-11 rounded-xl bg-indigo-600 font-black text-white shadow-sm hover:bg-indigo-700">
+          <button disabled={kitchenItems.length === 0} className="mt-2 h-11 rounded-xl bg-indigo-600 font-black text-white shadow-sm hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60">
             Save Meal Setup
           </button>
         </form>

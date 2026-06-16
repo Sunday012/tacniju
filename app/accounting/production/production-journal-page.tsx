@@ -1,6 +1,6 @@
 import { AccountingShell } from "@/components/accounting/accounting-shell"
 import { getItems } from "@/app/inventory/actions"
-import { saveProductionJournal } from "./actions"
+import { ProductionJournalDetail, saveProductionJournal } from "./actions"
 import { ArrowDownToLine, ArrowUpFromLine, Save } from "lucide-react"
 
 const entryRows = Array.from({ length: 10 }, (_, index) => index)
@@ -9,10 +9,12 @@ export async function ProductionJournalPage({
   journalType,
   title,
   subtitle,
+  initialJournal,
 }: {
   journalType: "Production" | "Raw Material"
   title: string
   subtitle: string
+  initialJournal?: ProductionJournalDetail | null
 }) {
   const items = await getItems()
   const innerTitle = journalType === "Raw Material" ? "Raw Materials" : "Production"
@@ -27,15 +29,16 @@ export async function ProductionJournalPage({
     <AccountingShell title={title} backHref="/accounting/production" backLabel="Production" framed={false}>
       <form action={saveProductionJournal} className="rounded-[2rem] border border-white/70 bg-white/85 p-5 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] backdrop-blur-3xl sm:p-7">
         <input type="hidden" name="journal_type" value={journalType} />
+        {initialJournal?.id ? <input type="hidden" name="journal_id" value={initialJournal.id} /> : null}
         <div className="mb-6 flex justify-end border-b border-slate-200 pb-5">
           <div className="grid w-full min-w-0 gap-3 sm:grid-cols-2 lg:max-w-[420px]">
             <label className="grid min-w-0 gap-1.5 text-xs font-black uppercase tracking-widest text-slate-500">
               Voucher No
-              <input name="voucher_no" className="h-10 w-full min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700 outline-none focus:border-indigo-300 focus:bg-white" placeholder="Auto if blank" />
+              <input name="voucher_no" defaultValue={initialJournal?.voucherNo || ""} className="h-10 w-full min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700 outline-none focus:border-indigo-300 focus:bg-white" placeholder="Auto if blank" />
             </label>
             <label className="grid min-w-0 gap-1.5 text-xs font-black uppercase tracking-widest text-slate-500">
               Batch No
-              <input name="batch_no" className="h-10 w-full min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700 outline-none focus:border-indigo-300 focus:bg-white" />
+              <input name="batch_no" defaultValue={initialJournal?.batchNo || ""} className="h-10 w-full min-w-0 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700 outline-none focus:border-indigo-300 focus:bg-white" />
             </label>
           </div>
         </div>
@@ -59,8 +62,8 @@ export async function ProductionJournalPage({
             </div>
 
             <div className="grid overflow-hidden rounded-2xl border border-slate-200 bg-white lg:grid-cols-2">
-              <JournalSide title={leftSide.title} icon={leftSide.icon} prefix={leftSide.prefix} items={items} />
-              <JournalSide title={rightSide.title} icon={rightSide.icon} prefix={rightSide.prefix} items={items} />
+              <JournalSide title={leftSide.title} icon={leftSide.icon} prefix={leftSide.prefix} initialRows={leftSide.prefix === "in" ? initialJournal?.inRows : initialJournal?.outRows} />
+              <JournalSide title={rightSide.title} icon={rightSide.icon} prefix={rightSide.prefix} initialRows={rightSide.prefix === "in" ? initialJournal?.inRows : initialJournal?.outRows} />
             </div>
             <datalist id="production-item-options">
               {items.map(item => <option key={item.id} value={item.name} />)}
@@ -80,7 +83,7 @@ export async function ProductionJournalPage({
             <div className="mt-6 flex justify-end">
               <button className="inline-flex h-11 items-center gap-2 rounded-xl bg-indigo-600 px-5 font-black text-white shadow-sm hover:bg-indigo-700">
                 <Save className="h-4 w-4" />
-                Save {title}
+                {initialJournal?.id ? "Update" : "Save"} {title}
               </button>
             </div>
           </>
@@ -90,7 +93,17 @@ export async function ProductionJournalPage({
   )
 }
 
-function JournalSide({ title, icon, prefix, items }: { title: string; icon: "in" | "out"; prefix: "in" | "out"; items: Awaited<ReturnType<typeof getItems>> }) {
+function JournalSide({
+  title,
+  icon,
+  prefix,
+  initialRows,
+}: {
+  title: string
+  icon: "in" | "out"
+  prefix: "in" | "out"
+  initialRows?: Array<{ itemName: string; qty: number }>
+}) {
   const Icon = icon === "in" ? ArrowDownToLine : ArrowUpFromLine
 
   return (
@@ -109,10 +122,11 @@ function JournalSide({ title, icon, prefix, items }: { title: string; icon: "in"
             <input
               name={`${prefix}_item_name_${row}`}
               list="production-item-options"
+              defaultValue={initialRows?.[row]?.itemName || ""}
               className="h-11 min-w-0 bg-white px-4 text-sm font-medium text-slate-700 outline-none focus:bg-indigo-50/50"
               autoComplete="off"
             />
-            <input name={`${prefix}_qty_${row}`} type="number" min="0" step="0.01" className="h-11 border-l border-slate-100 px-4 text-right text-sm font-bold text-slate-700 outline-none focus:bg-indigo-50/50" />
+            <input name={`${prefix}_qty_${row}`} type="number" min="0" step="0.01" defaultValue={initialRows?.[row]?.qty || ""} className="h-11 border-l border-slate-100 px-4 text-right text-sm font-bold text-slate-700 outline-none focus:bg-indigo-50/50" />
           </div>
         ))}
       </div>

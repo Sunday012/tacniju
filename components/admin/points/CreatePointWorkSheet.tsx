@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Loader2, Plus } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { createPointWorkRecord } from "@/app/admin/points/actions"
+import { createPointWork } from "@/app/admin/points/actions"
 import {
   Sheet,
   SheetContent,
@@ -14,22 +14,14 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 
-type MemberOption = {
-  id: string
-  full_name: string | null
-  points: number | null
-}
-
 export function CreatePointWorkSheet({
   category,
   categoryName,
   defaultMode,
-  members,
 }: {
   category: string
   categoryName: string
   defaultMode: "add" | "remove"
-  members: MemberOption[]
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -40,7 +32,7 @@ export function CreatePointWorkSheet({
     setLoading(true)
     try {
       const formData = new FormData(event.currentTarget)
-      const result = await createPointWorkRecord(formData)
+      const result = await createPointWork(formData)
       if (result?.error) {
         toast.error(result.error)
       } else {
@@ -70,7 +62,7 @@ export function CreatePointWorkSheet({
           </div>
           <SheetTitle className="text-xl font-extrabold text-slate-900">Create Work</SheetTitle>
           <SheetDescription className="text-sm font-medium text-slate-500">
-            Add a {categoryName} point work entry.
+            Create the work and points. Add members to it from Add Members.
           </SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 px-6 py-5">
@@ -78,17 +70,6 @@ export function CreatePointWorkSheet({
           <label className="grid gap-1.5 text-sm font-bold text-slate-600">
             Work title
             <input name="title" className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" placeholder="Work title" required />
-          </label>
-          <label className="grid gap-1.5 text-sm font-bold text-slate-600">
-            Member
-            <select name="profile_id" required className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white">
-              <option value="">Select member</option>
-              {members.map(member => (
-                <option key={member.id} value={member.id}>
-                  {member.full_name || "Unnamed"} ({member.points || 0} pts)
-                </option>
-              ))}
-            </select>
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-1.5 text-sm font-bold text-slate-600">

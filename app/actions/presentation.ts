@@ -58,3 +58,54 @@ export async function clearPresentationState() {
 
   return { success: true };
 }
+
+export type PresentationTimerState = {
+  active: boolean;
+  mode: "timer" | "stopwatch";
+  fullscreen?: boolean;
+  durationSeconds?: number;
+  startedAt?: string | null;
+  pausedSeconds?: number;
+  corner?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+};
+
+export async function setPresentationTimerState(timerState: PresentationTimerState) {
+  const supabase = await createServerClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Unauthorized" };
+
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) return { success: false, error: "Server config error" };
+
+  const adminSupabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey);
+
+  const { error } = await adminSupabase
+    .from("presentation_state")
+    .update({
+      timer_state: timerState,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", 1);
+
+  if (error) {
+    console.error("Error setting presentation timer state:", error);
+    return { error: error.message };
+  }
+
+  revalidatePath("/present");
+  revalidatePath("/admin/presenter");
+  return { success: true };
+}
+
+export async function clearPresentationTimerState() {
+  return setPresentationTimerState({
+    active: false,
+    mode: "timer",
+    fullscreen: false,
+    durationSeconds: 0,
+    startedAt: null,
+    pausedSeconds: 0,
+    corner: "top-right",
+  });
+}

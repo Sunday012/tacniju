@@ -11,32 +11,47 @@ export default async function PointSummaryPage({ params }: { params: { category:
   if (!category) notFound()
 
   const supabase = await createClient()
-  const { data: records, error } = await supabase
-    .from("point_work_records")
-    .select("id, points, mode, profile_id, profile:profiles!profile_id(full_name, reservation_number, points)")
-    .eq("category", category.slug)
-    .order("created_at", { ascending: false })
+  const [{ data: works, error }, { data: records }] = await Promise.all([
+    supabase
+      .from("point_works")
+      .select("id, title, points, mode, note, created_at")
+      .eq("category", category.slug)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("point_work_records")
+      .select("id, title, work_id, points, mode, profile_id, profile:profiles!profile_id(full_name, reservation_number, points)")
+      .eq("category", category.slug)
+      .order("created_at", { ascending: false }),
+  ])
 
   const grouped = new Map<string, any>()
+  ;((works || []) as any[]).forEach(work => {
+    grouped.set(work.id, {
+      id: work.id,
+      title: work.title,
+      mode: work.mode,
+      points: Number(work.points || 0),
+      memberCount: 0,
+      members: [],
+    })
+  })
   ;((records || []) as any[]).forEach(record => {
-    const key = record.profile_id
+    const key = record.work_id || record.id
     const current = grouped.get(key) || {
-      profile: record.profile,
-      added: 0,
-      removed: 0,
-      count: 0,
+      id: key,
+      title: record.title,
+      mode: record.mode,
+      points: Number(record.points || 0),
+      memberCount: 0,
+      members: [],
     }
 
-    if (record.mode === "remove") {
-      current.removed += Number(record.points || 0)
-    } else {
-      current.added += Number(record.points || 0)
-    }
-    current.count += 1
+    current.memberCount += 1
+    current.members.push(record.profile)
     grouped.set(key, current)
   })
 
-  const rows = Array.from(grouped.values()).sort((a, b) => (b.added - b.removed) - (a.added - a.removed))
+  const rows = Array.from(grouped.values()).sort((a, b) => b.memberCount - a.memberCount)
 
   return (
     <div className="p-6 md:p-10">
@@ -66,35 +81,41 @@ export default async function PointSummaryPage({ params }: { params: { category:
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-widest text-slate-500">
-                    <th className="px-6 py-4">Member</th>
-                    <th className="px-6 py-4">Reservation</th>
-                    <th className="px-6 py-4 text-right">Works</th>
-                    <th className="px-6 py-4 text-right">Added</th>
-                    <th className="px-6 py-4 text-right">Removed</th>
-                    <th className="px-6 py-4 text-right">Net</th>
-                    <th className="px-6 py-4 text-right">Current Points</th>
+                    <th className="px-6 py-4">Work</th>
+                    <th className="px-6 py-4">Action</th>
+                    <th className="px-6 py-4 text-right">Members</th>
+                    <th className="px-6 py-4 text-right">Points Each</th>
+                    <th className="px-6 py-4 text-right">Total Impact</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {rows.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-6 py-12 text-center font-medium text-slate-500">
+                      <td colSpan={5} className="px-6 py-12 text-center font-medium text-slate-500">
                         No works have been created yet.
                       </td>
                     </tr>
                   ) : rows.map(row => {
-                    const net = row.added - row.removed
+                    const total = row.memberCount * row.points
+                    const signedTotal = row.mode === "remove" ? -total : total
                     return (
-                      <tr key={row.profile?.reservation_number || row.profile?.full_name} className="font-medium text-slate-600">
-                        <td className="px-6 py-4 font-bold text-slate-800">{row.profile?.full_name || "Unnamed"}</td>
-                        <td className="px-6 py-4 font-mono">{row.profile?.reservation_number || "-"}</td>
-                        <td className="px-6 py-4 text-right font-black">{row.count}</td>
-                        <td className="px-6 py-4 text-right font-black text-indigo-600">{row.added}</td>
-                        <td className="px-6 py-4 text-right font-black text-rose-600">{row.removed}</td>
-                        <td className={net < 0 ? "px-6 py-4 text-right font-black text-rose-600" : "px-6 py-4 text-right font-black text-emerald-600"}>
-                          {net > 0 ? "+" : ""}{net}
+                      <tr key={row.id} className="font-medium text-slate-600">
+                        <td className="px-6 py-4">
+                          <div className="font-bold text-slate-800">{row.title}</div>
+                          {row.members.length > 0 ? (
+                            <div className="mt-1 max-w-xl truncate text-xs text-slate-400">
+                              {row.members.map((member: any) => member?.full_name || "Unnamed").join(", ")}
+                            </div>
+                          ) : null}
                         </td>
-                        <td className="px-6 py-4 text-right font-black text-indigo-600">{row.profile?.points || 0}</td>
+                        <td className="px-6 py-4 capitalize">{row.mode}</td>
+                        <td className="px-6 py-4 text-right font-black">{row.memberCount}</td>
+                        <td className={row.mode === "remove" ? "px-6 py-4 text-right font-black text-rose-600" : "px-6 py-4 text-right font-black text-indigo-600"}>
+                          {row.mode === "remove" ? "-" : "+"}{row.points}
+                        </td>
+                        <td className={signedTotal < 0 ? "px-6 py-4 text-right font-black text-rose-600" : "px-6 py-4 text-right font-black text-emerald-600"}>
+                          {signedTotal > 0 ? "+" : ""}{signedTotal}
+                        </td>
                       </tr>
                     )
                   })}

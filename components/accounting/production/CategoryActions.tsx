@@ -1,10 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Edit2, Loader2, Trash2 } from "lucide-react"
+import { Edit2, EyeOff, Loader2, Power, Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { deleteProductionCategory, updateProductionCategory } from "@/app/accounting/production/actions"
+import { deleteProductionCategory, setProductionCategoryActive, updateProductionCategory } from "@/app/accounting/production/actions"
 import {
   Dialog,
   DialogContent,
@@ -25,6 +25,7 @@ type Category = {
 export function CategoryActions({ category }: { category: Category }) {
   const router = useRouter()
   const [editOpen, setEditOpen] = useState(false)
+  const [statusOpen, setStatusOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -47,6 +48,24 @@ export function CategoryActions({ category }: { category: Category }) {
     }
   }
 
+  async function handleStatusChange() {
+    setLoading(true)
+    try {
+      const result = await setProductionCategoryActive(category.id, !category.active)
+      if (result?.error) {
+        toast.error(result.error)
+      } else {
+        toast.success(category.active ? "Category marked inactive." : "Category activated.")
+        setStatusOpen(false)
+        router.refresh()
+      }
+    } catch (error) {
+      toast.error("Something went wrong")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function handleDelete() {
     setLoading(true)
     try {
@@ -54,7 +73,7 @@ export function CategoryActions({ category }: { category: Category }) {
       if (result?.error) {
         toast.error(result.error)
       } else {
-        toast.success("Category deleted.")
+        toast.success("Category deleted forever.")
         setDeleteOpen(false)
         router.refresh()
       }
@@ -122,6 +141,49 @@ export function CategoryActions({ category }: { category: Category }) {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={statusOpen} onOpenChange={setStatusOpen}>
+        <DialogTrigger asChild>
+          <button
+            type="button"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-amber-50 hover:text-amber-600"
+            title={category.active ? "Make inactive" : "Activate category"}
+          >
+            {category.active ? <EyeOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+          </button>
+        </DialogTrigger>
+        <DialogContent className="w-[92vw] max-w-md rounded-2xl border-slate-200 bg-white p-0 text-slate-900 shadow-2xl">
+          <DialogHeader className="border-b border-slate-100 px-6 py-5 text-left">
+            <DialogTitle className="text-xl font-extrabold text-slate-900">
+              {category.active ? "Make Category Inactive?" : "Activate Category?"}
+            </DialogTitle>
+            <DialogDescription className="text-sm font-medium leading-6 text-slate-500">
+              {category.active
+                ? `This will hide ${category.name} for now without deleting it.`
+                : `This will make ${category.name} available again.`}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-3 px-6 py-5 sm:space-x-0">
+            <button
+              type="button"
+              onClick={() => setStatusOpen(false)}
+              disabled={loading}
+              className="h-11 rounded-xl border border-slate-200 bg-white px-5 text-sm font-black text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleStatusChange}
+              disabled={loading}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 text-sm font-black text-white transition-colors hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : category.active ? <EyeOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+              {category.active ? "Make Inactive" : "Activate"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogTrigger asChild>
           <button
@@ -136,7 +198,7 @@ export function CategoryActions({ category }: { category: Category }) {
           <DialogHeader className="border-b border-slate-100 px-6 py-5 text-left">
             <DialogTitle className="text-xl font-extrabold text-slate-900">Delete Category?</DialogTitle>
             <DialogDescription className="text-sm font-medium leading-6 text-slate-500">
-              This will mark <span className="font-extrabold text-slate-700">{category.name}</span> as inactive.
+              This will permanently delete <span className="font-extrabold text-slate-700">{category.name}</span>. Use the inactive button if you only want to hide it for now.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-3 px-6 py-5 sm:space-x-0">

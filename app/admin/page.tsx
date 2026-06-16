@@ -9,7 +9,7 @@ export default async function AdminPage() {
 
   // Get all members
   const { data: members } = await supabase.from("profiles").select("*")
-  const memberProfiles = (members || []).filter(member => !isGuestProfile(member))
+  const memberProfiles = (members || []).filter(member => !isGuestProfile(member) && member.member_status !== "Transferred")
   const guestProfiles = (members || []).filter(member => isGuestProfile(member))
 
   // Get attendance stats
