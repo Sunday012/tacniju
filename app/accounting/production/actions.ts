@@ -537,7 +537,13 @@ export async function saveProductionJournal(formData: FormData) {
   const batchNo = String(formData.get("batch_no") || "").trim()
   const today = new Date().toISOString().slice(0, 10)
 
-  const rawRows = Array.from({ length: 10 }).flatMap((_, index) => {
+  const rowIndexes = Array.from(formData.keys()).reduce((indexes, key) => {
+    const match = String(key).match(/^(in|out)_(item|item_name|qty)_(\d+)$/)
+    if (match) indexes.add(Number(match[3]))
+    return indexes
+  }, new Set<number>())
+
+  const rawRows = Array.from(rowIndexes).flatMap((index) => {
     const result: Array<{ itemRef: string; qty: number; movement_type: "IN" | "OUT" }> = []
     const inItem = String(formData.get(`in_item_${index}`) || formData.get(`in_item_name_${index}`) || "").trim()
     const inQty = Number(formData.get(`in_qty_${index}`) || 0)

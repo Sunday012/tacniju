@@ -14,6 +14,7 @@ import { getActiveBattles } from "@/app/actions/battles"
 import { ReceivedGifts } from "@/components/dashboard/received-gifts"
 import { TopNewsBattles } from "@/components/dashboard/top-news-battles"
 import { Utensils } from "lucide-react"
+import { getProfilePartyBalance } from "@/app/accounting/actions"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -88,6 +89,7 @@ export default async function DashboardPage() {
 
   // Fetch active battles
   const { battles: activeBattles } = await getActiveBattles();
+  const partyBalance = await getProfilePartyBalance(profile?.id || user.id);
 
   return (
     <>
@@ -98,6 +100,7 @@ export default async function DashboardPage() {
         avatarUrl={profile?.avatar_url || undefined}
         initials={initials}
         points={profile?.points || 0}
+        moneyBalance={partyBalance}
       />
 
       <div className="mt-8">

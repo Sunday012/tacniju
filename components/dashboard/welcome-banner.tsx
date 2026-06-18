@@ -7,9 +7,14 @@ interface WelcomeBannerProps {
   avatarUrl?: string
   initials: string
   points?: number
+  moneyBalance?: number | null
 }
 
-export function WelcomeBanner({ fullName, rank, department, avatarUrl, initials, points = 0 }: WelcomeBannerProps) {
+export function WelcomeBanner({ fullName, rank, department, avatarUrl, initials, points = 0, moneyBalance = null }: WelcomeBannerProps) {
+  const formattedMoney = moneyBalance === null
+    ? null
+    : `${Math.abs(moneyBalance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${moneyBalance < 0 ? " Cr" : ""}`
+
   return (
     <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-700 p-8 sm:p-10 shadow-[0_20px_40px_-15px_rgba(79,70,229,0.3)] border border-indigo-400/20 mb-8">
       {/* Decorative background elements matching the Coursue style banner */}
@@ -43,6 +48,12 @@ export function WelcomeBanner({ fullName, rank, department, avatarUrl, initials,
                 </svg>
                 {points} Points
               </div>
+              {formattedMoney ? (
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 backdrop-blur-md text-emerald-50 text-[11px] font-bold tracking-widest uppercase shadow-inner border border-emerald-400/20">
+                  <span className="text-sm font-black text-emerald-200">NGN</span>
+                  {formattedMoney}
+                </div>
+              ) : null}
             </div>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-2.5 tracking-tight font-sans">
               Welcome back, {fullName}!
@@ -69,4 +80,3 @@ export function WelcomeBanner({ fullName, rank, department, avatarUrl, initials,
     </div>
   )
 }
-

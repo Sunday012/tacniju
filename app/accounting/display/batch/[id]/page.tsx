@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation"
-import { Save } from "lucide-react"
 import { AccountingShell } from "@/components/accounting/accounting-shell"
 import { getItems } from "@/app/inventory/actions"
 import { getBatch, saveBatch } from "../actions"
 import { BatchForm, DeleteBatchForm, SubmitButton } from "./batch-form"
+import { BatchRows } from "./batch-rows"
 
 export default async function BatchFormPage({ params }: { params: { id: string } }) {
   const [items, batch] = await Promise.all([
@@ -49,41 +49,7 @@ export default async function BatchFormPage({ params }: { params: { id: string }
           <div className="px-3 py-2 text-right">Rate</div>
         </div>
 
-        <div className="divide-y divide-slate-100">
-          {rows.map((row, index) => (
-            <div key={index} className="grid md:grid-cols-[1fr_120px_120px]">
-              <div className="border-b border-slate-100 md:border-b-0 md:border-r">
-                <input
-                  name={`item_${index}`}
-                  list="batch-items"
-                  defaultValue={row.itemName}
-                  placeholder="Select item"
-                  className="h-10 w-full bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:bg-indigo-50/40"
-                />
-              </div>
-              <div className="border-b border-slate-100 md:border-b-0 md:border-r">
-                <input
-                  name={`qty_${index}`}
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  defaultValue={row.qty}
-                  placeholder="0.00"
-                  className="h-10 w-full bg-white px-3 text-right font-mono text-sm font-bold text-slate-900 outline-none focus:bg-indigo-50/40"
-                />
-              </div>
-              <input
-                name={`rate_${index}`}
-                type="number"
-                min="0"
-                step="0.01"
-                defaultValue={row.rate}
-                placeholder="Rate"
-                className="h-10 w-full bg-white px-3 text-right font-mono text-sm font-bold text-slate-900 outline-none focus:bg-indigo-50/40"
-              />
-            </div>
-          ))}
-        </div>
+        <BatchRows rows={rows} />
 
         <datalist id="batch-items">
           {items.map(item => <option key={item.id} value={item.name} />)}
@@ -99,7 +65,7 @@ export default async function BatchFormPage({ params }: { params: { id: string }
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-indigo-400"
             />
           </label>
-          <div />f
+          <div />
         </div>
       </BatchForm>
 

@@ -94,7 +94,13 @@ export async function saveBatch(prevState: any, formData: FormData) {
 
   if (!batchNo) return { error: "Batch No is required" }
 
-  const rawRows = Array.from({ length: 10 }).map((_, index) => ({
+  const rowIndexes = Array.from(formData.keys()).reduce((indexes, key) => {
+    const match = String(key).match(/^(item|qty|rate)_(\d+)$/)
+    if (match) indexes.add(Number(match[2]))
+    return indexes
+  }, new Set<number>())
+
+  const rawRows = Array.from(rowIndexes).map((index) => ({
     itemRef: String(formData.get(`item_${index}`) || "").trim(),
     qty: Number(formData.get(`qty_${index}`) || 0),
     rate: Number(formData.get(`rate_${index}`) || 0),

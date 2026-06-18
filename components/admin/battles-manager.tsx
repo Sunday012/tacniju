@@ -10,15 +10,39 @@ import { toast } from "sonner"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 
-export function BattlesManager({ battles, profiles }: { battles: any[], profiles: any[] }) {
+type CompetitionOption = { id: string; name: string }
+type CompetitionEntryOption = {
+  competitionId: string
+  profile: {
+    id: string
+    full_name: string
+    reservation_number?: string | null
+    avatar_url?: string | null
+  }
+}
+
+export function BattlesManager({
+  battles,
+  competitions,
+  entries,
+}: {
+  battles: any[]
+  competitions: CompetitionOption[]
+  entries: CompetitionEntryOption[]
+}) {
   const [title, setTitle] = useState("")
   const [category, setCategory] = useState("General")
+  const [competitionId, setCompetitionId] = useState("")
   const [player1Id, setPlayer1Id] = useState("")
   const [player2Id, setPlayer2Id] = useState("")
   const [isCreating, setIsCreating] = useState(false)
   const [processingId, setProcessingId] = useState<string | null>(null)
+  const profiles = entries
+    .filter(entry => entry.competitionId === competitionId)
+    .map(entry => entry.profile)
 
   const handleRandomize = () => {
+    if (!competitionId) return toast.error("Select a competition first")
     if (profiles.length < 2) return toast.error("Not enough members")
     const shuffled = [...profiles].sort(() => 0.5 - Math.random())
     setPlayer1Id(shuffled[0].id)
@@ -27,11 +51,11 @@ export function BattlesManager({ battles, profiles }: { battles: any[], profiles
   }
 
   const handleCreate = async () => {
-    if (!title || !player1Id || !player2Id) return toast.error("Please fill all fields")
+    if (!competitionId || !title || !player1Id || !player2Id) return toast.error("Please fill all fields")
     if (player1Id === player2Id) return toast.error("Select two different players")
     
     setIsCreating(true)
-    const res = await createBattleAction(title, player1Id, player2Id, category)
+    const res = await createBattleAction(title, player1Id, player2Id, category, competitionId)
     setIsCreating(false)
     if (res.success) {
       toast.success("Battle match created!")
@@ -103,6 +127,19 @@ export function BattlesManager({ battles, profiles }: { battles: any[], profiles
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
+                <label className="text-sm font-semibold text-slate-700 mb-1 block">Competition</label>
+                <Select value={competitionId} onValueChange={(value) => {
+                  setCompetitionId(value)
+                  setPlayer1Id("")
+                  setPlayer2Id("")
+                }}>
+                  <SelectTrigger><SelectValue placeholder="Select Competition" /></SelectTrigger>
+                  <SelectContent>
+                    {competitions.map(competition => <SelectItem key={competition.id} value={competition.id}>{competition.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
                 <label className="text-sm font-semibold text-slate-700 mb-1 block">Battle Title</label>
                 <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Memory Verse Challenge" />
               </div>
@@ -128,7 +165,7 @@ export function BattlesManager({ battles, profiles }: { battles: any[], profiles
               <div>
                 <label className="text-sm font-semibold text-slate-700 mb-1 block">Player 1</label>
                 <Select value={player1Id} onValueChange={setPlayer1Id}>
-                  <SelectTrigger><SelectValue placeholder="Select Member" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={competitionId ? "Select Entrant" : "Select competition first"} /></SelectTrigger>
                   <SelectContent>
                     {profiles.map(p => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
                   </SelectContent>
@@ -137,7 +174,7 @@ export function BattlesManager({ battles, profiles }: { battles: any[], profiles
               <div>
                 <label className="text-sm font-semibold text-slate-700 mb-1 block">Player 2</label>
                 <Select value={player2Id} onValueChange={setPlayer2Id}>
-                  <SelectTrigger><SelectValue placeholder="Select Member" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={competitionId ? "Select Entrant" : "Select competition first"} /></SelectTrigger>
                   <SelectContent>
                     {profiles.map(p => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
                   </SelectContent>
@@ -149,7 +186,7 @@ export function BattlesManager({ battles, profiles }: { battles: any[], profiles
                   <Shuffle className="w-4 h-4 mr-2" />
                   Random Pair
                 </Button>
-                <Button onClick={handleCreate} disabled={isCreating} className="flex-1 bg-indigo-600 hover:bg-indigo-700">
+                <Button onClick={handleCreate} disabled={isCreating || !competitionId} className="flex-1 bg-indigo-600 hover:bg-indigo-700">
                   <Swords className="w-4 h-4 mr-2" />
                   Start Battle
                 </Button>

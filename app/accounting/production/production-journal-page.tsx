@@ -2,8 +2,7 @@ import { AccountingShell } from "@/components/accounting/accounting-shell"
 import { getItems } from "@/app/inventory/actions"
 import { ProductionJournalDetail, saveProductionJournal } from "./actions"
 import { ArrowDownToLine, ArrowUpFromLine, Save } from "lucide-react"
-
-const entryRows = Array.from({ length: 10 }, (_, index) => index)
+import { JournalRows } from "./journal-rows"
 
 export async function ProductionJournalPage({
   journalType,
@@ -116,20 +115,7 @@ function JournalSide({
         <div className="px-4 py-3">Name of Item</div>
         <div className="border-l border-slate-200 px-4 py-3 text-right">Qty</div>
       </div>
-      <div>
-        {entryRows.map(row => (
-          <div key={row} className="grid grid-cols-[minmax(0,1fr)_120px] border-b border-slate-100 last:border-b-0">
-            <input
-              name={`${prefix}_item_name_${row}`}
-              list="production-item-options"
-              defaultValue={initialRows?.[row]?.itemName || ""}
-              className="h-11 min-w-0 bg-white px-4 text-sm font-medium text-slate-700 outline-none focus:bg-indigo-50/50"
-              autoComplete="off"
-            />
-            <input name={`${prefix}_qty_${row}`} type="number" min="0" step="0.01" defaultValue={initialRows?.[row]?.qty || ""} className="h-11 border-l border-slate-100 px-4 text-right text-sm font-bold text-slate-700 outline-none focus:bg-indigo-50/50" />
-          </div>
-        ))}
-      </div>
+      <JournalRows prefix={prefix} initialRows={initialRows} />
     </section>
   )
 }

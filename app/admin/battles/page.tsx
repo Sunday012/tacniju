@@ -15,12 +15,26 @@ export default async function BattlesPage() {
 
   const { battles } = await getBattles()
   
-  // Fetch profiles for pairing
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("id, full_name, reservation_number, avatar_url, rank, district, assembly, email")
-    .order("full_name")
-  const memberProfiles = (profiles || []).filter(profile => !isGuestProfile(profile))
+  const [{ data: competitions }, { data: entries }] = await Promise.all([
+    supabase
+      .from("competitions")
+      .select("id, name")
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("competition_entries")
+      .select(`
+        competition_id,
+        profile:profiles!profile_id(id, full_name, reservation_number, avatar_url, rank, district, assembly, email)
+      `)
+      .order("entered_at", { ascending: false }),
+  ])
+
+  const competitionEntries = (entries || [])
+    .map((entry: any) => ({
+      competitionId: entry.competition_id as string,
+      profile: Array.isArray(entry.profile) ? entry.profile[0] : entry.profile,
+    }))
+    .filter(entry => entry.profile && !isGuestProfile(entry.profile))
 
   return (
     <div className="p-6 md:p-10 relative">
@@ -30,7 +44,7 @@ export default async function BattlesPage() {
           <p className="text-slate-600 mt-2">Create, manage, and decide winners for live match-ups.</p>
         </div>
         
-        <BattlesManager battles={battles || []} profiles={memberProfiles} />
+        <BattlesManager battles={battles || []} competitions={competitions || []} entries={competitionEntries} />
       </div>
     </div>
   )

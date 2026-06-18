@@ -260,6 +260,42 @@ export async function getTransactionsForLedgers(ledgerIds: string[], startDate?:
   return fetchLedgerTransactions(ledgerIds, startDate, endDate)
 }
 
+export async function getProfilePartyBalance(profileId: string) {
+  const supabase = await createClient()
+  const cookieStore = cookies()
+  const orgId = cookieStore.get("active_org_id")?.value
+  if (!orgId || !profileId) return null
+
+  const { data: ledger, error: ledgerError } = await supabase
+    .from("ledgers")
+    .select("id, opening_balance, balance_type")
+    .eq("org_id", orgId)
+    .eq("source_profile_id", profileId)
+    .eq("ledger_kind", "party")
+    .maybeSingle()
+
+  if (ledgerError || !ledger?.id) return null
+
+  const { data: entries, error: entriesError } = await supabase
+    .from("voucher_entries")
+    .select(`
+      debit_amount,
+      credit_amount,
+      vouchers!inner(org_id)
+    `)
+    .eq("ledger_id", ledger.id)
+    .eq("vouchers.org_id", orgId)
+
+  if (entriesError) return null
+
+  const opening = Number(ledger.opening_balance || 0) * (ledger.balance_type === "Cr" ? -1 : 1)
+  const movement = (entries || []).reduce((sum: number, entry: any) => {
+    return sum + Number(entry.debit_amount || 0) - Number(entry.credit_amount || 0)
+  }, 0)
+
+  return opening + movement
+}
+
 export type AccountingProgram = {
   id: string
   name: string

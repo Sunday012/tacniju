@@ -46,7 +46,7 @@ export async function getActiveBattles() {
   return { battles: data, error: null }
 }
 
-export async function createBattleAction(title: string, player1Id: string, player2Id: string, category: string = "General") {
+export async function createBattleAction(title: string, player1Id: string, player2Id: string, category: string = "General", competitionId?: string) {
   const supabase = await createServerClient()
   
   const { data: { user } } = await supabase.auth.getUser()
@@ -56,11 +56,27 @@ export async function createBattleAction(title: string, player1Id: string, playe
   if (!serviceRoleKey) return { success: false, error: "Server config error" }
   
   const adminSupabase = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
+  const competition = String(competitionId || "").trim()
+  if (!competition) return { success: false, error: "Select a competition first" }
+
+  const { data: eligibleEntries, error: entryError } = await adminSupabase
+    .from("competition_entries")
+    .select("profile_id")
+    .eq("competition_id", competition)
+    .in("profile_id", [player1Id, player2Id])
+
+  if (entryError) return { success: false, error: entryError.message }
+  const eligibleIds = new Set((eligibleEntries || []).map(entry => entry.profile_id))
+  if (!eligibleIds.has(player1Id) || !eligibleIds.has(player2Id)) {
+    return { success: false, error: "Only members registered in the selected competition can battle." }
+  }
   
   const { error } = await adminSupabase.from("battles").insert([{
     title,
     participant1_id: player1Id,
     participant2_id: player2Id,
+    category,
+    competition_id: competition,
     status: 'live'
   }])
 

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { getCurrentAccessProfile, isMainAdmin } from "@/lib/access"
 import { getPointCategory } from "@/lib/point-categories"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
 function revalidatePointPaths(category?: string) {
   revalidatePath("/admin/points")
@@ -14,6 +15,12 @@ function revalidatePointPaths(category?: string) {
   }
   revalidatePath("/dashboard")
   revalidatePath("/admin")
+}
+
+function getAdminSupabase() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!serviceRoleKey) return null
+  return createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey)
 }
 
 export async function adjustMemberPoints(formData: FormData) {
@@ -70,7 +77,10 @@ export async function createPointWork(formData: FormData) {
   if (!Number.isFinite(points) || points <= 0) return { error: "Points must be greater than zero." }
   if (mode !== "add" && mode !== "remove") return { error: "Select a valid point action." }
 
-  const { error: insertError } = await supabase.from("point_works").insert({
+  const adminSupabase = getAdminSupabase()
+  if (!adminSupabase) return { error: "Server config error." }
+
+  const { error: insertError } = await adminSupabase.from("point_works").insert({
     category,
     title,
     points,
