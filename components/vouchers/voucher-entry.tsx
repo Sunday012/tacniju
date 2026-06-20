@@ -202,12 +202,16 @@ export function VoucherEntry({
         })
     }
     const invoiceTotal = itemsSubtotal + invoiceAdditionalNet
+    const defaultSalesLedger = ledgers.find(ledger => /^sales( a\/c| account)?$/i.test(ledger.name.trim()))
+        || ledgers.find(ledger => ledger.name.toLowerCase().includes("sales"))
+        || ledgers.find(ledger => ledger.account_groups?.name?.toLowerCase() === "income")
+    const activeInvoiceLedgerId = voucherType === "Sales" ? (invoiceLedgerId || defaultSalesLedger?.id || "") : invoiceLedgerId
 
 
     const isBalanced = isSingleEntry
         ? (masterLedgerId !== "" && totalAmount > 0)
         : isInvoiceMode
-            ? (selectedPartyId !== "" && invoiceLedgerId !== "" && itemsSubtotal > 0)
+            ? (selectedPartyId !== "" && activeInvoiceLedgerId !== "" && itemsSubtotal > 0)
             : (totalDebit === totalCredit && totalDebit > 0)
 
     async function handleSubmit(e: React.FormEvent) {
@@ -243,17 +247,17 @@ export function VoucherEntry({
             })
         } else if (isInvoiceMode) {
             if (!selectedPartyId) return toast.error("Please select a Party.")
-            if (!invoiceLedgerId) return toast.error(`Please select a ${voucherType} Account.`)
+            if (!activeInvoiceLedgerId) return toast.error(`Please select a ${voucherType} Account.`)
             if (itemsSubtotal <= 0) return toast.error("Please enter at least one valid item.")
 
             const partyLedgerId = ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId
 
             if (voucherType === "Sales") {
                 finalLedgers.push({ ledger_id: partyLedgerId, debit_amount: invoiceTotal, credit_amount: 0, adjustment_method: "On Account" })
-                finalLedgers.push({ ledger_id: invoiceLedgerId, debit_amount: 0, credit_amount: itemsSubtotal })
+                finalLedgers.push({ ledger_id: activeInvoiceLedgerId, debit_amount: 0, credit_amount: itemsSubtotal })
             } else {
                 finalLedgers.push({ ledger_id: partyLedgerId, debit_amount: 0, credit_amount: invoiceTotal, adjustment_method: "On Account" })
-                finalLedgers.push({ ledger_id: invoiceLedgerId, debit_amount: itemsSubtotal, credit_amount: 0 })
+                finalLedgers.push({ ledger_id: activeInvoiceLedgerId, debit_amount: itemsSubtotal, credit_amount: 0 })
             }
 
             // Push additional ledgers
@@ -622,7 +626,7 @@ export function VoucherEntry({
                                         }))}
                                         placeholder="Search registered member..."
                                         className="h-10 w-full"
-                                        inputClassName="border-slate-300"
+                                        inputClassName="border-transparent bg-transparent shadow-none hover:border-slate-300 focus:border-slate-400 focus:ring-1 focus:ring-slate-300"
                                     />
                                 </div>
                                 {formatBalance(!isInvoiceMode ? selectedLedgers[0]?.ledger_id : (ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId)) && (
@@ -633,10 +637,10 @@ export function VoucherEntry({
                                 )}
                             </div>
 
-                            {isInvoiceMode && (
+                            {voucherType === "Purchase" && (
                                 <div className="flex flex-col gap-2 rounded-md border border-slate-200 bg-white p-2 sm:flex-row sm:items-center sm:gap-3">
                                     <Label className="font-bold text-slate-700 shrink-0 sm:w-24">
-                                        {voucherType === "Sales" ? "Sales A/c" : "Purchase A/c"}
+                                        Purchase A/c
                                     </Label>
                                     <div className="w-full flex-1">
                                         <ComboboxInput
@@ -711,12 +715,13 @@ export function VoucherEntry({
                                     </TableBody>
                                 </Table>
 
-                                {/* Add Item */}
-                                <div className="flex items-center border-t border-slate-200 bg-slate-50/50 p-2">
-                                    <Button type="button" variant="outline" size="sm" onClick={addItemLine} className="gap-2 h-8">
-                                        <Plus className="h-4 w-4" /> Add Item
-                                    </Button>
-                                </div>
+                                {voucherType !== "Sales" && (
+                                    <div className="flex items-center border-t border-slate-200 bg-slate-50/50 p-2">
+                                        <Button type="button" variant="outline" size="sm" onClick={addItemLine} className="gap-2 h-8">
+                                            <Plus className="h-4 w-4" /> Add Item
+                                        </Button>
+                                    </div>
+                                )}
 
                                 {/* Inline Additional Ledgers for Invoice Mode: two-column input (ledger left, amount right) */}
                                 {isInvoiceMode && (
