@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { ArrowLeft, ClipboardList } from "lucide-react"
 import { createClient } from "@/lib/server"
 import { CreatePointWorkSheet } from "@/components/admin/points/CreatePointWorkSheet"
+import { PointWorkMembersSheet } from "@/components/admin/points/PointWorkMembersSheet"
 import { getPointCategory } from "@/lib/point-categories"
 
 export const dynamic = "force-dynamic"
@@ -20,14 +21,15 @@ export default async function PointWorksPage({ params }: { params: { category: s
       .order("created_at", { ascending: false }),
     supabase
       .from("point_work_records")
-      .select("work_id")
+      .select("work_id, profile:profiles!profile_id(id, full_name, reservation_number, points)")
       .eq("category", category.slug),
   ])
 
   const rows = (works || []) as any[]
-  const countByWork = new Map<string, number>()
+  const membersByWork = new Map<string, any[]>()
   ;((records || []) as any[]).forEach(record => {
-    if (record.work_id) countByWork.set(record.work_id, (countByWork.get(record.work_id) || 0) + 1)
+    if (!record.work_id || !record.profile) return
+    membersByWork.set(record.work_id, [...(membersByWork.get(record.work_id) || []), record.profile])
   })
 
   return (
@@ -80,12 +82,17 @@ export default async function PointWorksPage({ params }: { params: { category: s
                     </tr>
                   ) : rows.map(record => (
                     <tr key={record.id} className="font-medium text-slate-600">
-                      <td className="px-6 py-4">
-                        <div className="font-bold text-slate-800">{record.title}</div>
-                        {record.note ? <div className="mt-1 text-xs text-slate-400">{record.note}</div> : null}
+                      <td className="px-4 py-3">
+                        <PointWorkMembersSheet
+                          title={record.title}
+                          mode={record.mode}
+                          points={Number(record.points || 0)}
+                          note={record.note}
+                          members={membersByWork.get(record.id) || []}
+                        />
                       </td>
                       <td className="px-6 py-4 capitalize">{record.mode}</td>
-                      <td className="px-6 py-4 text-right font-black">{countByWork.get(record.id) || 0}</td>
+                      <td className="px-6 py-4 text-right font-black">{membersByWork.get(record.id)?.length || 0}</td>
                       <td className={record.mode === "remove" ? "px-6 py-4 text-right font-black text-rose-600" : "px-6 py-4 text-right font-black text-indigo-600"}>
                         {record.mode === "remove" ? "-" : "+"}{record.points}
                       </td>

@@ -102,11 +102,6 @@ export default async function PointSummaryPage({ params }: { params: { category:
                       <tr key={row.id} className="font-medium text-slate-600">
                         <td className="px-6 py-4">
                           <div className="font-bold text-slate-800">{row.title}</div>
-                          {row.members.length > 0 ? (
-                            <div className="mt-1 max-w-xl truncate text-xs text-slate-400">
-                              {row.members.map((member: any) => member?.full_name || "Unnamed").join(", ")}
-                            </div>
-                          ) : null}
                         </td>
                         <td className="px-6 py-4 capitalize">{row.mode}</td>
                         <td className="px-6 py-4 text-right font-black">{row.memberCount}</td>

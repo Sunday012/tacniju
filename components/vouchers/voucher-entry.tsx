@@ -125,6 +125,12 @@ export function VoucherEntry({
         }
         return ""
     })
+    const [resolvedPartyLedgerId, setResolvedPartyLedgerId] = useState<string>(() => {
+        if ((initialType === "Sales" || initialType === "Purchase") && initialVoucher?.voucher_entries?.length > 0) {
+            return initialVoucher.voucher_entries[0].ledger_id
+        }
+        return ""
+    })
     const [ledgerLabels, setLedgerLabels] = useState<Record<string, string>>({})
     const [managedLedgerIndex, setManagedLedgerIndex] = useState<number | null>(null)
     // Offset: mark party/ledger lines to settle against the party balance (bill-wise "On Account").
@@ -157,6 +163,7 @@ export function VoucherEntry({
                 setSelectedLedgers(newType === 'Sales' || newType === 'Purchase' ? [] : [{ ledger_id: "", amount: 0, debit_amount: 0, credit_amount: 0 }]);
                 setMasterLedgerId("");
                 setInvoiceLedgerId("");
+                setResolvedPartyLedgerId("");
             }
         }
         window.addEventListener('keydown', handleKeyDown, { capture: true })
@@ -250,7 +257,7 @@ export function VoucherEntry({
             if (!activeInvoiceLedgerId) return toast.error(`Please select a ${voucherType} Account.`)
             if (itemsSubtotal <= 0) return toast.error("Please enter at least one valid item.")
 
-            const partyLedgerId = ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId
+            const partyLedgerId = resolvedPartyLedgerId || ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId
 
             if (voucherType === "Sales") {
                 finalLedgers.push({ ledger_id: partyLedgerId, debit_amount: invoiceTotal, credit_amount: 0, adjustment_method: "On Account" })
@@ -309,6 +316,7 @@ export function VoucherEntry({
                 setMasterLedgerId("")
                 setInvoiceLedgerId("")
                 setSelectedPartyId("")
+                setResolvedPartyLedgerId("")
                 setManagedLedgerIndex(null)
                 setSelectedItems(needsItems ? [{ item_id: "", qty: 1, rate: 0, amount: 0 }] : [])
                 setSelectedLedgers(isInvoiceMode ? [] : [{ ledger_id: "", amount: 0, debit_amount: 0, credit_amount: 0 }])
@@ -396,7 +404,10 @@ export function VoucherEntry({
 
     async function handlePartyChange(partyId: string) {
         setSelectedPartyId(partyId)
-        if (!partyId) return
+        if (!partyId) {
+            setResolvedPartyLedgerId("")
+            return
+        }
 
         try {
             const selectedParty = parties.find(party => party.id === partyId)
@@ -404,6 +415,7 @@ export function VoucherEntry({
             const ledgerId = selectedParty?.ledgerId
                 ? selectedParty.ledgerId
                 : (await getOrCreateProfilePartyLedger(partyId)).ledgerId
+            setResolvedPartyLedgerId(ledgerId)
             const partyLabel = selectedParty
                 ? selectedParty.reservation_number
                     ? `${selectedParty.name} (${selectedParty.reservation_number})`

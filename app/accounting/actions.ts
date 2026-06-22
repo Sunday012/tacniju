@@ -115,6 +115,7 @@ export async function createAccountingParty(formData: FormData) {
 
   const name = String(formData.get("name") || "").trim()
   const phone = String(formData.get("phone") || "").trim()
+  const address = String(formData.get("address") || "").trim()
 
   if (!name) return { error: "Party name is required." }
 
@@ -131,6 +132,7 @@ export async function createAccountingParty(formData: FormData) {
     source_profile_id: null,
     contact_person: name,
     phone_number: phone || null,
+    address: address || null,
     description: "Manually created party",
     active: true,
   })

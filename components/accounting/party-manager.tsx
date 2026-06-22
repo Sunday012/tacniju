@@ -29,6 +29,7 @@ export function PartyManager({ parties, hideTitle = false }: { parties: Party[],
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
+  const [address, setAddress] = useState("")
   const [selectedParty, setSelectedParty] = useState<Party | null>(null)
   const [isDesktop, setIsDesktop] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -62,6 +63,7 @@ export function PartyManager({ parties, hideTitle = false }: { parties: Party[],
     const formData = new FormData()
     formData.set("name", name.trim())
     formData.set("phone", phone.trim())
+    formData.set("address", address.trim())
 
     startTransition(async () => {
       const result = await createAccountingParty(formData)
@@ -72,6 +74,7 @@ export function PartyManager({ parties, hideTitle = false }: { parties: Party[],
       toast.success("Party created.")
       setName("")
       setPhone("")
+      setAddress("")
       setShowForm(false)
       router.refresh()
     })
@@ -256,6 +259,10 @@ export function PartyManager({ parties, hideTitle = false }: { parties: Party[],
                 <div className="space-y-1.5">
                   <Label htmlFor="party-phone" className="font-bold text-slate-700">Phone (optional)</Label>
                   <Input id="party-phone" value={phone} onChange={e => setPhone(e.target.value)} placeholder="e.g. 0803..." />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label htmlFor="party-address" className="font-bold text-slate-700">Address (optional)</Label>
+                  <Input id="party-address" value={address} onChange={e => setAddress(e.target.value)} placeholder="e.g. 123 Main Street" />
                 </div>
               </div>
               <div className="mt-5 flex gap-3">
