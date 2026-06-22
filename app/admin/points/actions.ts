@@ -59,6 +59,50 @@ export async function adjustMemberPoints(formData: FormData) {
   revalidatePointPaths()
 }
 
+export async function addAttendancePoints(formData: FormData) {
+  const { user, profile } = await getCurrentAccessProfile()
+  if (!user || !isMainAdmin(profile)) {
+    return { error: "Only admins can manage points." }
+  }
+
+  const points = Number(formData.get("points") || 0)
+  const profileIds = Array.from(new Set(
+    formData.getAll("profile_ids").map(value => String(value).trim()).filter(Boolean)
+  ))
+
+  if (!Number.isFinite(points) || points <= 0) return { error: "Points must be greater than zero." }
+  if (profileIds.length === 0) return { error: "Select at least one attendee." }
+
+  const adminSupabase = getAdminSupabase()
+  if (!adminSupabase) return { error: "Server config error." }
+
+  const { data: members, error: fetchError } = await adminSupabase
+    .from("profiles")
+    .select("id, points")
+    .in("id", profileIds)
+
+  if (fetchError || !members?.length) {
+    console.error("Failed to fetch attendance members for points", fetchError)
+    return { error: "Could not find selected attendees." }
+  }
+
+  for (const member of members) {
+    const nextPoints = Number(member.points || 0) + points
+    const { error: updateError } = await adminSupabase
+      .from("profiles")
+      .update({ points: nextPoints })
+      .eq("id", member.id)
+
+    if (updateError) {
+      console.error("Failed to add attendance points", updateError)
+      return { error: "Some attendee points could not be updated." }
+    }
+  }
+
+  revalidatePointPaths("attendance")
+  return { success: true, updated: members.length }
+}
+
 export async function createPointWork(formData: FormData) {
   const { supabase, user, profile } = await getCurrentAccessProfile()
   if (!user || !isMainAdmin(profile)) {

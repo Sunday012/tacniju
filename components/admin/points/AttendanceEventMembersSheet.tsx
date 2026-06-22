@@ -1,6 +1,10 @@
 "use client"
 
-import { CalendarCheck, Users } from "lucide-react"
+import { useState } from "react"
+import { CalendarCheck, Loader2, Plus, Users } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { addAttendancePoints } from "@/app/admin/points/actions"
 import {
   Sheet,
   SheetContent,
@@ -12,6 +16,7 @@ import {
 
 type AttendanceMember = {
   id: string
+  profile_id: string
   full_name: string | null
   reservation_number: string | null
   points: number | null
@@ -29,6 +34,47 @@ export function AttendanceEventMembersSheet({
   description?: string | null
   members: AttendanceMember[]
 }) {
+  const router = useRouter()
+  const [allPoints, setAllPoints] = useState("")
+  const [memberPoints, setMemberPoints] = useState<Record<string, string>>({})
+  const [activeMemberId, setActiveMemberId] = useState<string | null>(null)
+  const [loadingTarget, setLoadingTarget] = useState<string | null>(null)
+
+  async function addPoints(profileIds: string[], pointsValue: string, target: string) {
+    const points = Number(pointsValue)
+    if (!Number.isFinite(points) || points <= 0) {
+      toast.error("Enter points greater than zero.")
+      return
+    }
+    if (profileIds.length === 0) {
+      toast.error("No attendees selected.")
+      return
+    }
+
+    const formData = new FormData()
+    formData.set("points", String(points))
+    profileIds.forEach(id => formData.append("profile_ids", id))
+
+    setLoadingTarget(target)
+    try {
+      const result = await addAttendancePoints(formData)
+      if (result?.error) {
+        toast.error(result.error)
+      } else {
+        toast.success(`Added ${points} point${points === 1 ? "" : "s"} to ${result.updated || profileIds.length} attendee${(result.updated || profileIds.length) === 1 ? "" : "s"}.`)
+        if (target === "all") setAllPoints("")
+        else setMemberPoints(current => ({ ...current, [target]: "" }))
+        router.refresh()
+      }
+    } catch {
+      toast.error("Could not add points.")
+    } finally {
+      setLoadingTarget(null)
+    }
+  }
+
+  const attendeeIds = members.map(member => member.profile_id).filter(Boolean)
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -48,6 +94,31 @@ export function AttendanceEventMembersSheet({
           </SheetDescription>
         </SheetHeader>
 
+        {members.length > 0 ? (
+          <div className="flex items-end gap-3 border-b border-slate-100 px-6 py-4">
+            <label className="grid flex-1 gap-1.5 text-sm font-bold text-slate-600">
+              Add points to all attendees
+              <input
+                value={allPoints}
+                onChange={event => setAllPoints(event.target.value)}
+                type="number"
+                min="1"
+                className="h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-emerald-300 focus:bg-white"
+                placeholder="Points"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => addPoints(attendeeIds, allPoints, "all")}
+              disabled={loadingTarget === "all"}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-black text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {loadingTarget === "all" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              Add
+            </button>
+          </div>
+        ) : null}
+
         <div className="flex-1 overflow-y-auto">
           {members.length === 0 ? (
             <div className="px-6 py-12 text-center text-sm font-bold text-slate-500">
@@ -56,21 +127,46 @@ export function AttendanceEventMembersSheet({
           ) : (
             <div className="divide-y divide-slate-100">
               {members.map(member => (
-                <div key={member.id} className="flex items-center gap-3 px-6 py-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-                    <Users className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-black text-slate-800">{member.full_name || "Unknown User"}</div>
-                    <div className="mt-0.5 text-xs font-bold text-slate-400">
-                      {member.reservation_number || "-"} · {member.points || 0} pts
+                <div key={member.id}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveMemberId(current => current === member.id ? null : member.id)}
+                    className="flex w-full items-center gap-3 px-6 py-4 text-left transition hover:bg-slate-50"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+                      <Users className="h-4 w-4" />
                     </div>
-                  </div>
-                  {member.marked_at ? (
-                    <div className="text-xs font-bold text-slate-400">
-                      {new Date(member.marked_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-black text-slate-800">{member.full_name || "Unknown User"}</div>
+                      <div className="mt-0.5 text-xs font-bold text-slate-400">
+                        {member.reservation_number || "-"} · {member.points || 0} pts
+                      </div>
                     </div>
-                  ) : null}
+                    {member.marked_at ? (
+                      <div className="text-xs font-bold text-slate-400">
+                        {new Date(member.marked_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                    ) : null}
+                  </button>
+                  <div className={activeMemberId === member.id ? "grid gap-3 bg-slate-50 px-6 pb-4 sm:grid-cols-[1fr_auto]" : "hidden"}>
+                    <input
+                      value={memberPoints[member.id] || ""}
+                      onChange={event => setMemberPoints(current => ({ ...current, [member.id]: event.target.value }))}
+                      type="number"
+                      min="1"
+                      className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm outline-none focus:border-emerald-300"
+                      placeholder={`Points for ${member.full_name || "attendee"}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => addPoints([member.profile_id], memberPoints[member.id] || "", member.id)}
+                      disabled={loadingTarget === member.id}
+                      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-black text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {loadingTarget === member.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                      Add Points
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

@@ -53,6 +53,7 @@ export default async function PointWorksPage({ params }: { params: { category: s
         ...(membersByEvent.get(record.event_id) || []),
         {
           id: record.id,
+          profile_id: record.user_id,
           full_name: profile?.full_name || "Unknown User",
           reservation_number: profile?.reservation_number || null,
           points: profile?.points || 0,
