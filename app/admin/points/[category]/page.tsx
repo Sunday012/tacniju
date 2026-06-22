@@ -10,11 +10,18 @@ export default async function PointCategoryPage({ params }: { params: { category
   const category = getPointCategory(params.category)
   if (!category) notFound()
 
-  const menuItems = [
-    { href: `/admin/points/${category.slug}/works`, label: "List of Works", icon: ClipboardList },
-    { href: `/admin/points/${category.slug}/members`, label: "Add Members", icon: ClipboardList },
-    { href: `/admin/points/${category.slug}/summary`, label: "Summary", icon: FileText },
-  ]
+  const isAttendance = category.slug === "attendance"
+  const menuItems = isAttendance
+    ? [
+      { href: `/admin/points/${category.slug}/works`, label: "List of Events", icon: ClipboardList },
+      { href: "/admin/events", label: "Manage Events", icon: ClipboardList },
+      { href: `/admin/points/${category.slug}/summary`, label: "Summary", icon: FileText },
+    ]
+    : [
+      { href: `/admin/points/${category.slug}/works`, label: "List of Works", icon: ClipboardList },
+      { href: `/admin/points/${category.slug}/members`, label: "Add Members", icon: ClipboardList },
+      { href: `/admin/points/${category.slug}/summary`, label: "Summary", icon: FileText },
+    ]
 
   return (
     <div className="p-6 md:p-10">
@@ -30,11 +37,20 @@ export default async function PointCategoryPage({ params }: { params: { category
             </Link>
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">{category.name}</h1>
           </div>
-          <CreatePointWorkSheet
-            category={category.slug}
-            categoryName={category.name}
-            defaultMode={category.defaultMode}
-          />
+          {isAttendance ? (
+            <Link
+              href="/admin/events"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-black text-white shadow-sm transition-colors hover:bg-indigo-700"
+            >
+              Manage Events
+            </Link>
+          ) : (
+            <CreatePointWorkSheet
+              category={category.slug}
+              categoryName={category.name}
+              defaultMode={category.defaultMode}
+            />
+          )}
         </div>
 
         <section className="rounded-2xl border border-white/70 bg-white p-5 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)]">

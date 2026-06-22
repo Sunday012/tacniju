@@ -1,6 +1,10 @@
 "use client"
 
-import { Users } from "lucide-react"
+import { useState } from "react"
+import { Loader2, Trash2, Users } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { deletePointWorkRecord } from "@/app/admin/points/actions"
 import {
   Sheet,
   SheetContent,
@@ -11,7 +15,8 @@ import {
 } from "@/components/ui/sheet"
 
 type PointWorkMember = {
-  id: string
+  record_id: string
+  profile_id: string
   full_name: string | null
   reservation_number: string | null
   points: number | null
@@ -30,7 +35,28 @@ export function PointWorkMembersSheet({
   note?: string | null
   members: PointWorkMember[]
 }) {
+  const router = useRouter()
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const signedPoints = `${mode === "remove" ? "-" : "+"}${points}`
+
+  async function handleDeleteMember(recordId: string, name: string) {
+    if (!window.confirm(`Remove ${name} from this work and reverse their points?`)) return
+
+    setDeletingId(recordId)
+    try {
+      const result = await deletePointWorkRecord(recordId)
+      if (result?.error) {
+        toast.error(result.error)
+      } else {
+        toast.success("Member removed from work.")
+        router.refresh()
+      }
+    } catch {
+      toast.error("Something went wrong")
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   return (
     <Sheet>
@@ -59,7 +85,7 @@ export function PointWorkMembersSheet({
           ) : (
             <div className="divide-y divide-slate-100">
               {members.map(member => (
-                <div key={member.id} className="flex items-center gap-3 px-6 py-4">
+                <div key={member.record_id} className="flex items-center gap-3 px-6 py-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-sm font-black text-slate-600">
                     {(member.full_name || "U").slice(0, 1).toUpperCase()}
                   </div>
@@ -69,6 +95,15 @@ export function PointWorkMembersSheet({
                       {member.reservation_number || "-"} · {member.points || 0} pts
                     </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteMember(member.record_id, member.full_name || "this member")}
+                    disabled={deletingId === member.record_id}
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    title="Remove member from work"
+                  >
+                    {deletingId === member.record_id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                  </button>
                 </div>
               ))}
             </div>

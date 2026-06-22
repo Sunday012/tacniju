@@ -4,18 +4,18 @@ import { useState } from "react"
 import { Loader2, Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { deletePointWorkRecord } from "@/app/admin/points/actions"
+import { deletePointWork } from "@/app/admin/points/actions"
 
-export function DeletePointWorkButton({ recordId }: { recordId: string }) {
+export function DeletePointWorkButton({ workId }: { workId: string }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
   async function handleDelete() {
-    if (!window.confirm("Delete this work entry and reverse its points?")) return
+    if (!window.confirm("Delete this work and reverse points for every member under it?")) return
 
     setLoading(true)
     try {
-      const result = await deletePointWorkRecord(recordId)
+      const result = await deletePointWork(workId)
       if (result?.error) {
         toast.error(result.error)
       } else {

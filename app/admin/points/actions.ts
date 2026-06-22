@@ -102,6 +102,101 @@ export async function createPointWorkRecord(formData: FormData) {
   return createPointWork(formData)
 }
 
+export async function updatePointWork(formData: FormData) {
+  const { user, profile } = await getCurrentAccessProfile()
+  if (!user || !isMainAdmin(profile)) {
+    return { error: "Only admins can manage points." }
+  }
+
+  const id = String(formData.get("id") || "").trim()
+  const title = String(formData.get("title") || "").trim()
+  const points = Number(formData.get("points") || 0)
+  const mode = String(formData.get("mode") || "add")
+  const note = String(formData.get("note") || "").trim()
+
+  if (!id) return { error: "Work ID is required." }
+  if (!title) return { error: "Work title is required." }
+  if (!Number.isFinite(points) || points <= 0) return { error: "Points must be greater than zero." }
+  if (mode !== "add" && mode !== "remove") return { error: "Select a valid point action." }
+
+  const adminSupabase = getAdminSupabase()
+  if (!adminSupabase) return { error: "Server config error." }
+
+  const { data: work, error: workError } = await adminSupabase
+    .from("point_works")
+    .select("id, category, points, mode")
+    .eq("id", id)
+    .maybeSingle()
+
+  if (workError || !work) {
+    console.error("Failed to fetch point work for update", workError)
+    return { error: "Could not find selected work." }
+  }
+
+  const { data: records, error: recordsError } = await adminSupabase
+    .from("point_work_records")
+    .select("id, profile_id, points, mode")
+    .eq("work_id", id)
+
+  if (recordsError) {
+    console.error("Failed to fetch point work members for update", recordsError)
+    return { error: "Could not load members under this work." }
+  }
+
+  const oldSigned = work.mode === "remove" ? -Number(work.points || 0) : Number(work.points || 0)
+  const newSigned = mode === "remove" ? -points : points
+  const delta = newSigned - oldSigned
+
+  const { error: updateError } = await adminSupabase
+    .from("point_works")
+    .update({ title, points, mode, note: note || null, updated_at: new Date().toISOString() })
+    .eq("id", id)
+
+  if (updateError) {
+    console.error("Failed to update point work", updateError)
+    return { error: "Failed to update work." }
+  }
+
+  const { error: recordUpdateError } = await adminSupabase
+    .from("point_work_records")
+    .update({ title, points, mode, note: note || null })
+    .eq("work_id", id)
+
+  if (recordUpdateError) {
+    console.error("Failed to update point work records", recordUpdateError)
+    return { error: "Work was updated, but member records could not be updated." }
+  }
+
+  if (delta !== 0 && records?.length) {
+    const profileIds = records.map(record => record.profile_id).filter(Boolean)
+    const { data: members, error: membersError } = await adminSupabase
+      .from("profiles")
+      .select("id, points")
+      .in("id", profileIds)
+
+    if (membersError) {
+      console.error("Failed to fetch members for point adjustment", membersError)
+      return { error: "Work was updated, but member points could not be adjusted." }
+    }
+
+    for (const member of members || []) {
+      const nextPoints = Math.max(0, Number(member.points || 0) + delta)
+      const { error: memberUpdateError } = await adminSupabase
+        .from("profiles")
+        .update({ points: nextPoints })
+        .eq("id", member.id)
+
+      if (memberUpdateError) {
+        console.error("Failed to adjust member points for point work update", memberUpdateError)
+        return { error: "Work was updated, but some member points could not be adjusted." }
+      }
+    }
+  }
+
+  revalidatePointPaths(work.category)
+  return { success: true }
+}
+
 export async function addMembersToPointWork(formData: FormData) {
   const { supabase, user, profile } = await getCurrentAccessProfile()
   if (!user || !isMainAdmin(profile)) {
@@ -178,6 +273,89 @@ export async function addMembersToPointWork(formData: FormData) {
 
   revalidatePointPaths(work.category)
   return { success: true, added: members.length }
+}
+
+export async function deletePointWork(workId: string) {
+  const { user, profile } = await getCurrentAccessProfile()
+  if (!user || !isMainAdmin(profile)) {
+    return { error: "Only admins can manage points." }
+  }
+
+  const id = workId.trim()
+  if (!id) return { error: "Work ID is required." }
+
+  const adminSupabase = getAdminSupabase()
+  if (!adminSupabase) return { error: "Server config error." }
+
+  const { data: work, error: workError } = await adminSupabase
+    .from("point_works")
+    .select("id, category")
+    .eq("id", id)
+    .maybeSingle()
+
+  if (workError || !work) {
+    console.error("Failed to fetch point work for delete", workError)
+    return { error: "Could not find selected work." }
+  }
+
+  const { data: records, error: recordsError } = await adminSupabase
+    .from("point_work_records")
+    .select("id, profile_id, points, mode")
+    .eq("work_id", id)
+
+  if (recordsError) {
+    console.error("Failed to fetch point work records for delete", recordsError)
+    return { error: "Could not load members under this work." }
+  }
+
+  if (records?.length) {
+    const profileIds = records.map(record => record.profile_id).filter(Boolean)
+    const { data: members, error: membersError } = await adminSupabase
+      .from("profiles")
+      .select("id, points")
+      .in("id", profileIds)
+
+    if (membersError) {
+      console.error("Failed to fetch members for point work delete", membersError)
+      return { error: "Could not reverse member points." }
+    }
+
+    const memberPoints = new Map((members || []).map(member => [member.id, Number(member.points || 0)]))
+    for (const record of records) {
+      const current = memberPoints.get(record.profile_id)
+      if (current === undefined) continue
+
+      const nextPoints = record.mode === "remove"
+        ? current + Number(record.points || 0)
+        : Math.max(0, current - Number(record.points || 0))
+      memberPoints.set(record.profile_id, nextPoints)
+    }
+
+    for (const [profileId, nextPoints] of Array.from(memberPoints.entries())) {
+      const { error: updateError } = await adminSupabase
+        .from("profiles")
+        .update({ points: nextPoints })
+        .eq("id", profileId)
+
+      if (updateError) {
+        console.error("Failed to reverse member points for point work delete", updateError)
+        return { error: "Could not reverse all member points." }
+      }
+    }
+  }
+
+  const { error: deleteError } = await adminSupabase
+    .from("point_works")
+    .delete()
+    .eq("id", id)
+
+  if (deleteError) {
+    console.error("Failed to delete point work", deleteError)
+    return { error: "Failed to delete work." }
+  }
+
+  revalidatePointPaths(work.category)
+  return { success: true }
 }
 
 export async function deletePointWorkRecord(recordId: string) {

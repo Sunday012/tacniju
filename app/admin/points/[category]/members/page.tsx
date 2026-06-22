@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { ArrowLeft, Users } from "lucide-react"
 import { createClient } from "@/lib/server"
 import { getPointCategory } from "@/lib/point-categories"
@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic"
 export default async function PointWorkMembersPage({ params }: { params: { category: string } }) {
   const category = getPointCategory(params.category)
   if (!category) notFound()
+  if (category.slug === "attendance") redirect("/admin/events")
 
   const supabase = await createClient()
   const [{ data: works, error: worksError }, { data: profiles }] = await Promise.all([
