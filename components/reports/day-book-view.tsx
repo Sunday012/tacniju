@@ -47,6 +47,7 @@ function getVoucherDisplayAmounts(voucherType: string, debit: number, credit: nu
         case "Purchase":
             return { debitDisplay: total, creditDisplay: null as number | null }
         case "Contra":
+            return { debitDisplay: null as number | null, creditDisplay: total }
         default:
             return { debitDisplay: debit || null, creditDisplay: credit || null }
     }
@@ -110,6 +111,15 @@ export function DayBookView({
     }
 
     function getMainParties(voucherType: string, entries: any[] = []) {
+        if (voucherType === "Contra") {
+            const sendingEntries = entries.filter(entry => Number(entry.credit_amount || 0) > 0)
+            const names = sendingEntries
+                .map(entry => entry.ledgers?.name)
+                .filter(Boolean)
+
+            return Array.from(new Set(names))
+        }
+
         const preferredSideByType: Record<string, "debit" | "credit" | null> = {
             Receipt: "credit",
             Payment: "debit",

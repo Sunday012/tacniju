@@ -24,6 +24,12 @@ export default async function DayBookPage({ searchParams }: { searchParams: { da
         )
     }
 
+    function getDisplayEntries(voucherType: string, entries: any[] = []) {
+        if (voucherType !== "Contra") return entries
+        const sendingEntries = entries.filter(entry => Number(entry.credit_amount || 0) > 0)
+        return sendingEntries.length > 0 ? sendingEntries : entries
+    }
+
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-50 p-4 md:p-8">
             <div className="max-w-6xl mx-auto space-y-6">
@@ -86,6 +92,8 @@ export default async function DayBookPage({ searchParams }: { searchParams: { da
                                     data.map(v => {
                                         const entries = v.voucher_entries || []
                                         const totals = getEntryTotals(entries)
+                                        const displayEntries = getDisplayEntries(v.voucher_type, entries)
+                                        const contraTotal = Math.max(totals.debit, totals.credit)
 
                                         return (
                                         <TableRow key={v.id} className="border-slate-200 align-top">
@@ -105,9 +113,9 @@ export default async function DayBookPage({ searchParams }: { searchParams: { da
                                             <TableCell>
                                                 <div className="font-medium text-slate-800 mb-2 italic">"{v.narration}"</div>
                                                 <div className="space-y-1">
-                                                    {entries.length === 0 ? (
+                                                    {displayEntries.length === 0 ? (
                                                         <div className="text-xs text-red-600">No ledger entries were saved for this voucher.</div>
-                                                    ) : entries.map((e: any, i: number) => (
+                                                    ) : displayEntries.map((e: any, i: number) => (
                                                         <div key={i} className={`flex justify-between ${e.debit_amount > 0 ? 'text-emerald-400/80' : 'text-red-400/80'}`}>
                                                             <span>{e.debit_amount > 0 ? 'Dr' : 'Cr'} {e.ledgers?.name}</span>
                                                         </div>
@@ -116,12 +124,14 @@ export default async function DayBookPage({ searchParams }: { searchParams: { da
                                             </TableCell>
                                             <TableCell className="text-right font-mono">
                                                 <div className="mt-8">
-                                                    {totals.debit > 0 ? totals.debit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
+                                                    {v.voucher_type !== "Contra" && totals.debit > 0 ? totals.debit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right font-mono">
                                                 <div className="mt-8">
-                                                    {totals.credit > 0 ? totals.credit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
+                                                    {(v.voucher_type === "Contra" ? contraTotal : totals.credit) > 0
+                                                        ? (v.voucher_type === "Contra" ? contraTotal : totals.credit).toLocaleString(undefined, { minimumFractionDigits: 2 })
+                                                        : '-'}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
