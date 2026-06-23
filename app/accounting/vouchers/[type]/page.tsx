@@ -5,6 +5,7 @@ import { getLedgers, getLedgerBalances } from "@/app/management/actions"
 import { getRecentVouchers, VoucherType } from "@/app/vouchers/actions"
 import { getItems } from "@/app/inventory/actions"
 import { getAccountingParties, getAccountingPrograms } from "@/app/accounting/actions"
+import { getNextVoucherNo } from "@/lib/voucher-numbering"
 
 const typeMap: Record<string, VoucherType> = {
   payment: "Payment",
@@ -73,6 +74,8 @@ export default async function AccountingVoucherPage({ params }: { params: { type
     getAccountingPrograms(),
     getLedgerBalances(),
   ])
+  const typeVouchers = (vouchers || []).filter((voucher: any) => voucher.voucher_type === voucherType)
+  const nextVoucherNo = getNextVoucherNo(voucherType, typeVouchers)
 
   return (
     <AccountingShell
@@ -82,14 +85,14 @@ export default async function AccountingVoucherPage({ params }: { params: { type
       backLabel="Vouchers"
       hero={{
         title: `${voucherType} Voucher`,
-        badge: voucherType,
+        badge: nextVoucherNo,
         ...heroStyles[voucherType],
       }}
     >
       <VoucherEntry
         fixedType={voucherType}
         ledgers={ledgers}
-        recentVouchers={(vouchers || []).filter((voucher: any) => voucher.voucher_type === voucherType)}
+        recentVouchers={typeVouchers}
         items={items}
         parties={parties}
         programs={programs}

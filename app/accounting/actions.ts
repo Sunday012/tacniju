@@ -33,6 +33,70 @@ async function getOrCreatePartyGroup(supabase: Awaited<ReturnType<typeof createC
   return data.id as string
 }
 
+async function getOrCreateAccountGroup(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  orgId: string,
+  name: string,
+  nature: "Asset" | "Liability" | "Income" | "Expense"
+) {
+  const { data: existing } = await supabase
+    .from("account_groups")
+    .select("id")
+    .eq("org_id", orgId)
+    .eq("name", name)
+    .maybeSingle()
+
+  if (existing?.id) return existing.id as string
+
+  const { data, error } = await supabase
+    .from("account_groups")
+    .insert({ org_id: orgId, name, nature, parent_id: null })
+    .select("id")
+    .single()
+
+  if (error) throw error
+  return data.id as string
+}
+
+export async function getOrCreateDefaultSalesLedger() {
+  const supabase = await createClient()
+  const orgId = await getOrgId()
+
+  const { data: existing } = await supabase
+    .from("ledgers")
+    .select("id")
+    .eq("org_id", orgId)
+    .ilike("name", "Sales%")
+    .eq("active", true)
+    .limit(1)
+    .maybeSingle()
+
+  if (existing?.id) return { ledgerId: existing.id as string }
+
+  const groupId = await getOrCreateAccountGroup(supabase, orgId, "Income", "Income")
+  const { data, error } = await supabase
+    .from("ledgers")
+    .insert({
+      org_id: orgId,
+      group_id: groupId,
+      name: "Sales",
+      opening_balance: 0,
+      balance_type: "Cr",
+      is_cash_bank: false,
+      ledger_kind: "ledger",
+      source_context: "accounting",
+      active: true,
+      description: "Default sales account",
+    })
+    .select("id")
+    .single()
+
+  if (error) throw error
+  revalidatePath("/accounting")
+  revalidatePath("/accounting/info")
+  return { ledgerId: data.id as string }
+}
+
 export async function getAccountingParties() {
   const supabase = await createClient()
   const orgId = await getOrgId()

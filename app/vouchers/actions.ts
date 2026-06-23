@@ -4,6 +4,7 @@ import { createClient } from "@/lib/server"
 import { cookies } from "next/headers"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { getNextVoucherNo, getVoucherPrefix } from "@/lib/voucher-numbering"
 
 async function getOrgId() {
     const cookieStore = cookies()
@@ -58,24 +59,18 @@ export async function saveVoucher(payload: VoucherFormPayload) {
     const { data: { user } } = await supabase.auth.getUser()
 
     // 2. Auto-increment Voucher Number
-    const prefix = payload.voucher_type.substring(0, 3).toUpperCase() + "-"
+    const prefix = getVoucherPrefix(payload.voucher_type)
     const { data: lastVoucher } = await supabase
         .from("vouchers")
         .select("voucher_no")
         .eq("org_id", orgId)
         .eq("voucher_type", payload.voucher_type)
+        .like("voucher_no", `${prefix}-%`)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle()
 
-    let nextNum = 1
-    if (lastVoucher && lastVoucher.voucher_no) {
-        const parts = lastVoucher.voucher_no.split("-")
-        if (parts.length === 2) {
-            nextNum = parseInt(parts[1], 10) + 1
-        }
-    }
-    const voucherNo = `${prefix}${nextNum.toString().padStart(3, '0')}`
+    const voucherNo = getNextVoucherNo(payload.voucher_type, lastVoucher ? [lastVoucher] : [])
 
     // 3. Insert Voucher Header
     const { data: header, error: headerErr } = await supabase.from("vouchers").insert({

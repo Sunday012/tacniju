@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { saveVoucher, updateVoucher, VoucherType, VoucherItemPayload, VoucherLedgerEntry } from "@/app/vouchers/actions"
 import { Ledger, LedgerBalance } from "@/app/management/actions"
 import { Item } from "@/app/inventory/actions"
-import { getOrCreateProfilePartyLedger } from "@/app/accounting/actions"
+import { getOrCreateDefaultSalesLedger, getOrCreateProfilePartyLedger } from "@/app/accounting/actions"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { Plus, Trash2 } from "lucide-react"
@@ -218,8 +218,19 @@ export function VoucherEntry({
     const isBalanced = isSingleEntry
         ? (masterLedgerId !== "" && totalAmount > 0)
         : isInvoiceMode
-            ? (selectedPartyId !== "" && activeInvoiceLedgerId !== "" && itemsSubtotal > 0)
+            ? (selectedPartyId !== "" && (voucherType === "Sales" || activeInvoiceLedgerId !== "") && itemsSubtotal > 0)
             : (totalDebit === totalCredit && totalDebit > 0)
+    const invoiceValidationMessage = isInvoiceMode
+        ? !selectedPartyId
+            ? "Select a party"
+            : voucherType !== "Sales" && !activeInvoiceLedgerId
+                ? `Create or select a ${voucherType.toLowerCase()} account`
+                : selectedItems.some(item => item.item_id && Number(item.rate || 0) <= 0)
+                    ? "Enter item rate"
+                    : itemsSubtotal <= 0
+                        ? "Select an item and enter amount"
+                        : ""
+        : ""
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
@@ -254,17 +265,27 @@ export function VoucherEntry({
             })
         } else if (isInvoiceMode) {
             if (!selectedPartyId) return toast.error("Please select a Party.")
-            if (!activeInvoiceLedgerId) return toast.error(`Please select a ${voucherType} Account.`)
+            let finalInvoiceLedgerId = activeInvoiceLedgerId
+            if (!finalInvoiceLedgerId && voucherType === "Sales") {
+                try {
+                    const result = await getOrCreateDefaultSalesLedger()
+                    finalInvoiceLedgerId = result.ledgerId
+                    setInvoiceLedgerId(result.ledgerId)
+                } catch (error: any) {
+                    return toast.error(error?.message || "Could not create the default Sales account.")
+                }
+            }
+            if (!finalInvoiceLedgerId) return toast.error(`Please select a ${voucherType} Account.`)
             if (itemsSubtotal <= 0) return toast.error("Please enter at least one valid item.")
 
             const partyLedgerId = resolvedPartyLedgerId || ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId
 
             if (voucherType === "Sales") {
                 finalLedgers.push({ ledger_id: partyLedgerId, debit_amount: invoiceTotal, credit_amount: 0, adjustment_method: "On Account" })
-                finalLedgers.push({ ledger_id: activeInvoiceLedgerId, debit_amount: 0, credit_amount: itemsSubtotal })
+                finalLedgers.push({ ledger_id: finalInvoiceLedgerId, debit_amount: 0, credit_amount: itemsSubtotal })
             } else {
                 finalLedgers.push({ ledger_id: partyLedgerId, debit_amount: 0, credit_amount: invoiceTotal, adjustment_method: "On Account" })
-                finalLedgers.push({ ledger_id: activeInvoiceLedgerId, debit_amount: itemsSubtotal, credit_amount: 0 })
+                finalLedgers.push({ ledger_id: finalInvoiceLedgerId, debit_amount: itemsSubtotal, credit_amount: 0 })
             }
 
             // Push additional ledgers
@@ -339,7 +360,9 @@ export function VoucherEntry({
         if (field === 'item_id') {
             const itemDef = items.find(i => i.id === value)
             if (itemDef) {
-                updated[index].rate = voucherType === "Sales" ? itemDef.selling_rate : itemDef.purchase_rate
+                updated[index].rate = voucherType === "Sales"
+                    ? Number(itemDef.selling_rate || itemDef.purchase_rate || 0)
+                    : Number(itemDef.purchase_rate || itemDef.selling_rate || 0)
             }
         }
         if (field === 'qty' || field === 'rate' || field === 'item_id') {
@@ -697,7 +720,7 @@ export function VoucherEntry({
                                                             value={pi.item_id}
                                                             onChange={(val) => updateItem(idx, 'item_id', val)}
                                                             options={items.map(i => ({ value: i.id, label: i.name }))}
-                                                            placeholder="Type item..."
+                                                            placeholder=""
                                                             className="h-8"
                                                             inputClassName="h-8 bg-transparent border-transparent px-2 shadow-none hover:border-slate-300 focus:border-slate-400 focus:ring-1 focus:ring-slate-300"
                                                         />
@@ -706,7 +729,7 @@ export function VoucherEntry({
                                                         <input type="number" min="0" step="0.01" value={pi.qty || ""} onChange={e => updateItem(idx, 'qty', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleItemKeyDown(e, idx, 'qty')} className={invisibleInputClass} />
                                                     </TableCell>
                                                     <TableCell className="p-1">
-                                                        <input type="number" min="0" step="0.01" value={pi.rate || ""} onChange={e => updateItem(idx, 'rate', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleItemKeyDown(e, idx, 'rate')} className={invisibleInputClass} />
+                                                        <input type="number" min="0" step="0.01" value={pi.rate || ""} onChange={e => updateItem(idx, 'rate', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleItemKeyDown(e, idx, 'rate')} placeholder="0.00" className={invisibleInputClass} />
                                                     </TableCell>
                                                     <TableCell className="p-1 text-sm font-semibold text-slate-500">
                                                         {itemDef?.unit || "—"}
@@ -727,46 +750,11 @@ export function VoucherEntry({
                                     </TableBody>
                                 </Table>
 
-                                {voucherType !== "Sales" && (
-                                    <div className="flex items-center border-t border-slate-200 bg-slate-50/50 p-2">
+                                {needsItems && (
+                                    <div className="mt-2 flex items-center border-t border-slate-200 bg-slate-50/50 p-2">
                                         <Button type="button" variant="outline" size="sm" onClick={addItemLine} className="gap-2 h-8">
                                             <Plus className="h-4 w-4" /> Add Item
                                         </Button>
-                                    </div>
-                                )}
-
-                                {/* Inline Additional Ledgers for Invoice Mode: two-column input (ledger left, amount right) */}
-                                {isInvoiceMode && (
-                                    <div className="border-t-2 border-slate-200 bg-slate-50">
-                                        <div className="flex items-stretch border-b border-slate-200 bg-slate-100/70 text-xs font-black uppercase tracking-wider text-slate-500">
-                                            <div className="flex-1 border-r border-slate-200 px-4 py-2">Add Ledger</div>
-                                            <div className="w-[200px] px-4 py-2 text-right">Amount</div>
-                                            <div className="w-10" />
-                                        </div>
-                                        {[...selectedLedgers, { ledger_id: "", amount: 0 }].map((sl, idx) => (
-                                            <div key={`add-ledger-${idx}`} className="flex items-stretch border-b border-slate-100">
-                                                <div className="flex flex-1 items-center border-r border-slate-200 px-2 py-2">
-                                                    <ComboboxInput
-                                                        value={sl.ledger_id}
-                                                        onChange={(val) => updateInvoiceLedger(idx, 'ledger_id', val)}
-                                                        options={detailLedgerOptions}
-                                                        placeholder="Charge / discount ledger..."
-                                                        className="h-9 w-full"
-                                                        inputClassName="bg-transparent border-transparent hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-none h-9 px-2"
-                                                    />
-                                                </div>
-                                                <div className="flex w-[200px] items-center px-2 py-2">
-                                                    <input type="number" min="0" step="0.01" value={sl.amount || ""} onChange={e => updateInvoiceLedger(idx, 'amount', parseFloat(e.target.value) || 0)} placeholder="0.00" className={`${invisibleInputClass} h-9 text-base font-bold`} />
-                                                </div>
-                                                <div className="flex w-10 items-center justify-center">
-                                                    {idx < selectedLedgers.length && (
-                                                        <button type="button" onClick={() => removeLedgerLine(idx)} className="text-slate-300 hover:text-red-500">
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
                                     </div>
                                 )}
                             </div>
@@ -925,7 +913,10 @@ export function VoucherEntry({
                                     </div>
                                 </div>
 
-                                <div className="flex justify-end pt-4">
+                                <div className="flex flex-col items-end gap-2 pt-4">
+                                    {isInvoiceMode && !isBalanced && invoiceValidationMessage ? (
+                                        <p className="text-xs font-bold text-amber-600">{invoiceValidationMessage}</p>
+                                    ) : null}
                                     <Button type="submit" disabled={isSubmitting || !isBalanced} className={`${theme.button} h-11 min-w-[140px] px-6 font-bold text-white`}>
                                         {isSubmitting ? "Saving..." : editingVoucherId ? `Update ${voucherType}` : `Save ${voucherType}`}
                                     </Button>
