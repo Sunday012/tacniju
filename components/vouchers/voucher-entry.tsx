@@ -215,8 +215,9 @@ export function VoucherEntry({
     const activeInvoiceLedgerId = voucherType === "Sales" ? (invoiceLedgerId || defaultSalesLedger?.id || "") : invoiceLedgerId
 
 
+    const hasValidContraLine = voucherType === "Contra" && selectedLedgers.some(line => line.ledger_id && Number(line.amount || 0) > 0)
     const isBalanced = isSingleEntry
-        ? (masterLedgerId !== "" && totalAmount > 0)
+        ? (masterLedgerId !== "" && totalAmount > 0 && (voucherType !== "Contra" || hasValidContraLine))
         : isInvoiceMode
             ? (selectedPartyId !== "" && (voucherType === "Sales" || activeInvoiceLedgerId !== "") && itemsSubtotal > 0)
             : (totalDebit === totalCredit && totalDebit > 0)
@@ -551,7 +552,8 @@ export function VoucherEntry({
     const cashBankLedgers = ledgers.filter((ledger) => ledger.is_cash_bank)
     const regularLedgers = ledgers.filter((ledger) => !ledger.is_cash_bank)
     // Top "Account" field lists every ledger by plain name (cash/bank accounts first).
-    const topAccountOptions = [...cashBankLedgers, ...regularLedgers].map((ledger) => ({
+    const topAccountCandidates = isSingleEntry ? cashBankLedgers : [...cashBankLedgers, ...regularLedgers]
+    const topAccountOptions = topAccountCandidates.map((ledger) => ({
         value: ledger.id,
         label: ledger.name,
     }))
@@ -562,7 +564,7 @@ export function VoucherEntry({
             : (regularLedgers.length > 0 ? regularLedgers : ledgers.filter((ledger) => ledger.id !== masterLedgerId))
     const detailLedgerOptions = detailLedgerCandidates.map((ledger) => ({
         value: ledger.id,
-        label: buildLedgerLabel(ledger),
+        label: voucherType === "Contra" ? ledger.name : buildLedgerLabel(ledger),
     }))
     const managedLedger = managedLedgerIndex !== null ? selectedLedgers[managedLedgerIndex] : null
     const managedLedgerRecord = managedLedger?.ledger_id ? ledgers.find(ledger => ledger.id === managedLedger.ledger_id) : null
@@ -570,7 +572,7 @@ export function VoucherEntry({
     const managedAmountSide = isPaymentLike ? "Dr" : "Cr"
     const requiresCashBankMaster = isSingleEntry
     const hasCashBankMasterOptions = topAccountOptions.length > 0
-    const detailPlaceholder = voucherType === "Contra" ? "Type receiving/paying cash-bank ledger..." : "Type expense, income, party, or other ledger..."
+    const detailPlaceholder = voucherType === "Contra" ? "" : "Type expense, income, party, or other ledger..."
     const hasVisibleLedgerRows = selectedLedgers.some((ledger, index) => (
         index === 0 ||
         ledger.forceVisible ||
@@ -622,13 +624,15 @@ export function VoucherEntry({
 
                     {isSingleEntry && (
                         <div className="mt-6 flex flex-col gap-2 rounded-md border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:gap-3">
-                            <Label className="font-bold text-slate-700 shrink-0 sm:w-24">Account</Label>
+                            <Label className="font-bold text-slate-700 shrink-0 sm:w-36">
+                                {voucherType === "Contra" ? "Receiving Account" : "Account"}
+                            </Label>
                             <div className="w-full flex-1 space-y-1">
                                 <ComboboxInput
                                     value={masterLedgerId}
                                     onChange={handleMasterLedgerChange}
                                     options={topAccountOptions}
-                                    placeholder={topAccountOptions.length > 0 ? "Search account name..." : "No account found. Create one in Accounts Info."}
+                                    placeholder={voucherType === "Contra" ? "" : topAccountOptions.length > 0 ? "Search account name..." : "No account found. Create one in Accounts Info."}
                                     className="h-10 w-full border-slate-300 font-semibold shadow-sm bg-white rounded-md"
                                     inputClassName="bg-transparent border-none focus-visible:ring-0 shadow-none font-semibold text-slate-800"
                                 />
@@ -767,11 +771,13 @@ export function VoucherEntry({
                                     <TableHeader className="bg-slate-50">
                                         <TableRow className="border-b-slate-200">
                                             <TableHead className={`${isSingleEntry ? 'w-[50%]' : 'w-[40%]'} text-slate-500 font-semibold h-9 px-2`}>
-                                                {isSingleEntry ? "Party / Ledger" : "Ledger"}
+                                                {voucherType === "Contra" ? "Sending Account" : isSingleEntry ? "Party / Ledger" : "Ledger"}
                                             </TableHead>
                                             {isSingleEntry && (
                                                 <>
-                                                    <TableHead className="text-slate-500 font-semibold h-9 px-2">Manage</TableHead>
+                                                    {voucherType !== "Contra" && (
+                                                        <TableHead className="text-slate-500 font-semibold h-9 px-2">Manage</TableHead>
+                                                    )}
                                                     <TableHead className="text-right text-slate-500 font-semibold h-9 px-4">Amount</TableHead>
                                                 </>
                                             )}
@@ -799,35 +805,37 @@ export function VoucherEntry({
                                                                 value={sl.ledger_id}
                                                                 onChange={(val) => updateLedger(index, 'ledger_id', val)}
                                                                 options={detailLedgerOptions}
-                                                                placeholder={detailLedgerOptions.length > 0 ? detailPlaceholder : "Select party above or create a ledger in Accounts Info"}
+                                                                placeholder={voucherType === "Contra" ? "" : detailLedgerOptions.length > 0 ? detailPlaceholder : "Select party above or create a ledger in Accounts Info"}
                                                                 className="h-8"
                                                                 inputClassName="bg-transparent border-transparent hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-none h-8 px-2"
                                                             />
                                                         )}
-                                                        {formatBalance(sl.ledger_id) && (
+                                                        {voucherType !== "Contra" && formatBalance(sl.ledger_id) && (
                                                             <p className="px-2 text-[11px] font-semibold text-slate-400">Current Bal: {formatBalance(sl.ledger_id)}</p>
                                                         )}
                                                     </TableCell>
                                                     {isSingleEntry && (
                                                         <>
-                                                            <TableCell className="p-1">
-                                                                {sl.ledger_id && (!ledgers.find(l => l.id === sl.ledger_id)?.is_cash_bank) ? (
-                                                                    <Button
-                                                                        type="button"
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        onClick={() => openBillWiseManager(index)}
-                                                                        className="h-8 px-3 text-xs font-bold"
-                                                                    >
-                                                                        Manage
-                                                                    </Button>
-                                                                ) : <span className="px-2 text-slate-300">-</span>}
-                                                                {sl.adjustment_method && (
-                                                                    <span className="ml-2 text-xs font-semibold text-slate-400">
-                                                                        {sl.adjustment_method}
-                                                                    </span>
-                                                                )}
-                                                            </TableCell>
+                                                            {voucherType !== "Contra" && (
+                                                                <TableCell className="p-1">
+                                                                    {sl.ledger_id && (!ledgers.find(l => l.id === sl.ledger_id)?.is_cash_bank) ? (
+                                                                        <Button
+                                                                            type="button"
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            onClick={() => openBillWiseManager(index)}
+                                                                            className="h-8 px-3 text-xs font-bold"
+                                                                        >
+                                                                            Manage
+                                                                        </Button>
+                                                                    ) : <span className="px-2 text-slate-300">-</span>}
+                                                                    {sl.adjustment_method && (
+                                                                        <span className="ml-2 text-xs font-semibold text-slate-400">
+                                                                            {sl.adjustment_method}
+                                                                        </span>
+                                                                    )}
+                                                                </TableCell>
+                                                            )}
                                                             <TableCell className="p-1">
                                                                 <input type="number" min="0" step="0.01" value={sl.amount || ""} onChange={e => updateLedger(index, 'amount', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleLedgerKeyDown(e, index, 'amount')} className={invisibleInputClass} />
                                                             </TableCell>
@@ -846,8 +854,8 @@ export function VoucherEntry({
                                                 </TableRow>
                                             )) : (
                                             <TableRow>
-                                                <TableCell colSpan={3} className="h-24 text-center text-slate-400">
-                                                    Select an account or party above to begin entries
+                                                <TableCell colSpan={voucherType === "Contra" ? 2 : 3} className="h-24 text-center text-slate-400">
+                                                    {voucherType === "Contra" ? "Select receiving and sending accounts to begin" : "Select an account or party above to begin entries"}
                                                 </TableCell>
                                             </TableRow>
                                         )}
