@@ -23,7 +23,9 @@ import {
   Award,
   FileText,
   Megaphone,
-  Utensils
+  Utensils,
+  BookMarked,
+  BookOpenText
 } from "lucide-react"
 
 type NavItem = {
@@ -80,6 +82,21 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
     items: [
       { name: "Competitions", href: "/admin/competitions", icon: Trophy },
       { name: "Battles", href: "/admin/battles", icon: Swords },
+    ]
+  },
+  {
+    title: "Records",
+    items: [
+      {
+        name: "Dreams",
+        href: "/admin/records/dreams",
+        icon: BookOpenText,
+        children: [
+          { name: "New", href: "/admin/records/dreams/new", icon: FileText },
+          { name: "Category", href: "/admin/records/dreams/category", icon: BookMarked },
+          { name: "Summary", href: "/admin/records/dreams/summary", icon: FileText },
+        ],
+      },
       { name: "Points", href: "/admin/points", icon: Award },
     ]
   }

@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Menu, Scan, Calendar, BookOpen, LayoutDashboard, LogOut, Shield, Users, Package, Trophy, Ticket, ChevronDown, MonitorPlay, Hash, ShoppingBag, Settings, Award, Swords, FileText, Megaphone, Utensils } from "lucide-react"
+import { Menu, Scan, Calendar, BookOpen, LayoutDashboard, LogOut, Shield, Users, Package, Trophy, Ticket, ChevronDown, MonitorPlay, Hash, ShoppingBag, Settings, Award, Swords, FileText, Megaphone, Utensils, BookMarked, BookOpenText } from "lucide-react"
 
 type NavItem = {
   name: string
@@ -69,6 +69,21 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
     items: [
       { name: "Competitions", href: "/admin/competitions", icon: Trophy },
       { name: "Battles", href: "/admin/battles", icon: Swords },
+    ]
+  },
+  {
+    title: "Records",
+    items: [
+      {
+        name: "Dreams",
+        href: "/admin/records/dreams",
+        icon: BookOpenText,
+        children: [
+          { name: "New", href: "/admin/records/dreams/new", icon: FileText },
+          { name: "Category", href: "/admin/records/dreams/category", icon: BookMarked },
+          { name: "Summary", href: "/admin/records/dreams/summary", icon: FileText },
+        ],
+      },
       { name: "Points", href: "/admin/points", icon: Award },
     ]
   }
