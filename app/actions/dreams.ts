@@ -118,7 +118,7 @@ export async function getAdminDreams() {
       created_at,
       updated_at,
       category:dream_categories(id, name, description, is_active, created_at),
-      owner:profiles(id, full_name, reservation_number)
+      owner:profiles!dreams_profile_id_fkey(id, full_name, reservation_number)
     `)
     .order("dream_date", { ascending: false })
     .order("created_at", { ascending: false })
@@ -147,7 +147,7 @@ export async function getAdminDream(id: string) {
       created_at,
       updated_at,
       category:dream_categories(id, name, description, is_active, created_at),
-      owner:profiles(id, full_name, reservation_number)
+      owner:profiles!dreams_profile_id_fkey(id, full_name, reservation_number)
     `)
     .eq("id", id)
     .maybeSingle()

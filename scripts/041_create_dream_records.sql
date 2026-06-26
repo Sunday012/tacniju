@@ -28,9 +28,11 @@ CREATE INDEX IF NOT EXISTS dreams_category_id_idx ON public.dreams(category_id);
 ALTER TABLE public.dream_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.dreams ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Authenticated users can view dream categories" ON public.dream_categories;
 CREATE POLICY "Authenticated users can view dream categories" ON public.dream_categories
     FOR SELECT USING (auth.role() = 'authenticated');
 
+DROP POLICY IF EXISTS "Admins can insert dream categories" ON public.dream_categories;
 CREATE POLICY "Admins can insert dream categories" ON public.dream_categories
     FOR INSERT WITH CHECK (
         EXISTS (
@@ -39,6 +41,7 @@ CREATE POLICY "Admins can insert dream categories" ON public.dream_categories
         )
     );
 
+DROP POLICY IF EXISTS "Admins can update dream categories" ON public.dream_categories;
 CREATE POLICY "Admins can update dream categories" ON public.dream_categories
     FOR UPDATE USING (
         EXISTS (
@@ -47,6 +50,7 @@ CREATE POLICY "Admins can update dream categories" ON public.dream_categories
         )
     );
 
+DROP POLICY IF EXISTS "Admins can view all dreams" ON public.dreams;
 CREATE POLICY "Admins can view all dreams" ON public.dreams
     FOR SELECT USING (
         EXISTS (
@@ -55,9 +59,11 @@ CREATE POLICY "Admins can view all dreams" ON public.dreams
         )
     );
 
+DROP POLICY IF EXISTS "Members can view their own dreams" ON public.dreams;
 CREATE POLICY "Members can view their own dreams" ON public.dreams
     FOR SELECT USING (profile_id = auth.uid());
 
+DROP POLICY IF EXISTS "Admins can insert dreams" ON public.dreams;
 CREATE POLICY "Admins can insert dreams" ON public.dreams
     FOR INSERT WITH CHECK (
         EXISTS (
@@ -66,6 +72,7 @@ CREATE POLICY "Admins can insert dreams" ON public.dreams
         )
     );
 
+DROP POLICY IF EXISTS "Admins can update dreams" ON public.dreams;
 CREATE POLICY "Admins can update dreams" ON public.dreams
     FOR UPDATE USING (
         EXISTS (
@@ -74,6 +81,7 @@ CREATE POLICY "Admins can update dreams" ON public.dreams
         )
     );
 
+DROP POLICY IF EXISTS "Admins can delete dreams" ON public.dreams;
 CREATE POLICY "Admins can delete dreams" ON public.dreams
     FOR DELETE USING (
         EXISTS (
