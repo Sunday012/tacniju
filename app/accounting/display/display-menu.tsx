@@ -1,5 +1,4 @@
 import {
-  AlertTriangle,
   BookOpen,
   Boxes,
   FolderTree,
@@ -64,7 +63,6 @@ export const displayMenuItems: DisplayMenuItem[] = [
     children: [
       { label: "Stock Item", icon: Package, href: "/accounting/inventory" },
       { label: "Category", icon: FolderTree, href: "/accounting/production/inventory/categories" },
-      { label: "Physical Stock Register", icon: BookOpen, href: "/accounting/production/reports/stock" },
       { label: "Batch", icon: Boxes, href: "/accounting/display/batch" },
     ],
   },
@@ -78,26 +76,6 @@ export const displayMenuItems: DisplayMenuItem[] = [
       { label: "Purchase Bill Pending", icon: Receipt, href: "/accounting/display/bill-pending/purchase" },
       { label: "Non Allocated Payment", icon: Receipt, href: "/accounting/display/bill-pending/payment" },
       { label: "Expense Bill Pending", icon: Receipt, href: "/accounting/display/bill-pending/expense" },
-    ],
-  },
-  {
-    label: "Cash / Funds Flow",
-    icon: LineChart,
-    href: "/accounting/statements/cash-in-hand",
-  },
-  {
-    label: "Chart of Accounts",
-    icon: FolderTree,
-    href: "/accounting/chart-of-accounts",
-  },
-  {
-    label: "Exception Reports",
-    icon: AlertTriangle,
-    slug: "exception-reports",
-    children: [
-      { label: "Negative Stock", icon: AlertTriangle, href: "/accounting/production/reports/stock" },
-      { label: "Negative Ledgers", icon: AlertTriangle, href: "/reports/trial-balance" },
-      { label: "Negative Batch", icon: AlertTriangle, href: "/accounting/production/reports/stock" },
     ],
   },
 ]

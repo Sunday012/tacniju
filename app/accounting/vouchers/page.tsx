@@ -6,7 +6,7 @@ const voucherCards = [
   { href: "/accounting/vouchers/receipt", label: "Receipt", icon: ReceiptText },
   { href: "/accounting/vouchers/payment", label: "Payment", icon: WalletCards },
   { href: "/accounting/vouchers/contra", label: "Contra", icon: WalletCards },
-  { href: "/accounting/vouchers/expense", label: "Expenses", icon: WalletCards },
+  { href: "/accounting/vouchers/income", label: "Income", icon: ReceiptText },
 ]
 
 export default function AccountingVouchersPage() {

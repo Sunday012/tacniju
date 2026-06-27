@@ -529,7 +529,7 @@ export function VoucherEntry({
         }
 
         if (!selectedLedger.is_cash_bank) {
-            toast.error(`"${selectedLedger.name}" is not a cash/bank account. Select it in the Party / Ledger rows below.`)
+            toast.error(`"${selectedLedger.name}" is not a cash/bank account. Select it in the Ledger rows below.`)
             return
         }
 
@@ -541,12 +541,6 @@ export function VoucherEntry({
         const bal = balances[ledgerId]
         if (!bal) return null
         return `₦${bal.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${bal.type}`
-    }
-
-    const buildLedgerLabel = (ledger: LedgerWithGroup) => {
-        const groupName = ledger.account_groups?.name
-        const kind = ledger.is_cash_bank ? "Cash/Bank" : "Ledger"
-        return groupName ? `${kind}: ${ledger.name} (${groupName})` : `${kind}: ${ledger.name}`
     }
 
     const cashBankLedgers = ledgers.filter((ledger) => ledger.is_cash_bank)
@@ -564,11 +558,11 @@ export function VoucherEntry({
             : (regularLedgers.length > 0 ? regularLedgers : ledgers.filter((ledger) => ledger.id !== masterLedgerId))
     const detailLedgerOptions = detailLedgerCandidates.map((ledger) => ({
         value: ledger.id,
-        label: voucherType === "Contra" ? ledger.name : buildLedgerLabel(ledger),
+        label: ledger.name,
     }))
     const managedLedger = managedLedgerIndex !== null ? selectedLedgers[managedLedgerIndex] : null
     const managedLedgerRecord = managedLedger?.ledger_id ? ledgers.find(ledger => ledger.id === managedLedger.ledger_id) : null
-    const managedLedgerName = managedLedgerRecord ? buildLedgerLabel(managedLedgerRecord) : ""
+    const managedLedgerName = managedLedgerRecord?.name || ""
     const managedAmountSide = isPaymentLike ? "Dr" : "Cr"
     const requiresCashBankMaster = isSingleEntry
     const hasCashBankMasterOptions = topAccountOptions.length > 0
@@ -582,11 +576,12 @@ export function VoucherEntry({
         ledger.credit_amount > 0
     ))
     const showLedgerRows = (!isSingleEntry && !isInvoiceMode) || masterLedgerId || (!isInvoiceMode && selectedPartyId) || hasVisibleLedgerRows
+    const voucherDisplayName = voucherType === "Expense" ? "Expenses Purchase" : voucherType
 
     return (
         <div className="w-full">
-            <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)]">
-                <div className="border-b border-slate-200 bg-white px-5 py-4">
+            <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <div className="border-b border-slate-200 bg-white px-4 py-3">
                     {!fixedType && !editingVoucherId && (
                         <div className="mb-4 flex justify-end">
                             <Select value={voucherType} onValueChange={(v: VoucherType) => {
@@ -611,20 +606,20 @@ export function VoucherEntry({
                             </Select>
                         </div>
                     )}
-                    <div className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2">
+                    <div className="mt-3 grid max-w-[700px] grid-cols-1 gap-3 sm:grid-cols-[260px_360px]">
                         <div className="flex items-center gap-2">
                             <Label className="w-16 text-slate-500">Date</Label>
-                            <Input type="date" value={date} onChange={e => setDate(e.target.value)} required className="h-8 bg-transparent border-t-0 border-x-0 border-b-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-slate-400 px-1 [&::-webkit-calendar-picker-indicator]:hidden" />
+                            <Input type="date" value={date} onChange={e => setDate(e.target.value)} required className="h-8 max-w-44 bg-transparent border-t-0 border-x-0 border-b-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-slate-400 px-1 [&::-webkit-calendar-picker-indicator]:hidden" />
                         </div>
                         <div className="flex items-center gap-2">
                             <Label className="w-16 text-slate-500">Ref</Label>
-                            <Input value={reference} onChange={e => setReference(e.target.value)} placeholder="Ref / Cheque No" className="h-8 bg-transparent border-t-0 border-x-0 border-b-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-slate-400 px-1" />
+                            <Input value={reference} onChange={e => setReference(e.target.value)} placeholder="Ref / Cheque No" className="h-8 max-w-72 bg-transparent border-t-0 border-x-0 border-b-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-slate-400 px-1" />
                         </div>
                     </div>
 
                     {isSingleEntry && (
-                        <div className="mt-6 flex flex-col gap-2 rounded-md border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:gap-3">
-                            <Label className="font-bold text-slate-700 shrink-0 sm:w-36">
+                        <div className="mt-4 flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:gap-3 lg:inline-flex lg:w-[calc(50%-0.375rem)] lg:align-top">
+                            <Label className="font-bold text-slate-700 shrink-0 sm:w-28">
                                 {voucherType === "Contra" ? "Receiving Account" : "Account"}
                             </Label>
                             <div className="w-full flex-1 space-y-1">
@@ -633,7 +628,7 @@ export function VoucherEntry({
                                     onChange={handleMasterLedgerChange}
                                     options={topAccountOptions}
                                     placeholder={voucherType === "Contra" ? "" : topAccountOptions.length > 0 ? "Search account name..." : "No account found. Create one in Accounts Info."}
-                                    className="h-10 w-full border-slate-300 font-semibold shadow-sm bg-white rounded-md"
+                                    className="h-9 w-full rounded-md border-slate-300 bg-white font-semibold"
                                     inputClassName="bg-transparent border-none focus-visible:ring-0 shadow-none font-semibold text-slate-800"
                                 />
                                 {requiresCashBankMaster && !hasCashBankMasterOptions && (
@@ -652,8 +647,8 @@ export function VoucherEntry({
                     )}
 
                     {voucherType !== "Contra" && (
-                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                            <div className="flex flex-col gap-2 rounded-md border border-slate-200 bg-white p-2 sm:flex-row sm:items-center sm:gap-3">
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:ml-3 lg:inline-grid lg:w-[calc(50%-0.375rem)] lg:grid-cols-1 lg:align-top">
+                            <div className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-2 sm:flex-row sm:items-center sm:gap-3">
                                 <Label className="font-bold text-slate-700 shrink-0 sm:w-24">Party</Label>
                                 <div className="w-full flex-1">
                                     <ComboboxInput
@@ -664,7 +659,7 @@ export function VoucherEntry({
                                             label: p.reservation_number ? `${p.name} (${p.reservation_number})` : p.name,
                                         }))}
                                         placeholder="Search registered member..."
-                                        className="h-10 w-full"
+                                        className="h-9 w-full"
                                         inputClassName="border-transparent bg-transparent shadow-none hover:border-slate-300 focus:border-slate-400 focus:ring-1 focus:ring-slate-300"
                                     />
                                 </div>
@@ -697,7 +692,7 @@ export function VoucherEntry({
                     )}
                 </div>
 
-                <div className="p-5">
+                <div className="p-4">
                     <form onSubmit={handleSubmit} className="space-y-4">
 
                         {/* ITEM TABLE (For Sales/Purchase) */}
@@ -771,7 +766,7 @@ export function VoucherEntry({
                                     <TableHeader className="bg-slate-50">
                                         <TableRow className="border-b-slate-200">
                                             <TableHead className={`${isSingleEntry ? 'w-[50%]' : 'w-[40%]'} text-slate-500 font-semibold h-9 px-2`}>
-                                                {voucherType === "Contra" ? "Sending Account" : isSingleEntry ? "Party / Ledger" : "Ledger"}
+                                                {voucherType === "Contra" ? "Sending Account" : "Ledger"}
                                             </TableHead>
                                             {isSingleEntry && (
                                                 <>
@@ -887,7 +882,7 @@ export function VoucherEntry({
                                 {/* Footer: Narration & Totals */}
                                 <div className="flex flex-col gap-4 bg-slate-50/50 border-t border-slate-300 px-4 py-4 sm:flex-row sm:items-end sm:justify-between">
                                     {/* Narration - Left Side */}
-                                    <div className="w-full flex gap-2 items-center sm:w-[60%]">
+                                    <div className="flex w-full gap-2 items-center sm:max-w-[620px]">
                                         <Label className="text-slate-700 font-semibold whitespace-nowrap">Narration:</Label>
                                         <Input
                                             value={narration}
@@ -925,8 +920,8 @@ export function VoucherEntry({
                                     {isInvoiceMode && !isBalanced && invoiceValidationMessage ? (
                                         <p className="text-xs font-bold text-amber-600">{invoiceValidationMessage}</p>
                                     ) : null}
-                                    <Button type="submit" disabled={isSubmitting || !isBalanced} className={`${theme.button} h-11 min-w-[140px] px-6 font-bold text-white`}>
-                                        {isSubmitting ? "Saving..." : editingVoucherId ? `Update ${voucherType}` : `Save ${voucherType}`}
+                                    <Button type="submit" disabled={isSubmitting || !isBalanced} className={`${theme.button} h-10 min-w-[128px] rounded-lg px-5 font-bold text-white`}>
+                                        {isSubmitting ? "Saving..." : editingVoucherId ? `Update ${voucherDisplayName}` : `Save ${voucherDisplayName}`}
                                     </Button>
                                 </div>
                             </form>
@@ -934,32 +929,35 @@ export function VoucherEntry({
             </section>
 
             <Dialog open={managedLedgerIndex !== null} onOpenChange={(open) => !open && setManagedLedgerIndex(null)}>
-                <DialogContent className="max-w-4xl overflow-hidden border-slate-300 bg-white p-0 text-slate-900">
-                    <DialogHeader className="border-b border-slate-200 bg-slate-900 px-5 py-3 text-white">
+                <DialogContent className="flex h-[92dvh] w-full max-w-4xl flex-col gap-0 overflow-hidden border-slate-300 bg-white p-0 text-slate-900 shadow-none max-sm:bottom-0 max-sm:left-0 max-sm:top-auto max-sm:max-h-[92dvh] max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-t-xl max-sm:border-x-0 max-sm:border-b-0 sm:h-auto sm:max-h-[88vh]">
+                    <DialogHeader className="shrink-0 border-b border-slate-200 bg-slate-900 px-4 py-3 text-left text-white sm:px-5">
                         <DialogTitle className="text-base font-black">Bill-wise Details</DialogTitle>
                     </DialogHeader>
 
                     {managedLedgerIndex !== null && managedLedger && (
-                        <div>
-                            <div className="border-b border-slate-200 bg-slate-50 px-5 py-4 text-center text-sm font-semibold">
-                                <span>Bill-wise Details for: </span>
-                                <span className="font-black">{managedLedgerName || "Selected Ledger"}</span>
-                                <span className="ml-2">
+                        <div className="flex min-h-0 flex-1 flex-col">
+                            <div className="shrink-0 border-b border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold sm:px-5 sm:py-4 sm:text-center">
+                                <div className="flex flex-col gap-1 sm:block">
+                                    <span>Bill-wise Details for: </span>
+                                    <span className="font-black">{managedLedgerName || "Selected Ledger"}</span>
+                                </div>
+                                <span className="mt-1 block text-slate-600 sm:mt-0 sm:ml-2 sm:inline">
                                     Upto ₦{Number(managedLedger.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {managedAmountSide}
                                 </span>
                             </div>
 
-                            <div className="overflow-x-auto p-5">
-                                <div className="min-w-[720px] overflow-hidden rounded-lg border border-slate-300 bg-white">
-                                    <div className="grid grid-cols-[180px_1fr_180px_150px] border-b border-slate-300 bg-slate-50 text-xs font-black uppercase tracking-wide text-slate-500">
+                            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+                                <div className="overflow-hidden rounded-lg border border-slate-300 bg-white">
+                                    <div className="hidden grid-cols-[180px_1fr_180px_150px] border-b border-slate-300 bg-slate-50 text-xs font-black uppercase tracking-wide text-slate-500 sm:grid">
                                         <div className="border-r border-slate-300 px-3 py-2">Type of Ref</div>
                                         <div className="border-r border-slate-300 px-3 py-2">Name</div>
                                         <div className="border-r border-slate-300 px-3 py-2">Due Date / Ref Days</div>
                                         <div className="px-3 py-2 text-right">Amount {managedAmountSide}</div>
                                     </div>
 
-                                    <div className="grid grid-cols-[180px_1fr_180px_150px] items-center border-b border-slate-200">
-                                        <div className="border-r border-slate-200 p-2">
+                                    <div className="grid gap-3 border-b border-slate-200 p-3 sm:grid-cols-[180px_1fr_180px_150px] sm:items-center sm:gap-0 sm:p-0">
+                                        <div className="sm:border-r sm:border-slate-200 sm:p-2">
+                                            <Label className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500 sm:hidden">Type of Ref</Label>
                                             <Select
                                                 value={managedLedger.adjustment_method || "On Account"}
                                                 onValueChange={(value: any) => updateLedger(managedLedgerIndex, "adjustment_method", value)}
@@ -976,7 +974,8 @@ export function VoucherEntry({
                                             </Select>
                                         </div>
 
-                                        <div className="border-r border-slate-200 p-2">
+                                        <div className="sm:border-r sm:border-slate-200 sm:p-2">
+                                            <Label className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500 sm:hidden">Name</Label>
                                             {managedLedger.adjustment_method === "New Reference" && voucherType === "Payment" ? (
                                                 <ComboboxInput
                                                     value={managedLedger.adjustment_reference || ""}
@@ -1000,7 +999,8 @@ export function VoucherEntry({
                                             )}
                                         </div>
 
-                                        <div className="border-r border-slate-200 p-2">
+                                        <div className="sm:border-r sm:border-slate-200 sm:p-2">
+                                            <Label className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500 sm:hidden">Due Date / Ref Days</Label>
                                             <Input
                                                 type="date"
                                                 value={managedLedger.due_date || ""}
@@ -1009,7 +1009,8 @@ export function VoucherEntry({
                                             />
                                         </div>
 
-                                        <div className="p-2">
+                                        <div className="sm:p-2">
+                                            <Label className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500 sm:hidden">Amount {managedAmountSide}</Label>
                                             <Input
                                                 type="number"
                                                 min="0"
@@ -1029,11 +1030,11 @@ export function VoucherEntry({
                                 </div>
                             </div>
 
-                            <DialogFooter className="border-t border-slate-200 bg-slate-50 px-5 py-3">
-                                <Button type="button" variant="outline" onClick={() => setManagedLedgerIndex(null)}>
+                            <DialogFooter className="shrink-0 gap-2 border-t border-slate-200 bg-slate-50 px-4 py-3 sm:px-5">
+                                <Button type="button" variant="outline" onClick={() => setManagedLedgerIndex(null)} className="w-full sm:w-auto">
                                     Quit
                                 </Button>
-                                <Button type="button" onClick={() => setManagedLedgerIndex(null)} className="bg-slate-900 px-6 font-bold text-white hover:bg-slate-800">
+                                <Button type="button" onClick={() => setManagedLedgerIndex(null)} className="w-full bg-slate-900 px-6 font-bold text-white hover:bg-slate-800 sm:w-auto">
                                     Accept
                                 </Button>
                             </DialogFooter>

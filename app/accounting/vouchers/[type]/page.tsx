@@ -61,6 +61,20 @@ const heroStyles: Record<VoucherType, { className: string; eyebrowClassName: str
   },
 }
 
+const inventoryVoucherTypes = new Set<VoucherType>(["Sales", "Purchase", "Expense", "Program"])
+
+function getVoucherDisplayName(voucherType: VoucherType) {
+  return voucherType === "Expense" ? "Expenses Purchase" : voucherType
+}
+
+function getVoucherListHref(voucherType: VoucherType) {
+  return inventoryVoucherTypes.has(voucherType) ? "/accounting/inventory-vouchers" : "/accounting/vouchers"
+}
+
+function getVoucherListLabel(voucherType: VoucherType) {
+  return inventoryVoucherTypes.has(voucherType) ? "Inventory Vouchers" : "Vouchers"
+}
+
 export default async function AccountingVoucherPage({ params }: { params: { type: string } }) {
   const voucherType = typeMap[params.type]
   if (!voucherType) notFound()
@@ -76,16 +90,18 @@ export default async function AccountingVoucherPage({ params }: { params: { type
   ])
   const typeVouchers = (vouchers || []).filter((voucher: any) => voucher.voucher_type === voucherType)
   const nextVoucherNo = getNextVoucherNo(voucherType, typeVouchers)
+  const voucherDisplayName = getVoucherDisplayName(voucherType)
 
   return (
     <AccountingShell
-      title={`${voucherType} Voucher`}
+      title={`${voucherDisplayName} Voucher`}
       framed={false}
-      backHref="/accounting/vouchers"
-      backLabel="Vouchers"
+      backHref={getVoucherListHref(voucherType)}
+      backLabel={getVoucherListLabel(voucherType)}
       hero={{
-        title: `${voucherType} Voucher`,
+        title: `${voucherDisplayName} Voucher`,
         badge: nextVoucherNo,
+        compact: true,
         ...heroStyles[voucherType],
       }}
     >

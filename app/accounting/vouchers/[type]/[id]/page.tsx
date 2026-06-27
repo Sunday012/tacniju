@@ -72,6 +72,7 @@ export default async function AccountingVoucherDetailPage({
           title: `Edit ${voucher.voucher_no}`,
           subtitle: voucher.narration || `${voucherType} Voucher`,
           badge: voucherType,
+          compact: true,
         }}
       >
         <VoucherEntry
@@ -98,6 +99,7 @@ export default async function AccountingVoucherDetailPage({
         title: voucher.narration || voucher.voucher_no,
         subtitle: `${voucherType} Voucher`,
         badge: voucher.voucher_no,
+        compact: true,
       }}
     >
       <div className="space-y-6">
