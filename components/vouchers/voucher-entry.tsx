@@ -577,6 +577,7 @@ export function VoucherEntry({
     ))
     const showLedgerRows = (!isSingleEntry && !isInvoiceMode) || masterLedgerId || (!isInvoiceMode && selectedPartyId) || hasVisibleLedgerRows
     const voucherDisplayName = voucherType === "Expense" ? "Expenses Purchase" : voucherType
+    const showOffsetToggle = voucherType !== "Contra" && voucherType !== "Expense"
 
     return (
         <div className="w-full">
@@ -859,7 +860,7 @@ export function VoucherEntry({
 
                                 {/* Action bar: Offset + Add Ledger sit below the rows and move down as rows grow */}
                                 <div className="flex items-center gap-4 border-t border-slate-200 bg-white px-4 py-2">
-                                    {voucherType !== "Contra" && (
+                                    {showOffsetToggle && (
                                         <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-slate-600">
                                             <input
                                                 type="checkbox"
