@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -50,7 +50,45 @@ function buildInitialItems(voucher: any | null): VoucherItemPayload[] {
     }))
 }
 
-function buildInitialLedgerState(voucher: any | null, type: VoucherType, ledgers: LedgerWithGroup[]) {
+function getPartyIdForLedger(ledgerId: string, parties: PartyOption[], ledgers: LedgerWithGroup[]) {
+    if (!ledgerId) return ""
+    const selectedLedger = ledgers.find(ledger => ledger.id === ledgerId)
+    const party = parties.find(party => (
+        party.id === ledgerId ||
+        party.ledgerId === ledgerId ||
+        (selectedLedger?.source_profile_id && party.id === selectedLedger.source_profile_id)
+    ))
+    return party?.id || ""
+}
+
+function buildInitialInvoiceState(voucher: any | null, type: VoucherType, ledgers: LedgerWithGroup[], parties: PartyOption[]) {
+    const empty = { partyLedgerId: "", partyId: "", invoiceLedgerId: "" }
+    if ((type !== "Sales" && type !== "Purchase") || !voucher?.voucher_entries?.length) return empty
+
+    const entries = voucher.voucher_entries.map((entry: any) => ({
+        ledger_id: entry.ledger_id,
+        debit_amount: Number(entry.debit_amount || 0),
+        credit_amount: Number(entry.credit_amount || 0),
+    }))
+
+    const partyEntry = entries.find((entry: any) => (
+        getPartyIdForLedger(entry.ledger_id, parties, ledgers) &&
+        (type === "Sales" ? entry.debit_amount > 0 : entry.credit_amount > 0)
+    )) || entries.find((entry: any) => getPartyIdForLedger(entry.ledger_id, parties, ledgers))
+
+    const invoiceEntry = entries.find((entry: any) => (
+        entry.ledger_id !== partyEntry?.ledger_id &&
+        (type === "Sales" ? entry.credit_amount > 0 : entry.debit_amount > 0)
+    ))
+
+    return {
+        partyLedgerId: partyEntry?.ledger_id || "",
+        partyId: partyEntry ? (getPartyIdForLedger(partyEntry.ledger_id, parties, ledgers) || partyEntry.ledger_id) : "",
+        invoiceLedgerId: invoiceEntry?.ledger_id || "",
+    }
+}
+
+function buildInitialLedgerState(voucher: any | null, type: VoucherType, ledgers: LedgerWithGroup[], parties: PartyOption[]) {
     const empty = { masterLedgerId: "", selectedLedgers: [{ ledger_id: "", amount: 0, debit_amount: 0, credit_amount: 0 }] }
     if (!voucher?.voucher_entries?.length) return empty
 
@@ -63,11 +101,33 @@ function buildInitialLedgerState(voucher: any | null, type: VoucherType, ledgers
         due_date: entry.due_date || undefined,
     }))
 
+    if (type === "Sales" || type === "Purchase") {
+        const invoiceState = buildInitialInvoiceState(voucher, type, ledgers, parties)
+        const additionalEntries = entries.filter((entry: any) => (
+            entry.ledger_id !== invoiceState.partyLedgerId &&
+            entry.ledger_id !== invoiceState.invoiceLedgerId
+        ))
+
+        return {
+            masterLedgerId: "",
+            selectedLedgers: additionalEntries.map((entry: any) => ({
+                ...entry,
+                amount: Math.max(Number(entry.debit_amount || 0), Number(entry.credit_amount || 0)),
+                forceVisible: true,
+            })),
+        }
+    }
+
     if (!isSingleEntryVoucher(type)) {
         return { masterLedgerId: "", selectedLedgers: entries }
     }
 
-    const masterEntry = entries.find((entry: any) => ledgers.find(ledger => ledger.id === entry.ledger_id)?.is_cash_bank) || entries[0]
+    const masterEntry = entries.find((entry: any) => ledgers.find(ledger => ledger.id === entry.ledger_id)?.is_cash_bank)
+        || (type === "Expense"
+            ? entries.find((entry: any) => Number(entry.credit_amount || 0) > 0)
+            : type === "Contra"
+                ? entries.find((entry: any) => Number(entry.debit_amount || 0) > 0)
+                : entries[0])
     const detailEntries = entries.filter((entry: any) => entry !== masterEntry)
     const selectedLedgers = detailEntries.length > 0
         ? detailEntries.map((entry: any) => ({
@@ -111,24 +171,24 @@ export function VoucherEntry({
 
     const [selectedItems, setSelectedItems] = useState<VoucherItemPayload[]>(() => buildInitialItems(initialVoucher))
     // We add 'amount' to support single-entry mode (Payment, Receipt, Contra)
-    const initialLedgerState = buildInitialLedgerState(initialVoucher, initialType, ledgers)
+    const initialInvoiceState = buildInitialInvoiceState(initialVoucher, initialType, ledgers, parties)
+    const initialLedgerState = buildInitialLedgerState(initialVoucher, initialType, ledgers, parties)
+    const initialMasterPartyId = getPartyIdForLedger(initialLedgerState.masterLedgerId, parties, ledgers)
+    const initialDetailPartyLedgerId = initialLedgerState.selectedLedgers.find((ledger: any) => getPartyIdForLedger(ledger.ledger_id, parties, ledgers))?.ledger_id || ""
+    const initialDetailPartyId = getPartyIdForLedger(initialDetailPartyLedgerId, parties, ledgers)
     const [selectedLedgers, setSelectedLedgers] = useState<any[]>(initialLedgerState.selectedLedgers)
     const [masterLedgerId, setMasterLedgerId] = useState<string>(initialLedgerState.masterLedgerId)
-    // In Sales/Purchase, infer the main Sales/Purchase ledger if editing
-    const inferredInvoiceLedger = (initialType === "Sales" || initialType === "Purchase") && initialVoucher?.voucher_entries
-        ? initialVoucher.voucher_entries.find((e: any) => e.ledger_id !== initialVoucher.voucher_entries[0]?.ledger_id)?.ledger_id
-        : ""
-    const [invoiceLedgerId, setInvoiceLedgerId] = useState<string>(inferredInvoiceLedger || "")
+    const [invoiceLedgerId, setInvoiceLedgerId] = useState<string>(initialInvoiceState.invoiceLedgerId)
     const [selectedPartyId, setSelectedPartyId] = useState(() => {
-        if ((initialType === "Sales" || initialType === "Purchase") && initialVoucher?.voucher_entries?.length > 0) {
-            return initialVoucher.voucher_entries[0].ledger_id
-        }
+        if (initialType === "Sales" || initialType === "Purchase") return initialInvoiceState.partyId
+        if (initialType === "Expense") return initialMasterPartyId
+        if (initialDetailPartyId) return initialDetailPartyId
         return ""
     })
     const [resolvedPartyLedgerId, setResolvedPartyLedgerId] = useState<string>(() => {
-        if ((initialType === "Sales" || initialType === "Purchase") && initialVoucher?.voucher_entries?.length > 0) {
-            return initialVoucher.voucher_entries[0].ledger_id
-        }
+        if (initialType === "Sales" || initialType === "Purchase") return initialInvoiceState.partyLedgerId
+        if (initialType === "Expense") return initialLedgerState.masterLedgerId
+        if (initialDetailPartyLedgerId) return initialDetailPartyLedgerId
         return ""
     })
     const [ledgerLabels, setLedgerLabels] = useState<Record<string, string>>({})
@@ -138,6 +198,7 @@ export function VoucherEntry({
     const [offsetEnabled, setOffsetEnabled] = useState(false)
 
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const submittingRef = useRef(false)
     const router = useRouter()
 
     useEffect(() => {
@@ -316,6 +377,8 @@ export function VoucherEntry({
 
         const validItems = selectedItems.filter(i => i.item_id && i.qty > 0)
 
+        if (submittingRef.current) return
+        submittingRef.current = true
         setIsSubmitting(true)
         try {
             const payload = {
@@ -350,6 +413,7 @@ export function VoucherEntry({
             console.error(error)
             toast.error("Failed to save voucher.")
         } finally {
+            submittingRef.current = false
             setIsSubmitting(false)
         }
     }

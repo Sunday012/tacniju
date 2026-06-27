@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation"
 import { AccountingShell } from "@/components/accounting/accounting-shell"
 import { VoucherEntry } from "@/components/vouchers/voucher-entry"
 import { getLedgers, getLedgerBalances } from "@/app/management/actions"
-import { getRecentVouchers, VoucherType } from "@/app/vouchers/actions"
+import { getRecentVouchers, getVoucherById, VoucherType } from "@/app/vouchers/actions"
 import { getItems } from "@/app/inventory/actions"
 import { getAccountingParties, getAccountingPrograms } from "@/app/accounting/actions"
 import { getNextVoucherNo } from "@/lib/voucher-numbering"
@@ -75,32 +75,42 @@ function getVoucherListLabel(voucherType: VoucherType) {
   return inventoryVoucherTypes.has(voucherType) ? "Inventory Vouchers" : "Vouchers"
 }
 
-export default async function AccountingVoucherPage({ params }: { params: { type: string } }) {
+export default async function AccountingVoucherPage({
+  params,
+  searchParams,
+}: {
+  params: { type: string }
+  searchParams?: { edit?: string }
+}) {
   const voucherType = typeMap[params.type]
   if (!voucherType) notFound()
   if (voucherType === "Program") redirect("/accounting/programs")
 
   const parties = await getAccountingParties()
-  const [ledgers, vouchers, items, programs, balances] = await Promise.all([
+  const [ledgers, vouchers, items, programs, balances, editingVoucher] = await Promise.all([
     getLedgers(),
     getRecentVouchers(),
     getItems(),
     getAccountingPrograms(),
     getLedgerBalances(),
+    searchParams?.edit ? getVoucherById(searchParams.edit) : Promise.resolve(null),
   ])
+  if (searchParams?.edit && !editingVoucher) notFound()
+  if (editingVoucher && editingVoucher.voucher_type !== voucherType) notFound()
+
   const typeVouchers = (vouchers || []).filter((voucher: any) => voucher.voucher_type === voucherType)
-  const nextVoucherNo = getNextVoucherNo(voucherType, typeVouchers)
+  const voucherNo = editingVoucher?.voucher_no || getNextVoucherNo(voucherType, typeVouchers)
   const voucherDisplayName = getVoucherDisplayName(voucherType)
 
   return (
     <AccountingShell
-      title={`${voucherDisplayName} Voucher`}
+      title={`${editingVoucher ? "Edit " : ""}${voucherDisplayName} Voucher`}
       framed={false}
       backHref={getVoucherListHref(voucherType)}
       backLabel={getVoucherListLabel(voucherType)}
       hero={{
         title: `${voucherDisplayName} Voucher`,
-        badge: nextVoucherNo,
+        badge: voucherNo,
         compact: true,
         ...heroStyles[voucherType],
       }}
@@ -113,6 +123,7 @@ export default async function AccountingVoucherPage({ params }: { params: { type
         parties={parties}
         programs={programs}
         balances={balances}
+        initialVoucher={editingVoucher}
       />
     </AccountingShell>
   )

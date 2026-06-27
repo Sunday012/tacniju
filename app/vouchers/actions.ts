@@ -139,6 +139,7 @@ export async function saveVoucher(payload: VoucherFormPayload) {
     revalidatePath("/vouchers")
     revalidatePath("/inventory")
     revalidatePath("/accounting")
+    if (payload.voucher_type === "Expense") revalidatePath("/accounting/display/expense-purchase-register")
     return header
 }
 
@@ -171,6 +172,13 @@ export async function updateVoucher(payload: VoucherUpdatePayload) {
 
     if (headerErr) throw headerErr
 
+    const { data: existingEntries, error: existingEntriesError } = await supabase
+        .from("voucher_entries")
+        .select("id")
+        .eq("voucher_id", payload.id)
+
+    if (existingEntriesError) throw existingEntriesError
+
     const { error: deleteEntriesError } = await supabase
         .from("voucher_entries")
         .delete()
@@ -178,12 +186,43 @@ export async function updateVoucher(payload: VoucherUpdatePayload) {
 
     if (deleteEntriesError) throw deleteEntriesError
 
+    if ((existingEntries || []).length > 0) {
+        const { data: remainingEntries, error: remainingEntriesError } = await supabase
+            .from("voucher_entries")
+            .select("id")
+            .eq("voucher_id", payload.id)
+
+        if (remainingEntriesError) throw remainingEntriesError
+        if ((remainingEntries || []).length > 0) {
+            throw new Error("Could not clear the old voucher entries before saving the edit.")
+        }
+    }
+
+    const { data: existingItems, error: existingItemsError } = await supabase
+        .from("voucher_items")
+        .select("id")
+        .eq("voucher_id", payload.id)
+
+    if (existingItemsError) throw existingItemsError
+
     const { error: deleteItemsError } = await supabase
         .from("voucher_items")
         .delete()
         .eq("voucher_id", payload.id)
 
     if (deleteItemsError) throw deleteItemsError
+
+    if ((existingItems || []).length > 0) {
+        const { data: remainingItems, error: remainingItemsError } = await supabase
+            .from("voucher_items")
+            .select("id")
+            .eq("voucher_id", payload.id)
+
+        if (remainingItemsError) throw remainingItemsError
+        if ((remainingItems || []).length > 0) {
+            throw new Error("Could not clear the old voucher items before saving the edit.")
+        }
+    }
 
     const entries = payload.ledger_entries.map(e => ({
         voucher_id: payload.id,
@@ -216,6 +255,7 @@ export async function updateVoucher(payload: VoucherUpdatePayload) {
     revalidatePath("/inventory")
     revalidatePath("/accounting")
     revalidatePath("/accounting/day-book")
+    if (payload.voucher_type === "Expense") revalidatePath("/accounting/display/expense-purchase-register")
     revalidatePath(`/accounting/vouchers/${payload.voucher_type.toLowerCase()}/${payload.id}`)
     return { id: payload.id }
 }
@@ -305,4 +345,5 @@ export async function deleteVoucher(id: string) {
     revalidatePath("/inventory")
     revalidatePath("/accounting")
     revalidatePath("/accounting/day-book")
+    revalidatePath("/accounting/display/expense-purchase-register")
 }

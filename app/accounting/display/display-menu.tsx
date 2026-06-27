@@ -42,6 +42,7 @@ export const displayMenuItems: DisplayMenuItem[] = [
       { label: "Group Summary", icon: Layers, href: "/accounting/info/group" },
       { label: "Sales Register", icon: Receipt, href: "/accounting/vouchers/sales" },
       { label: "Purchase Register", icon: Receipt, href: "/accounting/vouchers/purchase" },
+      { label: "Expenses Purchase Register", icon: Receipt, href: "/accounting/display/expense-purchase-register" },
       { label: "Payment / Receipt Register", icon: Receipt, href: "/accounting/day-book" },
     ],
   },
