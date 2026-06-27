@@ -7,9 +7,19 @@ import { redirect } from "next/navigation"
 import { getNextVoucherNo, getVoucherPrefix } from "@/lib/voucher-numbering"
 
 async function getOrgId() {
+    const supabase = await createClient()
     const cookieStore = cookies()
     const orgId = cookieStore.get("active_org_id")?.value
     if (!orgId) redirect("/select-church")
+
+    const { data: org, error } = await supabase
+        .from("organizations")
+        .select("id")
+        .eq("id", orgId)
+        .maybeSingle()
+
+    if (error || !org?.id) redirect("/select-church")
+
     return orgId
 }
 
@@ -49,6 +59,11 @@ async function cleanupVoucherOnFailure(supabase: Awaited<ReturnType<typeof creat
         .from("vouchers")
         .delete()
         .eq("id", voucherId)
+}
+
+function optionalVoucherValue(value: string | undefined) {
+    if (!value || value === "$undefined") return null
+    return value
 }
 
 export async function saveVoucher(payload: VoucherFormPayload) {
@@ -91,9 +106,9 @@ export async function saveVoucher(payload: VoucherFormPayload) {
         ledger_id: e.ledger_id,
         debit_amount: e.debit_amount || 0,
         credit_amount: e.credit_amount || 0,
-        adjustment_method: e.adjustment_method || null,
-        adjustment_reference: e.adjustment_reference || null,
-        due_date: e.due_date || null,
+        adjustment_method: optionalVoucherValue(e.adjustment_method),
+        adjustment_reference: optionalVoucherValue(e.adjustment_reference),
+        due_date: optionalVoucherValue(e.due_date),
     }))
 
     const { error: lineErr } = await supabase.from("voucher_entries").insert(entries)
@@ -175,9 +190,9 @@ export async function updateVoucher(payload: VoucherUpdatePayload) {
         ledger_id: e.ledger_id,
         debit_amount: e.debit_amount || 0,
         credit_amount: e.credit_amount || 0,
-        adjustment_method: e.adjustment_method || null,
-        adjustment_reference: e.adjustment_reference || null,
-        due_date: e.due_date || null,
+        adjustment_method: optionalVoucherValue(e.adjustment_method),
+        adjustment_reference: optionalVoucherValue(e.adjustment_reference),
+        due_date: optionalVoucherValue(e.due_date),
     }))
 
     const { error: lineErr } = await supabase.from("voucher_entries").insert(entries)

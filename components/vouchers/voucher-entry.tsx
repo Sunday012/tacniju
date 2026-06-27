@@ -574,7 +574,7 @@ export function VoucherEntry({
     const managedLedgerName = managedLedgerRecord?.name || ""
     const managedAmountSide = isPaymentLike ? "Dr" : "Cr"
     const hasCashBankMasterOptions = topAccountOptions.length > 0
-    const detailPlaceholder = voucherType === "Contra" ? "" : "Type expense, income, party, or other ledger..."
+    const detailPlaceholder = ""
     const hasVisibleLedgerRows = selectedLedgers.some((ledger, index) => (
         index === 0 ||
         ledger.forceVisible ||
@@ -624,7 +624,7 @@ export function VoucherEntry({
                         </div>
                         <div className="flex items-center gap-2">
                             <Label className="w-16 text-slate-500">Ref</Label>
-                            <Input value={reference} onChange={e => setReference(e.target.value)} placeholder="Ref / Cheque No" className="h-8 max-w-72 bg-transparent border-t-0 border-x-0 border-b-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-slate-400 px-1" />
+                            <Input value={reference} onChange={e => setReference(e.target.value)} className="h-8 max-w-72 bg-transparent border-t-0 border-x-0 border-b-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-slate-400 px-1" />
                         </div>
                     </div>
 
@@ -638,7 +638,7 @@ export function VoucherEntry({
                                     value={masterLedgerId}
                                     onChange={handleMasterLedgerChange}
                                     options={topAccountOptions}
-                                    placeholder={voucherType === "Contra" ? "" : topAccountOptions.length > 0 ? "Search account name..." : "No account found. Create one in Accounts Info."}
+                                    placeholder=""
                                     className="h-9 w-full rounded-md border-slate-300 bg-white font-semibold"
                                     inputClassName="bg-transparent border-none focus-visible:ring-0 shadow-none font-semibold text-slate-800"
                                 />
@@ -669,7 +669,7 @@ export function VoucherEntry({
                                             value: p.id,
                                             label: p.reservation_number ? `${p.name} (${p.reservation_number})` : p.name,
                                         }))}
-                                        placeholder="Search registered member..."
+                                        placeholder=""
                                         className="h-9 w-full"
                                         inputClassName="border-transparent bg-transparent shadow-none hover:border-slate-300 focus:border-slate-400 focus:ring-1 focus:ring-slate-300"
                                     />
@@ -691,7 +691,7 @@ export function VoucherEntry({
                                             value={invoiceLedgerId}
                                             onChange={setInvoiceLedgerId}
                                             options={detailLedgerOptions}
-                                            placeholder={`Select ${voucherType.toLowerCase()} account...`}
+                                            placeholder=""
                                             className="h-10 w-full"
                                             inputClassName="border-slate-300"
                                         />
@@ -738,7 +738,7 @@ export function VoucherEntry({
                                                         <input type="number" min="0" step="0.01" value={pi.qty || ""} onChange={e => updateItem(idx, 'qty', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleItemKeyDown(e, idx, 'qty')} className={invisibleInputClass} />
                                                     </TableCell>
                                                     <TableCell className="p-1">
-                                                        <input type="number" min="0" step="0.01" value={pi.rate || ""} onChange={e => updateItem(idx, 'rate', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleItemKeyDown(e, idx, 'rate')} placeholder="0.00" className={invisibleInputClass} />
+                                                        <input type="number" min="0" step="0.01" value={pi.rate || ""} onChange={e => updateItem(idx, 'rate', parseFloat(e.target.value) || 0)} onKeyDown={(e) => handleItemKeyDown(e, idx, 'rate')} className={invisibleInputClass} />
                                                     </TableCell>
                                                     <TableCell className="p-1 text-sm font-semibold text-slate-500">
                                                         {itemDef?.unit || "—"}
@@ -810,7 +810,7 @@ export function VoucherEntry({
                                                                 value={sl.ledger_id}
                                                                 onChange={(val) => updateLedger(index, 'ledger_id', val)}
                                                                 options={detailLedgerOptions}
-                                                                placeholder={voucherType === "Contra" ? "" : detailLedgerOptions.length > 0 ? detailPlaceholder : "Select party above or create a ledger in Accounts Info"}
+                                                                placeholder=""
                                                                 className="h-8"
                                                                 inputClassName="bg-transparent border-transparent hover:border-slate-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-none h-8 px-2"
                                                             />
@@ -897,7 +897,6 @@ export function VoucherEntry({
                                         <Input
                                             value={narration}
                                             onChange={e => setNarration(e.target.value)}
-                                            required
                                             className="h-8 bg-transparent border-t-0 border-x-0 border-b-slate-400 rounded-none focus-visible:ring-0 focus-visible:border-slate-600 px-1 shadow-none w-full"
                                         />
                                     </div>
@@ -973,7 +972,7 @@ export function VoucherEntry({
                                                 onValueChange={(value: any) => updateLedger(managedLedgerIndex, "adjustment_method", value)}
                                             >
                                                 <SelectTrigger className="h-9 border-slate-300 bg-white text-sm font-semibold">
-                                                    <SelectValue placeholder="Method of Adj." />
+                                                    <SelectValue placeholder="" />
                                                 </SelectTrigger>
                                                 <SelectContent className="bg-white border-slate-300 text-slate-900">
                                                     <SelectItem value="Advance">Advance</SelectItem>
@@ -994,7 +993,7 @@ export function VoucherEntry({
                                                         value: program.id,
                                                         label: `${program.name}${program.amount_to_contribute ? ` - ₦${Number(program.amount_to_contribute).toLocaleString()}` : ""}`,
                                                     }))}
-                                                    placeholder="Select program..."
+                                                    placeholder=""
                                                     className="h-9"
                                                     inputClassName="border-slate-300"
                                                 />
@@ -1002,7 +1001,7 @@ export function VoucherEntry({
                                                 <Input
                                                     value={managedLedger.adjustment_reference || ""}
                                                     onChange={(event) => updateLedger(managedLedgerIndex, "adjustment_reference", event.target.value)}
-                                                    placeholder={managedLedger.adjustment_method === "On Account" ? "On Account" : "Reference name"}
+                                                    placeholder=""
                                                     disabled={managedLedger.adjustment_method === "On Account"}
                                                     className="h-9 border-slate-300 bg-white"
                                                 />

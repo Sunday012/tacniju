@@ -86,7 +86,7 @@ CREATE TABLE vouchers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     org_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
     period_id UUID REFERENCES periods(id) ON DELETE SET NULL,
-    voucher_type TEXT NOT NULL, CHECK (voucher_type IN ('Payment', 'Receipt', 'Sales', 'Purchase', 'Contra')),
+    voucher_type TEXT NOT NULL, CHECK (voucher_type IN ('Payment', 'Receipt', 'Sales', 'Purchase', 'Contra', 'Expense', 'Income', 'Program')),
     voucher_no TEXT NOT NULL,
     date DATE NOT NULL,
     reference TEXT,
