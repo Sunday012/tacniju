@@ -181,10 +181,12 @@ export function VoucherEntry({
         }
     }, [voucherType, needsItems])
 
-    // Expense behaves like Payment (cash out), Income & Program behave like Receipt (cash in)
+    // Payment/Expense credit the top account and debit detail lines.
+    // Only Payment is a cash-out movement; Expense Purchase records the obligation/process.
     const isPaymentLike = voucherType === "Payment" || voucherType === "Expense"
     const isReceiptLike = voucherType === "Receipt" || voucherType === "Income" || voucherType === "Program"
     const isSingleEntry = isPaymentLike || isReceiptLike || voucherType === "Contra"
+    const requiresCashBankMaster = isSingleEntry && voucherType !== "Expense"
     const isInvoiceMode = voucherType === "Sales" || voucherType === "Purchase"
     // Sales is always offset against the party; other types offset only when the user ticks it.
     const offsetActive = voucherType === "Sales" ? true : offsetEnabled
@@ -239,7 +241,7 @@ export function VoucherEntry({
         let finalLedgers: VoucherLedgerEntry[] = []
 
         if (isSingleEntry) {
-            if (!masterLedgerId) return toast.error("Please select a master Account at the top.")
+            if (!masterLedgerId) return toast.error(voucherType === "Expense" ? "Please select a Party." : "Please select an Account at the top.")
             const validLines = selectedLedgers.filter((l: any) => l.ledger_id && l.amount > 0)
             if (validLines.length === 0) return toast.error("Please enter at least one valid ledger line with an amount.")
             if (!isBalanced) return toast.error("Voucher must have a positive total amount.")
@@ -430,6 +432,7 @@ export function VoucherEntry({
         setSelectedPartyId(partyId)
         if (!partyId) {
             setResolvedPartyLedgerId("")
+            if (voucherType === "Expense") setMasterLedgerId("")
             return
         }
 
@@ -445,8 +448,10 @@ export function VoucherEntry({
                     ? `${selectedParty.name} (${selectedParty.reservation_number})`
                     : selectedParty.name
                 : "Selected party"
-            const updated = [...selectedLedgers]
-            if (!isInvoiceMode && updated.length > 0) {
+            if (voucherType === "Expense") {
+                setMasterLedgerId(ledgerId)
+            } else if (!isInvoiceMode && selectedLedgers.length > 0) {
+                const updated = [...selectedLedgers]
                 updated[0] = {
                     ...updated[0],
                     ledger_id: ledgerId,
@@ -528,7 +533,7 @@ export function VoucherEntry({
             return
         }
 
-        if (!selectedLedger.is_cash_bank) {
+        if (requiresCashBankMaster && !selectedLedger.is_cash_bank) {
             toast.error(`"${selectedLedger.name}" is not a cash/bank account. Select it in the Ledger rows below.`)
             return
         }
@@ -545,17 +550,21 @@ export function VoucherEntry({
 
     const cashBankLedgers = ledgers.filter((ledger) => ledger.is_cash_bank)
     const regularLedgers = ledgers.filter((ledger) => !ledger.is_cash_bank)
-    // Top "Account" field lists every ledger by plain name (cash/bank accounts first).
-    const topAccountCandidates = isSingleEntry ? cashBankLedgers : [...cashBankLedgers, ...regularLedgers]
+    const topAccountCandidates = voucherType === "Expense"
+        ? regularLedgers
+        : isSingleEntry
+            ? cashBankLedgers
+            : [...cashBankLedgers, ...regularLedgers]
     const topAccountOptions = topAccountCandidates.map((ledger) => ({
         value: ledger.id,
         label: ledger.name,
     }))
+    const usesPartyAsMasterAccount = voucherType === "Expense"
     const detailLedgerCandidates = !isSingleEntry
         ? ledgers
         : voucherType === "Contra"
             ? cashBankLedgers.filter((ledger) => ledger.id !== masterLedgerId)
-            : (regularLedgers.length > 0 ? regularLedgers : ledgers.filter((ledger) => ledger.id !== masterLedgerId))
+            : regularLedgers.filter((ledger) => ledger.id !== masterLedgerId)
     const detailLedgerOptions = detailLedgerCandidates.map((ledger) => ({
         value: ledger.id,
         label: ledger.name,
@@ -564,7 +573,6 @@ export function VoucherEntry({
     const managedLedgerRecord = managedLedger?.ledger_id ? ledgers.find(ledger => ledger.id === managedLedger.ledger_id) : null
     const managedLedgerName = managedLedgerRecord?.name || ""
     const managedAmountSide = isPaymentLike ? "Dr" : "Cr"
-    const requiresCashBankMaster = isSingleEntry
     const hasCashBankMasterOptions = topAccountOptions.length > 0
     const detailPlaceholder = voucherType === "Contra" ? "" : "Type expense, income, party, or other ledger..."
     const hasVisibleLedgerRows = selectedLedgers.some((ledger, index) => (
@@ -578,6 +586,8 @@ export function VoucherEntry({
     const showLedgerRows = (!isSingleEntry && !isInvoiceMode) || masterLedgerId || (!isInvoiceMode && selectedPartyId) || hasVisibleLedgerRows
     const voucherDisplayName = voucherType === "Expense" ? "Expenses Purchase" : voucherType
     const showOffsetToggle = voucherType !== "Contra" && voucherType !== "Expense"
+    const showBillWiseManage = voucherType === "Payment" || voucherType === "Receipt"
+    const partyBalanceLedgerId = !isInvoiceMode ? resolvedPartyLedgerId : (ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId)
 
     return (
         <div className="w-full">
@@ -618,7 +628,7 @@ export function VoucherEntry({
                         </div>
                     </div>
 
-                    {isSingleEntry && (
+                    {isSingleEntry && !usesPartyAsMasterAccount && (
                         <div className="mt-4 flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:gap-3 lg:inline-flex lg:w-[calc(50%-0.375rem)] lg:align-top">
                             <Label className="font-bold text-slate-700 shrink-0 sm:w-28">
                                 {voucherType === "Contra" ? "Receiving Account" : "Account"}
@@ -648,7 +658,7 @@ export function VoucherEntry({
                     )}
 
                     {voucherType !== "Contra" && (
-                        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:ml-3 lg:inline-grid lg:w-[calc(50%-0.375rem)] lg:grid-cols-1 lg:align-top">
+                        <div className={`mt-4 grid gap-3 sm:grid-cols-2 ${isSingleEntry && !usesPartyAsMasterAccount ? "lg:ml-3 lg:inline-grid lg:w-[calc(50%-0.375rem)] lg:grid-cols-1 lg:align-top" : "lg:max-w-[calc(50%-0.375rem)]"}`}>
                             <div className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-2 sm:flex-row sm:items-center sm:gap-3">
                                 <Label className="font-bold text-slate-700 shrink-0 sm:w-24">Party</Label>
                                 <div className="w-full flex-1">
@@ -664,14 +674,13 @@ export function VoucherEntry({
                                         inputClassName="border-transparent bg-transparent shadow-none hover:border-slate-300 focus:border-slate-400 focus:ring-1 focus:ring-slate-300"
                                     />
                                 </div>
-                                {formatBalance(!isInvoiceMode ? selectedLedgers[0]?.ledger_id : (ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId)) && (
+                                {formatBalance(partyBalanceLedgerId) && (
                                     <div className="shrink-0 text-left sm:text-right">
                                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Bal </span>
-                                        <span className="text-sm font-bold text-slate-700">{formatBalance(!isInvoiceMode ? selectedLedgers[0]?.ledger_id : (ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId))}</span>
+                                        <span className="text-sm font-bold text-slate-700">{formatBalance(partyBalanceLedgerId)}</span>
                                     </div>
                                 )}
                             </div>
-
                             {voucherType === "Purchase" && (
                                 <div className="flex flex-col gap-2 rounded-md border border-slate-200 bg-white p-2 sm:flex-row sm:items-center sm:gap-3">
                                     <Label className="font-bold text-slate-700 shrink-0 sm:w-24">
@@ -771,7 +780,7 @@ export function VoucherEntry({
                                             </TableHead>
                                             {isSingleEntry && (
                                                 <>
-                                                    {voucherType !== "Contra" && (
+                                                    {showBillWiseManage && (
                                                         <TableHead className="text-slate-500 font-semibold h-9 px-2">Manage</TableHead>
                                                     )}
                                                     <TableHead className="text-right text-slate-500 font-semibold h-9 px-4">Amount</TableHead>
@@ -812,7 +821,7 @@ export function VoucherEntry({
                                                     </TableCell>
                                                     {isSingleEntry && (
                                                         <>
-                                                            {voucherType !== "Contra" && (
+                                                            {showBillWiseManage && (
                                                                 <TableCell className="p-1">
                                                                     {sl.ledger_id && (!ledgers.find(l => l.id === sl.ledger_id)?.is_cash_bank) ? (
                                                                         <Button
@@ -850,7 +859,7 @@ export function VoucherEntry({
                                                 </TableRow>
                                             )) : (
                                             <TableRow>
-                                                <TableCell colSpan={voucherType === "Contra" ? 2 : 3} className="h-24 text-center text-slate-400">
+                                                <TableCell colSpan={isSingleEntry ? (showBillWiseManage ? 3 : 2) : 3} className="h-24 text-center text-slate-400">
                                                     {voucherType === "Contra" ? "Select receiving and sending accounts to begin" : "Select an account or party above to begin entries"}
                                                 </TableCell>
                                             </TableRow>
