@@ -649,7 +649,8 @@ export function VoucherEntry({
     ))
     const showLedgerRows = (!isSingleEntry && !isInvoiceMode) || masterLedgerId || (!isInvoiceMode && selectedPartyId) || hasVisibleLedgerRows
     const voucherDisplayName = voucherType === "Expense" ? "Expenses Purchase" : voucherType
-    const showOffsetToggle = voucherType !== "Contra" && voucherType !== "Expense"
+    const showPartySelector = voucherType !== "Contra" && voucherType !== "Payment"
+    const showOffsetToggle = voucherType !== "Contra" && voucherType !== "Expense" && voucherType !== "Payment"
     const showBillWiseManage = voucherType === "Payment" || voucherType === "Receipt"
     const partyBalanceLedgerId = !isInvoiceMode ? resolvedPartyLedgerId : (ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId)
 
@@ -721,7 +722,7 @@ export function VoucherEntry({
                         </div>
                     )}
 
-                    {voucherType !== "Contra" && (
+                    {showPartySelector && (
                         <div className={`mt-4 grid gap-3 sm:grid-cols-2 ${isSingleEntry && !usesPartyAsMasterAccount ? "lg:ml-3 lg:inline-grid lg:w-[calc(50%-0.375rem)] lg:grid-cols-1 lg:align-top" : "lg:max-w-[calc(50%-0.375rem)]"}`}>
                             <div className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-2 sm:flex-row sm:items-center sm:gap-3">
                                 <Label className="font-bold text-slate-700 shrink-0 sm:w-24">Party</Label>
@@ -924,7 +925,11 @@ export function VoucherEntry({
                                             )) : (
                                             <TableRow>
                                                 <TableCell colSpan={isSingleEntry ? (showBillWiseManage ? 3 : 2) : 3} className="h-24 text-center text-slate-400">
-                                                    {voucherType === "Contra" ? "Select receiving and sending accounts to begin" : "Select an account or party above to begin entries"}
+                                                    {voucherType === "Contra"
+                                                        ? "Select receiving and sending accounts to begin"
+                                                        : voucherType === "Payment"
+                                                            ? "Select an account above to begin entries"
+                                                            : "Select an account or party above to begin entries"}
                                                 </TableCell>
                                             </TableRow>
                                         )}
