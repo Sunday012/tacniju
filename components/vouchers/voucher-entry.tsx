@@ -694,17 +694,17 @@ export function VoucherEntry({
         ? "Part Payments"
         : managedLedger?.adjustment_method === "Against Reference"
             ? "Pending Bills"
-            : managedLedger?.adjustment_method === "Through Reference"
+            : (managedLedger?.adjustment_method === "Through Reference" || managedLedger?.adjustment_method === "For Reference")
                 ? "Parties"
                 : "Name"
     const managedReferenceOptions = managedLedger?.adjustment_method === "Advance"
         ? advancePaymentOptions
         : managedLedger?.adjustment_method === "Against Reference"
             ? pendingBillOptions
-            : managedLedger?.adjustment_method === "Through Reference"
+            : (managedLedger?.adjustment_method === "Through Reference" || managedLedger?.adjustment_method === "For Reference")
                 ? partyReferenceOptions
                 : []
-    const usesReferenceOptions = managedLedger?.adjustment_method === "Advance" || managedLedger?.adjustment_method === "Against Reference" || managedLedger?.adjustment_method === "Through Reference"
+    const usesReferenceOptions = managedLedger?.adjustment_method === "Advance" || managedLedger?.adjustment_method === "Against Reference" || managedLedger?.adjustment_method === "Through Reference" || managedLedger?.adjustment_method === "For Reference"
 
     return (
         <div className="w-full">
