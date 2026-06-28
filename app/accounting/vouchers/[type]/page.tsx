@@ -5,6 +5,7 @@ import { getLedgers, getLedgerBalances } from "@/app/management/actions"
 import { getRecentVouchers, getVoucherById, VoucherType } from "@/app/vouchers/actions"
 import { getItems } from "@/app/inventory/actions"
 import { getAccountingParties, getAccountingPrograms } from "@/app/accounting/actions"
+import { getBillPendingRows } from "@/app/accounting/display/bill-pending/actions"
 import { getNextVoucherNo } from "@/lib/voucher-numbering"
 
 const typeMap: Record<string, VoucherType> = {
@@ -87,13 +88,24 @@ export default async function AccountingVoucherPage({
   if (voucherType === "Program") redirect("/accounting/programs")
 
   const parties = await getAccountingParties()
-  const [ledgers, vouchers, items, programs, balances, editingVoucher] = await Promise.all([
+  const pendingBillsPromise = voucherType === "Payment"
+    ? Promise.all([getBillPendingRows("purchase"), getBillPendingRows("expense")]).then(([purchase, expense]) => [...purchase, ...expense])
+    : voucherType === "Receipt"
+      ? getBillPendingRows("sales")
+      : Promise.resolve([])
+  const advancePaymentsPromise = voucherType === "Payment" || voucherType === "Receipt"
+    ? getBillPendingRows("payment")
+    : Promise.resolve([])
+
+  const [ledgers, vouchers, items, programs, balances, editingVoucher, pendingBills, advancePayments] = await Promise.all([
     getLedgers(),
     getRecentVouchers(),
     getItems(),
     getAccountingPrograms(),
     getLedgerBalances(),
     searchParams?.edit ? getVoucherById(searchParams.edit) : Promise.resolve(null),
+    pendingBillsPromise,
+    advancePaymentsPromise,
   ])
   if (searchParams?.edit && !editingVoucher) notFound()
   if (editingVoucher && editingVoucher.voucher_type !== voucherType) notFound()
@@ -118,12 +130,14 @@ export default async function AccountingVoucherPage({
       <VoucherEntry
         fixedType={voucherType}
         ledgers={ledgers}
-        recentVouchers={typeVouchers}
+        recentVouchers={vouchers || []}
         items={items}
         parties={parties}
         programs={programs}
         balances={balances}
         initialVoucher={editingVoucher}
+        pendingBills={pendingBills}
+        advancePayments={advancePayments}
       />
     </AccountingShell>
   )

@@ -36,6 +36,19 @@ type ProgramOption = {
     amount_to_contribute?: number
 }
 
+type ReferenceOption = {
+    value: string
+    label: string
+}
+
+type PendingBillOption = {
+    id: string
+    voucherNo: string
+    voucherType: string
+    party: string
+    pendingValue: number
+}
+
 function isSingleEntryVoucher(type: VoucherType) {
     return ["Payment", "Expense", "Receipt", "Income", "Program", "Contra"].includes(type)
 }
@@ -152,6 +165,8 @@ export function VoucherEntry({
     programs = [],
     balances = {},
     initialVoucher = null,
+    pendingBills = [],
+    advancePayments = [],
 }: {
     ledgers: LedgerWithGroup[],
     recentVouchers: any[],
@@ -161,6 +176,8 @@ export function VoucherEntry({
     programs?: ProgramOption[],
     balances?: Record<string, LedgerBalance>,
     initialVoucher?: any | null,
+    pendingBills?: PendingBillOption[],
+    advancePayments?: PendingBillOption[],
 }) {
     const editingVoucherId = initialVoucher?.id as string | undefined
     const initialType = (initialVoucher?.voucher_type || fixedType || "Payment") as VoucherType
@@ -474,6 +491,12 @@ export function VoucherEntry({
         setSelectedLedgers(updated)
     }
 
+    function updateLedgerFields(index: number, values: Record<string, any>) {
+        const updated = [...selectedLedgers]
+        updated[index] = { ...updated[index], ...values }
+        setSelectedLedgers(updated)
+    }
+
     // Invoice mode (Sales/Purchase) additional ledgers: edit ledger + a single amount.
     // index === selectedLedgers.length means the trailing blank row, which appends a new line.
     // Sales credits the amount (extra income); Purchase debits it (extra cost).
@@ -534,7 +557,7 @@ export function VoucherEntry({
         const updated = [...selectedLedgers]
         updated[index] = {
             ...updated[index],
-            adjustment_method: updated[index].adjustment_method || "On Account",
+            adjustment_method: updated[index].adjustment_method || "Advance",
         }
         setSelectedLedgers(updated)
         setManagedLedgerIndex(index)
@@ -653,6 +676,35 @@ export function VoucherEntry({
     const showOffsetToggle = voucherType !== "Contra" && voucherType !== "Expense" && voucherType !== "Payment"
     const showBillWiseManage = voucherType === "Payment" || voucherType === "Receipt"
     const partyBalanceLedgerId = !isInvoiceMode ? resolvedPartyLedgerId : (ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId)
+    const pendingBillOptions: ReferenceOption[] = pendingBills.map(bill => ({
+        value: bill.voucherNo,
+        label: `${bill.voucherNo} - ${bill.party}${bill.pendingValue > 0 ? ` - ₦${bill.pendingValue.toLocaleString()}` : ""}`,
+    }))
+    const advancePaymentOptions: ReferenceOption[] = advancePayments
+        .filter(payment => payment.id !== editingVoucherId)
+        .map(payment => ({
+            value: payment.voucherNo,
+            label: `${payment.voucherNo} - ${payment.party}${payment.pendingValue > 0 ? ` - ₦${payment.pendingValue.toLocaleString()}` : ""}`,
+        }))
+    const partyReferenceOptions: ReferenceOption[] = parties.map(party => ({
+        value: party.ledgerId || party.id,
+        label: party.reservation_number ? `${party.name} (${party.reservation_number})` : party.name,
+    }))
+    const managedReferenceLabel = managedLedger?.adjustment_method === "Advance"
+        ? "Part Payments"
+        : managedLedger?.adjustment_method === "Against Reference"
+            ? "Pending Bills"
+            : managedLedger?.adjustment_method === "Through Reference"
+                ? "Parties"
+                : "Name"
+    const managedReferenceOptions = managedLedger?.adjustment_method === "Advance"
+        ? advancePaymentOptions
+        : managedLedger?.adjustment_method === "Against Reference"
+            ? pendingBillOptions
+            : managedLedger?.adjustment_method === "Through Reference"
+                ? partyReferenceOptions
+                : []
+    const usesReferenceOptions = managedLedger?.adjustment_method === "Advance" || managedLedger?.adjustment_method === "Against Reference" || managedLedger?.adjustment_method === "Through Reference"
 
     return (
         <div className="w-full">
@@ -1028,7 +1080,7 @@ export function VoucherEntry({
                                 <div className="overflow-hidden rounded-lg border border-slate-300 bg-white">
                                     <div className="hidden grid-cols-[180px_1fr_180px_150px] border-b border-slate-300 bg-slate-50 text-xs font-black uppercase tracking-wide text-slate-500 sm:grid">
                                         <div className="border-r border-slate-300 px-3 py-2">Type of Ref</div>
-                                        <div className="border-r border-slate-300 px-3 py-2">Name</div>
+                                        <div className="border-r border-slate-300 px-3 py-2">{managedReferenceLabel}</div>
                                         <div className="border-r border-slate-300 px-3 py-2">Due Date / Ref Days</div>
                                         <div className="px-3 py-2 text-right">Amount {managedAmountSide}</div>
                                     </div>
@@ -1037,8 +1089,11 @@ export function VoucherEntry({
                                         <div className="sm:border-r sm:border-slate-200 sm:p-2">
                                             <Label className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500 sm:hidden">Type of Ref</Label>
                                             <Select
-                                                value={managedLedger.adjustment_method || "On Account"}
-                                                onValueChange={(value: any) => updateLedger(managedLedgerIndex, "adjustment_method", value)}
+                                                value={managedLedger.adjustment_method || "Advance"}
+                                                onValueChange={(value: any) => updateLedgerFields(managedLedgerIndex, {
+                                                    adjustment_method: value,
+                                                    adjustment_reference: "",
+                                                })}
                                             >
                                                 <SelectTrigger className="h-9 border-slate-300 bg-white text-sm font-semibold">
                                                     <SelectValue placeholder="" />
@@ -1046,22 +1101,20 @@ export function VoucherEntry({
                                                 <SelectContent className="bg-white border-slate-300 text-slate-900">
                                                     <SelectItem value="Advance">Advance</SelectItem>
                                                     <SelectItem value="Against Reference">Agst Ref</SelectItem>
-                                                    <SelectItem value="New Reference">New Ref</SelectItem>
+                                                    <SelectItem value="Through Reference">Through Ref</SelectItem>
+                                                    <SelectItem value="For Reference">For Ref</SelectItem>
                                                     <SelectItem value="On Account">On Account</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>
 
                                         <div className="sm:border-r sm:border-slate-200 sm:p-2">
-                                            <Label className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500 sm:hidden">Name</Label>
-                                            {managedLedger.adjustment_method === "New Reference" && voucherType === "Payment" ? (
+                                            <Label className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500 sm:hidden">{managedReferenceLabel}</Label>
+                                            {usesReferenceOptions ? (
                                                 <ComboboxInput
                                                     value={managedLedger.adjustment_reference || ""}
                                                     onChange={(value) => updateLedger(managedLedgerIndex, "adjustment_reference", value)}
-                                                    options={programs.map(program => ({
-                                                        value: program.id,
-                                                        label: `${program.name}${program.amount_to_contribute ? ` - ₦${Number(program.amount_to_contribute).toLocaleString()}` : ""}`,
-                                                    }))}
+                                                    options={managedReferenceOptions}
                                                     placeholder=""
                                                     className="h-9"
                                                     inputClassName="border-slate-300"

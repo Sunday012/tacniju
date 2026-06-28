@@ -36,7 +36,7 @@ export type VoucherLedgerEntry = {
     ledger_id: string
     debit_amount: number
     credit_amount: number
-    adjustment_method?: 'New Reference' | 'Against Reference' | 'Advance' | 'On Account'
+    adjustment_method?: 'New Reference' | 'Against Reference' | 'Through Reference' | 'For Reference' | 'Advance' | 'On Account'
     adjustment_reference?: string
     due_date?: string
 }
