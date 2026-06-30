@@ -25,7 +25,7 @@ const anton = Anton({
 });
 
 export const metadata: Metadata = {
-  title: "ChurchBooks",
+  title: "Godware",
   description: "Church Accounting & Management System",
 };
 

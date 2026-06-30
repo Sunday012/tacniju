@@ -46,6 +46,7 @@ export function InfoRecordProfile({
   transactionStartDate,
   transactionEndDate,
   comment,
+  commentTabLabel = "Comments",
 }: {
   title: string
   subtitle?: string
@@ -57,6 +58,7 @@ export function InfoRecordProfile({
   transactionStartDate?: string
   transactionEndDate?: string
   comment?: string
+  commentTabLabel?: string
 }) {
   const currentYear = new Date().getFullYear()
   const startDate = transactionStartDate || `${currentYear}-01-01`
@@ -98,7 +100,7 @@ export function InfoRecordProfile({
               Transactions
             </TabsTrigger>
             <TabsTrigger value="comments" className="rounded-none border-b-2 border-transparent px-0 py-4 text-lg font-medium text-slate-500 shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 data-[state=active]:shadow-none">
-              Comments
+              {commentTabLabel}
             </TabsTrigger>
           </TabsList>
 
@@ -204,7 +206,7 @@ export function InfoRecordProfile({
                   <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
                     <MessageSquareText className="h-5 w-5" />
                   </div>
-                  <h2 className="text-2xl font-semibold text-slate-900">Comments</h2>
+                  <h2 className="text-2xl font-semibold text-slate-900">{commentTabLabel}</h2>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-5 text-base text-slate-600">
                   {comment || "No comments added yet."}

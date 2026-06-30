@@ -1,16 +1,17 @@
 import { AccountingShell } from "@/components/accounting/accounting-shell"
 import { LedgersManager } from "@/components/management/ledgers-manager"
-import { getAccountGroups, getLedgers } from "@/app/management/actions"
+import { getAccountGroups, getLedgerBalances, getLedgers } from "@/app/management/actions"
 
 export default async function AccountingBankAccountPage() {
-  const [groups, ledgers] = await Promise.all([
+  const [groups, ledgers, balances] = await Promise.all([
     getAccountGroups(),
     getLedgers(),
+    getLedgerBalances(),
   ])
 
   return (
     <AccountingShell title="Bank Accounts" framed={false} backHref="/accounting/info" backLabel="Accounts Info">
-      <LedgersManager groups={groups} ledgers={ledgers} mode="banks" hideTitle />
+      <LedgersManager groups={groups} ledgers={ledgers} balances={balances} mode="banks" hideTitle />
     </AccountingShell>
   )
 }

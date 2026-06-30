@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { CreditCard, Landmark, Layers3, Loader2, Plus, Printer, Shield, Trash2 } from "lucide-react"
+import { CreditCard, Landmark, Layers3, Loader2, Pencil, Plus, Printer, Shield, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { createLedger, updateLedger, deleteLedger, AccountGroup, Ledger, seedDefaultLedgers } from "@/app/management/actions"
+import { createLedger, updateLedger, deleteLedger, AccountGroup, Ledger, LedgerBalance, seedDefaultLedgers } from "@/app/management/actions"
 
 type LedgerRow = Ledger & {
     account_groups?: {
@@ -24,7 +24,7 @@ type LedgerRow = Ledger & {
 
 type LedgersManagerMode = "accounts" | "banks"
 
-export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle = false }: { ledgers: LedgerRow[], groups: AccountGroup[], mode?: LedgersManagerMode, hideTitle?: boolean }) {
+export function LedgersManager({ ledgers, groups, balances = {}, mode = "accounts", hideTitle = false }: { ledgers: LedgerRow[], groups: AccountGroup[], balances?: Record<string, LedgerBalance>, mode?: LedgersManagerMode, hideTitle?: boolean }) {
     const isBankMode = mode === "banks"
     const pageTitle = isBankMode ? "Bank Accounts" : "Ledgers"
     const router = useRouter()
@@ -50,6 +50,13 @@ export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle =
     const groupedLedgers = visibleLedgers.filter((ledger) => ledger.group_id).length
     const debitLedgers = visibleLedgers.filter((ledger) => ledger.balance_type === "Dr").length
     const creditLedgers = visibleLedgers.filter((ledger) => ledger.balance_type === "Cr").length
+    const signedBalance = (ledger: LedgerRow) => {
+        const balance = balances[ledger.id]
+        if (balance) return balance.type === "Cr" ? -balance.amount : balance.amount
+        return ledger.balance_type === "Cr" ? -Number(ledger.opening_balance || 0) : Number(ledger.opening_balance || 0)
+    }
+    const overallBankBalance = visibleLedgers.reduce((total, ledger) => total + signedBalance(ledger), 0)
+    const formatCurrency = (amount: number) => `${amount < 0 ? "-" : ""}NGN ${Math.abs(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
     useEffect(() => {
         const mediaQuery = window.matchMedia("(min-width: 768px)")
@@ -311,7 +318,7 @@ export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle =
 
     return (
         <div className="space-y-8">
-            <div className="relative overflow-hidden rounded-3xl border border-indigo-700/40 bg-gradient-to-br from-indigo-900 via-indigo-800 to-violet-900 p-8 shadow-[0_20px_40px_-15px_rgba(49,46,129,0.4)]">
+            <div className="relative overflow-hidden rounded-3xl border border-indigo-700/40 bg-gradient-to-br from-indigo-900 via-indigo-800 to-violet-900 p-6 shadow-[0_20px_40px_-15px_rgba(49,46,129,0.4)] sm:p-8">
                 <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 opacity-10 pointer-events-none">
                     <Shield className="h-72 w-72 text-white" />
                 </div>
@@ -333,18 +340,29 @@ export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle =
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
-                        <div className="rounded-2xl border border-amber-300/30 bg-amber-400/15 px-4 py-3 backdrop-blur-md">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-200/90">Grouped</p>
-                            <p className="text-sm font-bold text-white">{groupedLedgers}</p>
-                        </div>
-                        <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-md">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-100/90">Debit</p>
-                            <p className="text-sm font-bold text-white">{debitLedgers}</p>
-                        </div>
-                        <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-md">
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-100/90">Credit</p>
-                            <p className="text-sm font-bold text-white">{creditLedgers}</p>
-                        </div>
+                        {isBankMode ? (
+                            <div>
+                                <p className="text-xs font-bold uppercase tracking-widest text-indigo-100/80">Overall Account Balance</p>
+                                <p className={`mt-2 text-3xl font-black tracking-tight sm:text-4xl ${overallBankBalance < 0 ? "text-red-300" : "text-emerald-300"}`}>
+                                    {formatCurrency(overallBankBalance)}
+                                </p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="rounded-2xl border border-amber-300/30 bg-amber-400/15 px-4 py-3 backdrop-blur-md">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-amber-200/90">Grouped</p>
+                                    <p className="text-sm font-bold text-white">{groupedLedgers}</p>
+                                </div>
+                                <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-md">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-100/90">Debit</p>
+                                    <p className="text-sm font-bold text-white">{debitLedgers}</p>
+                                </div>
+                                <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-md">
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-100/90">Credit</p>
+                                    <p className="text-sm font-bold text-white">{creditLedgers}</p>
+                                </div>
+                            </>
+                        )}
                         <button
                             type="button"
                             onClick={() => window.print()}
@@ -443,17 +461,16 @@ export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle =
                     <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600 [&_tr]:border-b [&_tr]:border-slate-200">
                         <TableRow className="border-slate-200">
                             <TableHead className="text-slate-500">{isBankMode ? "Account" : "Ledger"}</TableHead>
-                            {isBankMode && <TableHead className="text-slate-500">Bank</TableHead>}
-                            {isBankMode && <TableHead className="text-slate-500">A/C Number</TableHead>}
-                            <TableHead className="text-slate-500">Group</TableHead>
+                            {!isBankMode && <TableHead className="text-slate-500">Group</TableHead>}
                             {!isBankMode && <TableHead className="text-slate-500">Type</TableHead>}
-                            <TableHead className="text-slate-500">Opening</TableHead>
+                            <TableHead className="text-right text-slate-500">{isBankMode ? "Balance" : "Opening"}</TableHead>
+                            {isBankMode && <TableHead className="w-12 text-right text-slate-500">Edit</TableHead>}
                         </TableRow>
                     </TableHeader>
                     <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
                         {visibleLedgers.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={isBankMode ? 5 : 5} className="text-center text-slate-500 py-6">
+                                <TableCell colSpan={isBankMode ? 3 : 4} className="text-center text-slate-500 py-6">
                                     {isBankMode
                                         ? "No bank accounts yet. Add one to use it on vouchers."
                                         : "No ledgers found yet. Create one to use it in vouchers."}
@@ -461,17 +478,39 @@ export function LedgersManager({ ledgers, groups, mode = "accounts", hideTitle =
                             </TableRow>
                         ) : (
                             visibleLedgers.map((ledger) => (
-                                <TableRow key={ledger.id} className="cursor-pointer border-slate-200" onClick={() => openEdit(ledger)}>
+                                <TableRow key={ledger.id} className="cursor-pointer border-slate-200" onClick={() => isBankMode ? router.push(`/accounting/info/bank-account/${ledger.id}`) : openEdit(ledger)}>
                                     <TableCell className="font-medium text-slate-800">
-                                        <button type="button" onClick={() => openEdit(ledger)} className="w-full text-left transition hover:text-indigo-700">
+                                        <button type="button" onClick={(event) => {
+                                            event.stopPropagation()
+                                            if (isBankMode) {
+                                                router.push(`/accounting/info/bank-account/${ledger.id}`)
+                                                return
+                                            }
+                                            openEdit(ledger)
+                                        }} className="w-full text-left transition hover:text-indigo-700">
                                             {ledger.name}
                                         </button>
                                     </TableCell>
-                                    {isBankMode && <TableCell className="text-slate-500">{ledger.bank_name || "-"}</TableCell>}
-                                    {isBankMode && <TableCell className="text-slate-500 font-mono text-xs">{ledger.account_number || "-"}</TableCell>}
-                                    <TableCell className="text-slate-500">{ledger.account_groups?.name || groups.find((group) => group.id === ledger.group_id)?.name || "-"}</TableCell>
+                                    {!isBankMode && <TableCell className="text-slate-500">{ledger.account_groups?.name || groups.find((group) => group.id === ledger.group_id)?.name || "-"}</TableCell>}
                                     {!isBankMode && <TableCell className="text-slate-500">{ledger.balance_type}</TableCell>}
-                                    <TableCell className="text-slate-500">{Number(ledger.opening_balance || 0).toLocaleString()}</TableCell>
+                                    <TableCell className={`text-right font-bold ${isBankMode && signedBalance(ledger) >= 0 ? "text-emerald-600" : isBankMode ? "text-red-600" : "text-slate-500"}`}>
+                                        {isBankMode ? formatCurrency(signedBalance(ledger)) : Number(ledger.opening_balance || 0).toLocaleString()}
+                                    </TableCell>
+                                    {isBankMode && (
+                                        <TableCell className="text-right">
+                                            <button
+                                                type="button"
+                                                onClick={(event) => {
+                                                    event.stopPropagation()
+                                                    openEdit(ledger)
+                                                }}
+                                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                                                title={`Edit ${ledger.name}`}
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </button>
+                                        </TableCell>
+                                    )}
                                 </TableRow>
                             ))
                         )}

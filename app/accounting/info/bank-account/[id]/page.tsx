@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { getAccountGroups, getLedgers } from "@/app/management/actions"
+import { getAccountGroups, getLedgerBalances, getLedgers } from "@/app/management/actions"
 import { getLedgerTransactions } from "@/app/accounting/actions"
 import { InfoRecordProfile } from "@/components/accounting/info-record-profile"
 
@@ -10,7 +10,7 @@ export default async function BankAccountProfilePage({
   params: { id: string }
   searchParams: { start?: string; end?: string }
 }) {
-  const [groups, ledgers] = await Promise.all([getAccountGroups(), getLedgers()])
+  const [groups, ledgers, balances] = await Promise.all([getAccountGroups(), getLedgers(), getLedgerBalances()])
   const account = ledgers.find(item => item.id === params.id && (item.ledger_kind === "bank" || item.is_cash_bank))
 
   if (!account) notFound()
@@ -20,6 +20,11 @@ export default async function BankAccountProfilePage({
   const startDate = searchParams.start || `${currentYear}-01-01`
   const endDate = searchParams.end || `${currentYear}-12-31`
   const transactions = await getLedgerTransactions(account.id, startDate, endDate)
+  const currentBalance = balances[account.id]
+  const signedBalance = currentBalance
+    ? (currentBalance.type === "Cr" ? -currentBalance.amount : currentBalance.amount)
+    : (account.balance_type === "Cr" ? -Number(account.opening_balance || 0) : Number(account.opening_balance || 0))
+  const formattedBalance = `${signedBalance < 0 ? "-" : ""}NGN${Math.abs(signedBalance).toFixed(2)}`
 
   return (
     <InfoRecordProfile
@@ -28,7 +33,7 @@ export default async function BankAccountProfilePage({
       backHref="/accounting/info/bank-account"
       backLabel="Bank Accounts"
       metrics={[
-        { label: "Opening Balance", value: `NGN${Number(account.opening_balance || 0).toFixed(2)}` },
+        { label: "Actual Balance", value: formattedBalance },
         { label: "Account Number", value: account.account_number || "-" },
       ]}
       details={[
@@ -54,7 +59,8 @@ export default async function BankAccountProfilePage({
       transactionRows={transactions}
       transactionStartDate={startDate}
       transactionEndDate={endDate}
-      comment={account.description || "No extra notes added for this bank account yet."}
+      comment={account.description || "No statement notes added for this bank account yet."}
+      commentTabLabel="Statement"
     />
   )
 }

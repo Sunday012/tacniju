@@ -1,16 +1,49 @@
 import Link from "next/link"
 import { format, parseISO } from "date-fns"
-import { ArrowLeft, BookOpenText, CalendarDays, UserRound } from "lucide-react"
-import { getAdminDreams } from "@/app/actions/dreams"
+import { ArrowLeft, BookOpenText, CalendarDays, FolderTree } from "lucide-react"
+import { getAdminDreams, getDreamCategories } from "@/app/actions/dreams"
 
 export const dynamic = "force-dynamic"
 
-function preview(body: string) {
-  return body.length > 180 ? `${body.slice(0, 180)}...` : body
-}
-
 export default async function DreamSummaryPage() {
-  const { dreams, error } = await getAdminDreams()
+  const [{ dreams, error: dreamsError }, { categories, error: categoriesError }] = await Promise.all([
+    getAdminDreams(),
+    getDreamCategories(true),
+  ])
+  const error = dreamsError || categoriesError
+
+  const dreamCounts = new Map<string, { count: number; latestDate: string | null }>()
+  for (const dream of dreams) {
+    const key = dream.category_id || "uncategorized"
+    const current = dreamCounts.get(key) || { count: 0, latestDate: null }
+    dreamCounts.set(key, {
+      count: current.count + 1,
+      latestDate: !current.latestDate || dream.dream_date > current.latestDate ? dream.dream_date : current.latestDate,
+    })
+  }
+
+  const categorySummaries = categories
+    .map(category => ({
+      id: category.id,
+      name: category.name,
+      description: category.description,
+      isActive: category.is_active,
+      count: dreamCounts.get(category.id)?.count || 0,
+      latestDate: dreamCounts.get(category.id)?.latestDate || null,
+    }))
+    .filter(category => category.count > 0 || category.isActive)
+
+  const uncategorized = dreamCounts.get("uncategorized")
+  if (uncategorized) {
+    categorySummaries.push({
+      id: "uncategorized",
+      name: "Uncategorized",
+      description: "Dream records that have not been assigned to a category.",
+      isActive: true,
+      count: uncategorized.count,
+      latestDate: uncategorized.latestDate,
+    })
+  }
 
   return (
     <main className="flex-1 p-5 sm:p-8 lg:p-10 max-w-[1600px] mx-auto w-full">
@@ -21,7 +54,7 @@ export default async function DreamSummaryPage() {
             Back to Dreams
           </Link>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Dream Summary</h1>
-          <p className="mt-2 font-medium text-slate-500">Individual dream records are listed here and open into their full details.</p>
+          <p className="mt-2 font-medium text-slate-500">Dreams are grouped by category before opening the individual records.</p>
         </div>
         <Link href="/admin/records/dreams/new" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-black text-white shadow-sm hover:bg-indigo-700">
           <BookOpenText className="h-4 w-4" />
@@ -36,41 +69,37 @@ export default async function DreamSummaryPage() {
       )}
 
       <section className="space-y-3">
-        {dreams.length === 0 ? (
+        {categorySummaries.length === 0 ? (
           <div className="rounded-lg border border-slate-200 bg-white/85 p-12 text-center">
-            <BookOpenText className="mx-auto h-12 w-12 text-slate-300" />
+            <FolderTree className="mx-auto h-12 w-12 text-slate-300" />
             <h2 className="mt-4 text-lg font-extrabold text-slate-800">No dreams documented yet</h2>
             <p className="mt-1 text-sm text-slate-500">Create a new dream record to begin the summary.</p>
           </div>
         ) : (
-          dreams.map(dream => (
-            <Link key={dream.id} href={`/admin/records/dreams/summary/${dream.id}`} className="block rounded-lg border border-slate-200 bg-white/85 p-5 shadow-sm transition hover:border-indigo-200 hover:bg-white hover:shadow-md">
-              <article>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-lg font-extrabold text-slate-900">{dream.title}</h2>
-                      {dream.category?.name && (
-                        <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-bold text-indigo-700">{dream.category.name}</span>
-                      )}
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {categorySummaries.map(category => (
+              <Link key={category.id} href={`/admin/records/dreams/summary/category/${category.id}`} className="block rounded-lg border border-slate-200 bg-white/85 p-4 shadow-sm transition hover:border-indigo-200 hover:bg-white hover:shadow-md">
+                <article className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                    <FolderTree className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <h2 className="truncate text-base font-extrabold text-slate-900">{category.name}</h2>
+                      <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700">
+                        {category.count} {category.count === 1 ? "dream" : "dreams"}
+                      </span>
                     </div>
-                    <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-600">{preview(dream.body)}</p>
-                  </div>
-                  <div className="shrink-0 space-y-2 text-xs font-bold text-slate-500 sm:text-right">
-                    <p className="flex items-center gap-2 sm:justify-end">
+                    {category.description && <p className="mt-1 line-clamp-1 text-xs font-medium text-slate-500">{category.description}</p>}
+                    <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-slate-400">
                       <CalendarDays className="h-3.5 w-3.5" />
-                      {format(parseISO(dream.dream_date), "MMM d, yyyy")}
+                      {category.latestDate ? `Latest: ${format(parseISO(category.latestDate), "MMM d, yyyy")}` : "No records yet"}
                     </p>
-                    <p className="flex items-center gap-2 sm:justify-end">
-                      <UserRound className="h-3.5 w-3.5" />
-                      {dream.owner?.full_name || "Unnamed member"}
-                    </p>
-                    {dream.owner?.reservation_number && <p className="font-mono text-slate-400">{dream.owner.reservation_number}</p>}
                   </div>
-                </div>
-              </article>
-            </Link>
-          ))
+                </article>
+              </Link>
+            ))}
+          </div>
         )}
       </section>
     </main>
