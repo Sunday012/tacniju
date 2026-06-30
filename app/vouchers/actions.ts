@@ -140,6 +140,7 @@ export async function saveVoucher(payload: VoucherFormPayload) {
     revalidatePath("/inventory")
     revalidatePath("/accounting")
     if (payload.voucher_type === "Expense") revalidatePath("/accounting/display/expense-purchase-register")
+    if (payload.voucher_type === "Income") revalidatePath("/accounting/display/income-register")
     return header
 }
 
@@ -256,6 +257,7 @@ export async function updateVoucher(payload: VoucherUpdatePayload) {
     revalidatePath("/accounting")
     revalidatePath("/accounting/day-book")
     if (payload.voucher_type === "Expense") revalidatePath("/accounting/display/expense-purchase-register")
+    if (payload.voucher_type === "Income") revalidatePath("/accounting/display/income-register")
     revalidatePath(`/accounting/vouchers/${payload.voucher_type.toLowerCase()}/${payload.id}`)
     return { id: payload.id }
 }
@@ -346,4 +348,5 @@ export async function deleteVoucher(id: string) {
     revalidatePath("/accounting")
     revalidatePath("/accounting/day-book")
     revalidatePath("/accounting/display/expense-purchase-register")
+    revalidatePath("/accounting/display/income-register")
 }

@@ -672,8 +672,8 @@ export function VoucherEntry({
     ))
     const showLedgerRows = (!isSingleEntry && !isInvoiceMode) || masterLedgerId || (!isInvoiceMode && selectedPartyId) || hasVisibleLedgerRows
     const voucherDisplayName = voucherType === "Expense" ? "Expenses Purchase" : voucherType
-    const showPartySelector = voucherType !== "Contra" && voucherType !== "Payment"
-    const showOffsetToggle = voucherType !== "Contra" && voucherType !== "Expense" && voucherType !== "Payment"
+    const showPartySelector = voucherType !== "Contra" && voucherType !== "Payment" && voucherType !== "Income"
+    const showOffsetToggle = voucherType !== "Contra" && voucherType !== "Expense" && voucherType !== "Income" && voucherType !== "Payment"
     const showBillWiseManage = voucherType === "Payment" || voucherType === "Receipt"
     const partyBalanceLedgerId = !isInvoiceMode ? resolvedPartyLedgerId : (ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId)
     const pendingBillOptions: ReferenceOption[] = pendingBills.map(bill => ({
@@ -893,7 +893,13 @@ export function VoucherEntry({
                                     <TableHeader className="bg-slate-50">
                                         <TableRow className="border-b-slate-200">
                                             <TableHead className={`${isSingleEntry ? 'w-[50%]' : 'w-[40%]'} text-slate-500 font-semibold h-9 px-2`}>
-                                                {voucherType === "Contra" ? "Sending Account" : "Ledger"}
+                                                {voucherType === "Contra"
+                                                    ? "Sending Account"
+                                                    : voucherType === "Expense"
+                                                        ? "Expense Ledger"
+                                                        : voucherType === "Income"
+                                                            ? "Income Ledger"
+                                                            : "Ledger"}
                                             </TableHead>
                                             {isSingleEntry && (
                                                 <>
@@ -981,7 +987,9 @@ export function VoucherEntry({
                                                         ? "Select receiving and sending accounts to begin"
                                                         : voucherType === "Payment"
                                                             ? "Select an account above to begin entries"
-                                                            : "Select an account or party above to begin entries"}
+                                                            : voucherType === "Income"
+                                                                ? "Select a party above to begin income entries"
+                                                                : "Select an account or party above to begin entries"}
                                                 </TableCell>
                                             </TableRow>
                                         )}

@@ -41,6 +41,7 @@ export const displayMenuItems: DisplayMenuItem[] = [
       { label: "Ledger", icon: BookOpen, href: "/accounting/info/ledger" },
       { label: "Group Summary", icon: Layers, href: "/accounting/info/group" },
       { label: "Sales Register", icon: Receipt, href: "/accounting/vouchers/sales" },
+      { label: "Income Register", icon: Receipt, href: "/accounting/display/income-register" },
       { label: "Purchase Register", icon: Receipt, href: "/accounting/vouchers/purchase" },
       { label: "Expenses Purchase Register", icon: Receipt, href: "/accounting/display/expense-purchase-register" },
       { label: "Payment / Receipt Register", icon: Receipt, href: "/accounting/day-book" },

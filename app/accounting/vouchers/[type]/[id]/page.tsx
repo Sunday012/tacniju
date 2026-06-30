@@ -44,8 +44,17 @@ export default async function AccountingVoucherDetailPage({
     0
   )
   const fromDayBook = searchParams?.from === "daybook"
-  const backHref = fromDayBook ? "/accounting/day-book" : `/accounting/vouchers/${params.type}`
-  const backLabel = fromDayBook ? "Day Book" : `${voucherType} Vouchers`
+  const fromIncomeRegister = searchParams?.from === "income-register"
+  const backHref = fromDayBook
+    ? "/accounting/day-book"
+    : fromIncomeRegister
+      ? "/accounting/display/income-register"
+      : `/accounting/vouchers/${params.type}`
+  const backLabel = fromDayBook
+    ? "Day Book"
+    : fromIncomeRegister
+      ? "Income Register"
+      : `${voucherType} Vouchers`
 
   return (
     <AccountingShell
