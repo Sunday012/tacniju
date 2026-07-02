@@ -11,6 +11,7 @@ type ProductionMenuItem = {
 export const productionMenuItems: ProductionMenuItem[] = [
   { label: "Stock Journal", href: "/accounting/production/stock-journal", icon: ClipboardList },
   { label: "Raw Material Journal", href: "/accounting/production/raw-material-journal", icon: ScrollText },
+  { label: "Batch Summary", href: "/accounting/production/batch-summary", icon: Boxes },
   { label: "Inventory", href: "/accounting/production/inventory", icon: Boxes },
   { label: "Journal Summary", href: "/accounting/production/journal-summary", icon: ReceiptText },
   { label: "Reports", href: "/accounting/production/reports", icon: FileBarChart },

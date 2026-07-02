@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import { getAccountingParties, getLedgerTransactions, getOrCreateProfilePartyLedger } from "@/app/accounting/actions"
+import { getLedgerBalances } from "@/app/management/actions"
 import { InfoRecordProfile } from "@/components/accounting/info-record-profile"
 
 export default async function PartyProfilePage({
@@ -9,7 +10,10 @@ export default async function PartyProfilePage({
   params: { id: string }
   searchParams: { start?: string; end?: string }
 }) {
-  const parties = await getAccountingParties()
+  const [parties, balances] = await Promise.all([
+    getAccountingParties(),
+    getLedgerBalances(),
+  ])
   const party = parties.find(item => item.id === params.id)
 
   if (!party) notFound()
@@ -19,6 +23,10 @@ export default async function PartyProfilePage({
   const startDate = searchParams.start || `${currentYear}-01-01`
   const endDate = searchParams.end || `${currentYear}-12-31`
   const transactions = await getLedgerTransactions(ledgerId, startDate, endDate)
+  const balance = balances[ledgerId]
+  const currentBalance = balance
+    ? `NGN${balance.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${balance.type}`
+    : "NGN0.00 Dr"
 
   return (
     <InfoRecordProfile
@@ -27,8 +35,8 @@ export default async function PartyProfilePage({
       backHref="/accounting/info/party"
       backLabel="Parties"
       metrics={[
-        { label: "Debit", value: `NGN${transactions.reduce((sum, item) => sum + item.debitAmount, 0).toFixed(2)}` },
-        { label: "Credit", value: `NGN${transactions.reduce((sum, item) => sum + item.creditAmount, 0).toFixed(2)}` },
+        { label: "Current Balance", value: currentBalance },
+        { label: "Statement Period", value: `${startDate} to ${endDate}` },
       ]}
       details={[
         {
@@ -38,6 +46,7 @@ export default async function PartyProfilePage({
             { label: "Phone", value: party.phone_number || "-" },
             { label: "Reservation", value: party.reservation_number || "-" },
             { label: "Linked Ledger", value: ledgerId },
+            { label: "Current Balance", value: currentBalance },
           ],
         },
       ]}
@@ -45,6 +54,7 @@ export default async function PartyProfilePage({
       transactionStartDate={startDate}
       transactionEndDate={endDate}
       comment="No comments added yet."
+      transactionDisplayMode="ledger-party"
     />
   )
 }

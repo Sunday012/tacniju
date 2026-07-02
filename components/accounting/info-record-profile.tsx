@@ -24,6 +24,8 @@ type DetailSection = {
   fields: Field[]
 }
 
+type TransactionDisplayMode = "raw" | "bank-daybook" | "ledger-party"
+
 function formatIsoDate(dateValue: string) {
   const [year, month, day] = dateValue.split("-")
   if (!year || !month || !day) return dateValue
@@ -33,6 +35,34 @@ function formatIsoDate(dateValue: string) {
 function getVoucherHref(voucherType: string, voucherId: string) {
   const slug = voucherType.toLowerCase()
   return `/accounting/vouchers/${slug}/${voucherId}`
+}
+
+function getTransactionDisplayAmounts(item: LedgerTransactionRow, mode: TransactionDisplayMode) {
+  if (mode === "raw") {
+    return {
+      debit: item.debitAmount,
+      credit: item.creditAmount,
+    }
+  }
+
+  const amount = Math.max(item.debitAmount, item.creditAmount)
+  const bankDebitTypes = new Set(["Payment", "Sales", "Income"])
+  const bankCreditTypes = new Set(["Receipt", "Contra", "Expense", "Purchase", "Program"])
+  const isBankDebit = bankDebitTypes.has(item.voucherType)
+  const isBankCredit = bankCreditTypes.has(item.voucherType)
+
+  if (!isBankDebit && !isBankCredit) {
+    return {
+      debit: item.debitAmount,
+      credit: item.creditAmount,
+    }
+  }
+
+  const showDebit = mode === "bank-daybook" ? isBankDebit : isBankCredit
+  return {
+    debit: showDebit ? amount : 0,
+    credit: showDebit ? 0 : amount,
+  }
 }
 
 export function InfoRecordProfile({
@@ -47,6 +77,7 @@ export function InfoRecordProfile({
   transactionEndDate,
   comment,
   commentTabLabel = "Comments",
+  transactionDisplayMode = "raw",
 }: {
   title: string
   subtitle?: string
@@ -59,6 +90,7 @@ export function InfoRecordProfile({
   transactionEndDate?: string
   comment?: string
   commentTabLabel?: string
+  transactionDisplayMode?: TransactionDisplayMode
 }) {
   const currentYear = new Date().getFullYear()
   const startDate = transactionStartDate || `${currentYear}-01-01`
@@ -170,28 +202,31 @@ export function InfoRecordProfile({
                         </TableCell>
                       </TableRow>
                     ) : (
-                      transactionRows.map(item => (
-                        <TableRow key={item.id} className="cursor-pointer">
-                          <TableCell className="text-slate-500">{formatIsoDate(item.date)}</TableCell>
-                          <TableCell className="font-medium text-slate-800">
-                            <Link href={getVoucherHref(item.voucherType, item.voucherId)} className="block hover:text-indigo-700">
-                              {item.detailName}
-                            </Link>
-                          </TableCell>
-                          <TableCell className="pl-8 text-slate-500">{item.voucherType}</TableCell>
-                          <TableCell className="text-slate-500">
-                            <Link href={getVoucherHref(item.voucherType, item.voucherId)} className="hover:text-indigo-700">
-                              {item.voucherNumber || "-"}
-                            </Link>
-                          </TableCell>
-                          <TableCell className="text-right text-slate-700">
-                            {item.debitAmount > 0 ? item.debitAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "-"}
-                          </TableCell>
-                          <TableCell className="text-right text-slate-700">
-                            {item.creditAmount > 0 ? item.creditAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "-"}
-                          </TableCell>
-                        </TableRow>
-                      ))
+                      transactionRows.map(item => {
+                        const displayAmounts = getTransactionDisplayAmounts(item, transactionDisplayMode)
+                        return (
+                          <TableRow key={item.id} className="cursor-pointer">
+                            <TableCell className="text-slate-500">{formatIsoDate(item.date)}</TableCell>
+                            <TableCell className="font-medium text-slate-800">
+                              <Link href={getVoucherHref(item.voucherType, item.voucherId)} className="block hover:text-indigo-700">
+                                {item.detailName}
+                              </Link>
+                            </TableCell>
+                            <TableCell className="pl-8 text-slate-500">{item.voucherType}</TableCell>
+                            <TableCell className="text-slate-500">
+                              <Link href={getVoucherHref(item.voucherType, item.voucherId)} className="hover:text-indigo-700">
+                                {item.voucherNumber || "-"}
+                              </Link>
+                            </TableCell>
+                            <TableCell className="text-right text-slate-700">
+                              {displayAmounts.debit > 0 ? displayAmounts.debit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "-"}
+                            </TableCell>
+                            <TableCell className="text-right text-slate-700">
+                              {displayAmounts.credit > 0 ? displayAmounts.credit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "-"}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })
                     )}
                   </TableBody>
                 </Table>

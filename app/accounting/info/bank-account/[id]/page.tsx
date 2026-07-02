@@ -50,7 +50,7 @@ export default async function BankAccountProfilePage({
           title: "More Information",
           fields: [
             { label: "Balance Type", value: account.balance_type },
-            { label: "Opening Balance", value: `NGN${Number(account.opening_balance || 0).toFixed(2)}` },
+            { label: "Current Balance", value: formattedBalance },
             { label: "Description", value: account.description || "-" },
             { label: "Status", value: account.active ? "Active" : "Inactive" },
           ],
@@ -61,6 +61,7 @@ export default async function BankAccountProfilePage({
       transactionEndDate={endDate}
       comment={account.description || "No statement notes added for this bank account yet."}
       commentTabLabel="Statement"
+      transactionDisplayMode="bank-daybook"
     />
   )
 }

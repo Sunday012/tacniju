@@ -33,19 +33,22 @@ function getVoucherHref(voucherType: string, voucherId: string, fromDayBook = fa
     return `/accounting/vouchers/${voucherType.toLowerCase()}/${voucherId}${fromDayBook ? "?from=daybook" : ""}`
 }
 
+function getVoucherEditHref(voucherType: string, voucherId: string) {
+    return `/accounting/vouchers/${voucherType.toLowerCase()}?edit=${voucherId}`
+}
+
 function getVoucherDisplayAmounts(voucherType: string, debit: number, credit: number) {
     const total = Math.max(debit, credit)
 
     switch (voucherType) {
         case "Payment":
-        case "Expense":
         case "Sales":
-            return { debitDisplay: null as number | null, creditDisplay: total }
-        case "Receipt":
         case "Income":
-        case "Program":
-        case "Purchase":
             return { debitDisplay: total, creditDisplay: null as number | null }
+        case "Receipt":
+        case "Expense":
+        case "Purchase":
+        case "Program":
         case "Contra":
             return { debitDisplay: null as number | null, creditDisplay: total }
         default:
@@ -125,8 +128,8 @@ export function DayBookView({
             Payment: "debit",
             Sales: "debit",
             Purchase: "credit",
-            Expense: "debit",
-            Income: "credit",
+            Expense: "credit",
+            Income: "debit",
             Program: "credit",
             Contra: null,
         }
@@ -339,7 +342,7 @@ export function DayBookView({
                             <TableCell className="text-right">
                                 <div className="flex justify-end gap-1">
                                     <Link
-                                        href={`${getVoucherHref(v.voucher_type, v.id, true)}&edit=1`}
+                                        href={getVoucherEditHref(v.voucher_type, v.id)}
                                         title="Edit voucher"
                                         onClick={(event) => event.stopPropagation()}
                                     >

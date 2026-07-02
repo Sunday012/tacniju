@@ -117,21 +117,25 @@ export async function getAccountingParties() {
 
   const memberProfiles = (profiles || [])
     .filter(profile => !isGuestProfile(profile))
+  const profileLedgerIds = new Map<string, string>()
 
   if (memberProfiles.length > 0) {
     const { data: existingLedgers } = await supabase
       .from("ledgers")
-      .select("source_profile_id")
+      .select("id, source_profile_id")
       .eq("org_id", orgId)
       .eq("ledger_kind", "party")
       .not("source_profile_id", "is", null)
 
-    const existingProfileIds = new Set((existingLedgers || []).map(ledger => ledger.source_profile_id as string))
+    for (const ledger of existingLedgers || []) {
+      if (ledger.source_profile_id) profileLedgerIds.set(ledger.source_profile_id as string, ledger.id as string)
+    }
+    const existingProfileIds = new Set(profileLedgerIds.keys())
     const missingProfiles = memberProfiles.filter(profile => !existingProfileIds.has(profile.id))
 
     if (missingProfiles.length > 0) {
       const groupId = await getOrCreatePartyGroup(supabase, orgId)
-      const { error } = await supabase.from("ledgers").insert(
+      const { data: createdLedgers, error } = await supabase.from("ledgers").insert(
         missingProfiles.map(profile => ({
           org_id: orgId,
           group_id: groupId,
@@ -147,10 +151,14 @@ export async function getAccountingParties() {
           description: profile.reservation_number ? `Profile party ${profile.reservation_number}` : "Profile party",
           active: true,
         }))
-      )
+      ).select("id, source_profile_id")
 
       if (error) {
         console.error("Error auto-creating accounting parties:", error)
+      } else {
+        for (const ledger of createdLedgers || []) {
+          if (ledger.source_profile_id) profileLedgerIds.set(ledger.source_profile_id as string, ledger.id as string)
+        }
       }
     }
   }
@@ -174,7 +182,7 @@ export async function getAccountingParties() {
 
   const memberParties = memberProfiles.map(profile => ({
     id: profile.id,
-    ledgerId: null as string | null,
+    ledgerId: profileLedgerIds.get(profile.id) || null,
     name: profile.full_name || "Unnamed Member",
     reservation_number: profile.reservation_number || null,
     phone_number: profile.phone_number || null,

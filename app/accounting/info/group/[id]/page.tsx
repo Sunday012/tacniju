@@ -57,6 +57,7 @@ export default async function GroupProfilePage({
       transactionStartDate={startDate}
       transactionEndDate={endDate}
       comment="This page gives you a quick view of how the group is structured and what records are tied to it."
+      transactionDisplayMode="ledger-party"
     />
   )
 }

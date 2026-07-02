@@ -91,11 +91,13 @@ export async function saveBatch(prevState: any, formData: FormData) {
   const batchId = String(formData.get("batch_id") || "").trim()
   const batchNo = String(formData.get("batch_no") || "").trim()
   const narration = String(formData.get("narration") || "").trim()
+  const returnTo = String(formData.get("return_to") || "").trim()
+  const baseHref = returnTo === "production" ? "/accounting/production/batch-summary" : "/accounting/display/batch"
 
   if (!batchNo) return { error: "Batch No is required" }
 
   const rowIndexes = Array.from(formData.keys()).reduce((indexes, key) => {
-    const match = String(key).match(/^(item|qty|rate)_(\d+)$/)
+    const match = String(key).match(/^(item|qty)_(\d+)$/)
     if (match) indexes.add(Number(match[2]))
     return indexes
   }, new Set<number>())
@@ -103,7 +105,6 @@ export async function saveBatch(prevState: any, formData: FormData) {
   const rawRows = Array.from(rowIndexes).map((index) => ({
     itemRef: String(formData.get(`item_${index}`) || "").trim(),
     qty: Number(formData.get(`qty_${index}`) || 0),
-    rate: Number(formData.get(`rate_${index}`) || 0),
   })).filter(row => row.itemRef && Number.isFinite(row.qty) && row.qty > 0)
 
   if (rawRows.length === 0) return { error: "Please enter at least one valid item with a quantity." }
@@ -126,7 +127,7 @@ export async function saveBatch(prevState: any, formData: FormData) {
 
   const rows = rawRows.flatMap(row => {
     const item = itemById.get(row.itemRef) || itemByName.get(row.itemRef.toLowerCase())
-    return item ? [{ item, qty: row.qty, rate: row.rate }] : []
+    return item ? [{ item, qty: row.qty }] : []
   })
 
   if (rows.length === 0) return { error: "No valid items found." }
@@ -175,13 +176,12 @@ export async function saveBatch(prevState: any, formData: FormData) {
   }
 
   const { error: itemError } = await supabase.from("voucher_items").insert(rows.map(row => {
-    const finalRate = row.rate || Number(row.item.purchase_rate || row.item.selling_rate || 0)
     return {
       voucher_id: voucherId,
       item_id: row.item.id,
       qty: row.qty,
-      rate: finalRate,
-      amount: finalRate * row.qty,
+      rate: 0,
+      amount: 0,
       movement_type: "IN",
     }
   }))
@@ -189,12 +189,14 @@ export async function saveBatch(prevState: any, formData: FormData) {
   if (itemError) return { error: "Failed to save batch items." }
 
   revalidatePath("/accounting/display/batch")
+  revalidatePath("/accounting/production/batch-summary")
   revalidatePath(`/accounting/display/batch/${voucherId}`)
+  revalidatePath(`/accounting/production/batch-summary/${voucherId}`)
   revalidatePath("/accounting/stock-summary")
-  redirect(`/accounting/display/batch/${voucherId}`)
+  redirect(`${baseHref}/${voucherId}`)
 }
 
-export async function deleteBatch(batchId: string) {
+export async function deleteBatch(batchId: string, returnTo = "") {
   if (!batchId) return { error: "Invalid batch ID" }
   
   const supabase = await createClient()
@@ -217,6 +219,7 @@ export async function deleteBatch(batchId: string) {
   if (error) return { error: "Failed to delete batch." }
 
   revalidatePath("/accounting/display/batch")
+  revalidatePath("/accounting/production/batch-summary")
   revalidatePath("/accounting/stock-summary")
-  redirect("/accounting/display/batch")
+  redirect(returnTo === "production" ? "/accounting/production/batch-summary" : "/accounting/display/batch")
 }

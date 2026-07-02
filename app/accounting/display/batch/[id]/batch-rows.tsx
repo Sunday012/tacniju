@@ -6,7 +6,7 @@ import { Plus } from "lucide-react"
 export function BatchRows({
   rows,
 }: {
-  rows: Array<{ itemName: string; qty: number | string; rate: number | string }>
+  rows: Array<{ itemName: string; qty: number | string }>
 }) {
   const startingRows = useMemo(() => Math.max(10, rows.length), [rows.length])
   const [rowCount, setRowCount] = useState(startingRows)
@@ -16,7 +16,7 @@ export function BatchRows({
       {Array.from({ length: rowCount }, (_, index) => {
         const row = rows[index]
         return (
-          <div key={index} className="grid md:grid-cols-[1fr_120px_120px]">
+          <div key={index} className="grid md:grid-cols-[1fr_140px]">
             <div className="border-b border-slate-100 md:border-b-0 md:border-r">
               <input
                 name={`item_${index}`}
@@ -37,15 +37,6 @@ export function BatchRows({
                 className="h-10 w-full bg-white px-3 text-right font-mono text-sm font-bold text-slate-900 outline-none focus:bg-indigo-50/40"
               />
             </div>
-            <input
-              name={`rate_${index}`}
-              type="number"
-              min="0"
-              step="0.01"
-              defaultValue={row?.rate || ""}
-              placeholder="Rate"
-              className="h-10 w-full bg-white px-3 text-right font-mono text-sm font-bold text-slate-900 outline-none focus:bg-indigo-50/40"
-            />
           </div>
         )
       })}

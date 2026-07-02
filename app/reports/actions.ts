@@ -140,5 +140,9 @@ export async function getDayBook(filters?: { date?: string; startDate?: string; 
     const { data, error } = await query
 
     if (error) return []
-    return data
+    return (data || []).filter((voucher: any) => {
+        const voucherNo = String(voucher.voucher_no || "")
+        const narration = String(voucher.narration || "")
+        return narration !== "Batch" && !voucherNo.startsWith("BAT-")
+    })
 }

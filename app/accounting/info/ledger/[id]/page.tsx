@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { getAccountGroups, getLedgers } from "@/app/management/actions"
+import { getAccountGroups, getLedgerBalances, getLedgers } from "@/app/management/actions"
 import { getLedgerTransactions } from "@/app/accounting/actions"
 import { InfoRecordProfile } from "@/components/accounting/info-record-profile"
 
@@ -10,7 +10,7 @@ export default async function LedgerProfilePage({
   params: { id: string }
   searchParams: { start?: string; end?: string }
 }) {
-  const [groups, ledgers] = await Promise.all([getAccountGroups(), getLedgers()])
+  const [groups, ledgers, balances] = await Promise.all([getAccountGroups(), getLedgers(), getLedgerBalances()])
   const ledger = ledgers.find(item => item.id === params.id)
 
   if (!ledger) notFound()
@@ -20,6 +20,10 @@ export default async function LedgerProfilePage({
   const startDate = searchParams.start || `${currentYear}-01-01`
   const endDate = searchParams.end || `${currentYear}-12-31`
   const transactions = await getLedgerTransactions(ledger.id, startDate, endDate)
+  const balance = balances[ledger.id]
+  const currentBalance = balance
+    ? `NGN${balance.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${balance.type}`
+    : `NGN${Number(ledger.opening_balance || 0).toFixed(2)} ${ledger.balance_type}`
 
   return (
     <InfoRecordProfile
@@ -28,7 +32,7 @@ export default async function LedgerProfilePage({
       backHref="/accounting/info/ledger"
       backLabel="Ledgers"
       metrics={[
-        { label: "Opening Balance", value: `NGN${Number(ledger.opening_balance || 0).toFixed(2)}` },
+        { label: "Current Balance", value: currentBalance },
         { label: "Balance Type", value: ledger.balance_type },
       ]}
       details={[
@@ -47,7 +51,7 @@ export default async function LedgerProfilePage({
             { label: "Description", value: ledger.description || "-" },
             { label: "Ledger Kind", value: ledger.ledger_kind || "ledger" },
             { label: "Cash / Bank", value: ledger.is_cash_bank ? "Yes" : "No" },
-            { label: "Opening Balance", value: `NGN${Number(ledger.opening_balance || 0).toFixed(2)}` },
+            { label: "Current Balance", value: currentBalance },
           ],
         },
       ]}
@@ -55,6 +59,7 @@ export default async function LedgerProfilePage({
       transactionStartDate={startDate}
       transactionEndDate={endDate}
       comment={ledger.description || "No extra notes added for this ledger yet."}
+      transactionDisplayMode="ledger-party"
     />
   )
 }

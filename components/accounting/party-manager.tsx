@@ -13,7 +13,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { createAccountingParty } from "@/app/accounting/actions"
-import { deleteLedger } from "@/app/management/actions"
+import { deleteLedger, LedgerBalance } from "@/app/management/actions"
 
 type Party = {
   id: string
@@ -23,7 +23,7 @@ type Party = {
   ledgerId?: string | null
 }
 
-export function PartyManager({ parties, hideTitle = false }: { parties: Party[], hideTitle?: boolean }) {
+export function PartyManager({ parties, balances = {}, hideTitle = false }: { parties: Party[], balances?: Record<string, LedgerBalance>, hideTitle?: boolean }) {
   const router = useRouter()
   const [search, setSearch] = useState("")
   const [showForm, setShowForm] = useState(false)
@@ -35,6 +35,11 @@ export function PartyManager({ parties, hideTitle = false }: { parties: Party[],
   const [isPending, startTransition] = useTransition()
   const manualParties = parties.filter((party) => Boolean(party.ledgerId)).length
   const phoneParties = parties.filter((party) => Boolean(party.phone_number)).length
+  const formatBalance = (party: Party) => {
+    const balance = party.ledgerId ? balances[party.ledgerId] : null
+    if (!balance) return "NGN 0.00 Dr"
+    return `NGN ${balance.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${balance.type}`
+  }
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 768px)")
@@ -126,8 +131,8 @@ export function PartyManager({ parties, hideTitle = false }: { parties: Party[],
           <p className="mt-2 text-lg font-semibold text-slate-800">{selectedParty.reservation_number || "-"}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Status</p>
-          <p className="mt-2 text-lg font-semibold text-slate-800">{selectedParty.ledgerId ? "Manual Party" : "Auto Party"}</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Current Balance</p>
+          <p className="mt-2 text-lg font-semibold text-slate-800">{formatBalance(selectedParty)}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Linked Ledger</p>
@@ -291,12 +296,13 @@ export function PartyManager({ parties, hideTitle = false }: { parties: Party[],
               <TableHead>Name</TableHead>
               <TableHead>Reservation</TableHead>
               <TableHead>Phone</TableHead>
+              <TableHead className="text-right">Current Balance</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
             {filteredParties.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="py-8 text-center text-slate-500">No parties found.</TableCell>
+                <TableCell colSpan={4} className="py-8 text-center text-slate-500">No parties found.</TableCell>
               </TableRow>
             ) : filteredParties.map(party => {
               return (
@@ -316,6 +322,7 @@ export function PartyManager({ parties, hideTitle = false }: { parties: Party[],
                   </TableCell>
                   <TableCell className="text-slate-500">{party.reservation_number || "-"}</TableCell>
                   <TableCell className="text-slate-500">{party.phone_number || "-"}</TableCell>
+                  <TableCell className="text-right font-bold text-slate-700">{formatBalance(party)}</TableCell>
                 </TableRow>
               )
             })}

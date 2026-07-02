@@ -463,7 +463,7 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                             <TableHead className="text-slate-500">{isBankMode ? "Account" : "Ledger"}</TableHead>
                             {!isBankMode && <TableHead className="text-slate-500">Group</TableHead>}
                             {!isBankMode && <TableHead className="text-slate-500">Type</TableHead>}
-                            <TableHead className="text-right text-slate-500">{isBankMode ? "Balance" : "Opening"}</TableHead>
+                            <TableHead className="text-right text-slate-500">Current Balance</TableHead>
                             {isBankMode && <TableHead className="w-12 text-right text-slate-500">Edit</TableHead>}
                         </TableRow>
                     </TableHeader>
@@ -493,8 +493,8 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                                     </TableCell>
                                     {!isBankMode && <TableCell className="text-slate-500">{ledger.account_groups?.name || groups.find((group) => group.id === ledger.group_id)?.name || "-"}</TableCell>}
                                     {!isBankMode && <TableCell className="text-slate-500">{ledger.balance_type}</TableCell>}
-                                    <TableCell className={`text-right font-bold ${isBankMode && signedBalance(ledger) >= 0 ? "text-emerald-600" : isBankMode ? "text-red-600" : "text-slate-500"}`}>
-                                        {isBankMode ? formatCurrency(signedBalance(ledger)) : Number(ledger.opening_balance || 0).toLocaleString()}
+                                    <TableCell className={`text-right font-bold ${signedBalance(ledger) >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                                        {formatCurrency(signedBalance(ledger))}
                                     </TableCell>
                                     {isBankMode && (
                                         <TableCell className="text-right">

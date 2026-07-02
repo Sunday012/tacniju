@@ -110,7 +110,12 @@ export default async function AccountingVoucherPage({
   if (searchParams?.edit && !editingVoucher) notFound()
   if (editingVoucher && editingVoucher.voucher_type !== voucherType) notFound()
 
-  const typeVouchers = (vouchers || []).filter((voucher: any) => voucher.voucher_type === voucherType)
+  const typeVouchers = (vouchers || []).filter((voucher: any) => {
+    const voucherNo = String(voucher.voucher_no || "")
+    const narration = String(voucher.narration || "")
+    const isBatch = narration === "Batch" || voucherNo.startsWith("BAT-")
+    return voucher.voucher_type === voucherType && !(voucherType === "Purchase" && isBatch)
+  })
   const voucherNo = editingVoucher?.voucher_no || getNextVoucherNo(voucherType, typeVouchers)
   const voucherDisplayName = getVoucherDisplayName(voucherType)
 

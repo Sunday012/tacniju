@@ -319,7 +319,7 @@ export function VoucherEntry({
         let finalLedgers: VoucherLedgerEntry[] = []
 
         if (isSingleEntry) {
-            if (!masterLedgerId) return toast.error(voucherType === "Expense" ? "Please select a Party." : "Please select an Account at the top.")
+            if (!masterLedgerId) return toast.error(voucherType === "Expense" || voucherType === "Income" ? "Please select a Party." : "Please select an Account at the top.")
             const validLines = selectedLedgers.filter((l: any) => l.ledger_id && l.amount > 0)
             if (validLines.length === 0) return toast.error("Please enter at least one valid ledger line with an amount.")
             if (!isBalanced) return toast.error("Voucher must have a positive total amount.")
@@ -537,6 +537,8 @@ export function VoucherEntry({
                 : "Selected party"
             if (voucherType === "Expense") {
                 setMasterLedgerId(ledgerId)
+            } else if (voucherType === "Income") {
+                setMasterLedgerId(ledgerId)
             } else if (!isInvoiceMode && selectedLedgers.length > 0) {
                 const updated = [...selectedLedgers]
                 updated[0] = {
@@ -646,7 +648,7 @@ export function VoucherEntry({
         value: ledger.id,
         label: ledger.name,
     }))
-    const usesPartyAsMasterAccount = voucherType === "Expense"
+    const usesPartyAsMasterAccount = voucherType === "Expense" || voucherType === "Income"
     const detailLedgerCandidates = !isSingleEntry
         ? ledgers
         : voucherType === "Contra"
@@ -672,7 +674,7 @@ export function VoucherEntry({
     ))
     const showLedgerRows = (!isSingleEntry && !isInvoiceMode) || masterLedgerId || (!isInvoiceMode && selectedPartyId) || hasVisibleLedgerRows
     const voucherDisplayName = voucherType === "Expense" ? "Expenses Purchase" : voucherType
-    const showPartySelector = voucherType !== "Contra" && voucherType !== "Payment" && voucherType !== "Income"
+    const showPartySelector = voucherType !== "Contra" && voucherType !== "Payment"
     const showOffsetToggle = voucherType !== "Contra" && voucherType !== "Expense" && voucherType !== "Income" && voucherType !== "Payment"
     const showBillWiseManage = voucherType === "Payment" || voucherType === "Receipt"
     const partyBalanceLedgerId = !isInvoiceMode ? resolvedPartyLedgerId : (ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId)

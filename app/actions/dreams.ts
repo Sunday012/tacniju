@@ -304,6 +304,47 @@ export async function createDream(formData: FormData) {
   redirect("/admin/records/dreams/summary")
 }
 
+export async function updateDream(id: string, formData: FormData) {
+  const { supabase, error } = await requireAdmin()
+  if (error) return { error }
+
+  const dreamId = id.trim()
+  const dreamDate = String(formData.get("dream_date") || "").trim()
+  const profileId = String(formData.get("profile_id") || "").trim()
+  const categoryId = String(formData.get("category_id") || "").trim()
+  const title = String(formData.get("title") || "").trim()
+  const body = String(formData.get("body") || "").trim()
+
+  if (!dreamId) return { error: "Dream ID is required." }
+  if (!dreamDate) return { error: "Dream date is required." }
+  if (!profileId) return { error: "Select the owner of this dream." }
+  if (!title) return { error: "Dream title is required." }
+  if (!body) return { error: "Dream details are required." }
+
+  const { error: updateError } = await supabase
+    .from("dreams")
+    .update({
+      dream_date: dreamDate,
+      profile_id: profileId,
+      category_id: categoryId || null,
+      title,
+      body,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", dreamId)
+
+  if (updateError) {
+    console.error("Error updating dream:", updateError)
+    return { error: updateError.message }
+  }
+
+  revalidatePath("/admin/records/dreams")
+  revalidatePath("/admin/records/dreams/summary")
+  revalidatePath(`/admin/records/dreams/summary/${dreamId}`)
+  revalidatePath("/dashboard/dreams")
+  redirect(`/admin/records/dreams/summary/${dreamId}`)
+}
+
 export async function deleteDream(id: string) {
   const { supabase, error } = await requireAdmin()
   if (error) return { error }

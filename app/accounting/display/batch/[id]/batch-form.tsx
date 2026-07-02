@@ -42,7 +42,7 @@ import { Trash2 } from "lucide-react"
 import { deleteBatch } from "../actions"
 import { useTransition } from "react"
 
-export function DeleteBatchForm({ batchId }: { batchId: string }) {
+export function DeleteBatchForm({ batchId, returnTo = "" }: { batchId: string; returnTo?: string }) {
     const [isPending, startTransition] = useTransition()
 
     return (
@@ -53,7 +53,7 @@ export function DeleteBatchForm({ batchId }: { batchId: string }) {
                 e.preventDefault()
                 if (window.confirm("Are you sure you want to delete this batch?")) {
                     startTransition(async () => {
-                        const result = await deleteBatch(batchId)
+                        const result = await deleteBatch(batchId, returnTo)
                         if (result?.error) toast.error(result.error)
                     })
                 }

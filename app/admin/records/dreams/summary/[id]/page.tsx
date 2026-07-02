@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { format, parseISO } from "date-fns"
-import { ArrowLeft, CalendarDays, UserRound } from "lucide-react"
+import { ArrowLeft, CalendarDays, Pencil, UserRound } from "lucide-react"
 import { getAdminDream } from "@/app/actions/dreams"
 import { DeleteDreamButton } from "@/components/admin/dreams/DeleteDreamButton"
 
@@ -18,7 +18,13 @@ export default async function AdminDreamDetailPage({ params }: { params: { id: s
           <ArrowLeft className="h-4 w-4" />
           Back to Summary
         </Link>
-        <DeleteDreamButton dreamId={dream.id} title={dream.title} />
+        <div className="flex items-center gap-2">
+          <Link href={`/admin/records/dreams/${dream.id}/edit`} className="inline-flex h-10 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-black text-white shadow-sm hover:bg-indigo-700">
+            <Pencil className="h-4 w-4" />
+            Edit Dream
+          </Link>
+          <DeleteDreamButton dreamId={dream.id} title={dream.title} />
+        </div>
       </div>
 
       <article className="rounded-lg border border-slate-200 bg-white/90 p-6 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] sm:p-8">

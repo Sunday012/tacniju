@@ -133,6 +133,11 @@ export async function getBillPendingRows(kind: BillPendingKind): Promise<BillPen
   }
 
   return vouchers
+    .filter((voucher: any) => {
+      const voucherNo = String(voucher.voucher_no || "")
+      const narration = String(voucher.narration || "")
+      return narration !== "Batch" && !voucherNo.startsWith("BAT-")
+    })
     .map((voucher: any) => {
       const itemSummary = getItemSummary(voucher.voucher_items || [])
       const value = itemSummary.value || getEntryTotal(voucher.voucher_entries || [])
