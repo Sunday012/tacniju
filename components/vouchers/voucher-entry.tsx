@@ -742,8 +742,18 @@ export function VoucherEntry({
                             <Input type="date" value={date} onChange={e => setDate(e.target.value)} required className="h-8 max-w-44 bg-transparent border-t-0 border-x-0 border-b-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-slate-400 px-1 [&::-webkit-calendar-picker-indicator]:hidden" />
                         </div>
                         <div className="flex items-center gap-2">
-                            <Label className="w-16 text-slate-500">Ref</Label>
-                            <Input value={reference} onChange={e => setReference(e.target.value)} className="h-8 max-w-72 bg-transparent border-t-0 border-x-0 border-b-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-slate-400 px-1" />
+                            <Label className="w-16 text-slate-500">Program</Label>
+                            <ComboboxInput
+                                value={reference}
+                                onChange={setReference}
+                                options={programs.map(program => ({
+                                    value: program.id,
+                                    label: program.name,
+                                }))}
+                                placeholder=""
+                                className="h-8 max-w-72"
+                                inputClassName="h-8 bg-transparent border-t-0 border-x-0 border-b-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-slate-400 px-1 shadow-none"
+                            />
                         </div>
                     </div>
 

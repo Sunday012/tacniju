@@ -143,6 +143,8 @@ export async function getDayBook(filters?: { date?: string; startDate?: string; 
     return (data || []).filter((voucher: any) => {
         const voucherNo = String(voucher.voucher_no || "")
         const narration = String(voucher.narration || "")
-        return narration !== "Batch" && !voucherNo.startsWith("BAT-")
+        const isBatchVoucher = narration === "Batch" || voucherNo.startsWith("BAT-")
+        const isStockJournal = narration === "Production" || voucherNo.startsWith("STJ-")
+        return !isBatchVoucher && !isStockJournal
     })
 }

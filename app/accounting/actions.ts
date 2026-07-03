@@ -387,6 +387,36 @@ export type AccountingProgram = {
   description: string | null
   active: boolean
   created_at: string
+  voucher_count?: number
+  voucher_total?: number
+}
+
+export type AccountingProgramVoucher = {
+  id: string
+  date: string
+  voucher_no: string | null
+  voucher_type: string
+  narration: string | null
+  total_debit: number
+  total_credit: number
+  total_amount: number
+}
+
+function getVoucherTotal(voucher: any) {
+  const totalDebit = (voucher.voucher_entries || []).reduce(
+    (sum: number, entry: any) => sum + Number(entry.debit_amount || 0),
+    0
+  )
+  const totalCredit = (voucher.voucher_entries || []).reduce(
+    (sum: number, entry: any) => sum + Number(entry.credit_amount || 0),
+    0
+  )
+
+  return {
+    total_debit: totalDebit,
+    total_credit: totalCredit,
+    total_amount: Math.max(totalDebit, totalCredit),
+  }
 }
 
 export async function getAccountingPrograms() {
@@ -404,7 +434,106 @@ export async function getAccountingPrograms() {
     return []
   }
 
-  return data as AccountingProgram[]
+  const programs = (data || []) as AccountingProgram[]
+  const programIds = programs.map(program => program.id)
+
+  if (programIds.length === 0) return programs
+
+  const { data: vouchers, error: vouchersError } = await supabase
+    .from("vouchers")
+    .select(`
+      id,
+      reference,
+      voucher_entries (
+        debit_amount,
+        credit_amount
+      )
+    `)
+    .eq("org_id", orgId)
+    .in("reference", programIds)
+
+  if (vouchersError) {
+    console.error("Error fetching program voucher totals:", vouchersError)
+    return programs
+  }
+
+  const summary = new Map<string, { count: number; total: number }>()
+  for (const voucher of vouchers || []) {
+    const reference = String(voucher.reference || "")
+    const current = summary.get(reference) || { count: 0, total: 0 }
+    const totals = getVoucherTotal(voucher)
+    summary.set(reference, {
+      count: current.count + 1,
+      total: current.total + totals.total_amount,
+    })
+  }
+
+  return programs.map(program => {
+    const programSummary = summary.get(program.id)
+    return {
+      ...program,
+      voucher_count: programSummary?.count || 0,
+      voucher_total: programSummary?.total || 0,
+    }
+  })
+}
+
+export async function getAccountingProgramWithVouchers(id: string) {
+  const supabase = await createClient()
+  const orgId = await getOrgId()
+
+  const { data: program, error: programError } = await supabase
+    .from("accounting_programs")
+    .select("*")
+    .eq("id", id)
+    .eq("org_id", orgId)
+    .maybeSingle()
+
+  if (programError) {
+    console.error("Error fetching accounting program:", programError)
+    return null
+  }
+  if (!program) return null
+
+  const { data: vouchers, error: vouchersError } = await supabase
+    .from("vouchers")
+    .select(`
+      id,
+      date,
+      voucher_no,
+      voucher_type,
+      narration,
+      reference,
+      voucher_entries (
+        debit_amount,
+        credit_amount
+      )
+    `)
+    .eq("org_id", orgId)
+    .eq("reference", id)
+    .order("date", { ascending: false })
+
+  if (vouchersError) {
+    console.error("Error fetching program vouchers:", vouchersError)
+    return {
+      program: program as AccountingProgram,
+      vouchers: [] as AccountingProgramVoucher[],
+    }
+  }
+
+  const programVouchers = (vouchers || []).map((voucher: any) => ({
+    id: voucher.id as string,
+    date: voucher.date as string,
+    voucher_no: (voucher.voucher_no as string | null) || null,
+    voucher_type: (voucher.voucher_type as string) || "Voucher",
+    narration: (voucher.narration as string | null) || null,
+    ...getVoucherTotal(voucher),
+  })) as AccountingProgramVoucher[]
+
+  return {
+    program: program as AccountingProgram,
+    vouchers: programVouchers,
+  }
 }
 
 export async function createAccountingProgram(formData: FormData) {
@@ -435,6 +564,17 @@ export async function createAccountingProgram(formData: FormData) {
 export async function deleteAccountingProgram(id: string) {
   const supabase = await createClient()
   const orgId = await getOrgId()
+
+  const { count, error: usageError } = await supabase
+    .from("vouchers")
+    .select("id", { count: "exact", head: true })
+    .eq("org_id", orgId)
+    .eq("reference", id)
+
+  if (usageError) return { error: usageError.message }
+  if ((count || 0) > 0) {
+    return { error: "This program already has vouchers recorded under it." }
+  }
 
   const { error } = await supabase
     .from("accounting_programs")

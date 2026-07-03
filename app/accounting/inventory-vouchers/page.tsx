@@ -6,7 +6,7 @@ const voucherCards = [
   { href: "/accounting/vouchers/sales", label: "Sales", icon: ShoppingCart },
   { href: "/accounting/vouchers/purchase", label: "Purchase", icon: ShoppingCart },
   { href: "/accounting/vouchers/expense", label: "Expenses Purchase", icon: WalletCards },
-  { href: "/accounting/programs", label: "Program", icon: ReceiptText },
+  { href: "/accounting/vouchers/income", label: "Income", icon: ReceiptText },
 ]
 
 export default function InventoryVouchersPage() {

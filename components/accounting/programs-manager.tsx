@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
@@ -57,7 +58,7 @@ export function ProgramsManager({ programs, hideTitle = false }: { programs: Acc
           <DialogContent className="bg-white">
             <DialogHeader>
               <DialogTitle>Create Program</DialogTitle>
-              <DialogDescription>This program can be selected as a New Ref on payment vouchers.</DialogDescription>
+              <DialogDescription>This program can be selected on vouchers to build its register.</DialogDescription>
             </DialogHeader>
             <form action={handleCreate} className="space-y-4">
               <div className="space-y-2">
@@ -87,6 +88,8 @@ export function ProgramsManager({ programs, hideTitle = false }: { programs: Acc
           <TableRow>
             <TableHead>Name of Program</TableHead>
             <TableHead className="text-right">Amount</TableHead>
+            <TableHead className="text-right">Vouchers</TableHead>
+            <TableHead className="text-right">Recorded Total</TableHead>
             <TableHead>Other Info</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -94,12 +97,18 @@ export function ProgramsManager({ programs, hideTitle = false }: { programs: Acc
         <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
           {programs.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="py-8 text-center text-slate-500">No programs created yet.</TableCell>
+              <TableCell colSpan={6} className="py-8 text-center text-slate-500">No programs created yet.</TableCell>
             </TableRow>
           ) : programs.map(program => (
             <TableRow key={program.id}>
-              <TableCell className="font-bold text-slate-800">{program.name}</TableCell>
+              <TableCell>
+                <Link href={`/accounting/programs/${program.id}`} className="font-bold text-slate-800 hover:text-indigo-700 hover:underline">
+                  {program.name}
+                </Link>
+              </TableCell>
               <TableCell className="text-right font-mono">₦{Number(program.amount_to_contribute || 0).toLocaleString()}</TableCell>
+              <TableCell className="text-right font-mono">{Number(program.voucher_count || 0).toLocaleString()}</TableCell>
+              <TableCell className="text-right font-mono">₦{Number(program.voucher_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
               <TableCell className="max-w-md truncate text-slate-500">{program.description || "-"}</TableCell>
               <TableCell className="text-right">
                 <Button

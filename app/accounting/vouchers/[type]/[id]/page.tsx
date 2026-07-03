@@ -3,6 +3,7 @@ import { AccountingShell } from "@/components/accounting/accounting-shell"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { getVoucherById, VoucherType } from "@/app/vouchers/actions"
+import { getAccountingPrograms } from "@/app/accounting/actions"
 import Link from "next/link"
 
 const typeMap: Record<string, VoucherType> = {
@@ -32,8 +33,13 @@ export default async function AccountingVoucherDetailPage({
   const voucherType = typeMap[params.type]
   if (!voucherType) notFound()
 
-  const voucher = await getVoucherById(params.id)
+  const [voucher, programs] = await Promise.all([
+    getVoucherById(params.id),
+    getAccountingPrograms(),
+  ])
   if (!voucher || voucher.voucher_type !== voucherType) notFound()
+  const linkedProgram = programs.find(program => program.id === voucher.reference)
+  const referenceLabel = linkedProgram?.name || voucher.reference || "-"
 
   const totalDebit = (voucher.voucher_entries || []).reduce(
     (sum: number, entry: any) => sum + Number(entry.debit_amount || 0),
@@ -105,8 +111,8 @@ export default async function AccountingVoucherDetailPage({
               <p className="mt-2 text-base text-slate-700">{voucher.narration || "-"}</p>
             </div>
             <div className="sm:col-span-2 lg:col-span-4">
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Reference</p>
-              <p className="mt-2 text-base text-slate-700">{voucher.reference || "-"}</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Program</p>
+              <p className="mt-2 text-base text-slate-700">{referenceLabel}</p>
             </div>
           </CardContent>
         </Card>

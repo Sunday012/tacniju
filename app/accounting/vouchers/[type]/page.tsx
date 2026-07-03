@@ -62,7 +62,7 @@ const heroStyles: Record<VoucherType, { className: string; eyebrowClassName: str
   },
 }
 
-const inventoryVoucherTypes = new Set<VoucherType>(["Sales", "Purchase", "Expense", "Program"])
+const inventoryVoucherTypes = new Set<VoucherType>(["Sales", "Purchase", "Expense", "Income"])
 
 function getVoucherDisplayName(voucherType: VoucherType) {
   return voucherType === "Expense" ? "Expenses Purchase" : voucherType
