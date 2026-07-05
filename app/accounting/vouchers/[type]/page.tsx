@@ -91,13 +91,9 @@ export default async function AccountingVoucherPage({
   const pendingBillsPromise = voucherType === "Payment"
     ? Promise.all([getBillPendingRows("purchase"), getBillPendingRows("expense")]).then(([purchase, expense]) => [...purchase, ...expense])
     : voucherType === "Receipt"
-      ? getBillPendingRows("sales")
+      ? Promise.all([getBillPendingRows("sales"), getBillPendingRows("income")]).then(([sales, income]) => [...sales, ...income])
       : Promise.resolve([])
-  const advancePaymentsPromise = voucherType === "Payment" || voucherType === "Receipt"
-    ? getBillPendingRows("payment")
-    : Promise.resolve([])
-
-  const [ledgers, vouchers, items, programs, balances, editingVoucher, pendingBills, advancePayments] = await Promise.all([
+  const [ledgers, vouchers, items, programs, balances, editingVoucher, pendingBills] = await Promise.all([
     getLedgers(),
     getRecentVouchers(),
     getItems(),
@@ -105,7 +101,6 @@ export default async function AccountingVoucherPage({
     getLedgerBalances(),
     searchParams?.edit ? getVoucherById(searchParams.edit) : Promise.resolve(null),
     pendingBillsPromise,
-    advancePaymentsPromise,
   ])
   if (searchParams?.edit && !editingVoucher) notFound()
   if (editingVoucher && editingVoucher.voucher_type !== voucherType) notFound()
@@ -142,7 +137,6 @@ export default async function AccountingVoucherPage({
         balances={balances}
         initialVoucher={editingVoucher}
         pendingBills={pendingBills}
-        advancePayments={advancePayments}
       />
     </AccountingShell>
   )

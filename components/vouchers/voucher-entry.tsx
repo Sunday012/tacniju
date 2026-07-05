@@ -39,6 +39,7 @@ type ProgramOption = {
 type ReferenceOption = {
     value: string
     label: string
+    amount?: number
 }
 
 type PendingBillOption = {
@@ -166,7 +167,6 @@ export function VoucherEntry({
     balances = {},
     initialVoucher = null,
     pendingBills = [],
-    advancePayments = [],
 }: {
     ledgers: LedgerWithGroup[],
     recentVouchers: any[],
@@ -177,7 +177,6 @@ export function VoucherEntry({
     balances?: Record<string, LedgerBalance>,
     initialVoucher?: any | null,
     pendingBills?: PendingBillOption[],
-    advancePayments?: PendingBillOption[],
 }) {
     const editingVoucherId = initialVoucher?.id as string | undefined
     const initialType = (initialVoucher?.voucher_type || fixedType || "Payment") as VoucherType
@@ -497,6 +496,15 @@ export function VoucherEntry({
         setSelectedLedgers(updated)
     }
 
+    function updateManagedReference(index: number, value: string) {
+        const selectedOption = managedReferenceOptions.find(option => option.value === value)
+        const values: Record<string, any> = { adjustment_reference: value }
+        if (managedLedger?.adjustment_method === "Against Reference" && selectedOption?.amount) {
+            values.amount = selectedOption.amount
+        }
+        updateLedgerFields(index, values)
+    }
+
     // Invoice mode (Sales/Purchase) additional ledgers: edit ledger + a single amount.
     // index === selectedLedgers.length means the trailing blank row, which appends a new line.
     // Sales credits the amount (extra income); Purchase debits it (extra cost).
@@ -680,14 +688,9 @@ export function VoucherEntry({
     const partyBalanceLedgerId = !isInvoiceMode ? resolvedPartyLedgerId : (ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId)
     const pendingBillOptions: ReferenceOption[] = pendingBills.map(bill => ({
         value: bill.voucherNo,
-        label: `${bill.voucherNo} - ${bill.party}${bill.pendingValue > 0 ? ` - ₦${bill.pendingValue.toLocaleString()}` : ""}`,
+        label: `${bill.voucherNo} - ${bill.voucherType} - ${bill.party}${bill.pendingValue > 0 ? ` - ₦${bill.pendingValue.toLocaleString()}` : ""}`,
+        amount: bill.pendingValue,
     }))
-    const advancePaymentOptions: ReferenceOption[] = advancePayments
-        .filter(payment => payment.id !== editingVoucherId)
-        .map(payment => ({
-            value: payment.voucherNo,
-            label: `${payment.voucherNo} - ${payment.party}${payment.pendingValue > 0 ? ` - ₦${payment.pendingValue.toLocaleString()}` : ""}`,
-        }))
     const partyReferenceOptions: ReferenceOption[] = parties.map(party => ({
         value: party.ledgerId || party.id,
         label: party.reservation_number ? `${party.name} (${party.reservation_number})` : party.name,
@@ -700,13 +703,14 @@ export function VoucherEntry({
                 ? "Parties"
                 : "Name"
     const managedReferenceOptions = managedLedger?.adjustment_method === "Advance"
-        ? advancePaymentOptions
+        ? pendingBillOptions
         : managedLedger?.adjustment_method === "Against Reference"
             ? pendingBillOptions
             : (managedLedger?.adjustment_method === "Through Reference" || managedLedger?.adjustment_method === "For Reference")
                 ? partyReferenceOptions
                 : []
     const usesReferenceOptions = managedLedger?.adjustment_method === "Advance" || managedLedger?.adjustment_method === "Against Reference" || managedLedger?.adjustment_method === "Through Reference" || managedLedger?.adjustment_method === "For Reference"
+    const selectedManagedReferenceLabel = managedReferenceOptions.find(option => option.value === managedLedger?.adjustment_reference)?.label
 
     return (
         <div className="w-full">
@@ -970,8 +974,13 @@ export function VoucherEntry({
                                                                         </Button>
                                                                     ) : <span className="px-2 text-slate-300">-</span>}
                                                                     {sl.adjustment_method && (
-                                                                        <span className="ml-2 text-xs font-semibold text-slate-400">
-                                                                            {sl.adjustment_method}
+                                                                        <span className="ml-2 inline-flex max-w-[260px] flex-col align-middle text-xs font-semibold text-slate-400">
+                                                                            <span>{sl.adjustment_method}</span>
+                                                                            {managedLedgerIndex === index && selectedManagedReferenceLabel ? (
+                                                                                <span className="truncate text-slate-600">{selectedManagedReferenceLabel}</span>
+                                                                            ) : sl.adjustment_reference ? (
+                                                                                <span className="truncate text-slate-600">{sl.adjustment_reference}</span>
+                                                                            ) : null}
                                                                         </span>
                                                                     )}
                                                                 </TableCell>
@@ -1110,10 +1119,20 @@ export function VoucherEntry({
                                             <Label className="mb-1 block text-xs font-black uppercase tracking-wide text-slate-500 sm:hidden">Type of Ref</Label>
                                             <Select
                                                 value={managedLedger.adjustment_method || "Advance"}
-                                                onValueChange={(value: any) => updateLedgerFields(managedLedgerIndex, {
-                                                    adjustment_method: value,
-                                                    adjustment_reference: "",
-                                                })}
+                                                onValueChange={(value: any) => {
+                                                    const nextValues: Record<string, any> = {
+                                                        adjustment_method: value,
+                                                        adjustment_reference: "",
+                                                    }
+                                                    if (value === "Against Reference") {
+                                                        const firstPendingBill = pendingBills[0]
+                                                        if (firstPendingBill) {
+                                                            nextValues.adjustment_reference = firstPendingBill.voucherNo
+                                                            nextValues.amount = firstPendingBill.pendingValue
+                                                        }
+                                                    }
+                                                    updateLedgerFields(managedLedgerIndex, nextValues)
+                                                }}
                                             >
                                                 <SelectTrigger className="h-9 border-slate-300 bg-white text-sm font-semibold">
                                                     <SelectValue placeholder="" />
@@ -1133,7 +1152,7 @@ export function VoucherEntry({
                                             {usesReferenceOptions ? (
                                                 <ComboboxInput
                                                     value={managedLedger.adjustment_reference || ""}
-                                                    onChange={(value) => updateLedger(managedLedgerIndex, "adjustment_reference", value)}
+                                                    onChange={(value) => updateManagedReference(managedLedgerIndex, value)}
                                                     options={managedReferenceOptions}
                                                     placeholder=""
                                                     className="h-9"
@@ -1168,6 +1187,7 @@ export function VoucherEntry({
                                                 step="0.01"
                                                 value={managedLedger.amount || ""}
                                                 onChange={(event) => updateLedger(managedLedgerIndex, "amount", parseFloat(event.target.value) || 0)}
+                                                readOnly={managedLedger.adjustment_method === "Against Reference"}
                                                 className="h-9 border-slate-300 bg-white text-right font-mono font-bold"
                                             />
                                         </div>

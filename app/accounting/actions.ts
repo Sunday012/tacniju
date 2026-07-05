@@ -210,7 +210,7 @@ export async function createAccountingParty(formData: FormData) {
     balance_type: "Dr",
     is_cash_bank: false,
     ledger_kind: "party",
-    source_context: "manual",
+    source_context: "accounting",
     source_profile_id: null,
     contact_person: name,
     phone_number: phone || null,

@@ -10,6 +10,7 @@ const reportConfig: Record<BillPendingKind, { title: string; voucherSlug: string
   purchase: { title: "Purchase Bill Pending", voucherSlug: "purchase" },
   payment: { title: "Non Allocated Payment", voucherSlug: "payment" },
   expense: { title: "Expense Bill Pending", voucherSlug: "expense" },
+  income: { title: "Income Bill Pending", voucherSlug: "income" },
 }
 
 export function generateStaticParams() {

@@ -4,7 +4,7 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/server"
 
-export type BillPendingKind = "sales" | "purchase" | "payment" | "expense"
+export type BillPendingKind = "sales" | "purchase" | "payment" | "expense" | "income"
 
 export type BillPendingRow = {
   id: string
@@ -32,6 +32,7 @@ const kindToVoucherType: Record<BillPendingKind, string> = {
   purchase: "Purchase",
   payment: "Payment",
   expense: "Expense",
+  income: "Income",
 }
 
 const allocationTypes: Record<BillPendingKind, string[]> = {
@@ -39,6 +40,7 @@ const allocationTypes: Record<BillPendingKind, string[]> = {
   purchase: ["Payment"],
   payment: [],
   expense: ["Payment"],
+  income: ["Receipt"],
 }
 
 function getEntryTotal(entries: any[] = []) {
@@ -54,6 +56,7 @@ function getParty(voucherType: string, entries: any[] = []) {
     if (voucherType === "Sales") return Number(entry.debit_amount || 0) > 0
     if (voucherType === "Purchase") return Number(entry.credit_amount || 0) > 0
     if (voucherType === "Payment" || voucherType === "Expense") return Number(entry.debit_amount || 0) > 0
+    if (voucherType === "Income") return Number(entry.debit_amount || 0) > 0
     return true
   })
   return (preferred[0] || nonCash[0] || entries[0])?.ledgers?.name || "-"
@@ -121,7 +124,7 @@ export async function getBillPendingRows(kind: BillPendingKind): Promise<BillPen
       `)
       .eq("vouchers.org_id", orgId)
       .in("vouchers.voucher_type", allocationVoucherTypes)
-      .eq("adjustment_method", "Against Reference")
+      .in("adjustment_method", ["Against Reference", "Advance"])
 
     allocationsByReference = (allocations || []).reduce((map, entry: any) => {
       const reference = String(entry.adjustment_reference || "").trim()
