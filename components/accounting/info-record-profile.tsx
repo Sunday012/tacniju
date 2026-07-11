@@ -1,13 +1,17 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Building2, MessageSquareText } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { ArrowLeft, Building2, MessageSquareText, Trash2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { LedgerTransactionRow } from "@/app/accounting/actions"
+import { deleteLedger } from "@/app/management/actions"
+import { toast } from "sonner"
 
 type Metric = {
   label: string
@@ -46,8 +50,8 @@ function getTransactionDisplayAmounts(item: LedgerTransactionRow, mode: Transact
   }
 
   const amount = Math.max(item.debitAmount, item.creditAmount)
-  const bankDebitTypes = new Set(["Payment", "Sales", "Income"])
-  const bankCreditTypes = new Set(["Receipt", "Contra", "Expense", "Purchase", "Program"])
+  const bankDebitTypes = new Set(["Receipt", "Contra", "Income", "Program"])
+  const bankCreditTypes = new Set(["Payment", "Sales", "Expense", "Purchase"])
   const isBankDebit = bankDebitTypes.has(item.voucherType)
   const isBankCredit = bankCreditTypes.has(item.voucherType)
 
@@ -78,6 +82,8 @@ export function InfoRecordProfile({
   comment,
   commentTabLabel = "Comments",
   transactionDisplayMode = "raw",
+  deleteLedgerId,
+  deleteLabel = "Record",
 }: {
   title: string
   subtitle?: string
@@ -91,11 +97,28 @@ export function InfoRecordProfile({
   comment?: string
   commentTabLabel?: string
   transactionDisplayMode?: TransactionDisplayMode
+  deleteLedgerId?: string
+  deleteLabel?: string
 }) {
+  const router = useRouter()
   const currentYear = new Date().getFullYear()
   const startDate = transactionStartDate || `${currentYear}-01-01`
   const endDate = transactionEndDate || `${currentYear}-12-31`
   const transactionPeriod = `${formatIsoDate(startDate)} to ${formatIsoDate(endDate)}`
+
+  async function handleDeleteRecord() {
+    if (!deleteLedgerId) return
+    if (!confirm(`Delete ${deleteLabel} "${title}"?`)) return
+
+    const result = await deleteLedger(deleteLedgerId)
+    if (!result.success) {
+      toast.error(result.error)
+      return
+    }
+    toast.success(`${deleteLabel} deleted`)
+    router.push(backHref)
+    router.refresh()
+  }
 
   return (
     <div className="min-h-screen bg-[#F4F7FA] text-slate-900">
@@ -106,9 +129,17 @@ export function InfoRecordProfile({
             Back to {backLabel}
           </Link>
 
-          <div className="mt-5">
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{title}</h1>
-            {subtitle ? <p className="mt-2 text-base text-slate-600">{subtitle}</p> : null}
+          <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{title}</h1>
+              {subtitle ? <p className="mt-2 text-base text-slate-600">{subtitle}</p> : null}
+            </div>
+            {deleteLedgerId ? (
+              <Button type="button" variant="outline" onClick={handleDeleteRecord} className="h-10 border-red-200 bg-red-50 px-3 text-red-600 hover:border-red-300 hover:bg-red-100 hover:text-red-700">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+            ) : null}
           </div>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2">

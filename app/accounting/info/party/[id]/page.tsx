@@ -43,10 +43,15 @@ export default async function PartyProfilePage({
           title: "Details",
           fields: [
             { label: "Name", value: party.name },
+            { label: "Current Balance", value: currentBalance },
+          ],
+        },
+        {
+          title: "More Information",
+          fields: [
             { label: "Phone", value: party.phone_number || "-" },
             { label: "Reservation", value: party.reservation_number || "-" },
             { label: "Linked Ledger", value: ledgerId },
-            { label: "Current Balance", value: currentBalance },
           ],
         },
       ]}
@@ -55,6 +60,8 @@ export default async function PartyProfilePage({
       transactionEndDate={endDate}
       comment="No comments added yet."
       transactionDisplayMode="ledger-party"
+      deleteLedgerId={ledgerId}
+      deleteLabel="Party"
     />
   )
 }

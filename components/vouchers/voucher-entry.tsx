@@ -683,7 +683,7 @@ export function VoucherEntry({
     const showLedgerRows = (!isSingleEntry && !isInvoiceMode) || masterLedgerId || (!isInvoiceMode && selectedPartyId) || hasVisibleLedgerRows
     const voucherDisplayName = voucherType === "Expense" ? "Expenses Purchase" : voucherType
     const showPartySelector = voucherType !== "Contra" && voucherType !== "Payment"
-    const showOffsetToggle = voucherType !== "Contra" && voucherType !== "Expense" && voucherType !== "Income" && voucherType !== "Payment"
+    const showOffsetToggle = voucherType !== "Contra" && voucherType !== "Expense" && voucherType !== "Income" && voucherType !== "Payment" && voucherType !== "Receipt"
     const showBillWiseManage = voucherType === "Payment" || voucherType === "Receipt"
     const partyBalanceLedgerId = !isInvoiceMode ? resolvedPartyLedgerId : (ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId)
     const pendingBillOptions: ReferenceOption[] = pendingBills.map(bill => ({
@@ -711,6 +711,8 @@ export function VoucherEntry({
                 : []
     const usesReferenceOptions = managedLedger?.adjustment_method === "Advance" || managedLedger?.adjustment_method === "Against Reference" || managedLedger?.adjustment_method === "Through Reference" || managedLedger?.adjustment_method === "For Reference"
     const selectedManagedReferenceLabel = managedReferenceOptions.find(option => option.value === managedLedger?.adjustment_reference)?.label
+    const selectedManagedReferenceBalance = managedLedger?.adjustment_reference ? balances[managedLedger.adjustment_reference] : null
+    const selectedManagedReferenceName = selectedManagedReferenceLabel?.replace(/\s+-\s+.*$/, "")
 
     return (
         <div className="w-full">
@@ -1192,6 +1194,22 @@ export function VoucherEntry({
                                             />
                                         </div>
                                     </div>
+
+                                    {(managedLedger.adjustment_method === "Through Reference" || managedLedger.adjustment_method === "For Reference") && managedLedger.adjustment_reference ? (
+                                        <div className="border-b border-slate-200 bg-indigo-50/60 px-3 py-3 sm:px-4">
+                                            <p className="text-[11px] font-black uppercase tracking-wide text-indigo-500">
+                                                {managedLedger.adjustment_method === "For Reference" ? "Paying for" : "Paying through"}
+                                            </p>
+                                            <div className="mt-1 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                                <p className="text-sm font-black text-slate-900">{selectedManagedReferenceName || "Selected party"}</p>
+                                                <p className="text-sm font-bold text-slate-600">
+                                                    Balance: {selectedManagedReferenceBalance
+                                                        ? `₦${selectedManagedReferenceBalance.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${selectedManagedReferenceBalance.type}`
+                                                        : "₦0.00"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ) : null}
 
                                     <div className="flex justify-end px-3 py-3 text-sm font-black">
                                         <span className="min-w-[150px] border-y-2 border-slate-800 py-1 text-right">

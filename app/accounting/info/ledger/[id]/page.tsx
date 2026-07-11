@@ -33,24 +33,22 @@ export default async function LedgerProfilePage({
       backLabel="Ledgers"
       metrics={[
         { label: "Current Balance", value: currentBalance },
-        { label: "Balance Type", value: ledger.balance_type },
+        { label: "Status", value: ledger.active ? "Active" : "Inactive" },
       ]}
       details={[
         {
           title: "Details",
           fields: [
-            { label: "Group", value: group?.name || "-" },
-            { label: "Balance Type", value: ledger.balance_type },
-            { label: "Source", value: ledger.source_context || "accounting" },
+            { label: "Name", value: ledger.name },
             { label: "Status", value: ledger.active ? "Active" : "Inactive" },
           ],
         },
         {
           title: "More Information",
           fields: [
+            { label: "Group", value: group?.name || "-" },
+            { label: "Balance Type", value: ledger.balance_type },
             { label: "Description", value: ledger.description || "-" },
-            { label: "Ledger Kind", value: ledger.ledger_kind || "ledger" },
-            { label: "Cash / Bank", value: ledger.is_cash_bank ? "Yes" : "No" },
             { label: "Current Balance", value: currentBalance },
           ],
         },
@@ -60,6 +58,8 @@ export default async function LedgerProfilePage({
       transactionEndDate={endDate}
       comment={ledger.description || "No extra notes added for this ledger yet."}
       transactionDisplayMode="ledger-party"
+      deleteLedgerId={ledger.id}
+      deleteLabel="Ledger"
     />
   )
 }

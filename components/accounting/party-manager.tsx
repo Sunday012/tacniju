@@ -37,8 +37,12 @@ export function PartyManager({ parties, balances = {}, hideTitle = false }: { pa
   const phoneParties = parties.filter((party) => Boolean(party.phone_number)).length
   const formatBalance = (party: Party) => {
     const balance = party.ledgerId ? balances[party.ledgerId] : null
-    if (!balance) return "NGN 0.00 Dr"
-    return `NGN ${balance.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${balance.type}`
+    if (!balance) return { amount: 0, label: "NGN 0.00" }
+    const signed = balance.type === "Cr" ? -balance.amount : balance.amount
+    return {
+      amount: signed,
+      label: `NGN ${Math.abs(signed).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    }
   }
 
   useEffect(() => {
@@ -132,7 +136,7 @@ export function PartyManager({ parties, balances = {}, hideTitle = false }: { pa
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Current Balance</p>
-          <p className="mt-2 text-lg font-semibold text-slate-800">{formatBalance(selectedParty)}</p>
+          <p className={`mt-2 text-lg font-semibold ${formatBalance(selectedParty).amount >= 0 ? "text-emerald-600" : "text-red-600"}`}>{formatBalance(selectedParty).label}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Linked Ledger</p>
@@ -294,15 +298,13 @@ export function PartyManager({ parties, balances = {}, hideTitle = false }: { pa
           <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600">
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Reservation</TableHead>
-              <TableHead>Phone</TableHead>
               <TableHead className="text-right">Current Balance</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
             {filteredParties.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-8 text-center text-slate-500">No parties found.</TableCell>
+                <TableCell colSpan={2} className="py-8 text-center text-slate-500">No parties found.</TableCell>
               </TableRow>
             ) : filteredParties.map(party => {
               return (
@@ -320,9 +322,9 @@ export function PartyManager({ parties, balances = {}, hideTitle = false }: { pa
                       {party.name}
                     </button>
                   </TableCell>
-                  <TableCell className="text-slate-500">{party.reservation_number || "-"}</TableCell>
-                  <TableCell className="text-slate-500">{party.phone_number || "-"}</TableCell>
-                  <TableCell className="text-right font-bold text-slate-700">{formatBalance(party)}</TableCell>
+                  <TableCell className={`text-right font-bold ${formatBalance(party).amount >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                    {formatBalance(party).label}
+                  </TableCell>
                 </TableRow>
               )
             })}

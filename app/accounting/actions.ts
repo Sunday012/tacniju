@@ -301,13 +301,21 @@ async function fetchLedgerTransactions(ledgerIds: string[], startDate?: string, 
       id,
       debit_amount,
       credit_amount,
-      ledgers!voucher_entries_ledger_id_fkey(name),
+      ledger_id,
       vouchers!inner(
         id,
         org_id,
         date,
         voucher_no,
-        voucher_type
+        voucher_type,
+        voucher_entries(
+          id,
+          ledger_id,
+          debit_amount,
+          credit_amount,
+          adjustment_reference,
+          ledgers!voucher_entries_ledger_id_fkey(name)
+        )
       )
     `)
     .in("ledger_id", ledgerIds)
@@ -324,16 +332,31 @@ async function fetchLedgerTransactions(ledgerIds: string[], startDate?: string, 
     return []
   }
 
-  return (data || []).map((entry: any) => ({
-    id: entry.id as string,
-    date: entry.vouchers?.date as string,
-    voucherId: entry.vouchers?.id as string,
-    voucherNumber: (entry.vouchers?.voucher_no as string | null) || null,
-    voucherType: (entry.vouchers?.voucher_type as string) || "Voucher",
-    detailName: (entry.ledgers?.name as string) || "Ledger",
-    debitAmount: Number(entry.debit_amount || 0),
-    creditAmount: Number(entry.credit_amount || 0),
-  })) as LedgerTransactionRow[]
+  return (data || []).map((entry: any) => {
+    const amount = Math.max(Number(entry.debit_amount || 0), Number(entry.credit_amount || 0))
+    const isDebit = Number(entry.debit_amount || 0) > 0
+    const oppositeEntries = (entry.vouchers?.voucher_entries || [])
+      .filter((other: any) => other.id !== entry.id && !ledgerIds.includes(other.ledger_id))
+    const sameAmountOpposite = oppositeEntries.find((other: any) => (
+      isDebit
+        ? Number(other.credit_amount || 0) === amount
+        : Number(other.debit_amount || 0) === amount
+    ))
+    const counterparty = sameAmountOpposite || oppositeEntries[0]
+    const referenceName = counterparty?.adjustment_reference
+    const ledgerName = counterparty?.ledgers?.name
+
+    return {
+      id: entry.id as string,
+      date: entry.vouchers?.date as string,
+      voucherId: entry.vouchers?.id as string,
+      voucherNumber: (entry.vouchers?.voucher_no as string | null) || null,
+      voucherType: (entry.vouchers?.voucher_type as string) || "Voucher",
+      detailName: (referenceName || ledgerName || "Ledger") as string,
+      debitAmount: Number(entry.debit_amount || 0),
+      creditAmount: Number(entry.credit_amount || 0),
+    }
+  }) as LedgerTransactionRow[]
 }
 
 export async function getLedgerTransactions(ledgerId: string, startDate?: string, endDate?: string) {

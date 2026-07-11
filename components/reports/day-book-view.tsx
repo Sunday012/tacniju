@@ -257,6 +257,7 @@ export function DayBookView({
                     <Table>
                         <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600">
                             <TableRow className="border-slate-200">
+                                <TableHead className="text-slate-500">Voucher Date</TableHead>
                                 <TableHead className="text-slate-500">Details</TableHead>
                                 <TableHead className="text-slate-500">Vch Type</TableHead>
                                 <TableHead className="text-slate-500">Vch No.</TableHead>
@@ -268,7 +269,7 @@ export function DayBookView({
                         <TableBody className="[&_td]:px-5 [&_td]:py-3.5">
                             {groups.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center text-slate-500 py-6">
+                                    <TableCell colSpan={7} className="text-center text-slate-500 py-6">
                                         {isPeriodMode ? "No transactions recorded in this period." : "No transactions recorded on this date."}
                                     </TableCell>
                                 </TableRow>
@@ -289,7 +290,7 @@ export function DayBookView({
         return (
             <>
                 <TableRow className="border-slate-200 bg-slate-50">
-                    <TableCell colSpan={6} className="py-2 text-xs font-black uppercase tracking-widest text-slate-500">
+                    <TableCell colSpan={7} className="py-2 text-xs font-black uppercase tracking-widest text-slate-500">
                         {group.type} ({group.vouchers.length})
                     </TableCell>
                 </TableRow>
@@ -304,6 +305,9 @@ export function DayBookView({
                             onClick={() => router.push(getVoucherHref(v.voucher_type, v.id, true))}
                             className="cursor-pointer border-slate-200 align-top hover:bg-slate-50"
                         >
+                            <TableCell className="whitespace-nowrap text-sm font-semibold text-slate-600">
+                                {formatIsoDate(v.date)}
+                            </TableCell>
                             <TableCell>
                                 <div className="space-y-0.5">
                                     {mainParties.length === 0 ? (

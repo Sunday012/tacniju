@@ -62,6 +62,8 @@ export default async function BankAccountProfilePage({
       comment={account.description || "No statement notes added for this bank account yet."}
       commentTabLabel="Statement"
       transactionDisplayMode="bank-daybook"
+      deleteLedgerId={account.id}
+      deleteLabel="Bank Account"
     />
   )
 }

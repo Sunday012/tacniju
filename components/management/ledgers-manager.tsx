@@ -56,7 +56,7 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
         return ledger.balance_type === "Cr" ? -Number(ledger.opening_balance || 0) : Number(ledger.opening_balance || 0)
     }
     const overallBankBalance = visibleLedgers.reduce((total, ledger) => total + signedBalance(ledger), 0)
-    const formatCurrency = (amount: number) => `${amount < 0 ? "-" : ""}NGN ${Math.abs(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    const formatCurrency = (amount: number, showSign = false) => `${showSign && amount < 0 ? "-" : ""}NGN ${Math.abs(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
     useEffect(() => {
         const mediaQuery = window.matchMedia("(min-width: 768px)")
@@ -344,7 +344,7 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                             <div>
                                 <p className="text-xs font-bold uppercase tracking-widest text-indigo-100/80">Overall Account Balance</p>
                                 <p className={`mt-2 text-3xl font-black tracking-tight sm:text-4xl ${overallBankBalance < 0 ? "text-red-300" : "text-emerald-300"}`}>
-                                    {formatCurrency(overallBankBalance)}
+                                    {formatCurrency(overallBankBalance, true)}
                                 </p>
                             </div>
                         ) : (
@@ -459,10 +459,8 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                 <CardContent className="p-0">
                 <Table>
                     <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600 [&_tr]:border-b [&_tr]:border-slate-200">
-                        <TableRow className="border-slate-200">
+                            <TableRow className="border-slate-200">
                             <TableHead className="text-slate-500">{isBankMode ? "Account" : "Ledger"}</TableHead>
-                            {!isBankMode && <TableHead className="text-slate-500">Group</TableHead>}
-                            {!isBankMode && <TableHead className="text-slate-500">Type</TableHead>}
                             <TableHead className="text-right text-slate-500">Current Balance</TableHead>
                             {isBankMode && <TableHead className="w-12 text-right text-slate-500">Edit</TableHead>}
                         </TableRow>
@@ -470,7 +468,7 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                     <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
                         {visibleLedgers.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={isBankMode ? 3 : 4} className="text-center text-slate-500 py-6">
+                                <TableCell colSpan={isBankMode ? 3 : 2} className="text-center text-slate-500 py-6">
                                     {isBankMode
                                         ? "No bank accounts yet. Add one to use it on vouchers."
                                         : "No ledgers found yet. Create one to use it in vouchers."}
@@ -491,8 +489,6 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                                             {ledger.name}
                                         </button>
                                     </TableCell>
-                                    {!isBankMode && <TableCell className="text-slate-500">{ledger.account_groups?.name || groups.find((group) => group.id === ledger.group_id)?.name || "-"}</TableCell>}
-                                    {!isBankMode && <TableCell className="text-slate-500">{ledger.balance_type}</TableCell>}
                                     <TableCell className={`text-right font-bold ${signedBalance(ledger) >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                                         {formatCurrency(signedBalance(ledger))}
                                     </TableCell>
