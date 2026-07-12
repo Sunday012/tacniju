@@ -25,7 +25,8 @@ import {
   Megaphone,
   Utensils,
   BookMarked,
-  BookOpenText
+  BookOpenText,
+  Music
 } from "lucide-react"
 
 type NavItem = {
@@ -95,6 +96,16 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
           { name: "New", href: "/admin/records/dreams/new", icon: FileText },
           { name: "Category", href: "/admin/records/dreams/category", icon: BookMarked },
           { name: "Summary", href: "/admin/records/dreams/summary", icon: FileText },
+        ],
+      },
+      {
+        name: "Lyrics",
+        href: "/admin/records/lyrics",
+        icon: Music,
+        children: [
+          { name: "New", href: "/admin/records/lyrics/new", icon: FileText },
+          { name: "Category", href: "/admin/records/lyrics/category", icon: BookMarked },
+          { name: "Summary", href: "/admin/records/lyrics/summary", icon: FileText },
         ],
       },
       { name: "Points", href: "/admin/points", icon: Award },

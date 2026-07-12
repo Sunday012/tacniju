@@ -259,3 +259,73 @@ export async function deleteContentRecord(recordType: ContentRecordType, id: str
   revalidatePath(`/admin/records/${recordType}/summary`)
   return { success: true }
 }
+
+export async function getMyContentRecords(recordType: ContentRecordType) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) redirect("/auth/login")
+
+  const { data, error } = await supabase
+    .from("content_records")
+    .select(`
+      id,
+      record_type,
+      record_date,
+      title,
+      body,
+      profile_id,
+      category_id,
+      created_at,
+      updated_at,
+      category:content_record_categories(id, record_type, name, description, is_active, created_at)
+    `)
+    .eq("record_type", recordType)
+    .eq("profile_id", user.id)
+    .order("record_date", { ascending: false })
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error(`Error fetching member ${recordType}:`, error)
+    return { error: error.message, records: [] as ContentRecord[] }
+  }
+
+  return { records: (data || []).map(normalizeContentRecord) }
+}
+
+export async function getMyContentRecord(recordType: ContentRecordType, id: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) redirect("/auth/login")
+
+  const { data, error } = await supabase
+    .from("content_records")
+    .select(`
+      id,
+      record_type,
+      record_date,
+      title,
+      body,
+      profile_id,
+      category_id,
+      created_at,
+      updated_at,
+      category:content_record_categories(id, record_type, name, description, is_active, created_at)
+    `)
+    .eq("id", id)
+    .eq("record_type", recordType)
+    .eq("profile_id", user.id)
+    .maybeSingle()
+
+  if (error) {
+    console.error(`Error fetching member ${recordType}:`, error)
+    return { error: error.message, record: null }
+  }
+
+  return { record: data ? normalizeContentRecord(data) : null }
+}
