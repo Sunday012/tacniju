@@ -53,7 +53,8 @@ export default async function AccountingVoucherDetailPage({
     daybook: { href: "/accounting/day-book", label: "Day Book" },
     "income-register": { href: "/accounting/display/income-register", label: "Income Register" },
     "expense-register": { href: "/accounting/display/expense-purchase-register", label: "Expenses Purchase Register" },
-    "payment-receipt-register": { href: "/accounting/display/payment-receipt-register", label: "Payment / Receipt Register" },
+    "payment-register": { href: "/accounting/display/payment-register", label: "Payment Register" },
+    "receipt-register": { href: "/accounting/display/receipt-register", label: "Receipt Register" },
     "sales-register": { href: "/accounting/display/sales-register", label: "Sales Register" },
     "purchase-register": { href: "/accounting/display/purchase-register", label: "Purchase Register" },
   }

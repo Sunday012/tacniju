@@ -11,11 +11,10 @@ type VoucherEntryRow = {
   ledgers?: { name?: string | null; is_cash_bank?: boolean | null } | null
 }
 
-type PaymentReceiptVoucher = {
+type CashVoucher = {
   id: string
   voucher_no: string
   date: string
-  voucher_type: string
   voucher_entries?: VoucherEntryRow[] | null
 }
 
@@ -29,7 +28,7 @@ function uniqueNames(names: string[]) {
   return Array.from(new Set(names.filter(Boolean)))
 }
 
-function getEntrySummary(voucher: PaymentReceiptVoucher) {
+function getEntrySummary(voucher: CashVoucher) {
   const entries = voucher.voucher_entries || []
   const bankNames: string[] = []
   const partyNames: string[] = []
@@ -70,7 +69,7 @@ async function getOrgId() {
   return orgId
 }
 
-async function getPaymentReceiptVouchers() {
+async function getReceiptVouchers() {
   const supabase = await createClient()
   const orgId = await getOrgId()
 
@@ -80,7 +79,6 @@ async function getPaymentReceiptVouchers() {
       id,
       voucher_no,
       date,
-      voucher_type,
       voucher_entries (
         ledger_id,
         debit_amount,
@@ -89,20 +87,20 @@ async function getPaymentReceiptVouchers() {
       )
     `)
     .eq("org_id", orgId)
-    .in("voucher_type", ["Payment", "Receipt"])
+    .eq("voucher_type", "Receipt")
     .order("date", { ascending: false })
     .order("created_at", { ascending: false })
 
   if (error) {
-    console.error("Error fetching payment/receipt register:", error)
+    console.error("Error fetching receipt register:", error)
     return []
   }
 
-  return (data || []) as unknown as PaymentReceiptVoucher[]
+  return (data || []) as unknown as CashVoucher[]
 }
 
-export default async function PaymentReceiptRegisterPage() {
-  const vouchers = await getPaymentReceiptVouchers()
+export default async function ReceiptRegisterPage() {
+  const vouchers = await getReceiptVouchers()
 
   const rows: RegisterRow[] = vouchers.map(voucher => {
     const summary = getEntrySummary(voucher)
@@ -110,27 +108,25 @@ export default async function PaymentReceiptRegisterPage() {
       id: voucher.id,
       dateLabel: formatIsoDate(voucher.date),
       voucherNo: voucher.voucher_no,
-      type: voucher.voucher_type,
       party: summary.party,
       ledger: summary.account,
       amount: summary.amount,
-      href: `/accounting/vouchers/${voucher.voucher_type.toLowerCase()}/${voucher.id}?from=payment-receipt-register`,
+      href: `/accounting/vouchers/receipt/${voucher.id}?from=receipt-register`,
     }
   })
 
   return (
     <AccountingShell
-      title="Payment / Receipt Register"
+      title="Receipt Register"
       backHref="/accounting/display/account-book"
       backLabel="Account Book"
       framed={false}
     >
       <VoucherRegisterTable
         rows={rows}
-        typeLabel="Type"
         partyLabel="Particulars"
-        ledgerLabel="Account"
-        emptyLabel="No payment or receipt transactions yet."
+        ledgerLabel="Received Into"
+        emptyLabel="No receipt transactions yet."
       />
     </AccountingShell>
   )

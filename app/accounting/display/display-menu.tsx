@@ -44,7 +44,8 @@ export const displayMenuItems: DisplayMenuItem[] = [
       { label: "Income Register", icon: Receipt, href: "/accounting/display/income-register" },
       { label: "Purchase Register", icon: Receipt, href: "/accounting/display/purchase-register" },
       { label: "Expenses Purchase Register", icon: Receipt, href: "/accounting/display/expense-purchase-register" },
-      { label: "Payment / Receipt Register", icon: Receipt, href: "/accounting/display/payment-receipt-register" },
+      { label: "Payment Register", icon: Receipt, href: "/accounting/display/payment-register" },
+      { label: "Receipt Register", icon: Receipt, href: "/accounting/display/receipt-register" },
     ],
   },
   {
