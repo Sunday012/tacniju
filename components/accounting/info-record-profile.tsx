@@ -11,7 +11,9 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { LedgerTransactionRow } from "@/app/accounting/actions"
 import { deleteLedger } from "@/app/management/actions"
+import { deleteVoucher } from "@/app/vouchers/actions"
 import { toast } from "sonner"
+import { useState } from "react"
 
 type Metric = {
   label: string
@@ -101,10 +103,26 @@ export function InfoRecordProfile({
   deleteLabel?: string
 }) {
   const router = useRouter()
+  const [deletingVoucherId, setDeletingVoucherId] = useState<string | null>(null)
   const currentYear = new Date().getFullYear()
   const startDate = transactionStartDate || `${currentYear}-01-01`
   const endDate = transactionEndDate || `${currentYear}-12-31`
   const transactionPeriod = `${formatIsoDate(startDate)} to ${formatIsoDate(endDate)}`
+
+  async function handleDeleteVoucher(row: LedgerTransactionRow) {
+    if (!confirm(`Delete ${row.voucherType} voucher ${row.voucherNumber || ""}? This removes it from every account it touches.`)) return
+
+    setDeletingVoucherId(row.voucherId)
+    try {
+      await deleteVoucher(row.voucherId)
+      toast.success("Voucher deleted")
+      router.refresh()
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to delete voucher")
+    } finally {
+      setDeletingVoucherId(null)
+    }
+  }
 
   async function handleDeleteRecord() {
     if (!deleteLedgerId) return
@@ -223,12 +241,13 @@ export function InfoRecordProfile({
                       <TableHead>VCH No.</TableHead>
                       <TableHead className="text-right">Debit (NGN)</TableHead>
                       <TableHead className="text-right">Credit (NGN)</TableHead>
+                      <TableHead className="w-12 text-right"><span className="sr-only">Delete</span></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
                     {transactionRows.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="py-8 text-center text-slate-500">
+                        <TableCell colSpan={7} className="py-8 text-center text-slate-500">
                           No transactions recorded for this period.
                         </TableCell>
                       </TableRow>
@@ -254,6 +273,17 @@ export function InfoRecordProfile({
                             </TableCell>
                             <TableCell className="text-right text-slate-700">
                               {displayAmounts.credit > 0 ? displayAmounts.credit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "-"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteVoucher(item)}
+                                disabled={deletingVoucherId === item.voucherId}
+                                title={`Delete ${item.voucherType} voucher ${item.voucherNumber || ""}`}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
                             </TableCell>
                           </TableRow>
                         )

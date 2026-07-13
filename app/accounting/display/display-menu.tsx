@@ -39,12 +39,12 @@ export const displayMenuItems: DisplayMenuItem[] = [
     children: [
       { label: "Cash / Bank Book", icon: Landmark, href: "/accounting/info/bank-account" },
       { label: "Ledger", icon: BookOpen, href: "/accounting/info/ledger" },
-      { label: "Group Summary", icon: Layers, href: "/accounting/info/group" },
-      { label: "Sales Register", icon: Receipt, href: "/accounting/vouchers/sales" },
+      { label: "Group Summary", icon: Layers, href: "/accounting/display/group-summary" },
+      { label: "Sales Register", icon: Receipt, href: "/accounting/display/sales-register" },
       { label: "Income Register", icon: Receipt, href: "/accounting/display/income-register" },
-      { label: "Purchase Register", icon: Receipt, href: "/accounting/vouchers/purchase" },
+      { label: "Purchase Register", icon: Receipt, href: "/accounting/display/purchase-register" },
       { label: "Expenses Purchase Register", icon: Receipt, href: "/accounting/display/expense-purchase-register" },
-      { label: "Payment / Receipt Register", icon: Receipt, href: "/accounting/day-book" },
+      { label: "Payment / Receipt Register", icon: Receipt, href: "/accounting/display/payment-receipt-register" },
     ],
   },
   {

@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { CreditCard, Landmark, Layers3, Loader2, Pencil, Plus, Printer, Shield, Trash2 } from "lucide-react"
+import { BookOpen, CreditCard, Landmark, Layers3, Loader2, Pencil, Plus, Printer, Search, Shield, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -30,6 +30,7 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
     const router = useRouter()
     const [isOpen, setIsOpen] = useState(false)
     const [editId, setEditId] = useState<string | null>(null)
+    const [searchQuery, setSearchQuery] = useState("")
     const [name, setName] = useState("")
     const [groupId, setGroupId] = useState("")
     const [openingBalance, setOpeningBalance] = useState("0")
@@ -47,9 +48,12 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
         if (isBankMode) return Boolean(l.is_cash_bank) || l.ledger_kind === "bank"
         return !l.is_cash_bank && l.ledger_kind !== "party"
     })
-    const groupedLedgers = visibleLedgers.filter((ledger) => ledger.group_id).length
-    const debitLedgers = visibleLedgers.filter((ledger) => ledger.balance_type === "Dr").length
-    const creditLedgers = visibleLedgers.filter((ledger) => ledger.balance_type === "Cr").length
+    const filteredLedgers = searchQuery.trim()
+        ? visibleLedgers.filter(l => l.name.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+        : visibleLedgers
+    const groupedLedgers = filteredLedgers.filter((ledger) => ledger.group_id).length
+    const debitLedgers = filteredLedgers.filter((ledger) => ledger.balance_type === "Dr").length
+    const creditLedgers = filteredLedgers.filter((ledger) => ledger.balance_type === "Cr").length
     const signedBalance = (ledger: LedgerRow) => {
         const balance = balances[ledger.id]
         if (balance) return balance.type === "Cr" ? -balance.amount : balance.amount
@@ -333,7 +337,7 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                             </div>
                             {!hideTitle && <p className="text-sm font-semibold text-indigo-100/85">{isBankMode ? "Banking directory" : "Ledger register"}</p>}
                             <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">{pageTitle}</h1>
-                            <p className="mt-1.5 text-sm text-indigo-200/80">
+                            <p className="text-sm text-indigo-200/80">
                                 {visibleLedgers.length} {visibleLedgers.length === 1 ? (isBankMode ? "account" : "ledger") : (isBankMode ? "accounts" : "ledgers")} ready for transactions
                             </p>
                         </div>
@@ -455,58 +459,72 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                 </CardContent>
             </Card>
 
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={`Search ${isBankMode ? "accounts" : "ledgers"} by name...`}
+                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                />
+            </div>
+
             <Card className="overflow-hidden bg-white shadow-sm border-slate-200">
                 <CardContent className="p-0">
                 <Table>
                     <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600 [&_tr]:border-b [&_tr]:border-slate-200">
-                            <TableRow className="border-slate-200">
+                        <TableRow className="border-slate-200">
                             <TableHead className="text-slate-500">{isBankMode ? "Account" : "Ledger"}</TableHead>
                             <TableHead className="text-right text-slate-500">Current Balance</TableHead>
-                            {isBankMode && <TableHead className="w-12 text-right text-slate-500">Edit</TableHead>}
+                            <TableHead className="w-12 text-right text-slate-500">Edit</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
-                        {visibleLedgers.length === 0 ? (
+                        {filteredLedgers.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={isBankMode ? 3 : 2} className="text-center text-slate-500 py-6">
-                                    {isBankMode
-                                        ? "No bank accounts yet. Add one to use it on vouchers."
-                                        : "No ledgers found yet. Create one to use it in vouchers."}
+                                <TableCell colSpan={3} className="text-center text-slate-500 py-6">
+                                    {searchQuery.trim()
+                                        ? `No ledgers found matching "${searchQuery}".`
+                                        : isBankMode
+                                            ? "No bank accounts yet. Add one to use it on vouchers."
+                                            : "No ledgers found yet. Create one to use it in vouchers."}
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            visibleLedgers.map((ledger) => (
-                                <TableRow key={ledger.id} className="cursor-pointer border-slate-200" onClick={() => isBankMode ? router.push(`/accounting/info/bank-account/${ledger.id}`) : openEdit(ledger)}>
+                            filteredLedgers.map((ledger) => (
+                                <TableRow key={ledger.id} className="cursor-pointer border-slate-200" onClick={() => isBankMode ? router.push(`/accounting/info/bank-account/${ledger.id}`) : router.push(`/accounting/info/ledger/${ledger.id}`)}>
                                     <TableCell className="font-medium text-slate-800">
-                                        <button type="button" onClick={(event) => {
-                                            event.stopPropagation()
-                                            if (isBankMode) {
+                                        {isBankMode ? (
+                                            <button type="button" onClick={(event) => {
+                                                event.stopPropagation()
                                                 router.push(`/accounting/info/bank-account/${ledger.id}`)
-                                                return
-                                            }
-                                            openEdit(ledger)
-                                        }} className="w-full text-left transition hover:text-indigo-700">
-                                            {ledger.name}
-                                        </button>
+                                            }} className="w-full text-left transition hover:text-indigo-700">
+                                                {ledger.name}
+                                            </button>
+                                        ) : (
+                                            <Link href={`/accounting/info/ledger/${ledger.id}`} className="flex items-center gap-2 hover:text-indigo-700 transition" onClick={(e) => e.stopPropagation()}>
+                                                <BookOpen className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                                {ledger.name}
+                                            </Link>
+                                        )}
                                     </TableCell>
                                     <TableCell className={`text-right font-bold ${signedBalance(ledger) >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                                         {formatCurrency(signedBalance(ledger))}
                                     </TableCell>
-                                    {isBankMode && (
-                                        <TableCell className="text-right">
-                                            <button
-                                                type="button"
-                                                onClick={(event) => {
-                                                    event.stopPropagation()
-                                                    openEdit(ledger)
-                                                }}
-                                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
-                                                title={`Edit ${ledger.name}`}
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </button>
-                                        </TableCell>
-                                    )}
+                                    <TableCell className="text-right">
+                                        <button
+                                            type="button"
+                                            onClick={(event) => {
+                                                event.stopPropagation()
+                                                openEdit(ledger)
+                                            }}
+                                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                                            title={`Edit ${ledger.name}`}
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </button>
+                                    </TableCell>
                                 </TableRow>
                             ))
                         )}

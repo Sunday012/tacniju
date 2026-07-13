@@ -50,10 +50,10 @@ export default async function TrialBalancePage({ searchParams }: { searchParams:
                                             <TableCell className="font-medium text-slate-800">{row.ledgerName}</TableCell>
                                             <TableCell className="text-slate-500">{row.groupName}</TableCell>
                                             <TableCell className="text-slate-500 text-xs uppercase tracking-wider">{row.nature}</TableCell>
-                                            <TableCell className="text-right text-emerald-400 font-mono">
+                                            <TableCell className="text-right text-red-600 font-mono">
                                                 {row.closingDr > 0 ? row.closingDr.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
                                             </TableCell>
-                                            <TableCell className="text-right text-red-400 font-mono">
+                                            <TableCell className="text-right text-emerald-600 font-mono">
                                                 {row.closingCr > 0 ? row.closingCr.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
                                             </TableCell>
                                         </TableRow>
@@ -63,10 +63,10 @@ export default async function TrialBalancePage({ searchParams }: { searchParams:
                                     <TableCell colSpan={3} className="text-right font-bold text-slate-800 uppercase tracking-widest text-sm py-4">
                                         Total
                                     </TableCell>
-                                    <TableCell className="text-right font-bold text-emerald-400 font-mono text-lg py-4">
+                                    <TableCell className="text-right font-bold text-red-600 font-mono text-lg py-4">
                                         {totalDr.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                     </TableCell>
-                                    <TableCell className="text-right font-bold text-red-400 font-mono text-lg py-4">
+                                    <TableCell className="text-right font-bold text-emerald-600 font-mono text-lg py-4">
                                         {totalCr.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                     </TableCell>
                                 </TableRow>

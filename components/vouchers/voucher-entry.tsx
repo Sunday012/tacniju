@@ -9,13 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ComboboxInput } from "@/components/ui/combobox-input"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { saveVoucher, updateVoucher, VoucherType, VoucherItemPayload, VoucherLedgerEntry } from "@/app/vouchers/actions"
+import { saveVoucher, updateVoucher, deleteVoucher, VoucherType, VoucherItemPayload, VoucherLedgerEntry } from "@/app/vouchers/actions"
 import { Ledger, LedgerBalance } from "@/app/management/actions"
 import { Item } from "@/app/inventory/actions"
 import { getOrCreateDefaultSalesLedger, getOrCreateProfilePartyLedger } from "@/app/accounting/actions"
 import { toast } from "sonner"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Plus, Trash2 } from "lucide-react"
+import { Pencil, Plus, Trash2 } from "lucide-react"
 
 type LedgerWithGroup = Ledger & {
     account_groups?: {
@@ -214,8 +215,24 @@ export function VoucherEntry({
     const [offsetEnabled, setOffsetEnabled] = useState(false)
 
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [deletingVoucherId, setDeletingVoucherId] = useState<string | null>(null)
     const submittingRef = useRef(false)
     const router = useRouter()
+
+    async function handleDeleteRecentVoucher(voucher: any) {
+        if (!confirm(`Delete ${voucher.voucher_type} voucher ${voucher.voucher_no || ""}?`)) return
+
+        setDeletingVoucherId(voucher.id)
+        try {
+            await deleteVoucher(voucher.id)
+            toast.success("Voucher deleted")
+            router.refresh()
+        } catch (error: any) {
+            toast.error(error?.message || "Failed to delete voucher")
+        } finally {
+            setDeletingVoucherId(null)
+        }
+    }
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -259,11 +276,11 @@ export function VoucherEntry({
     }, [voucherType, needsItems])
 
     // Payment/Expense credit the top account and debit detail lines.
-    // Only Payment is a cash-out movement; Expense Purchase records the obligation/process.
+    // Both are cash-out movements — Expense debits the expense accounts, Payment debits party/obligation.
     const isPaymentLike = voucherType === "Payment" || voucherType === "Expense"
     const isReceiptLike = voucherType === "Receipt" || voucherType === "Income" || voucherType === "Program"
     const isSingleEntry = isPaymentLike || isReceiptLike || voucherType === "Contra"
-    const requiresCashBankMaster = isSingleEntry && voucherType !== "Expense"
+    const requiresCashBankMaster = isSingleEntry
     const isInvoiceMode = voucherType === "Sales" || voucherType === "Purchase"
     // Sales is always offset against the party; other types offset only when the user ticks it.
     const offsetActive = voucherType === "Sales" ? true : offsetEnabled
@@ -318,7 +335,7 @@ export function VoucherEntry({
         let finalLedgers: VoucherLedgerEntry[] = []
 
         if (isSingleEntry) {
-            if (!masterLedgerId) return toast.error(voucherType === "Expense" || voucherType === "Income" ? "Please select a Party." : "Please select an Account at the top.")
+            if (!masterLedgerId) return toast.error(voucherType === "Income" ? "Please select a Party." : "Please select an Account at the top.")
             const validLines = selectedLedgers.filter((l: any) => l.ledger_id && l.amount > 0)
             if (validLines.length === 0) return toast.error("Please enter at least one valid ledger line with an amount.")
             if (!isBalanced) return toast.error("Voucher must have a positive total amount.")
@@ -527,7 +544,6 @@ export function VoucherEntry({
         setSelectedPartyId(partyId)
         if (!partyId) {
             setResolvedPartyLedgerId("")
-            if (voucherType === "Expense") setMasterLedgerId("")
             return
         }
 
@@ -543,9 +559,7 @@ export function VoucherEntry({
                     ? `${selectedParty.name} (${selectedParty.reservation_number})`
                     : selectedParty.name
                 : "Selected party"
-            if (voucherType === "Expense") {
-                setMasterLedgerId(ledgerId)
-            } else if (voucherType === "Income") {
+            if (voucherType === "Income") {
                 setMasterLedgerId(ledgerId)
             } else if (!isInvoiceMode && selectedLedgers.length > 0) {
                 const updated = [...selectedLedgers]
@@ -647,16 +661,14 @@ export function VoucherEntry({
 
     const cashBankLedgers = ledgers.filter((ledger) => ledger.is_cash_bank)
     const regularLedgers = ledgers.filter((ledger) => !ledger.is_cash_bank)
-    const topAccountCandidates = voucherType === "Expense"
-        ? regularLedgers
-        : isSingleEntry
-            ? cashBankLedgers
-            : [...cashBankLedgers, ...regularLedgers]
+    const topAccountCandidates = isSingleEntry
+        ? cashBankLedgers
+        : [...cashBankLedgers, ...regularLedgers]
     const topAccountOptions = topAccountCandidates.map((ledger) => ({
         value: ledger.id,
         label: ledger.name,
     }))
-    const usesPartyAsMasterAccount = voucherType === "Expense" || voucherType === "Income"
+    const usesPartyAsMasterAccount = voucherType === "Income"
     const detailLedgerCandidates = !isSingleEntry
         ? ledgers
         : voucherType === "Contra"
@@ -682,7 +694,7 @@ export function VoucherEntry({
     ))
     const showLedgerRows = (!isSingleEntry && !isInvoiceMode) || masterLedgerId || (!isInvoiceMode && selectedPartyId) || hasVisibleLedgerRows
     const voucherDisplayName = voucherType === "Expense" ? "Expenses Purchase" : voucherType
-    const showPartySelector = voucherType !== "Contra" && voucherType !== "Payment"
+    const showPartySelector = voucherType !== "Contra" && voucherType !== "Payment" && voucherType !== "Expense"
     const showOffsetToggle = voucherType !== "Contra" && voucherType !== "Expense" && voucherType !== "Income" && voucherType !== "Payment" && voucherType !== "Receipt"
     const showBillWiseManage = voucherType === "Payment" || voucherType === "Receipt"
     const partyBalanceLedgerId = !isInvoiceMode ? resolvedPartyLedgerId : (ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId)
@@ -713,6 +725,18 @@ export function VoucherEntry({
     const selectedManagedReferenceLabel = managedReferenceOptions.find(option => option.value === managedLedger?.adjustment_reference)?.label
     const selectedManagedReferenceBalance = managedLedger?.adjustment_reference ? balances[managedLedger.adjustment_reference] : null
     const selectedManagedReferenceName = selectedManagedReferenceLabel?.replace(/\s+-\s+.*$/, "")
+
+    // Recent vouchers of this type, shown below the form so users can edit or delete past entries.
+    const voucherSlug = voucherType.toLowerCase()
+    const recentTypeVouchers = (recentVouchers || [])
+        .filter((voucher: any) => voucher.voucher_type === voucherType)
+        .slice(0, 10)
+    const voucherRowAmount = (voucher: any) => {
+        const entries = voucher.voucher_entries || []
+        const debit = entries.reduce((sum: number, entry: any) => sum + Number(entry.debit_amount || 0), 0)
+        const credit = entries.reduce((sum: number, entry: any) => sum + Number(entry.credit_amount || 0), 0)
+        return Math.max(debit, credit)
+    }
 
     return (
         <div className="w-full">
@@ -933,6 +957,7 @@ export function VoucherEntry({
                                                     <TableHead className="text-right text-slate-500 font-semibold h-9 px-4">Credit</TableHead>
                                                 </>
                                             )}
+                                            <TableHead className="w-8 h-9 px-1" />
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -1002,10 +1027,17 @@ export function VoucherEntry({
                                                             </TableCell>
                                                         </>
                                                     )}
+                                                    <TableCell className="p-1 text-center">
+                                                        {selectedLedgers.length > 1 && (
+                                                            <button type="button" onClick={() => removeLedgerLine(index)} className="text-slate-300 hover:text-red-500">
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </button>
+                                                        )}
+                                                    </TableCell>
                                                 </TableRow>
                                             )) : (
                                             <TableRow>
-                                                <TableCell colSpan={isSingleEntry ? (showBillWiseManage ? 3 : 2) : 3} className="h-24 text-center text-slate-400">
+                                                <TableCell colSpan={isSingleEntry ? (showBillWiseManage ? 4 : 3) : 4} className="h-24 text-center text-slate-400">
                                                     {voucherType === "Contra"
                                                         ? "Select receiving and sending accounts to begin"
                                                         : voucherType === "Payment"
@@ -1088,6 +1120,70 @@ export function VoucherEntry({
                             </form>
                 </div>
             </section>
+
+            {fixedType && (
+                <section className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white">
+                    <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
+                        <h3 className="text-sm font-bold text-slate-700">Recent {voucherDisplayName} Vouchers</h3>
+                        <span className="text-xs font-semibold text-slate-400">{recentTypeVouchers.length} shown</span>
+                    </div>
+                    <Table>
+                        <TableHeader className="bg-white">
+                            <TableRow className="border-b-slate-200">
+                                <TableHead className="text-slate-500 font-semibold h-9 px-4">Voucher No.</TableHead>
+                                <TableHead className="text-slate-500 font-semibold h-9 px-4">Date</TableHead>
+                                <TableHead className="text-slate-500 font-semibold h-9 px-4">Narration</TableHead>
+                                <TableHead className="text-right text-slate-500 font-semibold h-9 px-4">Amount</TableHead>
+                                <TableHead className="w-20 text-right text-slate-500 font-semibold h-9 px-4">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody className="divide-y divide-slate-100">
+                            {recentTypeVouchers.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="h-16 text-center text-slate-400">
+                                        No {voucherDisplayName.toLowerCase()} vouchers yet.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                recentTypeVouchers.map((voucher: any) => (
+                                    <TableRow key={voucher.id} className="[&_td]:px-4 [&_td]:py-2.5">
+                                        <TableCell className="font-semibold text-slate-800">
+                                            <Link href={`/accounting/vouchers/${voucherSlug}/${voucher.id}`} className="hover:text-indigo-700">
+                                                {voucher.voucher_no || "-"}
+                                            </Link>
+                                        </TableCell>
+                                        <TableCell className="text-slate-500">{voucher.date}</TableCell>
+                                        <TableCell className="max-w-[280px] truncate text-slate-600">{voucher.narration || "-"}</TableCell>
+                                        <TableCell className="text-right font-mono font-semibold text-slate-800">
+                                            {voucherRowAmount(voucher).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="flex items-center justify-end gap-1.5">
+                                                <Link
+                                                    href={`/accounting/vouchers/${voucherSlug}?edit=${voucher.id}`}
+                                                    title={`Edit ${voucher.voucher_no || ""}`}
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600"
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </Link>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteRecentVoucher(voucher)}
+                                                    disabled={deletingVoucherId === voucher.id}
+                                                    title={`Delete ${voucher.voucher_no || ""}`}
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </section>
+            )}
 
             <Dialog open={managedLedgerIndex !== null} onOpenChange={(open) => !open && setManagedLedgerIndex(null)}>
                 <DialogContent className="flex h-[92dvh] w-full max-w-4xl flex-col gap-0 overflow-hidden border-slate-300 bg-white p-0 text-slate-900 shadow-none max-sm:bottom-0 max-sm:left-0 max-sm:top-auto max-sm:max-h-[92dvh] max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-t-xl max-sm:border-x-0 max-sm:border-b-0 sm:h-auto sm:max-h-[88vh]">
