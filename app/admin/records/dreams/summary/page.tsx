@@ -93,7 +93,7 @@ export default async function DreamSummaryPage({ searchParams }: { searchParams:
         ) : sort === "month" ? (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {monthlySummaries.map(month => (
-              <Link key={month.key} href={`/admin/records/dreams/summary?sort=month#${month.key}`} className="block rounded-lg border border-slate-200 bg-white/85 p-4 shadow-sm transition hover:border-indigo-200 hover:bg-white hover:shadow-md">
+              <Link key={month.key} href={`/admin/records/dreams/summary/month/${month.key}`} className="block rounded-lg border border-slate-200 bg-white/85 p-4 shadow-sm transition hover:border-indigo-200 hover:bg-white hover:shadow-md">
                 <article className="flex items-center gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
                     <CalendarDays className="h-5 w-5" />

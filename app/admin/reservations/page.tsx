@@ -11,6 +11,7 @@ export default async function ReservationsPage() {
     .select("id, full_name, rank, assembly, district, email, reservation_number")
     .order('reservation_number', { ascending: true, nullsFirst: true })
     .order('full_name', { ascending: true })
+    .limit(10000)
   const memberProfiles = (members || []).filter(member => !isGuestProfile(member))
 
   return (

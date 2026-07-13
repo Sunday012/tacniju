@@ -93,6 +93,7 @@ export async function getDreamOwners() {
     .from("profiles")
     .select("id, full_name, reservation_number")
     .order("full_name", { ascending: true })
+    .limit(10000)
 
   if (fetchError) {
     console.error("Error fetching dream owners:", fetchError)
@@ -262,6 +263,49 @@ export async function updateDreamCategoryStatus(id: string, isActive: boolean) {
   if (updateError) {
     console.error("Error updating dream category:", updateError)
     return { error: updateError.message }
+  }
+
+  revalidatePath("/admin/records/dreams/category")
+  revalidatePath("/admin/records/dreams/new")
+  return { success: true }
+}
+
+export async function updateDreamCategory(id: string, formData: FormData) {
+  const { supabase, error } = await requireAdmin()
+  if (error) return { error }
+
+  const name = String(formData.get("name") || "").trim()
+  const description = String(formData.get("description") || "").trim()
+
+  if (!name) return { error: "Category name is required." }
+
+  const { error: updateError } = await supabase
+    .from("dream_categories")
+    .update({ name, description: description || null })
+    .eq("id", id)
+
+  if (updateError) {
+    console.error("Error updating dream category:", updateError)
+    return { error: updateError.message }
+  }
+
+  revalidatePath("/admin/records/dreams/category")
+  revalidatePath("/admin/records/dreams/new")
+  return { success: true }
+}
+
+export async function deleteDreamCategory(id: string) {
+  const { supabase, error } = await requireAdmin()
+  if (error) return { error }
+
+  const { error: deleteError } = await supabase
+    .from("dream_categories")
+    .delete()
+    .eq("id", id)
+
+  if (deleteError) {
+    console.error("Error deleting dream category:", deleteError)
+    return { error: deleteError.message }
   }
 
   revalidatePath("/admin/records/dreams/category")

@@ -20,6 +20,7 @@ export default async function FamiliesPage() {
     .from("profiles")
     .select("id, full_name, reservation_number, family_id, rank, district, assembly, email")
     .order("full_name")
+    .limit(10000)
   const memberProfiles = (profiles || []).filter(profile => !isGuestProfile(profile))
 
   return (

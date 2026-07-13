@@ -73,6 +73,7 @@ export async function getContentOwners() {
     .from("profiles")
     .select("id, full_name, reservation_number")
     .order("full_name", { ascending: true })
+    .limit(10000)
 
   if (fetchError) return { error: fetchError.message, owners: [] as ContentRecord["owner"][] }
   return { owners: data || [] }

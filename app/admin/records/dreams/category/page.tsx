@@ -76,7 +76,7 @@ export default async function DreamCategoriesPage() {
                     {category.description && <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-600">{category.description}</p>}
                     <p className="mt-3 text-xs font-semibold text-slate-400">{format(parseISO(category.created_at), "MMM d, yyyy")}</p>
                   </div>
-                  <DreamCategoryActions id={category.id} isActive={category.is_active} />
+                  <DreamCategoryActions category={category} />
                 </div>
               </article>
             ))
