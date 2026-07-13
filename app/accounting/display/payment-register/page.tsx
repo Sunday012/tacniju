@@ -106,6 +106,7 @@ export default async function PaymentRegisterPage() {
     const summary = getEntrySummary(voucher)
     return {
       id: voucher.id,
+      date: voucher.date,
       dateLabel: formatIsoDate(voucher.date),
       voucherNo: voucher.voucher_no,
       party: summary.party,
