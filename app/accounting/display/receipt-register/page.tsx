@@ -111,7 +111,7 @@ export default async function ReceiptRegisterPage() {
       party: summary.party,
       ledger: summary.account,
       amount: summary.amount,
-      href: `/accounting/vouchers/receipt/${voucher.id}?from=receipt-register`,
+      href: `/accounting/vouchers/receipt?edit=${voucher.id}`,
     }
   })
 

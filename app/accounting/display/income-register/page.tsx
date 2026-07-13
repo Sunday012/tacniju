@@ -103,7 +103,7 @@ export default async function IncomeRegisterPage() {
       party: summary.accountLedgers,
       ledger: summary.incomeLedgers,
       amount: summary.amount,
-      href: `/accounting/vouchers/income/${voucher.id}?from=income-register`,
+      href: `/accounting/vouchers/income?edit=${voucher.id}`,
     }
   })
 

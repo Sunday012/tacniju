@@ -103,7 +103,7 @@ export default async function ExpensePurchaseRegisterPage() {
       party: summary.partyLedgers,
       ledger: summary.expenseLedgers,
       amount: summary.amount,
-      href: `/accounting/vouchers/expense/${voucher.id}?from=expense-register`,
+      href: `/accounting/vouchers/expense?edit=${voucher.id}`,
     }
   })
 

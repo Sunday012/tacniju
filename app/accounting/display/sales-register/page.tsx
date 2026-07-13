@@ -101,7 +101,7 @@ export default async function SalesRegisterPage() {
       party: summary.party,
       ledger: summary.salesLedgers,
       amount: summary.amount,
-      href: `/accounting/vouchers/sales/${voucher.id}?from=sales-register`,
+      href: `/accounting/vouchers/sales?edit=${voucher.id}`,
     }
   })
 

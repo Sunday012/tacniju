@@ -111,7 +111,7 @@ export default async function PaymentRegisterPage() {
       party: summary.party,
       ledger: summary.account,
       amount: summary.amount,
-      href: `/accounting/vouchers/payment/${voucher.id}?from=payment-register`,
+      href: `/accounting/vouchers/payment?edit=${voucher.id}`,
     }
   })
 

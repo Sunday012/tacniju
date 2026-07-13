@@ -108,7 +108,7 @@ export default async function PurchaseRegisterPage() {
       party: summary.party,
       ledger: summary.purchaseLedgers,
       amount: summary.amount,
-      href: `/accounting/vouchers/purchase/${voucher.id}?from=purchase-register`,
+      href: `/accounting/vouchers/purchase?edit=${voucher.id}`,
     }
   })
 
