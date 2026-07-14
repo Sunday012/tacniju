@@ -24,14 +24,18 @@ async function getOrgId() {
 }
 
 async function getOrCreatePartyGroup(supabase: Awaited<ReturnType<typeof createClient>>, orgId: string) {
+  // Reuse the earliest existing "Parties" group. Using limit(1) instead of
+  // maybeSingle() avoids erroring when duplicates already exist (which would
+  // otherwise cause a brand new "Parties" group to be inserted every sync).
   const { data: existing } = await supabase
     .from("account_groups")
     .select("id")
     .eq("org_id", orgId)
     .eq("name", "Parties")
-    .maybeSingle()
+    .order("created_at", { ascending: true })
+    .limit(1)
 
-  if (existing?.id) return existing.id as string
+  if (existing && existing.length > 0) return existing[0].id as string
 
   const { data, error } = await supabase
     .from("account_groups")
@@ -54,9 +58,10 @@ async function getOrCreateAccountGroup(
     .select("id")
     .eq("org_id", orgId)
     .eq("name", name)
-    .maybeSingle()
+    .order("created_at", { ascending: true })
+    .limit(1)
 
-  if (existing?.id) return existing.id as string
+  if (existing && existing.length > 0) return existing[0].id as string
 
   const { data, error } = await supabase
     .from("account_groups")

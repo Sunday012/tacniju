@@ -83,6 +83,80 @@ export async function updateAccountGroup(id: string, payload: Partial<Omit<Accou
     return data
 }
 
+export async function consolidateDuplicateGroups() {
+    const supabase = await createClient()
+    const orgId = await getOrgId()
+
+    const { data: groups, error: groupsError } = await supabase
+        .from("account_groups")
+        .select("id, name, nature, created_at")
+        .eq("org_id", orgId)
+        .order("created_at", { ascending: true })
+
+    if (groupsError) throw groupsError
+
+    // Bucket groups that share the same nature + name. The earliest one in each
+    // bucket is the canonical group; the rest are duplicates to be merged in.
+    const buckets = new Map<string, { canonicalId: string; duplicateIds: string[] }>()
+    for (const group of groups || []) {
+        const key = `${group.nature}::${String(group.name || "").trim().toLowerCase()}`
+        const bucket = buckets.get(key)
+        if (bucket) {
+            bucket.duplicateIds.push(group.id as string)
+        } else {
+            buckets.set(key, { canonicalId: group.id as string, duplicateIds: [] })
+        }
+    }
+
+    const duplicateToCanonical = new Map<string, string>()
+    for (const bucket of Array.from(buckets.values())) {
+        for (const duplicateId of bucket.duplicateIds) {
+            duplicateToCanonical.set(duplicateId, bucket.canonicalId)
+        }
+    }
+
+    if (duplicateToCanonical.size === 0) {
+        return { success: true, removedGroups: 0, movedLedgers: 0 }
+    }
+
+    let movedLedgers = 0
+    for (const [duplicateId, canonicalId] of Array.from(duplicateToCanonical.entries())) {
+        // Move ledgers off the duplicate group onto the canonical one.
+        const { data: movedRows, error: moveLedgerError } = await supabase
+            .from("ledgers")
+            .update({ group_id: canonicalId })
+            .eq("org_id", orgId)
+            .eq("group_id", duplicateId)
+            .select("id")
+
+        if (moveLedgerError) throw moveLedgerError
+        movedLedgers += (movedRows || []).length
+
+        // Re-point any child groups that used the duplicate as their parent.
+        const { error: moveChildError } = await supabase
+            .from("account_groups")
+            .update({ parent_id: canonicalId })
+            .eq("org_id", orgId)
+            .eq("parent_id", duplicateId)
+
+        if (moveChildError) throw moveChildError
+    }
+
+    const duplicateIds = Array.from(duplicateToCanonical.keys())
+    const { error: deleteError } = await supabase
+        .from("account_groups")
+        .delete()
+        .eq("org_id", orgId)
+        .in("id", duplicateIds)
+
+    if (deleteError) throw deleteError
+
+    revalidatePath("/management")
+    revalidatePath("/accounting")
+
+    return { success: true, removedGroups: duplicateIds.length, movedLedgers }
+}
+
 export async function deleteAccountGroup(id: string) {
     const supabase = await createClient()
     const orgId = await getOrgId()

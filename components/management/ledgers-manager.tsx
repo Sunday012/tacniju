@@ -197,18 +197,18 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
                 <Label>{isBankMode ? "Account Display Name" : "Ledger Name"}</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} required className="bg-white border-slate-300" placeholder={isBankMode ? "e.g. Main Operating Account" : ""} />
+                <Input value={name} onChange={(e) => setName(e.target.value)} required className="bg-white border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" placeholder={isBankMode ? "e.g. Main Operating Account" : ""} />
             </div>
 
             {isBankMode && (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label>Bank Name</Label>
-                        <Input value={bankName} onChange={(e) => setBankName(e.target.value)} className="bg-white border-slate-300" placeholder="e.g. Access Bank" />
+                        <Input value={bankName} onChange={(e) => setBankName(e.target.value)} className="bg-white border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" placeholder="e.g. Access Bank" />
                     </div>
                     <div className="space-y-2">
                         <Label>Account Number</Label>
-                        <Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="bg-white border-slate-300" placeholder="0123456789" />
+                        <Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="bg-white border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" placeholder="0123456789" />
                     </div>
                 </div>
             )}
@@ -217,10 +217,10 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                 <div className="space-y-2">
                     <Label>Group</Label>
                     <Select value={groupId} onValueChange={setGroupId}>
-                        <SelectTrigger className="bg-white border-slate-300">
+                        <SelectTrigger className="bg-white border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
                             <SelectValue placeholder="Select a group" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-slate-300 text-slate-900">
+                        <SelectContent className="bg-white border-slate-300 text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
                             {groups.map((group) => (
                                 <SelectItem key={group.id} value={group.id}>{group.name}</SelectItem>
                             ))}
@@ -231,10 +231,10 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                 <div className="space-y-2">
                     <Label>Balance Type</Label>
                     <Select value={balanceType} onValueChange={(value: "Dr" | "Cr") => setBalanceType(value)}>
-                        <SelectTrigger className="bg-white border-slate-300">
+                        <SelectTrigger className="bg-white border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
                             <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border-slate-300 text-slate-900">
+                        <SelectContent className="bg-white border-slate-300 text-slate-900 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
                             <SelectItem value="Dr">Dr</SelectItem>
                             <SelectItem value="Cr">Cr</SelectItem>
                         </SelectContent>
@@ -250,7 +250,7 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                         step="0.01"
                         value={openingBalance}
                         onChange={(e) => setOpeningBalance(e.target.value)}
-                        className="bg-white border-slate-300"
+                        className="bg-white border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
                     />
                 </div>
 
@@ -275,18 +275,18 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                         <Label>Contact Person</Label>
-                        <Input value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} className="bg-white border-slate-300" placeholder="Optional" />
+                        <Input value={contactPerson} onChange={(e) => setContactPerson(e.target.value)} className="bg-white border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" placeholder="Optional" />
                     </div>
                     <div className="space-y-2">
                         <Label>Phone</Label>
-                        <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="bg-white border-slate-300" placeholder="Optional" />
+                        <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} className="bg-white border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" placeholder="Optional" />
                     </div>
                 </div>
             )}
 
             <div className="space-y-2">
                 <Label>Description</Label>
-                <Input value={description} onChange={(e) => setDescription(e.target.value)} className="bg-white border-slate-300" placeholder="Optional" />
+                <Input value={description} onChange={(e) => setDescription(e.target.value)} className="bg-white border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" placeholder="Optional" />
             </div>
 
             <div className="flex justify-end">
@@ -379,12 +379,12 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                 </div>
             </div>
 
-            <Card className="border-indigo-100 shadow-sm">
+            <Card className="border-indigo-100 shadow-sm dark:border-slate-800">
                 <CardContent className="flex flex-col gap-4 p-6 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex items-start gap-3">
                         <div>
-                            <h3 className="text-sm font-bold text-slate-800">{isBankMode ? "Account Setup" : "Ledger Setup"}</h3>
-                            <p className="text-xs text-slate-500">
+                            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{isBankMode ? "Account Setup" : "Ledger Setup"}</h3>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
                                 {isBankMode
                                     ? "Keep your operating, cash, and bank accounts organized for voucher posting."
                                     : "Create ledgers under the right groups so vouchers and reports stay aligned."}
@@ -404,14 +404,14 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                                     <button
                                         type="button"
                                         onClick={openCreate}
-                                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-5 py-3 text-sm font-bold text-indigo-800 transition hover:border-indigo-300 hover:bg-indigo-100"
+                                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-5 py-3 text-sm font-bold text-indigo-800 transition hover:border-indigo-300 hover:bg-indigo-100 dark:border-indigo-500/30 dark:bg-indigo-500/15 dark:text-indigo-200 dark:hover:bg-indigo-500/25"
                                     >
                                         <Plus className="h-4 w-4" />
                                         Create New {isBankMode ? "Bank" : "Ledger"}
                                     </button>
                                 </SheetTrigger>
-                                <SheetContent side="right" className="w-full overflow-y-auto border-slate-200 bg-slate-50 p-0 text-slate-900 sm:max-w-xl">
-                                    <SheetHeader className="border-b border-slate-200 px-6 py-5">
+                                <SheetContent side="right" className="w-full overflow-y-auto border-slate-200 bg-slate-50 p-0 text-slate-900 sm:max-w-xl dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100">
+                                    <SheetHeader className="border-b border-slate-200 px-6 py-5 dark:border-slate-800">
                                         <SheetTitle>{editId ? `Edit ${isBankMode ? "Bank" : "Ledger"}` : `Create ${isBankMode ? "Bank" : "Ledger"}`}</SheetTitle>
                                         <SheetDescription>{editId ? "Update record." : "Create a record."}</SheetDescription>
                                     </SheetHeader>
@@ -432,13 +432,13 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                                     <button
                                         type="button"
                                         onClick={openCreate}
-                                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-5 py-3 text-sm font-bold text-indigo-800 transition hover:border-indigo-300 hover:bg-indigo-100"
+                                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50 px-5 py-3 text-sm font-bold text-indigo-800 transition hover:border-indigo-300 hover:bg-indigo-100 dark:border-indigo-500/30 dark:bg-indigo-500/15 dark:text-indigo-200 dark:hover:bg-indigo-500/25"
                                     >
                                         <Plus className="h-4 w-4" />
                                         Create New {isBankMode ? "Bank" : "Ledger"}
                                     </button>
                                 </DrawerTrigger>
-                                <DrawerContent className="border-slate-200 bg-slate-50 text-slate-900">
+                                <DrawerContent className="border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100">
                                     <DrawerHeader>
                                         <DrawerTitle>{editId ? `Edit ${isBankMode ? "Bank" : "Ledger"}` : `Create ${isBankMode ? "Bank" : "Ledger"}`}</DrawerTitle>
                                         <DrawerDescription>{editId ? "Update record." : "Create a record."}</DrawerDescription>
@@ -466,24 +466,24 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={`Search ${isBankMode ? "accounts" : "ledgers"} by name...`}
-                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500"
                 />
             </div>
 
-            <Card className="overflow-hidden bg-white shadow-sm border-slate-200">
+            <Card className="overflow-hidden bg-white shadow-sm border-slate-200 dark:bg-slate-900 dark:border-slate-800">
                 <CardContent className="p-0">
                 <Table>
-                    <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600 [&_tr]:border-b [&_tr]:border-slate-200">
-                        <TableRow className="border-slate-200">
+                    <TableHeader className="bg-slate-50 dark:bg-slate-800/50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600 dark:[&_th]:text-slate-400 [&_tr]:border-b [&_tr]:border-slate-200 dark:[&_tr]:border-slate-800">
+                        <TableRow className="border-slate-200 dark:border-slate-800">
                             <TableHead className="text-slate-500">{isBankMode ? "Account" : "Ledger"}</TableHead>
                             <TableHead className="text-right text-slate-500">Current Balance</TableHead>
                             <TableHead className="w-12 text-right text-slate-500">Edit</TableHead>
                         </TableRow>
                     </TableHeader>
-                    <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
+                    <TableBody className="divide-y divide-slate-100 dark:divide-slate-800 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60 dark:[&_tr:hover]:bg-slate-800/50">
                         {filteredLedgers.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={3} className="text-center text-slate-500 py-6">
+                                <TableCell colSpan={3} className="text-center text-slate-500 dark:text-slate-400 py-6">
                                     {searchQuery.trim()
                                         ? `No ledgers found matching "${searchQuery}".`
                                         : isBankMode
@@ -493,8 +493,8 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                             </TableRow>
                         ) : (
                             filteredLedgers.map((ledger) => (
-                                <TableRow key={ledger.id} className="cursor-pointer border-slate-200" onClick={() => isBankMode ? router.push(`/accounting/info/bank-account/${ledger.id}`) : router.push(`/accounting/info/ledger/${ledger.id}`)}>
-                                    <TableCell className="font-medium text-slate-800">
+                                <TableRow key={ledger.id} className="cursor-pointer border-slate-200 dark:border-slate-800" onClick={() => isBankMode ? router.push(`/accounting/info/bank-account/${ledger.id}`) : router.push(`/accounting/info/ledger/${ledger.id}`)}>
+                                    <TableCell className="font-medium text-slate-800 dark:text-slate-100">
                                         {isBankMode ? (
                                             <button type="button" onClick={(event) => {
                                                 event.stopPropagation()
@@ -519,7 +519,7 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                                                 event.stopPropagation()
                                                 openEdit(ledger)
                                             }}
-                                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
                                             title={`Edit ${ledger.name}`}
                                         >
                                             <Pencil className="h-4 w-4" />

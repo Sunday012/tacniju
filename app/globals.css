@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Drive `dark:` variants off the `.dark` class that next-themes sets on <html>,
+   instead of Tailwind v4's default `prefers-color-scheme` (OS) behaviour. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-border: #e2e8f0;
   --color-input: #e2e8f0;
@@ -13,6 +17,20 @@
 }
 
 @layer base {
+  /* Dark values for the shared tokens so base UI (cards, tables, inputs,
+     dialogs, borders, body) flips automatically in dark mode. */
+  .dark {
+    --color-border: #1e293b;
+    --color-input: #1e293b;
+    --color-ring: #334155;
+    --color-background: #020617;
+    --color-foreground: #f1f5f9;
+    --color-card: #0f172a;
+    --color-card-foreground: #f1f5f9;
+    --color-muted: #1e293b;
+    --color-muted-foreground: #94a3b8;
+  }
+
   *, ::before, ::after {
     border-color: var(--color-border);
   }

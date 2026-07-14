@@ -33,9 +33,9 @@ export function GroupSummaryTable({ rows, emptyLabel }: { rows: GroupSummaryRow[
   const totalCredit = filteredRows.reduce((sum, row) => sum + row.credit, 0)
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-      <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm font-semibold text-slate-500">
+    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-800/50">
+        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
           {filteredRows.length} group{filteredRows.length === 1 ? "" : "s"}
           {query.trim() && rows.length !== filteredRows.length ? ` of ${rows.length}` : ""}
         </p>
@@ -46,20 +46,20 @@ export function GroupSummaryTable({ rows, emptyLabel }: { rows: GroupSummaryRow[
             value={query}
             onChange={event => setQuery(event.target.value)}
             placeholder="Search groups..."
-            className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500"
           />
         </div>
       </div>
 
       {rows.length === 0 ? (
-        <div className="px-4 py-10 text-center text-sm font-semibold text-slate-500">{emptyLabel}</div>
+        <div className="px-4 py-10 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">{emptyLabel}</div>
       ) : filteredRows.length === 0 ? (
-        <div className="px-4 py-10 text-center text-sm font-semibold text-slate-500">
+        <div className="px-4 py-10 text-center text-sm font-semibold text-slate-500 dark:text-slate-400">
           No groups match &ldquo;{query}&rdquo;.
         </div>
       ) : (
         <Table>
-          <TableHeader className="bg-white [&_th]:h-10 [&_th]:px-4 [&_th]:text-[11px] [&_th]:font-black [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-500">
+          <TableHeader className="bg-white dark:bg-slate-900 [&_th]:h-10 [&_th]:px-4 [&_th]:text-[11px] [&_th]:font-black [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-500 dark:[&_th]:text-slate-400">
             <TableRow>
               <TableHead>Group</TableHead>
               <TableHead>Nature</TableHead>
@@ -73,27 +73,27 @@ export function GroupSummaryTable({ rows, emptyLabel }: { rows: GroupSummaryRow[
               <TableRow
                 key={row.id}
                 onClick={() => router.push(row.href)}
-                className="cursor-pointer hover:bg-slate-50"
+                className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60"
               >
-                <TableCell className="min-w-44 font-black text-slate-900">{row.name}</TableCell>
-                <TableCell className="text-xs font-bold uppercase tracking-wider text-slate-500">{row.nature}</TableCell>
-                <TableCell className="text-right font-semibold text-slate-600">{row.ledgerCount}</TableCell>
-                <TableCell className="whitespace-nowrap text-right font-mono font-bold text-red-600">
+                <TableCell className="min-w-44 font-black text-slate-900 dark:text-slate-100">{row.name}</TableCell>
+                <TableCell className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{row.nature}</TableCell>
+                <TableCell className="text-right font-semibold text-slate-600 dark:text-slate-400">{row.ledgerCount}</TableCell>
+                <TableCell className="whitespace-nowrap text-right font-mono font-bold text-red-600 dark:text-red-400">
                   {row.debit > 0 ? money(row.debit) : "-"}
                 </TableCell>
-                <TableCell className="whitespace-nowrap text-right font-mono font-bold text-emerald-600">
+                <TableCell className="whitespace-nowrap text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">
                   {row.credit > 0 ? money(row.credit) : "-"}
                 </TableCell>
               </TableRow>
             ))}
-            <TableRow className="border-t-2 border-slate-300 bg-slate-50">
-              <TableCell colSpan={3} className="text-right text-sm font-black uppercase tracking-widest text-slate-800">
+            <TableRow className="border-t-2 border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60">
+              <TableCell colSpan={3} className="text-right text-sm font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">
                 Total
               </TableCell>
-              <TableCell className="whitespace-nowrap text-right font-mono text-base font-black text-red-600">
+              <TableCell className="whitespace-nowrap text-right font-mono text-base font-black text-red-600 dark:text-red-400">
                 {money(totalDebit)}
               </TableCell>
-              <TableCell className="whitespace-nowrap text-right font-mono text-base font-black text-emerald-600">
+              <TableCell className="whitespace-nowrap text-right font-mono text-base font-black text-emerald-600 dark:text-emerald-400">
                 {money(totalCredit)}
               </TableCell>
             </TableRow>

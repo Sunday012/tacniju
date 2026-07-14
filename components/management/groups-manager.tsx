@@ -10,9 +10,9 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { createAccountGroup, updateAccountGroup, deleteAccountGroup, AccountGroup, Ledger } from "@/app/management/actions"
+import { createAccountGroup, updateAccountGroup, deleteAccountGroup, consolidateDuplicateGroups, AccountGroup, Ledger } from "@/app/management/actions"
 import { useRouter } from "next/navigation"
-import { FolderTree, Loader2, Plus, Printer, Shield, Trash2 } from "lucide-react"
+import { FolderTree, Layers, Loader2, Plus, Printer, Shield, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 export function GroupsManager({ groups, ledgers = [], hideTitle = false }: { groups: AccountGroup[], ledgers?: Ledger[], hideTitle?: boolean }) {
@@ -22,8 +22,44 @@ export function GroupsManager({ groups, ledgers = [], hideTitle = false }: { gro
     const [nature, setNature] = useState<"Asset" | "Liability" | "Income" | "Expense">("Asset")
     const [parentId, setParentId] = useState<string>("none")
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [isMerging, setIsMerging] = useState(false)
     const [isDesktop, setIsDesktop] = useState(false)
     const router = useRouter()
+
+    const duplicateGroupCount = (() => {
+        const seen = new Set<string>()
+        let duplicates = 0
+        for (const group of groups) {
+            const key = `${group.nature}::${group.name.trim().toLowerCase()}`
+            if (seen.has(key)) duplicates++
+            else seen.add(key)
+        }
+        return duplicates
+    })()
+
+    async function handleMergeDuplicates() {
+        if (!confirm(`Merge ${duplicateGroupCount} duplicate group${duplicateGroupCount === 1 ? "" : "s"}? Ledgers will be moved onto the group that is kept, and the empty duplicates removed.`)) return
+
+        setIsMerging(true)
+        try {
+            const result = await consolidateDuplicateGroups()
+            if (!result.success) {
+                toast.error("Failed to merge duplicate groups")
+                return
+            }
+            if (result.removedGroups === 0) {
+                toast.success("No duplicate groups found")
+            } else {
+                toast.success(`Merged ${result.removedGroups} duplicate group${result.removedGroups === 1 ? "" : "s"} · moved ${result.movedLedgers} ledger${result.movedLedgers === 1 ? "" : "s"}`)
+            }
+            router.refresh()
+        } catch (error: any) {
+            toast.error(error?.message || "Failed to merge duplicate groups")
+            console.error("Failed to merge duplicate groups", error)
+        } finally {
+            setIsMerging(false)
+        }
+    }
 
     useEffect(() => {
         const mediaQuery = window.matchMedia("(min-width: 768px)")
@@ -264,9 +300,25 @@ export function GroupsManager({ groups, ledgers = [], hideTitle = false }: { gro
                         <div>
                             <h3 className="text-sm font-bold text-slate-800">Group Setup</h3>
                             <p className="text-xs text-slate-500">Create primary and child groups, then map your ledgers under the right structure.</p>
+                            {duplicateGroupCount > 0 ? (
+                                <p className="mt-1 text-xs font-semibold text-amber-600">
+                                    {duplicateGroupCount} duplicate group{duplicateGroupCount === 1 ? "" : "s"} found — merge them to tidy up your chart.
+                                </p>
+                            ) : null}
                         </div>
                     </div>
                     <div className="flex flex-col gap-3 sm:flex-row">
+                        {duplicateGroupCount > 0 ? (
+                            <button
+                                type="button"
+                                onClick={handleMergeDuplicates}
+                                disabled={isMerging}
+                                className="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm font-bold text-amber-800 transition hover:border-amber-300 hover:bg-amber-100 disabled:opacity-60"
+                            >
+                                {isMerging ? <Loader2 className="h-4 w-4 animate-spin" /> : <Layers className="h-4 w-4" />}
+                                Merge Duplicate Groups ({duplicateGroupCount})
+                            </button>
+                        ) : null}
                         {isDesktop ? (
                             <Sheet open={isOpen} onOpenChange={(open) => {
                                 setIsOpen(open)

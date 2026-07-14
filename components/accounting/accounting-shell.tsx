@@ -38,8 +38,8 @@ export function AccountingShell({
   }
 }) {
   return (
-    <div className="min-h-screen bg-[#F4F7FA] text-slate-900">
-      <div className="bg-indigo-950 text-white border-b-[3px] border-amber-400 shadow-sm">
+    <div className="min-h-screen bg-[#F4F7FA] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+      <div className="bg-indigo-950 text-white border-b-[3px] border-amber-400 shadow-sm dark:bg-slate-900">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <Link href={backHref} className="inline-flex items-center gap-2 rounded-lg border border-amber-400/60 bg-amber-400/15 px-3 py-1.5 text-sm font-bold text-amber-100 shadow-sm transition hover:bg-amber-400/25 hover:text-white">
             <ArrowLeft className="h-4 w-4" />
@@ -76,10 +76,10 @@ export function AccountingShell({
             </div>
           </section>
         ) : showTitle ? (
-          <h1 className="mb-8 text-3xl font-black tracking-tight text-slate-900">{title}</h1>
+          <h1 className="mb-8 text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100">{title}</h1>
         ) : null}
         {framed ? (
-          <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] backdrop-blur-3xl sm:p-5">
+          <div className="rounded-2xl border border-white/70 bg-white/80 p-4 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] backdrop-blur-3xl sm:p-5 dark:border-slate-800 dark:bg-slate-900/80">
             {children}
           </div>
         ) : children}
