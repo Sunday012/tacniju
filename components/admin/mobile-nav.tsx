@@ -191,7 +191,7 @@ export function AdminMobileNav() {
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="left" className="w-[280px] p-0 bg-white border-r border-slate-100 z-[9999] flex flex-col h-full dark:border-slate-900 dark:bg-slate-950 dark:text-slate-100">
+      <SheetContent side="left" className="w-[280px] p-0 bg-white border-r border-slate-100 z-[9999] flex h-dvh flex-col dark:border-slate-900 dark:bg-slate-950 dark:text-slate-100">
         <SheetHeader className="p-6 border-b border-slate-100 bg-gradient-to-br from-indigo-600 to-violet-700 shrink-0 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950">
           <SheetTitle className="text-white text-left flex items-center gap-3">
             <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
@@ -204,7 +204,7 @@ export function AdminMobileNav() {
           </SheetTitle>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain custom-scrollbar p-4 space-y-6">
           {NAV_GROUPS.map((group) => (
             <div key={group.title}>
               <button 

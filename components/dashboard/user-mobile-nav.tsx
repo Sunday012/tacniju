@@ -52,9 +52,9 @@ export function UserMobileNav({ isAdmin }: UserMobileNavProps) {
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="left" className="w-[270px] p-0 bg-white/95 backdrop-blur-2xl border-r border-slate-100 dark:border-slate-900 dark:bg-slate-950 dark:text-slate-100">
+      <SheetContent side="left" className="flex h-dvh w-[270px] flex-col p-0 bg-white/95 backdrop-blur-2xl border-r border-slate-100 dark:border-slate-900 dark:bg-slate-950 dark:text-slate-100">
         {/* Header */}
-        <SheetHeader className="p-6 border-b border-slate-100 dark:border-slate-800">
+        <SheetHeader className="shrink-0 p-6 border-b border-slate-100 dark:border-slate-800">
           <SheetTitle className="text-left flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-violet-600 rounded-lg flex items-center justify-center shadow-md shrink-0">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,7 +69,7 @@ export function UserMobileNav({ isAdmin }: UserMobileNavProps) {
         </SheetHeader>
 
         {/* Nav Items */}
-        <nav className="flex flex-col p-4 gap-1 flex-1">
+        <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 custom-scrollbar">
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-2 dark:text-slate-500">Overview</p>
           {navItems.map(({ label, href, icon: Icon }) => {
             const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href))
@@ -106,7 +106,7 @@ export function UserMobileNav({ isAdmin }: UserMobileNavProps) {
         </nav>
 
         {/* Sign out */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800">
+        <div className="shrink-0 p-4 border-t border-slate-100 dark:border-slate-800">
           <button
             onClick={handleSignOut}
             className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-sm font-semibold text-rose-500 hover:bg-rose-50 transition-colors dark:text-rose-300 dark:hover:bg-rose-950/30"
