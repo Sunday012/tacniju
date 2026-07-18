@@ -118,6 +118,7 @@ export default async function SalesRegisterPage() {
         partyLabel="Party"
         ledgerLabel="Sales Ledger"
         emptyLabel="No sales transactions yet."
+        addVoucherHref="/accounting/vouchers/sales"
       />
     </AccountingShell>
   )

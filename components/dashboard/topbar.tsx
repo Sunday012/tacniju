@@ -19,7 +19,8 @@ export function Topbar({ userInitial, avatarUrl, isAdmin }: TopbarProps) {
   const handleSignOut = async () => {
     const supabase = createClient()
     await supabase.auth.signOut()
-    router.push("/")
+    await fetch("/api/auth/signout", { method: "POST" })
+    router.push("/select-church")
   }
 
   return (
@@ -55,11 +56,11 @@ export function Topbar({ userInitial, avatarUrl, isAdmin }: TopbarProps) {
         <div className="h-8 w-[1px] bg-slate-200 hidden sm:block"></div>
         
         <div className="flex items-center gap-4">
-          <form action={handleSignOut} className="hidden sm:block text-slate-500 hover:text-slate-800 transition-colors duration-200">
-            <button type="submit" className="text-sm font-semibold px-2">
+          <div className="hidden sm:block text-slate-500 hover:text-slate-800 transition-colors duration-200">
+            <button type="button" onClick={handleSignOut} className="text-sm font-semibold px-2">
               Sign Out
             </button>
-          </form>
+          </div>
           <Link href="/dashboard/settings">
             <div className="p-1 rounded-2xl bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
               <Avatar className="h-10 w-10 rounded-xl">

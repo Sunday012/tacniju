@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { deleteVoucher } from "@/app/vouchers/actions"
 import { useRouter } from "next/navigation"
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 // Vouchers are listed serially by type: all Receipts, then Payments, then Sales, etc.
@@ -42,10 +42,13 @@ function getVoucherDisplayAmounts(voucherType: string, debit: number, credit: nu
 
     switch (voucherType) {
         case "Payment":
+        case "Receipt":
+            return voucherType === "Receipt"
+                ? { debitDisplay: total, creditDisplay: null as number | null }
+                : { debitDisplay: null as number | null, creditDisplay: total }
         case "Sales":
         case "Income":
             return { debitDisplay: total, creditDisplay: null as number | null }
-        case "Receipt":
         case "Expense":
         case "Purchase":
         case "Program":
@@ -220,7 +223,13 @@ export function DayBookView({
                 </label>
                 <Button type="submit" className="h-11 bg-indigo-600 px-6 font-bold text-white hover:bg-indigo-700">Go</Button>
               </form>
-              {onBack && <button onClick={onBack} className="h-10 rounded-xl bg-slate-100 px-4 text-sm font-bold text-slate-700 hover:bg-slate-200">Back</button>}
+              <div className="flex flex-wrap gap-2">
+                <Link href="/accounting/vouchers" className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-black text-white shadow-sm hover:bg-indigo-700">
+                  <Plus className="h-4 w-4" />
+                  Add Voucher
+                </Link>
+                {onBack && <button onClick={onBack} className="h-10 rounded-xl bg-slate-100 px-4 text-sm font-bold text-slate-700 hover:bg-slate-200">Back</button>}
+              </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

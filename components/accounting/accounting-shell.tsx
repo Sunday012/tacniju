@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react"
 const navItems = [
   { href: "/accounting/info", label: "Accounts Info" },
   { href: "/accounting/vouchers", label: "Vouchers" },
+  { href: "/accounting/voucher-designer", label: "New Creation" },
   { href: "/accounting/inventory-vouchers", label: "Inventory Vouchers" },
   { href: "/accounting/production", label: "Production" },
   { href: "/accounting/inventory", label: "Inventory Info" },
@@ -46,6 +47,9 @@ export function AccountingShell({
             Back to {backLabel}
           </Link>
           <div className="flex gap-2 overflow-x-auto">
+            <Link href="/select-church" className="whitespace-nowrap rounded-lg border border-indigo-700 bg-white/10 px-3 py-1.5 text-xs font-bold text-indigo-100 hover:bg-white/15">
+              Switch Church
+            </Link>
             {navItems.map(item => (
               <Link key={item.href} href={item.href} className="whitespace-nowrap rounded-lg border border-indigo-700 bg-white/10 px-3 py-1.5 text-xs font-bold text-indigo-100 hover:bg-white/15">
                 {item.label}

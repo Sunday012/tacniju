@@ -364,6 +364,49 @@ export async function updateLedger(id: string, payload: Partial<Omit<Ledger, "id
     revalidatePath("/accounting")
 }
 
+export async function adjustLedgerBalance(id: string, payload: { adjustmentType: "add" | "reduce"; amount: number; note?: string }) {
+    const supabase = await createClient()
+    const orgId = await getOrgId()
+    const amount = Number(payload.amount || 0)
+
+    if (!id) return { success: false, error: "Ledger is required." }
+    if (amount <= 0) return { success: false, error: "Amount must be greater than zero." }
+
+    const { data: ledger, error: fetchError } = await supabase
+        .from("ledgers")
+        .select("id, opening_balance, balance_type, description")
+        .eq("id", id)
+        .eq("org_id", orgId)
+        .maybeSingle()
+
+    if (fetchError) throw fetchError
+    if (!ledger) return { success: false, error: "Ledger not found." }
+
+    const currentOpening = ledger.balance_type === "Cr"
+        ? -Number(ledger.opening_balance || 0)
+        : Number(ledger.opening_balance || 0)
+    const adjustedOpening = currentOpening + (payload.adjustmentType === "add" ? amount : -amount)
+    const note = payload.note?.trim()
+    const description = note
+        ? [ledger.description, `Balance adjusted: ${note}`].filter(Boolean).join("\n")
+        : ledger.description
+
+    const { error } = await supabase
+        .from("ledgers")
+        .update({
+            opening_balance: Math.abs(adjustedOpening),
+            balance_type: adjustedOpening < 0 ? "Cr" : "Dr",
+            description,
+        })
+        .eq("id", id)
+        .eq("org_id", orgId)
+
+    if (error) throw error
+    revalidatePath("/management")
+    revalidatePath("/accounting")
+    return { success: true }
+}
+
 export async function deleteLedger(id: string) {
     const supabase = await createClient()
     const orgId = await getOrgId()

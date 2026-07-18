@@ -26,6 +26,8 @@ import {
   Utensils,
   BookMarked,
   BookOpenText,
+  Building2,
+  Mic2,
   Music
 } from "lucide-react"
 
@@ -53,6 +55,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
       { name: "Meal Tickets", href: "/admin/meal-tickets", icon: Ticket },
       { name: "Dining Hall", href: "/admin/dining-hall", icon: Utensils },
       { name: "Families", href: "/admin/families", icon: Users },
+      { name: "Departments", href: "/admin/departments", icon: Building2 },
     ]
   },
   {
@@ -106,6 +109,26 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
           { name: "New", href: "/admin/records/lyrics/new", icon: FileText },
           { name: "Category", href: "/admin/records/lyrics/category", icon: BookMarked },
           { name: "Summary", href: "/admin/records/lyrics/summary", icon: FileText },
+        ],
+      },
+      {
+        name: "Teachings",
+        href: "/admin/records/teachings",
+        icon: BookMarked,
+        children: [
+          { name: "New", href: "/admin/records/teachings/new", icon: FileText },
+          { name: "Category", href: "/admin/records/teachings/category", icon: BookMarked },
+          { name: "Summary", href: "/admin/records/teachings/summary", icon: FileText },
+        ],
+      },
+      {
+        name: "Prophecies",
+        href: "/admin/records/prophecies",
+        icon: Mic2,
+        children: [
+          { name: "New", href: "/admin/records/prophecies/new", icon: FileText },
+          { name: "Category", href: "/admin/records/prophecies/category", icon: BookMarked },
+          { name: "Summary", href: "/admin/records/prophecies/summary", icon: FileText },
         ],
       },
       { name: "Points", href: "/admin/points", icon: Award },

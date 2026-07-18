@@ -2,24 +2,25 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { format, parseISO } from "date-fns"
 import { ArrowLeft, CalendarDays } from "lucide-react"
-import { getMyContentRecord } from "@/app/actions/content-records"
+import { getVisibleContentRecord } from "@/app/actions/content-records"
 
 export const dynamic = "force-dynamic"
 
 export default async function DashboardLyricDetailPage({ params }: { params: { id: string } }) {
-  const { record: lyric } = await getMyContentRecord("lyrics", params.id)
+  const { record: lyric } = await getVisibleContentRecord("lyrics", params.id)
   if (!lyric) notFound()
 
   return (
     <div className="mx-auto max-w-4xl">
       <Link href="/dashboard/lyrics" className="mb-6 inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 shadow-sm hover:bg-slate-50">
         <ArrowLeft className="h-4 w-4" />
-        Back to My Lyrics
+        Back to Lyrics
       </Link>
 
       <article className="rounded-lg border border-slate-200 bg-white/90 p-6 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] sm:p-8">
         <div className="mb-5 flex flex-wrap items-center gap-2">
           {lyric.category?.name && <span className="rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">{lyric.category.name}</span>}
+          {lyric.owner?.full_name && <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">{lyric.owner.full_name}</span>}
           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">Lyric Record</span>
         </div>
 

@@ -145,6 +145,7 @@ export async function getDayBook(filters?: { date?: string; startDate?: string; 
         const narration = String(voucher.narration || "")
         const isBatchVoucher = narration === "Batch" || voucherNo.startsWith("BAT-")
         const isStockJournal = narration === "Production" || voucherNo.startsWith("STJ-")
-        return !isBatchVoucher && !isStockJournal
+        const isRawMaterialJournal = narration === "Raw Material" || voucherNo.startsWith("RMJ-")
+        return !isBatchVoucher && !isStockJournal && !isRawMaterialJournal
     })
 }

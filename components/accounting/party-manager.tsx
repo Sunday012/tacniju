@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { createAccountingParty } from "@/app/accounting/actions"
 import { deleteLedger, LedgerBalance } from "@/app/management/actions"
+import { AdjustBalanceDialog } from "@/components/accounting/adjust-balance-dialog"
 
 type Party = {
   id: string
@@ -158,6 +159,11 @@ export function PartyManager({ parties, balances = {}, hideTitle = false }: { pa
             Delete Party
           </Button>
         </div>
+        {selectedParty.ledgerId && (
+          <div className="mr-2">
+            <AdjustBalanceDialog ledgerId={selectedParty.ledgerId} ledgerName={selectedParty.name} balance={balances[selectedParty.ledgerId]} />
+          </div>
+        )}
         <Button asChild className="bg-indigo-600 text-white hover:bg-indigo-700">
           <Link href={`/accounting/info/party/${selectedParty.id}`}>View Full Page</Link>
         </Button>

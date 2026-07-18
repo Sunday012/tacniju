@@ -35,7 +35,8 @@ export function UserMobileNav({ isAdmin }: UserMobileNavProps) {
   const handleSignOut = async () => {
     const supabase = createClient()
     await supabase.auth.signOut()
-    router.push("/")
+    await fetch("/api/auth/signout", { method: "POST" })
+    router.push("/select-church")
   }
 
   return (

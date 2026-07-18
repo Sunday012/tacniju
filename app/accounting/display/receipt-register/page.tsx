@@ -128,6 +128,7 @@ export default async function ReceiptRegisterPage() {
         partyLabel="Particulars"
         ledgerLabel="Received Into"
         emptyLabel="No receipt transactions yet."
+        addVoucherHref="/accounting/vouchers/receipt"
       />
     </AccountingShell>
   )

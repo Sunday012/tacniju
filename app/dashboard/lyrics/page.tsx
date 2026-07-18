@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { format, parseISO } from "date-fns"
 import { Music, CalendarDays } from "lucide-react"
-import { getMyContentRecords } from "@/app/actions/content-records"
+import { getVisibleContentRecords } from "@/app/actions/content-records"
 
 export const dynamic = "force-dynamic"
 
@@ -10,13 +10,18 @@ function preview(body: string) {
 }
 
 export default async function DashboardLyricsPage() {
-  const { records, error } = await getMyContentRecords("lyrics")
+  const { records, error } = await getVisibleContentRecords("lyrics")
+  const composerCounts = new Map<string, number>()
+  for (const record of records) {
+    const name = record.owner?.full_name || "Unknown Composer"
+    composerCounts.set(name, (composerCounts.get(name) || 0) + 1)
+  }
 
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-extrabold tracking-tight text-slate-800">My Lyrics</h1>
-        <p className="mt-2 font-medium text-slate-500">Lyrics records attached to your name are shown here.</p>
+        <h1 className="text-3xl font-extrabold tracking-tight text-slate-800">Lyrics Library</h1>
+        <p className="mt-2 font-medium text-slate-500">All lyrics are visible by category and composer.</p>
       </div>
 
       {error && (
@@ -30,7 +35,7 @@ export default async function DashboardLyricsPage() {
           <div className="rounded-lg border border-slate-200 bg-white/85 p-12 text-center shadow-sm">
             <Music className="mx-auto h-12 w-12 text-slate-300" />
             <h2 className="mt-4 text-lg font-extrabold text-slate-800">No lyrics yet</h2>
-            <p className="mt-1 text-sm text-slate-500">When a lyric is documented for you, it will appear here.</p>
+            <p className="mt-1 text-sm text-slate-500">When lyrics are documented, they will appear here.</p>
           </div>
         ) : (
           records.map(record => (
@@ -41,6 +46,9 @@ export default async function DashboardLyricsPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="text-lg font-extrabold text-slate-900">{record.title}</h2>
                       {record.category?.name && <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-bold text-indigo-700">{record.category.name}</span>}
+                      <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
+                        {record.owner?.full_name || "Unknown Composer"} · {composerCounts.get(record.owner?.full_name || "Unknown Composer")} song{composerCounts.get(record.owner?.full_name || "Unknown Composer") === 1 ? "" : "s"}
+                      </span>
                     </div>
                     <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-600">{preview(record.body)}</p>
                   </div>

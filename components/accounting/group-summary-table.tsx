@@ -8,7 +8,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 export type GroupSummaryRow = {
   id: string
   name: string
-  nature: string
   ledgerCount: number
   debit: number
   credit: number
@@ -26,7 +25,7 @@ export function GroupSummaryTable({ rows, emptyLabel }: { rows: GroupSummaryRow[
   const filteredRows = useMemo(() => {
     const term = query.trim().toLowerCase()
     if (!term) return rows
-    return rows.filter(row => [row.name, row.nature].some(value => value.toLowerCase().includes(term)))
+    return rows.filter(row => row.name.toLowerCase().includes(term))
   }, [rows, query])
 
   const totalDebit = filteredRows.reduce((sum, row) => sum + row.debit, 0)
@@ -62,7 +61,6 @@ export function GroupSummaryTable({ rows, emptyLabel }: { rows: GroupSummaryRow[
           <TableHeader className="bg-white dark:bg-slate-900 [&_th]:h-10 [&_th]:px-4 [&_th]:text-[11px] [&_th]:font-black [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-500 dark:[&_th]:text-slate-400">
             <TableRow>
               <TableHead>Group</TableHead>
-              <TableHead>Nature</TableHead>
               <TableHead className="text-right">Ledgers</TableHead>
               <TableHead className="text-right">Debit (₦)</TableHead>
               <TableHead className="text-right">Credit (₦)</TableHead>
@@ -76,7 +74,6 @@ export function GroupSummaryTable({ rows, emptyLabel }: { rows: GroupSummaryRow[
                 className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/60"
               >
                 <TableCell className="min-w-44 font-black text-slate-900 dark:text-slate-100">{row.name}</TableCell>
-                <TableCell className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{row.nature}</TableCell>
                 <TableCell className="text-right font-semibold text-slate-600 dark:text-slate-400">{row.ledgerCount}</TableCell>
                 <TableCell className="whitespace-nowrap text-right font-mono font-bold text-red-600 dark:text-red-400">
                   {row.debit > 0 ? money(row.debit) : "-"}
@@ -87,7 +84,7 @@ export function GroupSummaryTable({ rows, emptyLabel }: { rows: GroupSummaryRow[
               </TableRow>
             ))}
             <TableRow className="border-t-2 border-slate-300 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60">
-              <TableCell colSpan={3} className="text-right text-sm font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">
+              <TableCell colSpan={2} className="text-right text-sm font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">
                 Total
               </TableCell>
               <TableCell className="whitespace-nowrap text-right font-mono text-base font-black text-red-600 dark:text-red-400">

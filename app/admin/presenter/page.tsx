@@ -45,6 +45,14 @@ export default function PresenterDashboard() {
                 <Monitor className="w-4 h-4" />
                 Launch Display Screen
               </a>
+              <a
+                href="/present/order-of-service"
+                target="_blank"
+                className="mt-3 w-full flex items-center justify-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-4 py-3 rounded-xl font-bold transition-all shadow-sm"
+              >
+                <BookOpen className="w-4 h-4" />
+                Order of Service
+              </a>
             </div>
           </div>
         </div>
