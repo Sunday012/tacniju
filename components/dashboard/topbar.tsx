@@ -24,7 +24,7 @@ export function Topbar({ userInitial, avatarUrl, isAdmin }: TopbarProps) {
   }
 
   return (
-    <header className="h-[88px] bg-white/80 flex items-center justify-between px-4 sm:px-10 w-full z-50 sticky top-0 py-4 backdrop-blur-xl border-b border-slate-200/40">
+    <header className="h-[88px] bg-white/80 flex items-center justify-between px-4 sm:px-10 w-full z-50 sticky top-0 py-4 backdrop-blur-xl border-b border-slate-200/40 dark:bg-slate-950 dark:border-slate-800/70">
       <div className="flex-1 flex items-center gap-3">
         {/* Mobile hamburger */}
         <UserMobileNav isAdmin={isAdmin} />
@@ -34,7 +34,7 @@ export function Topbar({ userInitial, avatarUrl, isAdmin }: TopbarProps) {
           <input 
             type="text" 
             placeholder="Search resources, events..." 
-            className="w-full bg-white/80 border border-slate-200/80 rounded-2xl pl-11 pr-4 py-3 text-[14px] text-slate-700 font-medium placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-[3px] focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all shadow-sm"
+            className="w-full bg-white/80 border border-slate-200/80 rounded-lg pl-11 pr-4 py-3 text-[14px] text-slate-700 font-medium placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:ring-[3px] focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all shadow-sm dark:bg-slate-900 dark:border-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-slate-900"
           />
         </div>
       </div>
@@ -42,30 +42,30 @@ export function Topbar({ userInitial, avatarUrl, isAdmin }: TopbarProps) {
       <div className="flex items-center gap-5 lg:gap-7">
         {isAdmin && (
           <Link href="/admin">
-            <Button variant="outline" className="hidden sm:flex rounded-xl border-indigo-200/60 bg-indigo-50/50 text-indigo-700 hover:bg-indigo-100/50 shadow-sm font-semibold h-10 px-5">
+            <Button variant="outline" className="hidden sm:flex rounded-lg border-indigo-200/60 bg-indigo-50/50 text-indigo-700 hover:bg-indigo-100/50 shadow-sm font-semibold h-10 px-5 dark:border-indigo-800 dark:bg-slate-900 dark:text-indigo-300 dark:hover:bg-slate-800">
               Admin Portal
             </Button>
           </Link>
         )}
         
-        <button className="relative p-2.5 text-slate-400 hover:text-indigo-600 bg-white shadow-sm border border-slate-200/60 rounded-xl hover:bg-slate-50 transition-all">
+        <button className="relative p-2.5 text-slate-400 hover:text-indigo-600 bg-white shadow-sm border border-slate-200/60 rounded-lg hover:bg-slate-50 transition-all dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-indigo-300">
           <Bell className="w-[18px] h-[18px]" />
-          <span className="absolute top-2 right-2.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white"></span>
+          <span className="absolute top-2 right-2.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white dark:ring-slate-900"></span>
         </button>
 
-        <div className="h-8 w-[1px] bg-slate-200 hidden sm:block"></div>
+        <div className="h-8 w-[1px] bg-slate-200 hidden sm:block dark:bg-slate-800"></div>
         
         <div className="flex items-center gap-4">
-          <div className="hidden sm:block text-slate-500 hover:text-slate-800 transition-colors duration-200">
+          <div className="hidden sm:block text-slate-500 hover:text-slate-800 transition-colors duration-200 dark:text-slate-400 dark:hover:text-slate-100">
             <button type="button" onClick={handleSignOut} className="text-sm font-semibold px-2">
               Sign Out
             </button>
           </div>
           <Link href="/dashboard/settings">
-            <div className="p-1 rounded-2xl bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-              <Avatar className="h-10 w-10 rounded-xl">
+            <div className="p-1 rounded-lg bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow cursor-pointer dark:bg-slate-900 dark:border-slate-800">
+              <Avatar className="h-10 w-10 rounded-lg">
                 {avatarUrl && <AvatarImage src={avatarUrl} />}
-                <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-violet-50 text-indigo-700 font-bold rounded-xl text-sm">
+                <AvatarFallback className="bg-gradient-to-br from-indigo-100 to-violet-50 text-indigo-700 font-bold rounded-lg text-sm dark:from-slate-800 dark:to-slate-900 dark:text-indigo-200">
                   {userInitial}
                 </AvatarFallback>
               </Avatar>

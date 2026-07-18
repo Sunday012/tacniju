@@ -62,6 +62,9 @@ export default async function PartyProfilePage({
       transactionDisplayMode="ledger-party"
       deleteLedgerId={ledgerId}
       deleteLabel="Party"
+      adjustLedgerId={ledgerId}
+      adjustLedgerName={party.name}
+      adjustBalance={balance}
     />
   )
 }

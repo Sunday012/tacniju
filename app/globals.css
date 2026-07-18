@@ -44,4 +44,57 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  .flat-dashboard [class*="shadow"] {
+    box-shadow: none !important;
+  }
+
+  .dark .flat-dashboard [class*="bg-white/"],
+  .dark .flat-dashboard [class~="bg-white"] {
+    background-color: rgb(15 23 42) !important;
+  }
+
+  .dark .flat-dashboard [class*="border-white/"],
+  .dark .flat-dashboard [class~="border-white"],
+  .dark .flat-dashboard [class*="border-slate-100"],
+  .dark .flat-dashboard [class*="border-slate-200"],
+  .dark .flat-dashboard [class*="border-gray-100"] {
+    border-color: rgb(30 41 59) !important;
+  }
+
+  .dark .flat-dashboard [class*="bg-slate-50"],
+  .dark .flat-dashboard [class*="bg-gray-50"] {
+    background-color: rgb(2 6 23) !important;
+  }
+
+  .dark .flat-dashboard [class*="text-slate-900"],
+  .dark .flat-dashboard [class*="text-slate-800"],
+  .dark .flat-dashboard [class*="text-gray-900"],
+  .dark .flat-dashboard [class*="text-gray-800"],
+  .dark .flat-dashboard [class*="text-gray-700"] {
+    color: rgb(241 245 249) !important;
+  }
+
+  .dark .flat-dashboard [class*="text-slate-700"],
+  .dark .flat-dashboard [class*="text-slate-600"],
+  .dark .flat-dashboard [class*="text-slate-500"],
+  .dark .flat-dashboard [class*="text-gray-600"],
+  .dark .flat-dashboard [class*="text-gray-500"] {
+    color: rgb(148 163 184) !important;
+  }
+
+  .flat-dashboard .rounded-\[2rem\],
+  .flat-dashboard .rounded-\[1\.7rem\],
+  .flat-dashboard .rounded-\[1\.25rem\],
+  .flat-dashboard .rounded-3xl,
+  .flat-dashboard .rounded-2xl {
+    border-radius: 12px !important;
+  }
+
+  .flat-dashboard .rounded-\[18px\],
+  .flat-dashboard .rounded-\[14px\],
+  .flat-dashboard .rounded-\[12px\],
+  .flat-dashboard .rounded-xl {
+    border-radius: 8px !important;
+  }
 }

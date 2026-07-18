@@ -64,6 +64,9 @@ export default async function BankAccountProfilePage({
       transactionDisplayMode="bank-daybook"
       deleteLedgerId={account.id}
       deleteLabel="Bank Account"
+      adjustLedgerId={account.id}
+      adjustLedgerName={account.name}
+      adjustBalance={currentBalance}
     />
   )
 }

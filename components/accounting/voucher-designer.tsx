@@ -1,7 +1,29 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { CalendarDays, Church, FileText, Hash, ImageIcon, ListChecks, Plus, ReceiptText, Save, Trash2, Type } from "lucide-react"
+import { useMemo, useState, useTransition } from "react"
+import {
+  CalendarDays,
+  Church,
+  Copy,
+  FileText,
+  Hash,
+  ImageIcon,
+  ListChecks,
+  Plus,
+  ReceiptText,
+  Save,
+  Trash2,
+  Type,
+} from "lucide-react"
+import { toast } from "sonner"
+import {
+  deleteCreationTemplate,
+  saveCreationTemplate,
+  type CreationTemplate,
+  type CreationTemplateBlock,
+  type CreationTemplateKind,
+  type CreationTemplateScope,
+} from "@/app/accounting/voucher-designer/actions"
 
 const modules = [
   { id: "heading", label: "Heading", icon: Type },
@@ -15,7 +37,17 @@ const modules = [
 ] as const
 
 type ModuleId = typeof modules[number]["id"]
-type Block = { id: string; module: ModuleId; label: string; value: string }
+type Block = CreationTemplateBlock & { module: ModuleId }
+
+const iconOptions = ["Receipt", "Church", "File", "List", "Image"]
+
+function defaultBlocks(): Block[] {
+  return [
+    { id: "initial-church", module: "church", label: "Church", value: "TACN IJU" },
+    { id: "initial-heading", module: "heading", label: "Title", value: "New Voucher" },
+    { id: "initial-amount", module: "amount", label: "Amount", value: "NGN 0.00" },
+  ]
+}
 
 function defaultValue(module: ModuleId) {
   if (module === "heading") return "Program Voucher"
@@ -25,7 +57,7 @@ function defaultValue(module: ModuleId) {
   if (module === "list") return "Opening prayer\nOffering\nClosing prayer"
   if (module === "church") return "TACN IJU"
   if (module === "image") return "Logo / image placeholder"
-    return "Write here..."
+  return "Write here..."
 }
 
 function createId() {
@@ -33,14 +65,30 @@ function createId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
-export function VoucherDesigner() {
-  const [format, setFormat] = useState<"voucher" | "page">("voucher")
-  const [blocks, setBlocks] = useState<Block[]>([
-    { id: "initial-church", module: "church", label: "Church", value: "TACN IJU" },
-    { id: "initial-heading", module: "heading", label: "Title", value: "New Voucher" },
-    { id: "initial-amount", module: "amount", label: "Amount", value: "NGN 0.00" },
-  ])
+function normalizeBlocks(blocks: CreationTemplateBlock[]): Block[] {
+  return blocks.map(block => ({
+    id: block.id || createId(),
+    module: modules.some(item => item.id === block.module) ? block.module as ModuleId : "text",
+    label: block.label || "Field",
+    value: block.value || "",
+  }))
+}
 
+export function VoucherDesigner({
+  templates,
+  defaultScope = "accounting",
+}: {
+  templates: CreationTemplate[]
+  defaultScope?: CreationTemplateScope
+}) {
+  const [templateId, setTemplateId] = useState("")
+  const [name, setName] = useState("New Voucher Template")
+  const [description, setDescription] = useState("")
+  const [format, setFormat] = useState<CreationTemplateKind>("voucher")
+  const [scope, setScope] = useState<CreationTemplateScope>(defaultScope === "admin" ? "admin" : "both")
+  const [iconName, setIconName] = useState("Receipt")
+  const [blocks, setBlocks] = useState<Block[]>(defaultBlocks())
+  const [isPending, startTransition] = useTransition()
   const selectedModules = useMemo(() => new Set(blocks.map(block => block.module)), [blocks])
 
   function addBlock(module: ModuleId) {
@@ -51,12 +99,69 @@ export function VoucherDesigner() {
     setBlocks(current => current.map(block => block.id === id ? { ...block, ...values } : block))
   }
 
+  function loadTemplate(template: CreationTemplate) {
+    setTemplateId(template.id)
+    setName(template.name)
+    setDescription(template.description || "")
+    setFormat(template.template_kind)
+    setScope(template.scope)
+    setIconName(template.icon_name || "Receipt")
+    setBlocks(normalizeBlocks(template.blocks || []))
+  }
+
+  function newTemplate() {
+    setTemplateId("")
+    setName(format === "page" ? "New Page Template" : "New Voucher Template")
+    setDescription("")
+    setIconName(format === "page" ? "File" : "Receipt")
+    setBlocks(defaultBlocks())
+  }
+
   function saveDraft() {
-    localStorage.setItem("godware_new_creation_draft", JSON.stringify({ format, blocks }))
+    localStorage.setItem("godware_new_creation_draft", JSON.stringify({ name, description, format, scope, iconName, blocks }))
+    toast.success("Browser draft saved")
+  }
+
+  function saveTemplate() {
+    const formData = new FormData()
+    formData.set("id", templateId)
+    formData.set("name", name)
+    formData.set("description", description)
+    formData.set("template_kind", format)
+    formData.set("scope", scope)
+    formData.set("icon_name", iconName)
+    formData.set("blocks", JSON.stringify(blocks))
+
+    startTransition(async () => {
+      const result = await saveCreationTemplate(formData)
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+      toast.success(templateId ? "Template updated" : "Template saved")
+    })
+  }
+
+  function removeTemplate() {
+    if (!templateId) {
+      toast.error("Select a saved template first.")
+      return
+    }
+    if (!confirm(`Delete "${name}"?`)) return
+
+    startTransition(async () => {
+      const result = await deleteCreationTemplate(templateId)
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+      toast.success("Template deleted")
+      newTemplate()
+    })
   }
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
+    <div className="grid gap-5 lg:grid-cols-[340px_1fr]">
       <aside className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div>
           <h1 className="text-xl font-black text-slate-900 dark:text-slate-100">Create Page / Voucher</h1>
@@ -66,6 +171,21 @@ export function VoucherDesigner() {
                 {item}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <input value={name} onChange={event => setName(event.target.value)} className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-black text-slate-900 outline-none focus:border-indigo-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100" placeholder="Template name" />
+          <textarea value={description} onChange={event => setDescription(event.target.value)} rows={3} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 outline-none focus:border-indigo-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200" placeholder="Description" />
+          <div className="grid grid-cols-2 gap-2">
+            <select value={scope} onChange={event => setScope(event.target.value as CreationTemplateScope)} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold dark:border-slate-700 dark:bg-slate-950">
+              <option value="both">Admin + Account</option>
+              <option value="accounting">Account Only</option>
+              <option value="admin">Admin Only</option>
+            </select>
+            <select value={iconName} onChange={event => setIconName(event.target.value)} className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold dark:border-slate-700 dark:bg-slate-950">
+              {iconOptions.map(option => <option key={option} value={option}>{option}</option>)}
+            </select>
           </div>
         </div>
 
@@ -81,16 +201,43 @@ export function VoucherDesigner() {
           })}
         </div>
 
-        <button onClick={saveDraft} className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 text-sm font-black text-white hover:bg-indigo-700">
-          <Save className="h-4 w-4" />
-          Save Draft
-        </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={saveTemplate} disabled={isPending} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 text-sm font-black text-white hover:bg-indigo-700 disabled:opacity-60">
+            <Save className="h-4 w-4" />
+            Save
+          </button>
+          <button onClick={saveDraft} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-black text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+            <Copy className="h-4 w-4" />
+            Draft
+          </button>
+          <button onClick={newTemplate} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-xs font-black text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300">
+            New
+          </button>
+          <button onClick={removeTemplate} disabled={!templateId || isPending} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 text-xs font-black text-red-600 hover:bg-red-100 disabled:opacity-50">
+            Delete
+          </button>
+        </div>
+
+        <div className="space-y-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+          <p className="text-xs font-black uppercase tracking-widest text-slate-400">Saved Templates</p>
+          {templates.length === 0 ? (
+            <p className="rounded-xl bg-slate-50 p-3 text-sm font-semibold text-slate-500 dark:bg-slate-950">No saved templates yet.</p>
+          ) : templates.map(template => (
+            <button key={template.id} onClick={() => loadTemplate(template)} className={`w-full rounded-xl border px-3 py-2 text-left transition ${templateId === template.id ? "border-indigo-300 bg-indigo-50 text-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-200" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"}`}>
+              <span className="block truncate text-sm font-black">{template.name}</span>
+              <span className="mt-0.5 block text-xs font-semibold capitalize text-slate-400">{template.template_kind} · {template.scope}</span>
+            </button>
+          ))}
+        </div>
       </aside>
 
       <section className="min-h-[720px] rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <div className={`${format === "voucher" ? "mx-auto max-w-3xl border border-slate-300 p-8" : "w-full p-4"} min-h-[640px] bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100`}>
+        <div className={`${format === "voucher" ? "mx-auto max-w-3xl border border-slate-300 p-8 dark:border-slate-700" : "w-full p-4"} min-h-[640px] bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100`}>
           <div className="mb-6 flex items-center justify-between border-b border-slate-200 pb-4 dark:border-slate-800">
-            <span className="text-xs font-black uppercase tracking-widest text-slate-400">{format}</span>
+            <div>
+              <span className="text-xs font-black uppercase tracking-widest text-slate-400">{format} template</span>
+              <h2 className="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{name || "Untitled Template"}</h2>
+            </div>
             <span className="text-xs font-bold text-slate-400">{selectedModules.size} module types</span>
           </div>
           <div className="space-y-4">

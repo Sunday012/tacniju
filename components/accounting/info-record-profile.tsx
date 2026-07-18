@@ -10,8 +10,9 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { LedgerTransactionRow } from "@/app/accounting/actions"
-import { deleteLedger } from "@/app/management/actions"
+import { deleteLedger, type LedgerBalance } from "@/app/management/actions"
 import { deleteVoucher } from "@/app/vouchers/actions"
+import { AdjustBalanceDialog } from "@/components/accounting/adjust-balance-dialog"
 import { toast } from "sonner"
 import { useState } from "react"
 
@@ -86,6 +87,9 @@ export function InfoRecordProfile({
   transactionDisplayMode = "raw",
   deleteLedgerId,
   deleteLabel = "Record",
+  adjustLedgerId,
+  adjustLedgerName,
+  adjustBalance,
 }: {
   title: string
   subtitle?: string
@@ -101,6 +105,9 @@ export function InfoRecordProfile({
   transactionDisplayMode?: TransactionDisplayMode
   deleteLedgerId?: string
   deleteLabel?: string
+  adjustLedgerId?: string
+  adjustLedgerName?: string
+  adjustBalance?: LedgerBalance | null
 }) {
   const router = useRouter()
   const [deletingVoucherId, setDeletingVoucherId] = useState<string | null>(null)
@@ -172,13 +179,13 @@ export function InfoRecordProfile({
       </div>
 
       <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
-        <Tabs defaultValue="details" className="space-y-6">
+        <Tabs defaultValue="transactions" className="space-y-6">
           <TabsList className="h-auto w-full justify-start gap-8 rounded-none border-b border-slate-200 bg-transparent p-0 text-left">
-            <TabsTrigger value="details" className="rounded-none border-b-2 border-transparent px-0 py-4 text-lg font-medium text-slate-500 shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 data-[state=active]:shadow-none">
-              Details
-            </TabsTrigger>
             <TabsTrigger value="transactions" className="rounded-none border-b-2 border-transparent px-0 py-4 text-lg font-medium text-slate-500 shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 data-[state=active]:shadow-none">
               Transactions
+            </TabsTrigger>
+            <TabsTrigger value="details" className="rounded-none border-b-2 border-transparent px-0 py-4 text-lg font-medium text-slate-500 shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 data-[state=active]:shadow-none">
+              Details
             </TabsTrigger>
             <TabsTrigger value="comments" className="rounded-none border-b-2 border-transparent px-0 py-4 text-lg font-medium text-slate-500 shadow-none data-[state=active]:border-blue-500 data-[state=active]:bg-transparent data-[state=active]:text-blue-600 data-[state=active]:shadow-none">
               {commentTabLabel}
@@ -214,9 +221,18 @@ export function InfoRecordProfile({
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <CardTitle className="text-2xl font-semibold text-slate-900">Transactions</CardTitle>
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Period</p>
-                      <p className="mt-1 font-semibold text-slate-800">{transactionPeriod}</p>
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      {adjustLedgerId ? (
+                        <AdjustBalanceDialog
+                          ledgerId={adjustLedgerId}
+                          ledgerName={adjustLedgerName || title}
+                          balance={adjustBalance}
+                        />
+                      ) : null}
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Period</p>
+                        <p className="mt-1 font-semibold text-slate-800">{transactionPeriod}</p>
+                      </div>
                     </div>
                   </div>
                   <form className="flex flex-col gap-3 sm:flex-row sm:items-end">

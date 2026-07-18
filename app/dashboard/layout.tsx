@@ -19,15 +19,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const initials = getInitials(profile?.full_name || "User")
 
   return (
-    <div className="min-h-screen bg-[#F4F7FA] flex flex-col lg:flex-row font-sans selection:bg-indigo-500/30">
+    <div className="flat-dashboard min-h-screen bg-[#F4F7FA] flex flex-col lg:flex-row font-sans selection:bg-indigo-500/30 dark:bg-slate-950">
       {/* Sidebar Navigation */}
       <SidebarNav profile={profile || null} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden relative">
-        {/* Subtle background blur effects */}
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-bl from-indigo-200/40 via-violet-100/20 to-transparent rounded-full blur-3xl opacity-60 pointer-events-none -z-10 translate-x-1/3 -translate-y-1/4"></div>
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-cyan-100/40 to-transparent rounded-full blur-3xl opacity-50 pointer-events-none -z-10 -translate-x-1/3 translate-y-1/3"></div>
 
         {/* Top Header */}
         <Topbar

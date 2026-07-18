@@ -15,8 +15,8 @@ interface AttendanceHistoryProps {
 export function AttendanceHistory({ attendance }: AttendanceHistoryProps) {
   if (!attendance || attendance.length === 0) {
     return (
-      <div className="text-center py-6 text-gray-500">
-        <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="text-center py-6 text-gray-500 dark:text-slate-400">
+        <svg className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -32,15 +32,15 @@ export function AttendanceHistory({ attendance }: AttendanceHistoryProps) {
   return (
     <div className="space-y-3">
       {attendance.map((record) => (
-        <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg dark:bg-slate-950 dark:border dark:border-slate-800">
           <div className="flex-1">
-            <p className="font-medium text-sm text-gray-900">{record.event_name}</p>
-            <p className="text-xs text-gray-500">{new Date(record.event_date).toLocaleDateString()}</p>
-            {record.notes && <p className="text-xs text-gray-600 mt-1">{record.notes}</p>}
+            <p className="font-medium text-sm text-gray-900 dark:text-slate-100">{record.event_name}</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400">{new Date(record.event_date).toLocaleDateString()}</p>
+            {record.notes && <p className="text-xs text-gray-600 mt-1 dark:text-slate-400">{record.notes}</p>}
           </div>
           <Badge
             variant={record.attended ? "default" : "secondary"}
-            className={`text-xs ${record.attended ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"}`}
+            className={`text-xs ${record.attended ? "bg-green-100 text-green-800 dark:bg-emerald-950 dark:text-emerald-300" : "bg-gray-100 text-gray-600 dark:bg-slate-900 dark:text-slate-300"}`}
           >
             {record.attended ? "Present" : "Absent"}
           </Badge>

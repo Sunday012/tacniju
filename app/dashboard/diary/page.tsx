@@ -1,7 +1,7 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ProfileImagePreview } from "@/components/profile-image-preview"
 import { isGuestProfile } from "@/lib/profile-kind"
 
 export default async function DiaryPage() {
@@ -26,12 +26,7 @@ export default async function DiaryPage() {
   const MemberCard = ({ member }: { member: any }) => (
     <Card className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300">
       <CardContent className="p-5 flex gap-4">
-        <Avatar className="h-12 w-12 border-2 border-indigo-50">
-          <AvatarImage src={member.avatar_url || ""} />
-          <AvatarFallback className="bg-indigo-100 text-indigo-700 font-bold">
-            {member.full_name.substring(0, 2).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+        <ProfileImagePreview imageUrl={member.avatar_url} name={member.full_name} className="h-12 w-12" fallbackClassName="bg-indigo-100 text-indigo-700 font-bold" />
         <div className="flex-1">
           <h3 className="font-bold text-lg text-gray-800 leading-tight">{member.full_name}</h3>
           {member.office_position && (

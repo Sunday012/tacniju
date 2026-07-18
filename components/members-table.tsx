@@ -17,7 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ProfileImagePreview } from "@/components/profile-image-preview"
 import { useRouter } from "next/navigation"
 import { updateMemberRankAction, giveMemberPointsAction, updateMemberDiaryDetailsAction } from "@/app/actions"
 import { Download, Users, Search, Filter, Eye, UserCog, FileText, Trash2, Coins, PlusCircle } from "lucide-react"
@@ -537,19 +537,14 @@ export function MembersTable({ members, availableAwards = [], gifts = [] }: Memb
   }
 
   const MemberCard = ({ member }: { member: Profile }) => (
-    <Card className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 w-full max-w-md mx-auto sm:max-w-full group">
+    <Card className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 w-full max-w-md mx-auto sm:max-w-full group dark:border-slate-800 dark:bg-slate-950">
       <CardContent className="p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-4">
           <div className="flex items-start gap-3">
-            <Avatar className="h-10 w-10 border border-slate-100 shrink-0">
-              <AvatarImage src={member.avatar_url || ""} />
-              <AvatarFallback className="bg-slate-100 text-slate-600 font-bold text-xs">
-                {member.full_name.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <ProfileImagePreview imageUrl={member.avatar_url} name={member.full_name} />
             <div>
-              <h3 className="font-semibold text-lg text-gray-800 break-words leading-tight">{member.full_name}</h3>
-              <p className="text-sm text-gray-600 break-all mt-0.5">{member.email}</p>
+              <h3 className="font-semibold text-lg text-gray-800 break-words leading-tight dark:text-slate-100">{member.full_name}</h3>
+              <p className="text-sm text-gray-600 break-all mt-0.5 dark:text-slate-400">{member.email}</p>
             </div>
           </div>
           <div className="mt-2 sm:mt-0 flex-shrink-0">
@@ -571,16 +566,16 @@ export function MembersTable({ members, availableAwards = [], gifts = [] }: Memb
 
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 mb-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-500">Department:</span>
+            <span className="text-sm font-medium text-gray-500 dark:text-slate-400">Department:</span>
             {member.department ? (
               <Badge variant="outline" className="text-xs">{member.department}</Badge>
             ) : (
-              <span className="text-xs text-gray-400">Not assigned</span>
+              <span className="text-xs text-gray-400 dark:text-slate-500">Not assigned</span>
             )}
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-500">Assembly:</span>
-            <span className="text-sm text-gray-700">{member.assembly || "Not specified"}</span>
+            <span className="text-sm font-medium text-gray-500 dark:text-slate-400">Assembly:</span>
+            <span className="text-sm text-gray-700 dark:text-slate-300">{member.assembly || "Not specified"}</span>
           </div>
         </div>
 
@@ -601,7 +596,7 @@ export function MembersTable({ members, availableAwards = [], gifts = [] }: Memb
                 Manage
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md max-h-[80vh] bg-white rounded-2xl">
+            <DialogContent className="sm:max-w-md max-h-[80vh] bg-white rounded-2xl dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <UserCog className="w-5 h-5" />
@@ -787,7 +782,7 @@ export function MembersTable({ members, availableAwards = [], gifts = [] }: Memb
                 <Trash2 className="w-4 h-4" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md bg-white rounded-2xl">
+            <DialogContent className="sm:max-w-md bg-white rounded-2xl dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 text-red-600">
                   <Trash2 className="w-5 h-5" />
@@ -905,7 +900,7 @@ export function MembersTable({ members, availableAwards = [], gifts = [] }: Memb
       {/* ============================================================================ */}
       {/* ENHANCED SECTION: Search and Filters (Your original logic + better UI) */}
       {/* ============================================================================ */}
-      <Card>
+      <Card className="border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
         <CardContent className="p-6">
           <div className="flex flex-col lg:flex-row gap-4 mb-4">
             <div className="relative flex-1">
@@ -914,17 +909,17 @@ export function MembersTable({ members, availableAwards = [], gifts = [] }: Memb
                 placeholder="Search members by name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500"
               />
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2">
               <Select value={filterDepartment} onValueChange={setFilterDepartment}>
-                <SelectTrigger className="w-full sm:w-48">
+                <SelectTrigger className="w-full sm:w-48 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
                   <Filter className="w-4 h-4 mr-2" />
                   <SelectValue placeholder="Department" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
                   <SelectItem value="all">All Departments</SelectItem>
                   <SelectItem value="Music">Music</SelectItem>
                   <SelectItem value="Ushering">Ushering</SelectItem>
@@ -935,10 +930,10 @@ export function MembersTable({ members, availableAwards = [], gifts = [] }: Memb
               </Select>
 
               <Select value={filterRank} onValueChange={setFilterRank}>
-                <SelectTrigger className="w-full sm:w-48">
+                <SelectTrigger className="w-full sm:w-48 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
                   <SelectValue placeholder="Rank" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
                   <SelectItem value="all">All Ranks</SelectItem>
                   <SelectItem value="S-Servant">S-Servant</SelectItem>
                   <SelectItem value="A-Chosen">A-Chosen</SelectItem>
@@ -948,10 +943,10 @@ export function MembersTable({ members, availableAwards = [], gifts = [] }: Memb
               </Select>
 
               <Select value={filterFamily} onValueChange={setFilterFamily}>
-                <SelectTrigger className="w-full sm:w-48">
+                <SelectTrigger className="w-full sm:w-48 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
                   <SelectValue placeholder="Family" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
                   <SelectItem value="all">All Families</SelectItem>
                   <SelectItem value="Eden">Eden</SelectItem>
                   <SelectItem value="Taberah">Taberah</SelectItem>
@@ -995,42 +990,37 @@ export function MembersTable({ members, availableAwards = [], gifts = [] }: Memb
       {/* ============================================================================ */}
       {viewMode === "table" ? (
         // DESKTOP TABLE VIEW (Enhanced version of your original table)
-        <Card>
+        <Card className="border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50/50">
-                  <TableHead className="font-semibold">Name</TableHead>
-                  <TableHead className="font-semibold">Email</TableHead>
-                  <TableHead className="font-semibold">Department</TableHead>
-                  <TableHead className="font-semibold">Rank</TableHead>
-                  <TableHead className="font-semibold">Points</TableHead>
-                  <TableHead className="font-semibold">Assembly</TableHead>
-                  <TableHead className="font-semibold text-right">Actions</TableHead>
+                <TableRow className="bg-gray-50/50 dark:border-slate-800 dark:bg-slate-900">
+                  <TableHead className="font-semibold dark:text-slate-300">Name</TableHead>
+                  <TableHead className="font-semibold dark:text-slate-300">Email</TableHead>
+                  <TableHead className="font-semibold dark:text-slate-300">Department</TableHead>
+                  <TableHead className="font-semibold dark:text-slate-300">Rank</TableHead>
+                  <TableHead className="font-semibold dark:text-slate-300">Points</TableHead>
+                  <TableHead className="font-semibold dark:text-slate-300">Assembly</TableHead>
+                  <TableHead className="font-semibold text-right dark:text-slate-300">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {sortedMembers.map((member) => (
-                  <TableRow key={member.id} className="hover:bg-gray-50/50">
-                    <TableCell className="font-medium">
+                  <TableRow key={member.id} className="hover:bg-gray-50/50 dark:border-slate-800 dark:hover:bg-slate-900/70">
+                    <TableCell className="font-medium dark:text-slate-100">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8 border border-slate-100">
-                          <AvatarImage src={member.avatar_url || ""} />
-                          <AvatarFallback className="bg-slate-100 text-slate-600 font-bold text-[10px]">
-                            {member.full_name.substring(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                        <ProfileImagePreview imageUrl={member.avatar_url} name={member.full_name} className="h-8 w-8" fallbackClassName="bg-slate-100 text-slate-600 font-bold text-[10px]" />
                         {member.full_name}
                       </div>
                     </TableCell>
-                    <TableCell className="text-gray-600">{member.email}</TableCell>
+                    <TableCell className="text-gray-600 dark:text-slate-400">{member.email}</TableCell>
                     <TableCell>
                       {member.department ? (
                         <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                           {member.department}
                         </Badge>
                       ) : (
-                        <span className="text-gray-400">Not assigned</span>
+                        <span className="text-gray-400 dark:text-slate-500">Not assigned</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -1053,7 +1043,7 @@ export function MembersTable({ members, availableAwards = [], gifts = [] }: Memb
                         {member.points || 0}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-gray-600">{member.assembly || "Not specified"}</TableCell>
+                    <TableCell className="text-gray-600 dark:text-slate-400">{member.assembly || "Not specified"}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2">
                         {/* ENHANCED MANAGE DIALOG (Same as your original but with better styling) */}
@@ -1074,7 +1064,7 @@ export function MembersTable({ members, availableAwards = [], gifts = [] }: Memb
                               Manage
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="sm:max-w-md bg-white">
+                          <DialogContent className="sm:max-w-md bg-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100">
                             <DialogHeader>
                               <DialogTitle className="flex items-center gap-2">
                                 <UserCog className="w-5 h-5" />
@@ -1092,13 +1082,13 @@ export function MembersTable({ members, availableAwards = [], gifts = [] }: Memb
                                 <TabsContent value="gifts" className="space-y-4 mt-0">
                                   <div className="space-y-3">
                                     {gifts.filter(g => g.profile_id === member.id).length === 0 ? (
-                                      <p className="text-sm text-gray-500 text-center py-4">No gifts received yet.</p>
+                                      <p className="text-sm text-gray-500 text-center py-4 dark:text-slate-400">No gifts received yet.</p>
                                     ) : (
                                       gifts.filter(g => g.profile_id === member.id).map(gift => (
-                                        <div key={gift.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl bg-gray-50">
+                                        <div key={gift.id} className="flex items-center justify-between p-3 border border-gray-100 rounded-xl bg-gray-50 dark:border-slate-800 dark:bg-slate-900">
                                           <div className="flex flex-col">
-                                            <span className="font-bold text-gray-800 text-sm">{Array.isArray(gift.asset) ? gift.asset[0]?.name : gift.asset?.name}</span>
-                                            <span className="text-xs text-gray-500">{new Date(gift.assigned_at).toLocaleDateString()}</span>
+                                            <span className="font-bold text-gray-800 text-sm dark:text-slate-100">{Array.isArray(gift.asset) ? gift.asset[0]?.name : gift.asset?.name}</span>
+                                            <span className="text-xs text-gray-500 dark:text-slate-400">{new Date(gift.assigned_at).toLocaleDateString()}</span>
                                           </div>
                                           <Badge variant="outline" className="bg-rose-50 text-rose-600 border-rose-200">
                                             {Array.isArray(gift.asset) ? gift.asset[0]?.category : gift.asset?.category}
@@ -1297,7 +1287,7 @@ export function MembersTable({ members, availableAwards = [], gifts = [] }: Memb
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="sm:max-w-md bg-white rounded-2xl">
+                          <DialogContent className="sm:max-w-md bg-white rounded-2xl dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100">
                             <DialogHeader>
                               <DialogTitle className="flex items-center gap-2 text-red-600">
                                 <Trash2 className="w-5 h-5" />
@@ -1349,11 +1339,11 @@ export function MembersTable({ members, availableAwards = [], gifts = [] }: Memb
       {filteredMembers.length === 0 && (
         <Card>
           <CardContent className="text-center py-12">
-            <div className="text-gray-400 mb-4">
+            <div className="text-gray-400 mb-4 dark:text-slate-500">
               <Users className="w-12 h-12 mx-auto mb-4" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No members found</h3>
-            <p className="text-gray-600">Try adjusting your search criteria or filters to find members.</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2 dark:text-slate-100">No members found</h3>
+            <p className="text-gray-600 dark:text-slate-400">Try adjusting your search criteria or filters to find members.</p>
           </CardContent>
         </Card>
       )}

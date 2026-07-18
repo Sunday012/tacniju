@@ -55,6 +55,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
       },
       { name: "Stall Orders", href: "/admin/stalls", icon: ShoppingBag },
       { name: "Accounting", href: "/accounting", icon: BookOpen },
+      { name: "New Creation", href: "/admin/new-creation", icon: FileText },
     ]
   },
   {

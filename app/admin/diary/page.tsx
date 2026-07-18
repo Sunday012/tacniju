@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/server"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ProfileImagePreview } from "@/components/profile-image-preview"
 import Link from "next/link"
 import { isGuestProfile } from "@/lib/profile-kind"
 
@@ -22,12 +22,7 @@ export default async function AdminDiaryPage() {
     <Card className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300">
       <CardContent className="p-5">
         <div className="flex items-start gap-4 mb-2">
-            <Avatar className="h-10 w-10 border border-slate-100 shrink-0">
-              <AvatarImage src={member.avatar_url || ""} />
-              <AvatarFallback className="bg-slate-100 text-slate-600 font-bold text-xs">
-                {member.full_name.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <ProfileImagePreview imageUrl={member.avatar_url} name={member.full_name} />
             <div className="flex-1">
                 <div className="flex justify-between items-start">
                     <h3 className="font-bold text-lg text-gray-800 leading-tight">{member.full_name}</h3>
