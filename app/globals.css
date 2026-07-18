@@ -97,4 +97,46 @@
   .flat-dashboard .rounded-xl {
     border-radius: 8px !important;
   }
+
+  .dark .voucher-entry-form [class*="bg-white/"],
+  .dark .voucher-entry-form [class~="bg-white"] {
+    background-color: rgb(15 23 42) !important;
+  }
+
+  .dark .voucher-entry-form [class*="bg-slate-50"],
+  .dark .voucher-entry-form [class*="bg-indigo-50"] {
+    background-color: rgb(2 6 23) !important;
+  }
+
+  .dark .voucher-entry-form [class*="border-slate-100"],
+  .dark .voucher-entry-form [class*="border-slate-200"],
+  .dark .voucher-entry-form [class*="border-slate-300"],
+  .dark .voucher-entry-form [class*="border-indigo-100"] {
+    border-color: rgb(30 41 59) !important;
+  }
+
+  .dark .voucher-entry-form [class*="text-slate-900"],
+  .dark .voucher-entry-form [class*="text-slate-800"],
+  .dark .voucher-entry-form [class*="text-slate-700"] {
+    color: rgb(241 245 249) !important;
+  }
+
+  .dark .voucher-entry-form [class*="text-slate-600"],
+  .dark .voucher-entry-form [class*="text-slate-500"] {
+    color: rgb(148 163 184) !important;
+  }
+
+  .dark .voucher-entry-form input,
+  .dark .voucher-entry-form textarea,
+  .dark .voucher-entry-form button[role="combobox"] {
+    color: rgb(241 245 249);
+  }
+
+  .dark .voucher-entry-form tr:hover {
+    background-color: rgb(15 23 42) !important;
+  }
+
+  .dark .voucher-entry-form .border-double {
+    border-color: rgb(203 213 225) !important;
+  }
 }

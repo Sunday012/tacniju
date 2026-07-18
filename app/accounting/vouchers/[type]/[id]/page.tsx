@@ -85,61 +85,61 @@ export default async function AccountingVoucherDetailPage({
           </Link>
         </div>
 
-        <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
+        <Card className="rounded-xl border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <CardHeader>
-            <CardTitle className="text-xl text-slate-900">Voucher Summary</CardTitle>
+            <CardTitle className="text-xl text-slate-900 dark:text-slate-100">Voucher Summary</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Voucher No.</p>
-              <p className="mt-2 text-lg font-semibold text-slate-900">{voucher.voucher_no}</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Voucher No.</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">{voucher.voucher_no}</p>
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Date</p>
-              <p className="mt-2 text-lg font-semibold text-slate-900">{formatIsoDate(voucher.date)}</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Date</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">{formatIsoDate(voucher.date)}</p>
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Debit</p>
-              <p className="mt-2 text-lg font-semibold text-slate-900">₦{totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Debit</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">₦{totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Credit</p>
-              <p className="mt-2 text-lg font-semibold text-slate-900">₦{totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Credit</p>
+              <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-slate-100">₦{totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
             </div>
             <div className="sm:col-span-2 lg:col-span-4">
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Narration</p>
-              <p className="mt-2 text-base text-slate-700">{voucher.narration || "-"}</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Narration</p>
+              <p className="mt-2 text-base text-slate-700 dark:text-slate-300">{voucher.narration || "-"}</p>
             </div>
             <div className="sm:col-span-2 lg:col-span-4">
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Program</p>
-              <p className="mt-2 text-base text-slate-700">{referenceLabel}</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Program</p>
+              <p className="mt-2 text-base text-slate-700 dark:text-slate-300">{referenceLabel}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
+        <Card className="rounded-xl border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <CardHeader>
-            <CardTitle className="text-xl text-slate-900">Ledger Entries</CardTitle>
+            <CardTitle className="text-xl text-slate-900 dark:text-slate-100">Ledger Entries</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
-              <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600">
-                <TableRow>
+              <TableHeader className="bg-slate-50 dark:bg-slate-950 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600 dark:[&_th]:text-slate-400">
+                <TableRow className="dark:border-slate-800">
                   <TableHead>Ledger</TableHead>
                   <TableHead className="text-right">Debit</TableHead>
                   <TableHead className="text-right">Credit</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5">
+              <TableBody className="divide-y divide-slate-100 dark:divide-slate-800 [&_td]:px-5 [&_td]:py-3.5">
                 {(voucher.voucher_entries || []).map((entry: any) => (
-                  <TableRow key={entry.id}>
-                    <TableCell className="font-medium text-slate-800">{entry.ledgers?.name || "Ledger"}</TableCell>
-                    <TableCell className="text-right text-slate-700">
+                  <TableRow key={entry.id} className="dark:border-slate-800 dark:hover:bg-slate-950">
+                    <TableCell className="font-medium text-slate-800 dark:text-slate-100">{entry.ledgers?.name || "Ledger"}</TableCell>
+                    <TableCell className="text-right text-slate-700 dark:text-slate-300">
                       {Number(entry.debit_amount || 0) > 0
                         ? Number(entry.debit_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })
                         : "-"}
                     </TableCell>
-                    <TableCell className="text-right text-slate-700">
+                    <TableCell className="text-right text-slate-700 dark:text-slate-300">
                       {Number(entry.credit_amount || 0) > 0
                         ? Number(entry.credit_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })
                         : "-"}
@@ -152,14 +152,14 @@ export default async function AccountingVoucherDetailPage({
         </Card>
 
         {(voucher.voucher_items || []).length > 0 ? (
-          <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
+          <Card className="rounded-xl border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <CardHeader>
-              <CardTitle className="text-xl text-slate-900">Items</CardTitle>
+              <CardTitle className="text-xl text-slate-900 dark:text-slate-100">Items</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
-                <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600">
-                  <TableRow>
+                <TableHeader className="bg-slate-50 dark:bg-slate-950 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600 dark:[&_th]:text-slate-400">
+                  <TableRow className="dark:border-slate-800">
                     <TableHead>Item</TableHead>
                     <TableHead className="text-right">Qty</TableHead>
                     <TableHead className="text-right">Rate</TableHead>
@@ -167,14 +167,14 @@ export default async function AccountingVoucherDetailPage({
                     <TableHead>Movement</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5">
+                <TableBody className="divide-y divide-slate-100 dark:divide-slate-800 [&_td]:px-5 [&_td]:py-3.5">
                   {(voucher.voucher_items || []).map((item: any) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium text-slate-800">{item.items?.name || "Item"}</TableCell>
-                      <TableCell className="text-right text-slate-700">{Number(item.qty || 0).toLocaleString()}</TableCell>
-                      <TableCell className="text-right text-slate-700">{Number(item.rate || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
-                      <TableCell className="text-right text-slate-700">{Number(item.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
-                      <TableCell className="text-slate-700">{item.movement_type || "-"}</TableCell>
+                    <TableRow key={item.id} className="dark:border-slate-800 dark:hover:bg-slate-950">
+                      <TableCell className="font-medium text-slate-800 dark:text-slate-100">{item.items?.name || "Item"}</TableCell>
+                      <TableCell className="text-right text-slate-700 dark:text-slate-300">{Number(item.qty || 0).toLocaleString()}</TableCell>
+                      <TableCell className="text-right text-slate-700 dark:text-slate-300">{Number(item.rate || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
+                      <TableCell className="text-right text-slate-700 dark:text-slate-300">{Number(item.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
+                      <TableCell className="text-slate-700 dark:text-slate-300">{item.movement_type || "-"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

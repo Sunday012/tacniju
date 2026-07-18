@@ -674,8 +674,8 @@ export function VoucherEntry({
     } as const
     const theme = themes[voucherType]
 
-    const invisibleInputClass = "w-full bg-transparent border-transparent hover:border-slate-300 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 rounded-md px-2 h-8 text-right transition-colors"
-    const invisibleSelectClass = "w-full bg-transparent border-transparent hover:border-slate-300 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 h-8 shadow-none"
+    const invisibleInputClass = "w-full bg-transparent border-transparent hover:border-slate-300 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 rounded-md px-2 h-8 text-right transition-colors dark:text-slate-100 dark:hover:border-slate-700 dark:focus:border-slate-500 dark:focus:ring-slate-700"
+    const invisibleSelectClass = "w-full bg-transparent border-transparent hover:border-slate-300 focus:border-slate-400 focus:ring-1 focus:ring-slate-300 h-8 shadow-none dark:text-slate-100 dark:hover:border-slate-700 dark:focus:border-slate-500 dark:focus:ring-slate-700"
 
     function handleMasterLedgerChange(value: string) {
         const selectedLedger = ledgers.find((ledger) => ledger.id === value)
@@ -788,7 +788,7 @@ export function VoucherEntry({
                     : "Select an account or party above to begin entries"
 
     return (
-        <div className="w-full">
+        <div className="voucher-entry-form w-full">
             <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
                 <div className="border-b border-slate-200 bg-white px-4 py-3">
                     {!fixedType && !editingVoucherId && (
@@ -799,10 +799,10 @@ export function VoucherEntry({
                                 setSelectedLedgers([{ ledger_id: "", debit_amount: 0, credit_amount: 0 }])
                                 setMasterLedgerId("")
                             }}>
-                                <SelectTrigger className="w-[200px] border-slate-300 bg-white font-bold text-slate-800">
+                                <SelectTrigger className="w-[200px] border-slate-300 bg-white font-bold text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent className="bg-white border-slate-300 text-slate-900">
+                                <SelectContent className="bg-white border-slate-300 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                                     <SelectItem value="Payment">Payment (Alt+P)</SelectItem>
                                     <SelectItem value="Receipt">Receipt (Alt+R)</SelectItem>
                                     <SelectItem value="Sales">Sales (Alt+S)</SelectItem>
@@ -1229,8 +1229,8 @@ export function VoucherEntry({
             )}
 
             <Dialog open={managedLedgerIndex !== null} onOpenChange={(open) => !open && setManagedLedgerIndex(null)}>
-                <DialogContent className="flex h-[92dvh] w-full max-w-4xl flex-col gap-0 overflow-hidden border-slate-300 bg-white p-0 text-slate-900 shadow-none max-sm:bottom-0 max-sm:left-0 max-sm:top-auto max-sm:max-h-[92dvh] max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-t-xl max-sm:border-x-0 max-sm:border-b-0 sm:h-auto sm:max-h-[88vh]">
-                    <DialogHeader className="shrink-0 border-b border-slate-200 bg-slate-900 px-4 py-3 text-left text-white sm:px-5">
+                <DialogContent className="voucher-entry-form flex h-[92dvh] w-full max-w-4xl flex-col gap-0 overflow-hidden border-slate-300 bg-white p-0 text-slate-900 shadow-none max-sm:bottom-0 max-sm:left-0 max-sm:top-auto max-sm:max-h-[92dvh] max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-t-xl max-sm:border-x-0 max-sm:border-b-0 sm:h-auto sm:max-h-[88vh] dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100">
+                    <DialogHeader className="shrink-0 border-b border-slate-200 bg-slate-900 px-4 py-3 text-left text-white sm:px-5 dark:border-slate-800">
                         <DialogTitle className="text-base font-black">Bill-wise Details</DialogTitle>
                     </DialogHeader>
 
@@ -1275,10 +1275,10 @@ export function VoucherEntry({
                                                     updateLedgerFields(managedLedgerIndex, nextValues)
                                                 }}
                                             >
-                                                <SelectTrigger className="h-9 border-slate-300 bg-white text-sm font-semibold">
+                                                <SelectTrigger className="h-9 border-slate-300 bg-white text-sm font-semibold dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                                                     <SelectValue placeholder="" />
                                                 </SelectTrigger>
-                                                <SelectContent className="bg-white border-slate-300 text-slate-900">
+                                                <SelectContent className="bg-white border-slate-300 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                                                     <SelectItem value="Advance">Advance</SelectItem>
                                                     <SelectItem value="Against Reference">Agst Ref</SelectItem>
                                                     <SelectItem value="Through Reference">Through Ref</SelectItem>
@@ -1297,7 +1297,7 @@ export function VoucherEntry({
                                                     options={managedReferenceOptions}
                                                     placeholder=""
                                                     className="h-9"
-                                                    inputClassName="border-slate-300"
+                                                    inputClassName="border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                                 />
                                             ) : (
                                                 <Input
@@ -1305,7 +1305,7 @@ export function VoucherEntry({
                                                     onChange={(event) => updateLedger(managedLedgerIndex, "adjustment_reference", event.target.value)}
                                                     placeholder=""
                                                     disabled={managedLedger.adjustment_method === "On Account"}
-                                                    className="h-9 border-slate-300 bg-white"
+                                                    className="h-9 border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                                 />
                                             )}
                                         </div>
@@ -1316,7 +1316,7 @@ export function VoucherEntry({
                                                 type="date"
                                                 value={managedLedger.due_date || ""}
                                                 onChange={(event) => updateLedger(managedLedgerIndex, "due_date", event.target.value)}
-                                                className="h-9 border-slate-300 bg-white"
+                                                className="h-9 border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                             />
                                         </div>
 
@@ -1329,7 +1329,7 @@ export function VoucherEntry({
                                                 value={managedLedger.amount || ""}
                                                 onChange={(event) => updateLedger(managedLedgerIndex, "amount", parseFloat(event.target.value) || 0)}
                                                 readOnly={managedLedger.adjustment_method === "Against Reference"}
-                                                className="h-9 border-slate-300 bg-white text-right font-mono font-bold"
+                                                className="h-9 border-slate-300 bg-white text-right font-mono font-bold dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                                             />
                                         </div>
                                     </div>

@@ -192,9 +192,9 @@ export function AdminSidebarNav() {
   }
 
   return (
-    <aside className="w-64 bg-white/60 backdrop-blur-2xl border-r border-[#E5E7EB]/50 hidden lg:flex flex-col h-screen sticky top-0 py-8 px-5 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20 print:hidden overflow-y-auto custom-scrollbar dark:border-slate-800 dark:bg-slate-950/85 dark:shadow-none">
+    <aside className="w-64 bg-white/60 backdrop-blur-2xl border-r border-[#E5E7EB]/50 hidden lg:flex flex-col h-screen sticky top-0 py-8 px-5 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20 print:hidden overflow-y-auto custom-scrollbar dark:border-slate-900 dark:bg-slate-950 dark:text-slate-100 dark:shadow-none">
       <div className="flex items-center gap-4 px-2 mb-10 cursor-pointer hover:opacity-90 transition-opacity">
-        <div className="w-14 h-11 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-200 p-1.5 overflow-hidden shrink-0 dark:border-slate-700 dark:bg-slate-900">
+        <div className="w-14 h-11 bg-white rounded-lg flex items-center justify-center shadow-sm border border-slate-200 p-1.5 overflow-hidden shrink-0 dark:border-slate-800 dark:bg-slate-900">
           <Image 
             src="https://res.cloudinary.com/dzckvrvu9/image/upload/v1777993333/WhatsApp_Image_2026-05-01_at_08.37.56-removebg-preview_a8w3wt.png" 
             alt="TACN Logo" 
@@ -229,7 +229,7 @@ export function AdminSidebarNav() {
 
                 return (
                   <div key={item.name}>
-                    <div className={`flex items-center rounded-2xl transition-all duration-200 group ${
+                    <div className={`flex items-center rounded-lg transition-all duration-200 group ${
                       isActive
                         ? "bg-indigo-600/10 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300"
                         : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100"
@@ -259,7 +259,7 @@ export function AdminSidebarNav() {
                           const ChildIcon = child.icon
                           return (
                             <Link key={child.href} href={child.href}>
-                              <span className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 ${
+                              <span className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${
                                 childActive
                                   ? "bg-indigo-600/10 text-indigo-700 font-semibold dark:bg-indigo-500/15 dark:text-indigo-300"
                                   : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-900 font-medium dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100"
@@ -283,14 +283,14 @@ export function AdminSidebarNav() {
       <div className="mt-auto pt-6 border-t border-slate-200/50 space-y-1 dark:border-slate-800">
         <p className="text-xs font-bold text-slate-400/80 uppercase tracking-widest mb-3 px-3 dark:text-slate-500">Quick Links</p>
         <Link href="/dashboard">
-          <span className="flex items-center gap-3.5 px-4 py-2.5 rounded-2xl text-slate-500 hover:bg-slate-100/80 hover:text-slate-900 font-medium transition-all duration-200 group dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100">
+          <span className="flex items-center gap-3.5 px-4 py-2.5 rounded-lg text-slate-500 hover:bg-slate-100/80 hover:text-slate-900 font-medium transition-all duration-200 group dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100">
             <Home className="w-5 h-5 text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300" />
             <span className="text-sm tracking-wide">User Dashboard</span>
           </span>
         </Link>
         <form action="/api/auth/signout" method="post">
-          <button type="submit" className="w-full flex items-center gap-3.5 px-4 py-2.5 rounded-2xl text-slate-500 hover:bg-rose-50 hover:text-rose-600 font-medium transition-all duration-200 group dark:text-slate-400 dark:hover:bg-rose-950/30 dark:hover:text-rose-300">
-            <LogOut className="w-5 h-5 text-slate-400 group-hover:text-rose-500" />
+          <button type="submit" className="w-full flex items-center gap-3.5 px-4 py-2.5 rounded-lg text-slate-500 hover:bg-rose-50 hover:text-rose-600 font-medium transition-all duration-200 group dark:text-slate-400 dark:hover:bg-rose-950/30 dark:hover:text-rose-300">
+            <LogOut className="w-5 h-5 text-slate-400 group-hover:text-rose-500 dark:text-slate-500 dark:group-hover:text-rose-300" />
             <span className="text-sm tracking-wide">Sign Out</span>
           </button>
         </form>

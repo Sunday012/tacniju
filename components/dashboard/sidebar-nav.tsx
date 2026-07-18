@@ -26,7 +26,7 @@ export function SidebarNav({ profile }: { profile?: { is_admin?: boolean | null;
   ]
 
   return (
-    <aside className="w-64 bg-white/60 backdrop-blur-2xl border-r border-[#E5E7EB]/50 hidden lg:flex flex-col h-screen sticky top-0 py-8 px-5 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20 dark:bg-slate-950 dark:border-slate-900">
+    <aside className="w-64 bg-white/60 backdrop-blur-2xl border-r border-[#E5E7EB]/50 hidden lg:flex flex-col h-screen sticky top-0 py-8 px-5 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20 dark:bg-slate-950 dark:border-slate-900 dark:text-slate-100">
       <div className="flex items-center gap-4 px-2 mb-12 cursor-pointer hover:opacity-90 transition-opacity">
         <div className="w-14 h-11 bg-white rounded-lg flex items-center justify-center shadow-sm border border-slate-200 p-1.5 overflow-hidden dark:bg-slate-900 dark:border-slate-800">
           <Image 
@@ -51,7 +51,7 @@ export function SidebarNav({ profile }: { profile?: { is_admin?: boolean | null;
             const Icon = item.icon
             return (
               <Link key={item.name} href={item.href}>
-                <span className={`flex items-center gap-3.5 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${
+                <span className={`flex items-center gap-3.5 px-4 py-3.5 rounded-lg transition-all duration-300 group ${
                   isActive 
                     ? "bg-indigo-600/10 text-indigo-700 font-semibold dark:bg-indigo-500/15 dark:text-indigo-300" 
                     : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-900 font-medium dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100"
@@ -69,7 +69,7 @@ export function SidebarNav({ profile }: { profile?: { is_admin?: boolean | null;
         <p className="text-xs font-bold text-slate-400/80 uppercase tracking-widest mb-4 px-3 dark:text-slate-500">Settings</p>
         <nav className="space-y-1.5">
           <Link href="/dashboard/settings">
-            <span className={`flex items-center gap-3.5 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${
+            <span className={`flex items-center gap-3.5 px-4 py-3.5 rounded-lg transition-all duration-300 group ${
               pathname === "/dashboard/settings" 
                 ? "bg-indigo-600/10 text-indigo-700 font-semibold dark:bg-indigo-500/15 dark:text-indigo-300" 
                 : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-900 font-medium dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100"

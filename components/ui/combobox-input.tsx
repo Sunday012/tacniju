@@ -85,15 +85,15 @@ export function ComboboxInput({
         </div>
       </PopoverTrigger>
       <PopoverContent 
-        className="w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-lg border border-slate-200 bg-white p-0 text-slate-900 shadow-xl z-[100]"
+        className="w-[var(--radix-popover-trigger-width)] overflow-hidden rounded-lg border border-slate-200 bg-white p-0 text-slate-900 shadow-xl z-[100] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
         align="start"
         onOpenAutoFocus={(e) => e.preventDefault()} // Prevent popover from stealing focus from input
       >
-        <Command className="bg-white text-slate-900">
+        <Command className="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
           {/* We hide the command input because our main input handles the filtering via state */}
-          <CommandList className="max-h-[320px] bg-white">
-            <CommandEmpty className="bg-white py-6 text-center text-sm text-slate-500">No results found.</CommandEmpty>
-            <CommandGroup className="max-h-[320px] overflow-auto bg-white p-1">
+          <CommandList className="max-h-[320px] bg-white dark:bg-slate-900">
+            <CommandEmpty className="bg-white py-6 text-center text-sm text-slate-500 dark:bg-slate-900 dark:text-slate-400">No results found.</CommandEmpty>
+            <CommandGroup className="max-h-[320px] overflow-auto bg-white p-1 dark:bg-slate-900">
               {options
                 .filter(opt => opt.label.toLowerCase().includes(inputValue.toLowerCase()))
                 .map((option) => (
@@ -101,7 +101,7 @@ export function ComboboxInput({
                   key={option.value}
                   value={option.label}
                   onSelect={() => handleSelect(option.value)}
-                  className="bg-white text-slate-900 hover:bg-indigo-50 data-[selected=true]:bg-indigo-50 data-[selected=true]:text-indigo-900"
+                  className="bg-white text-slate-900 hover:bg-indigo-50 data-[selected=true]:bg-indigo-50 data-[selected=true]:text-indigo-900 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 dark:data-[selected=true]:bg-indigo-950 dark:data-[selected=true]:text-indigo-200"
                 >
                   <Check
                     className={cn(

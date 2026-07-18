@@ -184,15 +184,15 @@ export function AdminMobileNav() {
         <Button
           variant="ghost"
           size="icon"
-          className="sm:hidden h-10 w-10 rounded-xl text-slate-600 hover:bg-indigo-50 hover:text-indigo-700"
+          className="sm:hidden h-10 w-10 rounded-lg text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-indigo-300"
           aria-label="Open menu"
         >
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
 
-      <SheetContent side="left" className="w-[280px] p-0 bg-white border-r border-slate-100 z-[9999] flex flex-col h-full">
-        <SheetHeader className="p-6 border-b border-slate-100 bg-gradient-to-br from-indigo-600 to-violet-700 shrink-0">
+      <SheetContent side="left" className="w-[280px] p-0 bg-white border-r border-slate-100 z-[9999] flex flex-col h-full dark:border-slate-900 dark:bg-slate-950 dark:text-slate-100">
+        <SheetHeader className="p-6 border-b border-slate-100 bg-gradient-to-br from-indigo-600 to-violet-700 shrink-0 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950">
           <SheetTitle className="text-white text-left flex items-center gap-3">
             <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
               <Shield className="w-5 h-5 text-white" />
@@ -209,7 +209,7 @@ export function AdminMobileNav() {
             <div key={group.title}>
               <button 
                 onClick={() => toggleGroup(group.title)}
-                className="w-full flex items-center justify-between text-[11px] font-bold text-slate-400/80 uppercase tracking-widest mb-2 px-2 hover:text-slate-600 transition-colors"
+                className="w-full flex items-center justify-between text-[11px] font-bold text-slate-400/80 uppercase tracking-widest mb-2 px-2 hover:text-slate-600 transition-colors dark:text-slate-500 dark:hover:text-slate-300"
               >
                 {group.title}
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${openGroups[group.title] ? 'rotate-180' : ''}`} />
@@ -227,13 +227,13 @@ export function AdminMobileNav() {
                       <div
                         className={`flex items-center rounded-xl text-sm font-semibold transition-colors border ${
                           isActive
-                            ? "bg-indigo-50 text-indigo-700 border-indigo-100"
-                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent"
+                            ? "bg-indigo-50 text-indigo-700 border-indigo-100 dark:border-indigo-900 dark:bg-indigo-500/15 dark:text-indigo-300"
+                            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100"
                         }`}
                       >
                         <Link href={item.href} onClick={() => setOpen(false)} className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 px-3 py-2.5">
-                            <Icon className={`w-4.5 h-4.5 ${isActive ? "text-indigo-600" : "text-slate-400"}`} />
+                            <Icon className={`w-4.5 h-4.5 ${isActive ? "text-indigo-600 dark:text-indigo-300" : "text-slate-400 dark:text-slate-500"}`} />
                             <span className="truncate">{item.name}</span>
                           </div>
                         </Link>
@@ -241,7 +241,7 @@ export function AdminMobileNav() {
                           <button
                             type="button"
                             onClick={(e) => { e.preventDefault(); toggleItem(item.href) }}
-                            className="p-2 mr-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+                            className="p-2 mr-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                             aria-label={isOpen ? `Collapse ${item.name}` : `Expand ${item.name}`}
                           >
                             <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
@@ -258,10 +258,10 @@ export function AdminMobileNav() {
                               <Link key={child.href} href={child.href} onClick={() => setOpen(false)}>
                                 <div className={`flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-semibold transition-colors border ${
                                   childActive
-                                    ? "bg-indigo-50 text-indigo-700 border-indigo-100"
-                                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent"
+                                    ? "bg-indigo-50 text-indigo-700 border-indigo-100 dark:border-indigo-900 dark:bg-indigo-500/15 dark:text-indigo-300"
+                                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100"
                                 }`}>
-                                  <ChildIcon className={`w-4 h-4 ${childActive ? "text-indigo-600" : "text-slate-400"}`} />
+                                  <ChildIcon className={`w-4 h-4 ${childActive ? "text-indigo-600 dark:text-indigo-300" : "text-slate-400 dark:text-slate-500"}`} />
                                   <span className="truncate">{child.name}</span>
                                 </div>
                               </Link>
@@ -276,21 +276,21 @@ export function AdminMobileNav() {
             </div>
           ))}
           
-          <div className="pt-4 border-t border-slate-100">
-            <p className="text-[11px] font-bold text-slate-400/80 uppercase tracking-widest mb-2 px-2">Quick Links</p>
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+            <p className="text-[11px] font-bold text-slate-400/80 uppercase tracking-widest mb-2 px-2 dark:text-slate-500">Quick Links</p>
             <Link href="/dashboard" onClick={() => setOpen(false)}>
-              <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors border border-transparent">
-                <LayoutDashboard className="w-4.5 h-4.5 text-slate-400" />
+              <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors border border-transparent dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100">
+                <LayoutDashboard className="w-4.5 h-4.5 text-slate-400 dark:text-slate-500" />
                 User Dashboard
               </div>
             </Link>
           </div>
         </div>
 
-        <div className="p-4 border-t border-slate-100 shrink-0">
+        <div className="p-4 border-t border-slate-100 shrink-0 dark:border-slate-800">
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-sm font-semibold text-rose-500 hover:bg-rose-50 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-sm font-semibold text-rose-500 hover:bg-rose-50 transition-colors dark:text-rose-300 dark:hover:bg-rose-950/30"
           >
             <LogOut className="w-4.5 h-4.5" />
             Sign Out
