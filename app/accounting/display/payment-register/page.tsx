@@ -128,6 +128,7 @@ export default async function PaymentRegisterPage() {
         partyLabel="Particulars"
         ledgerLabel="Paid From"
         emptyLabel="No payment transactions yet."
+        addVoucherHref="/accounting/vouchers/payment"
       />
     </AccountingShell>
   )

@@ -88,11 +88,11 @@ async function getPurchaseVouchers() {
     return []
   }
 
-  // Exclude batch/production stock journals (kept out of the day book too).
+  // Exclude batch/stock/raw-material journals; they have their own production registers.
   return (data || []).filter((voucher: any) => {
     const voucherNo = String(voucher.voucher_no || "")
     const narration = String(voucher.narration || "")
-    return !(narration === "Batch" || voucherNo.startsWith("BAT-"))
+    return !(narration === "Batch" || narration === "Production" || narration === "Raw Material" || voucherNo.startsWith("BAT-") || voucherNo.startsWith("STJ-") || voucherNo.startsWith("RMJ-"))
   }) as unknown as PurchaseVoucher[]
 }
 
@@ -125,6 +125,7 @@ export default async function PurchaseRegisterPage() {
         partyLabel="Party"
         ledgerLabel="Purchase Ledger"
         emptyLabel="No purchase transactions yet."
+        addVoucherHref="/accounting/vouchers/purchase"
       />
     </AccountingShell>
   )

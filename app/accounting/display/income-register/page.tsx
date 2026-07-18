@@ -120,6 +120,7 @@ export default async function IncomeRegisterPage() {
         partyLabel="Account"
         ledgerLabel="Income Ledger"
         emptyLabel="No income transactions yet."
+        addVoucherHref="/accounting/vouchers/income"
       />
     </AccountingShell>
   )

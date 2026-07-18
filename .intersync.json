@@ -1,0 +1,29 @@
+{
+  "provider": "anthropic",
+  "apiKeyEnv": "ANTHROPIC_API_KEY",
+  "fallback": "ollama",
+  "modes": [
+    "study"
+  ],
+  "study": {
+    "output": "intersync-frontend/src/data/modules.js",
+    "sourceGlobs": [
+      "sona-backend/**/*.go",
+      "sona-backend/db/**"
+    ]
+  },
+  "anthropic": {
+    "judgeModel": "claude-haiku-4-5",
+    "generateModel": "claude-sonnet-5"
+  },
+  "openai": {
+    "apiKeyEnv": "OPENAI_API_KEY",
+    "judgeModel": "gpt-4o-mini",
+    "generateModel": "gpt-4o",
+    "baseURL": "https://api.openai.com/v1"
+  },
+  "ollama": {
+    "baseURL": "http://127.0.0.1:11434",
+    "model": "llama3.2"
+  }
+}

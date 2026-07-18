@@ -41,13 +41,12 @@ export default async function GroupSummaryPage() {
     .map(entry => ({
       id: entry.id,
       name: entry.name,
-      nature: entry.nature,
       ledgerCount: entry.ledgerCount,
       debit: entry.total > 0 ? entry.total : 0,
       credit: entry.total < 0 ? -entry.total : 0,
       href: `/accounting/info/group/${entry.id}`,
     }))
-    .sort((a, b) => a.nature.localeCompare(b.nature) || a.name.localeCompare(b.name))
+    .sort((a, b) => a.name.localeCompare(b.name))
 
   return (
     <AccountingShell

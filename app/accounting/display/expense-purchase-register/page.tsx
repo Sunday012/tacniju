@@ -120,6 +120,7 @@ export default async function ExpensePurchaseRegisterPage() {
         partyLabel="Party"
         ledgerLabel="Ledger"
         emptyLabel="No expenses purchase transactions yet."
+        addVoucherHref="/accounting/vouchers/expense"
       />
     </AccountingShell>
   )

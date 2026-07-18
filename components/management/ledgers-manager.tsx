@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { createLedger, updateLedger, deleteLedger, AccountGroup, Ledger, LedgerBalance, seedDefaultLedgers } from "@/app/management/actions"
+import { AdjustBalanceDialog } from "@/components/accounting/adjust-balance-dialog"
 
 type LedgerRow = Ledger & {
     account_groups?: {
@@ -477,7 +478,7 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                         <TableRow className="border-slate-200 dark:border-slate-800">
                             <TableHead className="text-slate-500">{isBankMode ? "Account" : "Ledger"}</TableHead>
                             <TableHead className="text-right text-slate-500">Current Balance</TableHead>
-                            <TableHead className="w-12 text-right text-slate-500">Edit</TableHead>
+                            <TableHead className="w-40 text-right text-slate-500">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody className="divide-y divide-slate-100 dark:divide-slate-800 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60 dark:[&_tr:hover]:bg-slate-800/50">
@@ -513,17 +514,17 @@ export function LedgersManager({ ledgers, groups, balances = {}, mode = "account
                                         {formatCurrency(signedBalance(ledger))}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <button
-                                            type="button"
-                                            onClick={(event) => {
-                                                event.stopPropagation()
-                                                openEdit(ledger)
-                                            }}
-                                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
-                                            title={`Edit ${ledger.name}`}
-                                        >
-                                            <Pencil className="h-4 w-4" />
-                                        </button>
+                                        <div className="flex justify-end gap-2" onClick={(event) => event.stopPropagation()}>
+                                            <AdjustBalanceDialog ledgerId={ledger.id} ledgerName={ledger.name} balance={balances[ledger.id]} />
+                                            <button
+                                                type="button"
+                                                onClick={() => openEdit(ledger)}
+                                                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700"
+                                                title={`Edit ${ledger.name}`}
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))
