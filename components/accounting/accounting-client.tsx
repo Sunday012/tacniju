@@ -30,6 +30,7 @@ export function AccountingClient({ profile, orgName, groups, ledgers, customFiel
     const router = useRouter()
     const isoToday = new Date().toISOString().slice(0, 10)
     const currentYear = new Date().getFullYear()
+    const dashboardHref = profile?.is_admin || profile?.email === "sundayfavour997@gmail.com" ? "/admin" : "/dashboard"
 
     const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
     const currentPeriod = `1-Jan-${currentYear} to 31-Dec-${currentYear}`
@@ -59,7 +60,7 @@ export function AccountingClient({ profile, orgName, groups, ledgers, customFiel
                 if (key === 'i') setActiveTab('inventory')
                 if (key === 't') setActiveTab('attendance') // T for Attendance
                 if (key === 'm') setActiveTab('reports')
-                if (key === 'q') window.location.href = '/dashboard'
+                if (key === 'q') window.location.href = dashboardHref
             }
 
             // Escape always goes back to gateway
@@ -74,7 +75,7 @@ export function AccountingClient({ profile, orgName, groups, ledgers, customFiel
 
         window.addEventListener('keydown', handleKeyDown)
         return () => window.removeEventListener('keydown', handleKeyDown)
-    }, [activeTab])
+    }, [activeTab, dashboardHref])
 
     const renderContent = () => {
         switch (activeTab) {
@@ -282,7 +283,7 @@ export function AccountingClient({ profile, orgName, groups, ledgers, customFiel
 
                                     {/* Quit */}
                                     <div className="pt-2">
-                                        <Link href="/dashboard" className="block text-center bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 cursor-pointer font-bold rounded-md transition-colors shadow-sm border border-slate-200">
+                                        <Link href={dashboardHref} className="block text-center bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 cursor-pointer font-bold rounded-md transition-colors shadow-sm border border-slate-200">
                                             <span className="text-red-600 font-extrabold mr-[1px]">Q</span>uit to Dashboard
                                         </Link>
                                     </div>

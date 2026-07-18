@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 
-export function AccountingGateway({ orgName }: { orgName: string }) {
+export function AccountingGateway({ orgName, dashboardHref = "/dashboard" }: { orgName: string; dashboardHref?: string }) {
   const router = useRouter()
   const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
   const currentPeriod = `1-Jan-${new Date().getFullYear()} to 31-Dec-${new Date().getFullYear()}`
@@ -21,7 +21,7 @@ export function AccountingGateway({ orgName }: { orgName: string }) {
       s: "/accounting/stock-summary",
       t: "/accounting/statements",
       d: "/accounting/display",
-      q: "/dashboard",
+      q: dashboardHref,
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -48,7 +48,7 @@ export function AccountingGateway({ orgName }: { orgName: string }) {
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [router])
+  }, [router, dashboardHref])
 
   return (
     <div className="min-h-screen bg-[#F4F7FA] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
@@ -63,7 +63,7 @@ export function AccountingGateway({ orgName }: { orgName: string }) {
       <div className="bg-indigo-950 text-white shadow-sm dark:bg-slate-900">
         <div className="flex items-center justify-between px-5 py-3">
           <h1 className="font-black tracking-wide">CHURCH ACCOUNTING PORTAL</h1>
-          <Link href="/dashboard" className="rounded-lg border border-indigo-700 bg-white/10 px-4 py-2 text-sm font-bold text-indigo-100 hover:bg-white/15">
+          <Link href={dashboardHref} className="rounded-lg border border-indigo-700 bg-white/10 px-4 py-2 text-sm font-bold text-indigo-100 hover:bg-white/15">
             Dashboard
           </Link>
         </div>
@@ -122,7 +122,7 @@ export function AccountingGateway({ orgName }: { orgName: string }) {
               <GatewayLink href="/accounting/display" hotkey="D" label="Display" />
             </GatewaySection>
 
-            <Link href="/dashboard" className="block rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center font-black text-slate-700 shadow-sm hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
+            <Link href={dashboardHref} className="block rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center font-black text-slate-700 shadow-sm hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
               <span className="text-red-600">Q</span>uit to Dashboard
             </Link>
           </div>

@@ -91,7 +91,7 @@ export default function SelectChurchPage() {
     const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
 
     return (
-        <div className="min-h-screen w-full flex bg-white" style={{ fontFamily: "'Inter', sans-serif" }}>
+        <div className="select-church-page min-h-screen w-full flex bg-white dark:bg-slate-950" style={{ fontFamily: "'Inter', sans-serif" }}>
 
             {/* Left Sidebar — Branding */}
             <div className="hidden md:flex w-[340px] flex-shrink-0 bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950 flex-col justify-between p-8 text-white relative overflow-hidden">
@@ -135,12 +135,12 @@ export default function SelectChurchPage() {
             </div>
 
             {/* Right Panel — Church List */}
-            <div className="flex-1 flex flex-col min-h-screen overflow-hidden bg-slate-50/50">
+            <div className="flex-1 flex flex-col min-h-screen overflow-hidden bg-slate-50/50 dark:bg-slate-950">
                 {/* Top Bar */}
-                <div className="flex items-center justify-between px-6 md:px-10 py-5 bg-white border-b border-slate-200">
+                <div className="flex items-center justify-between px-6 md:px-10 py-5 bg-white border-b border-slate-200 dark:border-slate-800 dark:bg-slate-900">
                     <div>
-                        <h2 className="text-slate-900 font-bold text-xl">Select Assembly</h2>
-                        <p className="text-slate-500 text-xs mt-0.5">{today}</p>
+                        <h2 className="text-slate-900 font-bold text-xl dark:text-slate-100">Select Assembly</h2>
+                        <p className="text-slate-500 text-xs mt-0.5 dark:text-slate-400">{today}</p>
                     </div>
                     <button
                         onClick={() => { setShowModal(true); setModalError(""); setNewName(""); setNewPassword("") }}
@@ -159,27 +159,27 @@ export default function SelectChurchPage() {
                         </div>
                     ) : organizations.length === 0 ? (
                         <div className="flex flex-col items-center justify-center h-64 text-center">
-                            <div className="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mb-4 text-2xl">⛪</div>
-                            <p className="text-slate-700 font-medium">No assemblies registered yet</p>
-                            <p className="text-slate-500 text-sm mt-1">Click <span className="text-indigo-900 font-bold">+ Create Church</span> to get started</p>
+                            <div className="w-16 h-16 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mb-4 text-2xl dark:border-indigo-900 dark:bg-indigo-950">⛪</div>
+                            <p className="text-slate-700 font-medium dark:text-slate-200">No assemblies registered yet</p>
+                            <p className="text-slate-500 text-sm mt-1 dark:text-slate-400">Click <span className="text-indigo-900 font-bold dark:text-indigo-300">+ Create Church</span> to get started</p>
                         </div>
                     ) : (
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 items-start">
                             {organizations.map((org) => (
                                 <div
                                     key={org.id}
-                                    className="group bg-white border border-slate-200 hover:border-indigo-400 rounded-xl p-5 transition-all duration-200 shadow-sm hover:shadow-[0_8px_30px_-12px_rgba(49,46,129,0.3)]"
+                                    className="group bg-white border border-slate-200 hover:border-indigo-400 rounded-xl p-5 transition-all duration-200 shadow-sm hover:shadow-[0_8px_30px_-12px_rgba(49,46,129,0.3)] dark:border-slate-800 dark:bg-slate-900 dark:hover:border-indigo-700 dark:shadow-none"
                                 >
                                     {/* Avatar */}
                                     <div className="flex items-center gap-3 mb-5">
-                                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-800 to-violet-900 flex items-center justify-center shadow-md shadow-indigo-200 flex-shrink-0">
+                                        <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-indigo-800 to-violet-900 flex items-center justify-center shadow-md shadow-indigo-200 flex-shrink-0 dark:shadow-none">
                                             <span className="text-white font-extrabold text-lg">{org.name.charAt(0)}</span>
                                         </div>
                                         <div className="min-w-0">
-                                            <div className="text-slate-900 font-semibold text-sm truncate">{org.name}</div>
+                                            <div className="text-slate-900 font-semibold text-sm truncate dark:text-slate-100">{org.name}</div>
                                             {org.address
-                                                ? <div className="text-slate-500 text-[11px] truncate">{org.address}</div>
-                                                : <div className="text-slate-400 text-[11px]">No address set</div>
+                                                ? <div className="text-slate-500 text-[11px] truncate dark:text-slate-400">{org.address}</div>
+                                                : <div className="text-slate-400 text-[11px] dark:text-slate-500">No address set</div>
                                             }
                                         </div>
                                     </div>
@@ -191,7 +191,7 @@ export default function SelectChurchPage() {
                                         value={passwords[org.id] || ""}
                                         onChange={(e) => setPasswords({ ...passwords, [org.id]: e.target.value })}
                                         onKeyDown={(e) => { if (e.key === "Enter" && passwords[org.id]) handleJoin(org.id) }}
-                                        className="w-full mb-3 bg-slate-50 border border-slate-200 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 text-slate-800 placeholder:text-slate-400 rounded-lg px-3 py-2 text-sm outline-none transition-colors"
+                                        className="w-full mb-3 bg-slate-50 border border-slate-200 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 text-slate-800 placeholder:text-slate-400 rounded-lg px-3 py-2 text-sm outline-none transition-colors dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-500 dark:focus:ring-indigo-950"
                                     />
 
                                     {/* Join Button */}
@@ -207,7 +207,7 @@ export default function SelectChurchPage() {
                                     <button
                                         onClick={() => handleDelete(org)}
                                         disabled={deletingId === org.id}
-                                        className="mt-2 w-full rounded-lg border border-red-200 bg-red-50 py-2 text-sm font-bold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                        className="mt-2 w-full rounded-lg border border-red-200 bg-red-50 py-2 text-sm font-bold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/70"
                                     >
                                         {deletingId === org.id ? "Deleting..." : "Delete Assembly"}
                                     </button>
@@ -220,17 +220,17 @@ export default function SelectChurchPage() {
 
             {/* Create Church Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 dark:bg-slate-950/75">
+                    <div className="bg-white border border-slate-200 rounded-xl shadow-2xl w-full max-w-md overflow-hidden dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
                         {/* Modal Header */}
-                        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-br from-indigo-100 to-violet-100">
+                        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-br from-indigo-100 to-violet-100 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950">
                             <div>
-                                <h3 className="text-slate-900 font-bold text-base">Register New Assembly</h3>
-                                <p className="text-slate-500 text-xs mt-0.5">You'll be set as admin automatically</p>
+                                <h3 className="text-slate-900 font-bold text-base dark:text-slate-100">Register New Assembly</h3>
+                                <p className="text-slate-500 text-xs mt-0.5 dark:text-slate-400">You'll be set as admin automatically</p>
                             </div>
                             <button
                                 onClick={() => setShowModal(false)}
-                                className="w-7 h-7 rounded-full bg-white/80 hover:bg-white text-slate-500 hover:text-slate-800 flex items-center justify-center transition-all text-lg leading-none border border-slate-200"
+                                className="w-7 h-7 rounded-full bg-white/80 hover:bg-white text-slate-500 hover:text-slate-800 flex items-center justify-center transition-all text-lg leading-none border border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                             >
                                 ×
                             </button>
@@ -239,30 +239,30 @@ export default function SelectChurchPage() {
                         {/* Modal Form */}
                         <form onSubmit={handleCreate} className="p-6 space-y-4">
                             {modalError && (
-                                <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
+                                <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">
                                     {modalError}
                                 </div>
                             )}
                             <div className="space-y-1.5">
-                                <label className="text-slate-600 text-xs font-medium uppercase tracking-wider">Assembly Name</label>
+                                <label className="text-slate-600 text-xs font-medium uppercase tracking-wider dark:text-slate-300">Assembly Name</label>
                                 <input
                                     type="text"
                                     value={newName}
                                     onChange={(e) => setNewName(e.target.value)}
                                     required
                                     autoFocus
-                                    className="w-full bg-white border border-slate-200 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 text-slate-800 placeholder:text-slate-400 rounded-lg px-4 py-3 text-sm outline-none transition-colors"
+                                    className="w-full bg-white border border-slate-200 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 text-slate-800 placeholder:text-slate-400 rounded-lg px-4 py-3 text-sm outline-none transition-colors dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-500 dark:focus:ring-indigo-950"
                                     placeholder="e.g. Grace Assembly, Iju"
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <label className="text-slate-600 text-xs font-medium uppercase tracking-wider">Access Password</label>
+                                <label className="text-slate-600 text-xs font-medium uppercase tracking-wider dark:text-slate-300">Access Password</label>
                                 <input
                                     type="password"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     required
-                                    className="w-full bg-white border border-slate-200 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 text-slate-800 placeholder:text-slate-400 rounded-lg px-4 py-3 text-sm outline-none transition-colors"
+                                    className="w-full bg-white border border-slate-200 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 text-slate-800 placeholder:text-slate-400 rounded-lg px-4 py-3 text-sm outline-none transition-colors dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-indigo-500 dark:focus:ring-indigo-950"
                                     placeholder="Members will use this to join"
                                 />
                             </div>
@@ -270,7 +270,7 @@ export default function SelectChurchPage() {
                                 <button
                                     type="button"
                                     onClick={() => setShowModal(false)}
-                                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 rounded-lg transition-all text-sm"
+                                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 rounded-lg transition-all text-sm dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                                 >
                                     Cancel
                                 </button>
