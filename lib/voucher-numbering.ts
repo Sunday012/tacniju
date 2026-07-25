@@ -5,6 +5,7 @@ export const voucherPrefixes: Record<string, string> = {
   Contra: "CNT",
   Payment: "PAY",
   Expense: "EXP",
+  Levy: "LEV",
   Income: "INC",
   Program: "PRG",
 }

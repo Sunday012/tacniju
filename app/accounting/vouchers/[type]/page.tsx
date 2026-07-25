@@ -14,6 +14,7 @@ const typeMap: Record<string, VoucherType> = {
   sales: "Sales",
   purchase: "Purchase",
   expense: "Expense",
+  levy: "Levy",
   income: "Income",
   contra: "Contra",
   program: "Program",
@@ -44,6 +45,11 @@ const heroStyles: Record<VoucherType, { className: string; eyebrowClassName: str
     className: "bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-600",
     eyebrowClassName: "text-amber-100",
     badgeClassName: "text-amber-700",
+  },
+  Levy: {
+    className: "bg-gradient-to-br from-fuchsia-600 via-rose-500 to-pink-700",
+    eyebrowClassName: "text-rose-100",
+    badgeClassName: "text-rose-700",
   },
   Income: {
     className: "bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-600",

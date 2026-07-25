@@ -1,15 +1,11 @@
 "use server"
 
-import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
 import { createClient } from "@/lib/server"
 import { getItems } from "@/app/inventory/actions"
+import { getAccountingOrgId } from "@/lib/accounting-org"
 
 async function getOrgId() {
-  const cookieStore = cookies()
-  const orgId = cookieStore.get("active_org_id")?.value
-  if (!orgId) redirect("/select-church")
-  return orgId
+  return getAccountingOrgId()
 }
 
 export type ReportLine = {
@@ -34,8 +30,14 @@ export type ProfitLossReport = {
 }
 
 export type StockSummaryRow = {
+  id: string
   name: string
+  category: string
   quantity: number
+  inQty: number
+  outQty: number
+  debitAmount: number
+  creditAmount: number
   unit: string
   rate: number
   value: number
@@ -176,16 +178,36 @@ export async function getStockSummaryReport(): Promise<StockSummaryRow[]> {
     }
   }
 
+  const totals = new Map<string, { inQty: number; outQty: number; debitAmount: number; creditAmount: number }>()
+  for (const m of movements || []) {
+    const current = totals.get(m.item_id) || { inQty: 0, outQty: 0, debitAmount: 0, creditAmount: 0 }
+    if (m.movement_type === "IN") {
+      current.inQty += Number(m.qty || 0)
+      current.debitAmount += Number(m.amount || 0)
+    } else if (m.movement_type === "OUT") {
+      current.outQty += Number(m.qty || 0)
+      current.creditAmount += Number(m.amount || 0)
+    }
+    totals.set(m.item_id, current)
+  }
+
   return items
     .map(item => {
       const quantity = Number(item.current_stock || 0)
+      const itemTotals = totals.get(item.id) || { inQty: 0, outQty: 0, debitAmount: 0, creditAmount: 0 }
       let rate = avgRateMap.get(item.id)
       if (rate === undefined || isNaN(rate)) {
         rate = Number(item.purchase_rate || item.selling_rate || 0)
       }
       return {
+        id: item.id,
         name: item.name,
+        category: item.category || "Uncategorized",
         quantity,
+        inQty: itemTotals.inQty,
+        outQty: itemTotals.outQty,
+        debitAmount: itemTotals.debitAmount,
+        creditAmount: itemTotals.creditAmount,
         unit: item.primary_unit || item.unit || "",
         rate,
         value: quantity * rate,

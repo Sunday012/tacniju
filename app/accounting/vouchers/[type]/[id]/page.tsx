@@ -12,6 +12,7 @@ const typeMap: Record<string, VoucherType> = {
   sales: "Sales",
   purchase: "Purchase",
   expense: "Expense",
+  levy: "Levy",
   income: "Income",
   contra: "Contra",
   program: "Program",

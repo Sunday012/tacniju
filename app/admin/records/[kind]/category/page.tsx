@@ -32,6 +32,12 @@ export default async function ContentRecordCategoryPage({ params }: { params: { 
         <form action={createAction} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-black text-slate-900"><Plus className="h-5 w-5" /> New Category</h2>
           <div className="space-y-4">
+            <select name="parent_id" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-indigo-400" defaultValue="">
+              <option value="">Create as group</option>
+              {categories.map(category => (
+                <option key={category.id} value={category.id}>{category.name}</option>
+              ))}
+            </select>
             <input name="name" required placeholder="Category name" className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-semibold outline-none focus:border-indigo-400" />
             <textarea name="description" placeholder="Description" rows={4} className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400" />
             <button className="h-11 w-full rounded-xl bg-indigo-600 px-4 text-sm font-black text-white hover:bg-indigo-700">Save Category</button>
@@ -48,9 +54,10 @@ export default async function ContentRecordCategoryPage({ params }: { params: { 
               </div>
               <div className="min-w-0 flex-1">
                 <h2 className="truncate text-sm font-black text-slate-900">{category.name}</h2>
+                {category.parent?.name && <p className="mt-1 text-[11px] font-black uppercase tracking-widest text-indigo-500">Under {category.parent.name}</p>}
                 {category.description && <p className="mt-1 line-clamp-1 text-xs font-medium text-slate-500">{category.description}</p>}
               </div>
-              <ContentCategoryActions recordType={kind} categoryId={category.id} isActive={category.is_active} />
+              <ContentCategoryActions recordType={kind} category={category} categories={categories} />
             </article>
           ))}
         </div>

@@ -1,5 +1,6 @@
 "use client"
 
+import { Fragment, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -8,6 +9,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 export function TrialBalanceView({ data, onBack }: { data: any[], onBack: () => void }) {
     const router = useRouter()
     const searchParams = useSearchParams()
+    const [openRows, setOpenRows] = useState<Record<string, boolean>>({})
 
     let totalDr = 0
     let totalCr = 0
@@ -70,9 +72,7 @@ export function TrialBalanceView({ data, onBack }: { data: any[], onBack: () => 
                     <Table>
                         <TableHeader>
                             <TableRow className="border-slate-200">
-                                <TableHead className="text-slate-500">Ledger</TableHead>
-                                <TableHead className="text-slate-500">Group</TableHead>
-                                <TableHead className="text-slate-500">Nature</TableHead>
+                                <TableHead className="text-slate-500">Particulars</TableHead>
                                 <TableHead className="text-slate-500 text-right">Debit Balance (₦)</TableHead>
                                 <TableHead className="text-slate-500 text-right">Credit Balance (₦)</TableHead>
                             </TableRow>
@@ -80,25 +80,47 @@ export function TrialBalanceView({ data, onBack }: { data: any[], onBack: () => 
                         <TableBody>
                             {data.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center text-slate-500 py-6">No data found.</TableCell>
+                                    <TableCell colSpan={3} className="text-center text-slate-500 py-6">No data found.</TableCell>
                                 </TableRow>
                             ) : (
-                                data.map((row, idx) => (
-                                    <TableRow key={idx} className="border-slate-200 hover:bg-slate-50">
-                                        <TableCell className="font-medium text-slate-800">{row.ledgerName}</TableCell>
-                                        <TableCell className="text-slate-500">{row.groupName}</TableCell>
-                                        <TableCell className="text-slate-500 text-xs uppercase tracking-wider">{row.nature}</TableCell>
-                                        <TableCell className="text-right text-red-600 font-mono">
-                                            {row.closingDr > 0 ? row.closingDr.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
-                                        </TableCell>
-                                        <TableCell className="text-right text-emerald-600 font-mono">
-                                            {row.closingCr > 0 ? row.closingCr.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                data.map((row, idx) => {
+                                    const rowKey = row.groupName || row.ledgerName || String(idx)
+                                    const isOpen = openRows[rowKey]
+                                    const children = row.children || []
+                                    return (
+                                        <Fragment key={rowKey}>
+                                            <TableRow key={rowKey} className="border-slate-200 hover:bg-slate-50">
+                                                <TableCell className="font-bold text-slate-800">
+                                                    {children.length > 1 ? (
+                                                        <button type="button" onClick={() => setOpenRows(current => ({ ...current, [rowKey]: !isOpen }))} className="text-left hover:text-indigo-700 hover:underline">
+                                                            {isOpen ? "[-]" : "[+]"} {row.ledgerName}
+                                                        </button>
+                                                    ) : row.ledgerName}
+                                                </TableCell>
+                                                <TableCell className="text-right text-red-600 font-mono">
+                                                    {row.closingDr > 0 ? row.closingDr.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
+                                                </TableCell>
+                                                <TableCell className="text-right text-emerald-600 font-mono">
+                                                    {row.closingCr > 0 ? row.closingCr.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
+                                                </TableCell>
+                                            </TableRow>
+                                            {isOpen && children.map((child: any) => (
+                                                <TableRow key={`${rowKey}-${child.ledgerName}`} className="border-slate-100 bg-slate-50/60">
+                                                    <TableCell className="pl-8 text-sm font-medium text-slate-600">{child.ledgerName}</TableCell>
+                                                    <TableCell className="text-right text-red-600 font-mono text-sm">
+                                                        {child.closingDr > 0 ? child.closingDr.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
+                                                    </TableCell>
+                                                    <TableCell className="text-right text-emerald-600 font-mono text-sm">
+                                                        {child.closingCr > 0 ? child.closingCr.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '-'}
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </Fragment>
+                                    )
+                                })
                             )}
                             <TableRow className="border-t-2 border-slate-300 bg-slate-50">
-                                <TableCell colSpan={3} className="text-right font-bold text-slate-800 uppercase tracking-widest text-sm py-4">
+                                <TableCell className="text-right font-bold text-slate-800 uppercase tracking-widest text-sm py-4">
                                     Total
                                 </TableCell>
                                 <TableCell className="text-right font-bold text-red-600 font-mono text-lg py-4">

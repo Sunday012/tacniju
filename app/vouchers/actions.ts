@@ -1,29 +1,15 @@
 "use server"
 
 import { createClient } from "@/lib/server"
-import { cookies } from "next/headers"
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 import { getNextVoucherNo, getVoucherPrefix } from "@/lib/voucher-numbering"
+import { getAccountingOrgId } from "@/lib/accounting-org"
 
 async function getOrgId() {
-    const supabase = await createClient()
-    const cookieStore = cookies()
-    const orgId = cookieStore.get("active_org_id")?.value
-    if (!orgId) redirect("/select-church")
-
-    const { data: org, error } = await supabase
-        .from("organizations")
-        .select("id")
-        .eq("id", orgId)
-        .maybeSingle()
-
-    if (error || !org?.id) redirect("/select-church")
-
-    return orgId
+    return getAccountingOrgId()
 }
 
-export type VoucherType = 'Payment' | 'Receipt' | 'Sales' | 'Purchase' | 'Contra' | 'Expense' | 'Income' | 'Program'
+export type VoucherType = 'Payment' | 'Receipt' | 'Sales' | 'Purchase' | 'Contra' | 'Expense' | 'Levy' | 'Income' | 'Program'
 
 export type VoucherItemPayload = {
     item_id: string

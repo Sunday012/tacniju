@@ -1,27 +1,24 @@
 "use server"
 
 import { createClient } from "@/lib/server"
-import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
 import { Ledger, AccountGroup } from "@/app/management/actions"
+import { getAccountingOrgId } from "@/lib/accounting-org"
 
 async function getOrgId() {
-    const cookieStore = cookies()
-    const orgId = cookieStore.get("active_org_id")?.value
-    if (!orgId) redirect("/select-church")
-    return orgId
+    return getAccountingOrgId()
 }
 
 export type TrialBalanceRow = {
     ledgerName: string
     groupName: string
-    nature: string
+    nature?: string
     openingDr: number
     openingCr: number
     movementDr: number
     movementCr: number
     closingDr: number
     closingCr: number
+    children?: TrialBalanceRow[]
 }
 
 export async function getTrialBalance(startDate?: string, endDate?: string): Promise<TrialBalanceRow[]> {
@@ -35,6 +32,7 @@ export async function getTrialBalance(startDate?: string, endDate?: string): Pro
         .eq("org_id", orgId)
 
     if (lErr || !ledgersData) return []
+    const ledgers = ledgersData as any[]
 
     // 2. Fetch Movements within date range
     let query = supabase
@@ -63,9 +61,9 @@ export async function getTrialBalance(startDate?: string, endDate?: string): Pro
         curr.cr += Number(m.credit_amount || 0)
     }
 
-    const rows: TrialBalanceRow[] = []
+    const ledgerRows: TrialBalanceRow[] = []
 
-    for (const ledger of ledgersData) {
+    for (const ledger of ledgers) {
         const openingDr = ledger.balance_type === 'Dr' ? Number(ledger.opening_balance || 0) : 0
         const openingCr = ledger.balance_type === 'Cr' ? Number(ledger.opening_balance || 0) : 0
 
@@ -85,7 +83,7 @@ export async function getTrialBalance(startDate?: string, endDate?: string): Pro
 
         // Only include if there is some activity or balance
         if (openingDr || openingCr || moves.dr || moves.cr || closingDr || closingCr) {
-            rows.push({
+            ledgerRows.push({
                 ledgerName: ledger.name,
                 groupName: ledger.account_groups?.name || 'Unknown',
                 nature: ledger.account_groups?.nature || 'Unknown',
@@ -99,7 +97,57 @@ export async function getTrialBalance(startDate?: string, endDate?: string): Pro
         }
     }
 
-    return rows.sort((a, b) => a.nature.localeCompare(b.nature) || a.groupName.localeCompare(b.groupName) || a.ledgerName.localeCompare(b.ledgerName))
+    const preferredOrder = [
+        "Bank Accounts",
+        "Cash-in-Hand",
+        "Fixed Assets",
+        "Sundry Debtors",
+        "Sundry Creditors",
+        "Direct Expenses",
+        "Indirect Expenses",
+        "Direct Incomes",
+        "Indirect Incomes",
+    ]
+
+    function displayGroupName(row: TrialBalanceRow) {
+        const group = row.groupName || "Unknown"
+        if (/bank|cash at bank/i.test(group) || ledgers.find((ledger: any) => ledger.name === row.ledgerName)?.is_cash_bank) {
+            return "Bank Accounts"
+        }
+        if (/fixed asset|loan/i.test(group)) return "Fixed Assets"
+        return group
+    }
+
+    const grouped = new Map<string, TrialBalanceRow>()
+    for (const row of ledgerRows) {
+        const groupName = displayGroupName(row)
+        const current = grouped.get(groupName) || {
+            ledgerName: groupName,
+            groupName,
+            openingDr: 0,
+            openingCr: 0,
+            movementDr: 0,
+            movementCr: 0,
+            closingDr: 0,
+            closingCr: 0,
+            children: [],
+        }
+        current.openingDr += row.openingDr
+        current.openingCr += row.openingCr
+        current.movementDr += row.movementDr
+        current.movementCr += row.movementCr
+        current.closingDr += row.closingDr
+        current.closingCr += row.closingCr
+        current.children?.push(row)
+        grouped.set(groupName, current)
+    }
+
+    return Array.from(grouped.values()).sort((a, b) => {
+        const aIndex = preferredOrder.indexOf(a.groupName)
+        const bIndex = preferredOrder.indexOf(b.groupName)
+        if (aIndex !== -1 || bIndex !== -1) return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex)
+        return a.groupName.localeCompare(b.groupName)
+    })
 }
 
 export async function getDayBook(filters?: { date?: string; startDate?: string; endDate?: string }) {

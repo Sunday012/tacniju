@@ -7,7 +7,13 @@ import { updateDreamCategoryStatus, updateDreamCategory, deleteDreamCategory } f
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
-export function DreamCategoryActions({ category }: { category: { id: string; name: string; description: string | null; is_active: boolean } }) {
+export function DreamCategoryActions({
+  category,
+  categories,
+}: {
+  category: { id: string; parent_id: string | null; name: string; description: string | null; is_active: boolean }
+  categories: Array<{ id: string; name: string }>
+}) {
   const [isPending, startTransition] = useTransition()
   const [isEditing, setIsEditing] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
@@ -67,6 +73,15 @@ export function DreamCategoryActions({ category }: { category: { id: string; nam
             <DialogTitle>Edit Category</DialogTitle>
           </DialogHeader>
           <form action={handleEdit} ref={formRef} className="space-y-4">
+            <label className="grid gap-2 text-sm font-bold text-slate-600">
+              Category
+              <select name="parent_id" defaultValue={category.parent_id || ""} className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white">
+                <option value="">Create as category</option>
+                {categories.filter(item => item.id !== category.id).map(item => (
+                  <option key={item.id} value={item.id}>{item.name}</option>
+                ))}
+              </select>
+            </label>
             <label className="grid gap-2 text-sm font-bold text-slate-600">
               Name
               <input name="name" defaultValue={category.name} className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" required />

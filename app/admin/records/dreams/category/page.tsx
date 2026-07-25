@@ -42,8 +42,17 @@ export default async function DreamCategoriesPage() {
           </div>
           <div className="space-y-4">
             <label className="grid gap-2 text-sm font-bold text-slate-600">
+              Category
+              <select name="parent_id" className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" defaultValue="">
+                <option value="">Create as category</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-2 text-sm font-bold text-slate-600">
               Name
-              <input name="name" className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" placeholder="Vision, Warning, Prayer..." required />
+              <input name="name" className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" placeholder="Warning, Prayer, Family..." required />
             </label>
             <label className="grid gap-2 text-sm font-bold text-slate-600">
               Description
@@ -73,10 +82,11 @@ export default async function DreamCategoriesPage() {
                         {category.is_active ? "Active" : "Hidden"}
                       </span>
                     </div>
+                    {category.parent?.name && <p className="mt-1 text-[11px] font-black uppercase tracking-widest text-indigo-500">Sub category under {category.parent.name}</p>}
                     {category.description && <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-600">{category.description}</p>}
                     <p className="mt-3 text-xs font-semibold text-slate-400">{format(parseISO(category.created_at), "MMM d, yyyy")}</p>
                   </div>
-                  <DreamCategoryActions category={category} />
+                  <DreamCategoryActions category={category} categories={categories} />
                 </div>
               </article>
             ))

@@ -1,9 +1,8 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
-import { cookies } from "next/headers"
 import { createClient } from "@/lib/server"
+import { getAccountingOrgId } from "@/lib/accounting-org"
 
 export type CreationTemplateScope = "accounting" | "admin" | "both"
 export type CreationTemplateKind = "voucher" | "page"
@@ -30,19 +29,7 @@ export type CreationTemplate = {
 }
 
 async function getOrgId() {
-  const supabase = await createClient()
-  const cookieStore = cookies()
-  const orgId = cookieStore.get("active_org_id")?.value
-  if (!orgId) redirect("/select-church")
-
-  const { data: org, error } = await supabase
-    .from("organizations")
-    .select("id")
-    .eq("id", orgId)
-    .maybeSingle()
-
-  if (error || !org?.id) redirect("/select-church")
-  return orgId
+  return getAccountingOrgId()
 }
 
 async function canManageTemplates() {

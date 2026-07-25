@@ -53,10 +53,10 @@ export const displayMenuItems: DisplayMenuItem[] = [
     icon: Receipt,
     slug: "statement-of-accounts",
     children: [
-      { label: "Outstanding Receivables", icon: Receipt, href: "/accounting/statements/party" },
-      { label: "Outstanding Payables", icon: Receipt, href: "/accounting/statements/party" },
-      { label: "Ledger Monthly Summary", icon: BookOpen, href: "/accounting/info/ledger" },
-      { label: "Statistics", icon: LineChart, href: "/accounting/profit-loss" },
+      { label: "Outstanding Receivables", icon: Receipt, href: "/accounting/display/outstanding-receivable" },
+      { label: "Outstanding Payables", icon: Receipt, href: "/accounting/display/outstanding-payable" },
+      { label: "Voucher Statistics", icon: LineChart, href: "/accounting/display/statistics/voucher" },
+      { label: "Master Statistics", icon: Layers, href: "/accounting/display/statistics/master" },
     ],
   },
   {

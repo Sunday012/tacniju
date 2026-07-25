@@ -1,15 +1,11 @@
 "use server"
 
 import { createClient } from "@/lib/server"
-import { cookies } from "next/headers"
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
+import { getAccountingOrgId } from "@/lib/accounting-org"
 
 async function getOrgId() {
-    const cookieStore = cookies()
-    const orgId = cookieStore.get("active_org_id")?.value
-    if (!orgId) redirect("/select-church")
-    return orgId
+    return getAccountingOrgId()
 }
 
 export type Item = {

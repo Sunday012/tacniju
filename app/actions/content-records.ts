@@ -8,10 +8,12 @@ import { isContentRecordType, type ContentRecordType } from "@/lib/content-recor
 export type ContentCategory = {
   id: string
   record_type: ContentRecordType
+  parent_id: string | null
   name: string
   description: string | null
   is_active: boolean
   created_at: string
+  parent?: Pick<ContentCategory, "id" | "name"> | null
 }
 
 export type ContentRecord = {
@@ -83,7 +85,7 @@ export async function getContentCategories(recordType: ContentRecordType, includ
   const supabase = await createClient()
   let query = supabase
     .from("content_record_categories")
-    .select("id, record_type, name, description, is_active, created_at")
+    .select("id, record_type, parent_id, name, description, is_active, created_at, parent:content_record_categories!content_record_categories_parent_id_fkey(id, name)")
     .eq("record_type", recordType)
     .order("name", { ascending: true })
 
@@ -91,7 +93,12 @@ export async function getContentCategories(recordType: ContentRecordType, includ
 
   const { data, error } = await query
   if (error) return { error: error.message, categories: [] as ContentCategory[] }
-  return { categories: (data || []) as ContentCategory[] }
+  return {
+    categories: (data || []).map((category: any) => ({
+      ...category,
+      parent: firstRelation(category.parent),
+    })) as ContentCategory[],
+  }
 }
 
 export async function getContentRecords(recordType: ContentRecordType) {
@@ -110,7 +117,7 @@ export async function getContentRecords(recordType: ContentRecordType) {
       category_id,
       created_at,
       updated_at,
-      category:content_record_categories(id, record_type, name, description, is_active, created_at),
+      category:content_record_categories(id, record_type, parent_id, name, description, is_active, created_at),
       owner:profiles!content_records_profile_id_fkey(id, full_name, reservation_number)
     `)
     .eq("record_type", recordType)
@@ -137,7 +144,7 @@ export async function getContentRecord(recordType: ContentRecordType, id: string
       category_id,
       created_at,
       updated_at,
-      category:content_record_categories(id, record_type, name, description, is_active, created_at),
+      category:content_record_categories(id, record_type, parent_id, name, description, is_active, created_at),
       owner:profiles!content_records_profile_id_fkey(id, full_name, reservation_number)
     `)
     .eq("record_type", recordType)
@@ -153,11 +160,13 @@ export async function createContentCategory(recordType: ContentRecordType, formD
   if (error) return { error }
 
   const name = String(formData.get("name") || "").trim()
+  const parentId = String(formData.get("parent_id") || "").trim()
   const description = String(formData.get("description") || "").trim()
   if (!name) return { error: "Category name is required." }
 
   const { error: insertError } = await supabase.from("content_record_categories").insert({
     record_type: recordType,
+    parent_id: parentId || null,
     name,
     description: description || null,
   })
@@ -181,6 +190,47 @@ export async function updateContentCategoryStatus(recordType: ContentRecordType,
   if (updateError) return { error: updateError.message }
   revalidatePath(`/admin/records/${recordType}/category`)
   revalidatePath(`/admin/records/${recordType}/new`)
+  return { success: true }
+}
+
+export async function updateContentCategory(recordType: ContentRecordType, id: string, formData: FormData) {
+  const { supabase, error } = await requireAdmin()
+  if (error) return { error }
+
+  const name = String(formData.get("name") || "").trim()
+  const parentId = String(formData.get("parent_id") || "").trim()
+  const description = String(formData.get("description") || "").trim()
+
+  if (!name) return { error: "Category name is required." }
+  if (parentId === id) return { error: "A category cannot be under itself." }
+
+  const { error: updateError } = await supabase
+    .from("content_record_categories")
+    .update({ name, parent_id: parentId || null, description: description || null })
+    .eq("id", id)
+    .eq("record_type", recordType)
+
+  if (updateError) return { error: updateError.message }
+  revalidatePath(`/admin/records/${recordType}/category`)
+  revalidatePath(`/admin/records/${recordType}/new`)
+  revalidatePath(`/admin/records/${recordType}/summary`)
+  return { success: true }
+}
+
+export async function deleteContentCategory(recordType: ContentRecordType, id: string) {
+  const { supabase, error } = await requireAdmin()
+  if (error) return { error }
+
+  const { error: deleteError } = await supabase
+    .from("content_record_categories")
+    .delete()
+    .eq("id", id)
+    .eq("record_type", recordType)
+
+  if (deleteError) return { error: deleteError.message }
+  revalidatePath(`/admin/records/${recordType}/category`)
+  revalidatePath(`/admin/records/${recordType}/new`)
+  revalidatePath(`/admin/records/${recordType}/summary`)
   return { success: true }
 }
 
@@ -281,7 +331,7 @@ export async function getMyContentRecords(recordType: ContentRecordType) {
       category_id,
       created_at,
       updated_at,
-      category:content_record_categories(id, record_type, name, description, is_active, created_at)
+      category:content_record_categories(id, record_type, parent_id, name, description, is_active, created_at)
     `)
     .eq("record_type", recordType)
     .eq("profile_id", user.id)
@@ -316,7 +366,7 @@ export async function getVisibleContentRecords(recordType: ContentRecordType) {
       category_id,
       created_at,
       updated_at,
-      category:content_record_categories(id, record_type, name, description, is_active, created_at),
+      category:content_record_categories(id, record_type, parent_id, name, description, is_active, created_at),
       owner:profiles!content_records_profile_id_fkey(id, full_name, reservation_number)
     `)
     .eq("record_type", recordType)
@@ -351,7 +401,7 @@ export async function getMyContentRecord(recordType: ContentRecordType, id: stri
       category_id,
       created_at,
       updated_at,
-      category:content_record_categories(id, record_type, name, description, is_active, created_at)
+      category:content_record_categories(id, record_type, parent_id, name, description, is_active, created_at)
     `)
     .eq("id", id)
     .eq("record_type", recordType)
@@ -386,7 +436,7 @@ export async function getVisibleContentRecord(recordType: ContentRecordType, id:
       category_id,
       created_at,
       updated_at,
-      category:content_record_categories(id, record_type, name, description, is_active, created_at),
+      category:content_record_categories(id, record_type, parent_id, name, description, is_active, created_at),
       owner:profiles!content_records_profile_id_fkey(id, full_name, reservation_number)
     `)
     .eq("id", id)

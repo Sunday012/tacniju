@@ -52,7 +52,7 @@ type PendingBillOption = {
 }
 
 function isSingleEntryVoucher(type: VoucherType) {
-    return ["Payment", "Expense", "Receipt", "Income", "Program", "Contra"].includes(type)
+    return ["Payment", "Expense", "Levy", "Receipt", "Income", "Program", "Contra"].includes(type)
 }
 
 function buildInitialItems(voucher: any | null): VoucherItemPayload[] {
@@ -294,7 +294,7 @@ export function VoucherEntry({
 
     // Payment credits the top cash/bank account. Expense is a levy/bill raised:
     // it debits the selected party and credits the levy/expense ledger without touching bank/cash.
-    const isExpenseLevy = voucherType === "Expense"
+    const isExpenseLevy = voucherType === "Expense" || voucherType === "Levy"
     const isPaymentLike = voucherType === "Payment"
     const isReceiptLike = voucherType === "Receipt" || voucherType === "Income" || voucherType === "Program"
     const isSingleEntry = isPaymentLike || isExpenseLevy || isReceiptLike || voucherType === "Contra"
@@ -668,6 +668,7 @@ export function VoucherEntry({
         Sales: { button: "bg-blue-600 hover:bg-blue-500" },
         Purchase: { button: "bg-emerald-600 hover:bg-emerald-500" },
         Expense: { button: "bg-amber-500 hover:bg-amber-400" },
+        Levy: { button: "bg-rose-600 hover:bg-rose-500" },
         Income: { button: "bg-amber-500 hover:bg-amber-400" },
         Contra: { button: "bg-slate-900 hover:bg-slate-800" },
         Program: { button: "bg-indigo-600 hover:bg-indigo-500" },
@@ -747,19 +748,27 @@ export function VoucherEntry({
         value: party.ledgerId || party.id,
         label: party.reservation_number ? `${party.name} (${party.reservation_number})` : party.name,
     }))
+    const ledgerReferenceOptions: ReferenceOption[] = regularLedgers.map(ledger => ({
+        value: ledger.id,
+        label: `Ledger: ${ledger.name}`,
+    }))
+    const throughReferenceOptions = [
+        ...partyReferenceOptions.map(option => ({ ...option, label: `Party: ${option.label}` })),
+        ...ledgerReferenceOptions,
+    ]
     const managedReferenceLabel = managedLedger?.adjustment_method === "Advance"
         ? "Part Payments"
         : managedLedger?.adjustment_method === "Against Reference"
             ? "Pending Bills"
             : (managedLedger?.adjustment_method === "Through Reference" || managedLedger?.adjustment_method === "For Reference")
-                ? "Parties"
+                ? "Parties / Ledgers"
                 : "Name"
     const managedReferenceOptions = managedLedger?.adjustment_method === "Advance"
         ? pendingBillOptions
         : managedLedger?.adjustment_method === "Against Reference"
             ? pendingBillOptions
             : (managedLedger?.adjustment_method === "Through Reference" || managedLedger?.adjustment_method === "For Reference")
-                ? partyReferenceOptions
+                ? throughReferenceOptions
                 : []
     const usesReferenceOptions = managedLedger?.adjustment_method === "Advance" || managedLedger?.adjustment_method === "Against Reference" || managedLedger?.adjustment_method === "Through Reference" || managedLedger?.adjustment_method === "For Reference"
     const selectedManagedReferenceLabel = managedReferenceOptions.find(option => option.value === managedLedger?.adjustment_reference)?.label
@@ -808,6 +817,7 @@ export function VoucherEntry({
                                     <SelectItem value="Sales">Sales (Alt+S)</SelectItem>
                                     <SelectItem value="Purchase">Purchase (Alt+U)</SelectItem>
                                     <SelectItem value="Expense">Expense (Alt+E)</SelectItem>
+                                    <SelectItem value="Levy">Levy</SelectItem>
                                     <SelectItem value="Income">Income (Alt+I)</SelectItem>
                                     <SelectItem value="Contra">Contra (Alt+C)</SelectItem>
                                     <SelectItem value="Program">Program (Alt+G)</SelectItem>

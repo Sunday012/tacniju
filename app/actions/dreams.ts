@@ -6,10 +6,12 @@ import { createClient } from "@/lib/server"
 
 export type DreamCategory = {
   id: string
+  parent_id: string | null
   name: string
   description: string | null
   is_active: boolean
   created_at: string
+  parent?: Pick<DreamCategory, "id" | "name"> | null
 }
 
 export type DreamOwner = {
@@ -71,7 +73,7 @@ export async function getDreamCategories(includeInactive = false) {
   const supabase = await createClient()
   let query = supabase
     .from("dream_categories")
-    .select("id, name, description, is_active, created_at")
+    .select("id, parent_id, name, description, is_active, created_at, parent:dream_categories!dream_categories_parent_id_fkey(id, name)")
     .order("name", { ascending: true })
 
   if (!includeInactive) query = query.eq("is_active", true)
@@ -82,7 +84,12 @@ export async function getDreamCategories(includeInactive = false) {
     return { error: error.message, categories: [] as DreamCategory[] }
   }
 
-  return { categories: (data || []) as DreamCategory[] }
+  return {
+    categories: (data || []).map((category: any) => ({
+      ...category,
+      parent: firstRelation(category.parent),
+    })) as DreamCategory[],
+  }
 }
 
 export async function getDreamOwners() {
@@ -118,7 +125,7 @@ export async function getAdminDreams() {
       category_id,
       created_at,
       updated_at,
-      category:dream_categories(id, name, description, is_active, created_at),
+      category:dream_categories(id, parent_id, name, description, is_active, created_at),
       owner:profiles!dreams_profile_id_fkey(id, full_name, reservation_number)
     `)
     .order("dream_date", { ascending: false })
@@ -147,7 +154,7 @@ export async function getAdminDream(id: string) {
       category_id,
       created_at,
       updated_at,
-      category:dream_categories(id, name, description, is_active, created_at),
+      category:dream_categories(id, parent_id, name, description, is_active, created_at),
       owner:profiles!dreams_profile_id_fkey(id, full_name, reservation_number)
     `)
     .eq("id", id)
@@ -180,7 +187,7 @@ export async function getMyDreams() {
       category_id,
       created_at,
       updated_at,
-      category:dream_categories(id, name, description, is_active, created_at)
+      category:dream_categories(id, parent_id, name, description, is_active, created_at)
     `)
     .eq("profile_id", user.id)
     .order("dream_date", { ascending: false })
@@ -213,7 +220,7 @@ export async function getMyDream(id: string) {
       category_id,
       created_at,
       updated_at,
-      category:dream_categories(id, name, description, is_active, created_at)
+      category:dream_categories(id, parent_id, name, description, is_active, created_at)
     `)
     .eq("id", id)
     .eq("profile_id", user.id)
@@ -232,12 +239,14 @@ export async function createDreamCategory(formData: FormData) {
   if (error) return { error }
 
   const name = String(formData.get("name") || "").trim()
+  const parentId = String(formData.get("parent_id") || "").trim()
   const description = String(formData.get("description") || "").trim()
 
   if (!name) return { error: "Category name is required." }
 
   const { error: insertError } = await supabase.from("dream_categories").insert({
     name,
+    parent_id: parentId || null,
     description: description || null,
   })
 
@@ -275,13 +284,15 @@ export async function updateDreamCategory(id: string, formData: FormData) {
   if (error) return { error }
 
   const name = String(formData.get("name") || "").trim()
+  const parentId = String(formData.get("parent_id") || "").trim()
   const description = String(formData.get("description") || "").trim()
 
   if (!name) return { error: "Category name is required." }
+  if (parentId === id) return { error: "A category cannot be under itself." }
 
   const { error: updateError } = await supabase
     .from("dream_categories")
-    .update({ name, description: description || null })
+    .update({ name, parent_id: parentId || null, description: description || null })
     .eq("id", id)
 
   if (updateError) {

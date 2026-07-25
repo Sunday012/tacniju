@@ -1,8 +1,7 @@
-import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
 import { AccountingShell } from "@/components/accounting/accounting-shell"
 import { createClient } from "@/lib/server"
 import { VoucherRegisterTable, type RegisterRow } from "@/components/accounting/voucher-register-table"
+import { getAccountingOrgId } from "@/lib/accounting-org"
 
 type VoucherEntryRow = {
   ledger_id: string
@@ -44,19 +43,7 @@ function getEntrySummary(voucher: ExpensePurchaseVoucher) {
 }
 
 async function getOrgId() {
-  const supabase = await createClient()
-  const cookieStore = cookies()
-  const orgId = cookieStore.get("active_org_id")?.value
-  if (!orgId) redirect("/select-church")
-
-  const { data: org, error } = await supabase
-    .from("organizations")
-    .select("id")
-    .eq("id", orgId)
-    .maybeSingle()
-
-  if (error || !org?.id) redirect("/select-church")
-  return orgId
+  return getAccountingOrgId()
 }
 
 async function getExpensePurchaseVouchers() {
