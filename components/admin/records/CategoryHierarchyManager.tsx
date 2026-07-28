@@ -185,15 +185,15 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
       <div className="space-y-4">
         {/* SECTION 1: Ungrouped Categories (Existing Categories waiting to be assigned to a group) */}
         {ungroupedCategories.length > 0 && (
-          <div className="overflow-hidden rounded-2xl border border-amber-200 bg-amber-50/40 shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-amber-200/60 bg-amber-100/50 px-5 py-4">
+          <div className="overflow-hidden rounded-2xl border border-indigo-200/80 bg-indigo-50/30 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-indigo-100 bg-indigo-50/80 px-5 py-4">
               <div
                 onClick={() => toggleGroupExpand("__ungrouped__")}
                 className="flex flex-1 cursor-pointer items-center gap-3.5 min-w-[240px]"
               >
                 <button
                   type="button"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-amber-300 text-amber-800 shadow-xs hover:bg-amber-50"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-indigo-200 text-indigo-700 shadow-xs hover:bg-indigo-50"
                 >
                   {isGroupExpanded("__ungrouped__") ? (
                     <ChevronDown className="h-4 w-4" />
@@ -202,20 +202,20 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
                   )}
                 </button>
 
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-200 text-amber-900 font-bold">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white font-bold shadow-xs">
                   <Tag className="h-5 w-5" />
                 </div>
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2.5">
-                    <h3 className="text-base font-extrabold text-amber-950">
+                    <h3 className="text-base font-extrabold text-slate-900">
                       Existing Categories (Unassigned)
                     </h3>
-                    <span className="rounded-full bg-amber-200 px-2.5 py-0.5 text-xs font-black text-amber-900">
+                    <span className="rounded-full bg-indigo-100 border border-indigo-200 px-2.5 py-0.5 text-xs font-black text-indigo-800">
                       {ungroupedCategories.length} {ungroupedCategories.length === 1 ? "category" : "categories"}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-xs font-semibold text-amber-800/80">
+                  <p className="mt-0.5 text-xs font-semibold text-indigo-600">
                     These categories don't have a parent group yet. Click the edit icon on any category to assign it to a group.
                   </p>
                 </div>
@@ -224,14 +224,14 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
 
             {/* List of Ungrouped Categories */}
             {isGroupExpanded("__ungrouped__") && (
-              <div className="divide-y divide-amber-200/50 bg-white px-3 py-2">
+              <div className="divide-y divide-indigo-100/60 bg-white px-3 py-2">
                 {ungroupedCategories.map((category) => (
                   <div
                     key={category.id}
-                    className="group flex items-center justify-between gap-4 rounded-xl px-4 py-3 hover:bg-amber-50/50 transition-colors"
+                    className="group flex items-center justify-between gap-4 rounded-xl px-4 py-3 hover:bg-indigo-50/40 transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-800 group-hover:bg-amber-200 transition-colors">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100 transition-colors">
                         <Folder className="h-4 w-4" />
                       </div>
                       <div className="min-w-0">
