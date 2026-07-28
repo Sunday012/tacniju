@@ -11,8 +11,7 @@ import {
   Plus,
   Layers,
   Folder,
-  Tag,
-  ArrowRightLeft
+  Tag
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -31,6 +30,7 @@ export type BaseCategory = {
   name: string
   description: string | null
   is_active: boolean
+  is_group?: boolean
   created_at: string
   parent?: { id: string; name: string } | null
 }
@@ -74,16 +74,18 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
     }
   })
 
+  const isGroupCategory = (category: T) =>
+    category.parent_id === null && (category.is_group === true || childrenMap.has(category.id))
+
   // Distinguish top-level items (parent_id === null):
-  // 1. Groups: top-level items that have child categories assigned to them.
-  // 2. Ungrouped Categories: top-level items that do NOT have child categories.
-  const groups = categories.filter((c) => c.parent_id === null && childrenMap.has(c.id))
+  // 1. Groups: rows explicitly created as groups, plus older parent rows inferred from children.
+  // 2. Ungrouped Categories: top-level category rows waiting to be assigned under a group.
+  const groups = categories.filter(isGroupCategory)
   const ungroupedCategories = categories.filter(
-    (c) => c.parent_id === null && !childrenMap.has(c.id)
+    (c) => c.parent_id === null && !isGroupCategory(c)
   )
 
-  // All available groups for category selection (including any top-level item)
-  const availableGroups = categories.filter((c) => c.parent_id === null)
+  const availableGroups = groups
 
   function toggleGroupExpand(groupId: string) {
     setExpandedGroups((prev) => ({
@@ -111,6 +113,7 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
     formData.set("parent_id", "") // Top-level group has no parent_id
+    formData.set("is_group", "true")
 
     startTransition(async () => {
       const result = await createAction(formData)
@@ -149,12 +152,12 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
   return (
     <div className="space-y-6">
       {/* Top Header Actions */}
-      <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-extrabold text-slate-900">
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
             {labels.plural} Groups & Categories
           </h2>
-          <p className="mt-1 text-sm font-medium text-slate-500">
+          <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
             Create groups (e.g. Apostle Teachings) and assign series & topics as subcategories under them.
           </p>
         </div>
@@ -162,7 +165,7 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
           <Button
             type="button"
             onClick={() => setIsGroupSheetOpen(true)}
-            className="h-11 gap-2 rounded-xl bg-slate-900 px-5 text-sm font-black text-white hover:bg-slate-800 shadow-sm"
+            className="h-11 gap-2 rounded-xl bg-slate-900 px-5 text-sm font-black text-white hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 shadow-sm"
           >
             <FolderPlus className="h-4 w-4 text-indigo-400" />
             + New Group
@@ -185,15 +188,15 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
       <div className="space-y-4">
         {/* SECTION 1: Ungrouped Categories (Existing Categories waiting to be assigned to a group) */}
         {ungroupedCategories.length > 0 && (
-          <div className="overflow-hidden rounded-2xl border border-indigo-200/80 bg-indigo-50/30 shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-indigo-100 bg-indigo-50/80 px-5 py-4">
+          <div className="overflow-hidden rounded-2xl border border-indigo-200/80 bg-white shadow-sm dark:border-indigo-900/50 dark:bg-slate-900">
+            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-indigo-100 bg-indigo-50/50 px-5 py-4 dark:border-indigo-950 dark:bg-indigo-950/30">
               <div
                 onClick={() => toggleGroupExpand("__ungrouped__")}
                 className="flex flex-1 cursor-pointer items-center gap-3.5 min-w-[240px]"
               >
                 <button
                   type="button"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-indigo-200 text-indigo-700 shadow-xs hover:bg-indigo-50"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-indigo-200 text-indigo-600 shadow-xs dark:border-indigo-900 dark:bg-slate-800 dark:text-indigo-400 hover:bg-indigo-50"
                 >
                   {isGroupExpanded("__ungrouped__") ? (
                     <ChevronDown className="h-4 w-4" />
@@ -208,14 +211,14 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
 
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2.5">
-                    <h3 className="text-base font-extrabold text-slate-900">
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
                       Existing Categories (Unassigned)
                     </h3>
-                    <span className="rounded-full bg-indigo-100 border border-indigo-200 px-2.5 py-0.5 text-xs font-black text-indigo-800">
+                    <span className="rounded-full bg-indigo-100 border border-indigo-200 px-2.5 py-0.5 text-xs font-black text-indigo-800 dark:bg-indigo-950 dark:border-indigo-800 dark:text-indigo-300">
                       {ungroupedCategories.length} {ungroupedCategories.length === 1 ? "category" : "categories"}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-xs font-semibold text-indigo-600">
+                  <p className="mt-0.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
                     These categories don't have a parent group yet. Click the edit icon on any category to assign it to a group.
                   </p>
                 </div>
@@ -224,29 +227,29 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
 
             {/* List of Ungrouped Categories */}
             {isGroupExpanded("__ungrouped__") && (
-              <div className="divide-y divide-indigo-100/60 bg-white px-3 py-2">
+              <div className="divide-y divide-slate-100 bg-white px-3 py-2 dark:divide-slate-800/80 dark:bg-slate-900">
                 {ungroupedCategories.map((category) => (
                   <div
                     key={category.id}
-                    className="group flex items-center justify-between gap-4 rounded-xl px-4 py-3 hover:bg-indigo-50/40 transition-colors"
+                    className="group flex items-center justify-between gap-4 rounded-xl px-4 py-3 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/20 transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100 transition-colors">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400 group-hover:bg-indigo-100 transition-colors">
                         <Folder className="h-4 w-4" />
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-bold text-slate-900 truncate">
+                          <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                             {category.name}
                           </h4>
                           {!category.is_active && (
-                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                               Hidden
                             </span>
                           )}
                         </div>
                         {category.description && (
-                          <p className="mt-0.5 text-xs text-slate-500 truncate max-w-md">
+                          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 truncate max-w-md">
                             {category.description}
                           </p>
                         )}
@@ -259,11 +262,13 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
                           recordType={recordType as any}
                           category={category as any}
                           categories={categories as any}
+                          groupOptions={availableGroups as any}
                         />
                       ) : (
                         <DreamCategoryActions
                           category={category as any}
                           categories={categories as any}
+                          groupOptions={availableGroups as any}
                         />
                       )}
                     </div>
@@ -276,12 +281,12 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
 
         {/* SECTION 2: Structured Groups & Nested Categories */}
         {groups.length === 0 && ungroupedCategories.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+          <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400">
               <FolderTree className="h-7 w-7" />
             </div>
-            <h3 className="mt-4 text-lg font-extrabold text-slate-900">No Groups Created Yet</h3>
-            <p className="mt-1.5 text-sm text-slate-500 max-w-md mx-auto">
+            <h3 className="mt-4 text-lg font-extrabold text-slate-900 dark:text-white">No Groups Created Yet</h3>
+            <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
               Create your first top-level group to start organizing your {labels.plural.toLowerCase()}.
             </p>
             <div className="mt-6">
@@ -303,17 +308,17 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
             return (
               <div
                 key={group.id}
-                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all"
+                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 transition-all"
               >
                 {/* Group Card Header */}
-                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 bg-slate-50/80 px-5 py-4">
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 bg-slate-50/80 px-5 py-4 dark:border-slate-800 dark:bg-slate-800/50">
                   <div
                     onClick={() => toggleGroupExpand(group.id)}
                     className="flex flex-1 cursor-pointer items-center gap-3.5 min-w-[240px]"
                   >
                     <button
                       type="button"
-                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-600 shadow-xs hover:bg-slate-100"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-600 shadow-xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-100"
                     >
                       {isExpanded ? (
                         <ChevronDown className="h-4 w-4" />
@@ -322,26 +327,26 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
                       )}
                     </button>
 
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 font-bold">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 font-bold">
                       <Layers className="h-5 w-5" />
                     </div>
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2.5">
-                        <h3 className="text-base font-extrabold text-slate-900 truncate">
+                        <h3 className="text-base font-extrabold text-slate-900 dark:text-white truncate">
                           {group.name}
                         </h3>
-                        <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-black text-indigo-700 border border-indigo-200/60">
+                        <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-black text-indigo-700 border border-indigo-200/60 dark:bg-indigo-950 dark:border-indigo-800 dark:text-indigo-300">
                           {children.length} {children.length === 1 ? "category" : "categories"}
                         </span>
                         {!group.is_active && (
-                          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700">
+                          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950 dark:text-amber-300">
                             Hidden
                           </span>
                         )}
                       </div>
                       {group.description && (
-                        <p className="mt-0.5 text-xs text-slate-500 line-clamp-1">
+                        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 line-clamp-1">
                           {group.description}
                         </p>
                       )}
@@ -355,7 +360,7 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
                       variant="outline"
                       size="sm"
                       onClick={() => handleOpenCategorySheet(group.id)}
-                      className="h-9 gap-1.5 rounded-lg border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-indigo-600"
+                      className="h-9 gap-1.5 rounded-lg border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-indigo-400"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       Add Category
@@ -366,11 +371,15 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
                         recordType={recordType as any}
                         category={group as any}
                         categories={categories as any}
+                        groupOptions={availableGroups as any}
+                        isGroup
                       />
                     ) : (
                       <DreamCategoryActions
                         category={group as any}
                         categories={categories as any}
+                        groupOptions={availableGroups as any}
+                        isGroup
                       />
                     )}
                   </div>
@@ -378,7 +387,7 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
 
                 {/* Subcategories Collapsible List */}
                 {isExpanded && (
-                  <div className="divide-y divide-slate-100 bg-white px-3 py-2">
+                  <div className="divide-y divide-slate-100 bg-white px-3 py-2 dark:divide-slate-800/80 dark:bg-slate-900">
                     {children.length === 0 ? (
                       <div className="py-6 text-center">
                         <p className="text-xs font-semibold text-slate-400">
@@ -387,7 +396,7 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
                         <button
                           type="button"
                           onClick={() => handleOpenCategorySheet(group.id)}
-                          className="mt-2 text-xs font-extrabold text-indigo-600 hover:underline"
+                          className="mt-2 text-xs font-extrabold text-indigo-600 dark:text-indigo-400 hover:underline"
                         >
                           + Add a category to "{group.name}"
                         </button>
@@ -396,25 +405,25 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
                       children.map((category) => (
                         <div
                           key={category.id}
-                          className="group flex items-center justify-between gap-4 rounded-xl px-4 py-3 hover:bg-slate-50/80 transition-colors"
+                          className="group flex items-center justify-between gap-4 rounded-xl px-4 py-3 hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors"
                         >
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
                               <Folder className="h-4 w-4" />
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                <h4 className="text-sm font-bold text-slate-900 truncate">
+                                <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate">
                                   {category.name}
                                 </h4>
                                 {!category.is_active && (
-                                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
+                                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                                     Hidden
                                   </span>
                                 )}
                               </div>
                               {category.description && (
-                                <p className="mt-0.5 text-xs text-slate-500 truncate max-w-md">
+                                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 truncate max-w-md">
                                   {category.description}
                                 </p>
                               )}
@@ -424,16 +433,18 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
                           <div className="shrink-0">
                             {recordType ? (
                               <ContentCategoryActions
-                                recordType={recordType as any}
-                                category={category as any}
-                                categories={categories as any}
-                              />
-                            ) : (
-                              <DreamCategoryActions
-                                category={category as any}
-                                categories={categories as any}
-                              />
-                            )}
+                               recordType={recordType as any}
+                               category={category as any}
+                               categories={categories as any}
+                               groupOptions={availableGroups as any}
+                             />
+                           ) : (
+                             <DreamCategoryActions
+                               category={category as any}
+                               categories={categories as any}
+                               groupOptions={availableGroups as any}
+                             />
+                           )}
                           </div>
                         </div>
                       ))
@@ -450,48 +461,48 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
 
       {/* 1. New Group Sheet */}
       <Sheet open={isGroupSheetOpen} onOpenChange={setIsGroupSheetOpen}>
-        <SheetContent side="right" className="sm:max-w-md">
+        <SheetContent side="right" className="sm:max-w-md dark:bg-slate-900 dark:border-slate-800 dark:text-white">
           <SheetHeader>
-            <SheetTitle className="flex items-center gap-2 text-xl font-extrabold text-slate-900">
-              <FolderPlus className="h-5 w-5 text-indigo-600" />
+            <SheetTitle className="flex items-center gap-2 text-xl font-extrabold text-slate-900 dark:text-white">
+              <FolderPlus className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
               Create New Group
             </SheetTitle>
-            <SheetDescription>
+            <SheetDescription className="dark:text-slate-400">
               Create a top-level group for organizing {labels.plural.toLowerCase()}.
             </SheetDescription>
           </SheetHeader>
 
           <form onSubmit={handleCreateGroupSubmit} className="mt-6 space-y-5">
             <div className="space-y-2">
-              <label className="text-xs font-extrabold uppercase tracking-wider text-slate-600">
+              <label className="text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                 Group Name <span className="text-rose-500">*</span>
               </label>
               <input
                 name="name"
                 required
                 placeholder="e.g. Teachings Of The Law, Apostle Teachings..."
-                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm font-semibold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm font-semibold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-indigo-400"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-extrabold uppercase tracking-wider text-slate-600">
+              <label className="text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                 Description (Optional)
               </label>
               <textarea
                 name="description"
                 rows={4}
                 placeholder="Brief summary of what this group covers..."
-                className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-indigo-400"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsGroupSheetOpen(false)}
-                className="h-11 rounded-xl px-5 font-bold"
+                className="h-11 rounded-xl px-5 font-bold dark:border-slate-700 dark:text-slate-300"
               >
                 Cancel
               </Button>
@@ -509,20 +520,21 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
 
       {/* 2. New Category Sheet */}
       <Sheet open={isCategorySheetOpen} onOpenChange={setIsCategorySheetOpen}>
-        <SheetContent side="right" className="sm:max-w-md">
+        <SheetContent side="right" className="sm:max-w-md dark:bg-slate-900 dark:border-slate-800 dark:text-white">
           <SheetHeader>
-            <SheetTitle className="flex items-center gap-2 text-xl font-extrabold text-slate-900">
-              <Folder className="h-5 w-5 text-indigo-600" />
+            <SheetTitle className="flex items-center gap-2 text-xl font-extrabold text-slate-900 dark:text-white">
+              <Folder className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
               Create New Category
             </SheetTitle>
-            <SheetDescription>
+            <SheetDescription className="dark:text-slate-400">
               Categories must belong to a parent Group.
             </SheetDescription>
           </SheetHeader>
 
           <form onSubmit={handleCreateCategorySubmit} className="mt-6 space-y-5">
+            <input type="hidden" name="is_group" value="false" />
             <div className="space-y-2">
-              <label className="text-xs font-extrabold uppercase tracking-wider text-slate-600">
+              <label className="text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                 Select Parent Group <span className="text-rose-500">*</span>
               </label>
               <select
@@ -530,7 +542,7 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
                 required
                 value={selectedGroupId}
                 onChange={(e) => setSelectedGroupId(e.target.value)}
-                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm font-semibold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm font-semibold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-indigo-400"
               >
                 {availableGroups.length === 0 && <option value="">No Groups Available</option>}
                 {availableGroups.map((g) => (
@@ -542,35 +554,35 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-extrabold uppercase tracking-wider text-slate-600">
+              <label className="text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                 Category Name <span className="text-rose-500">*</span>
               </label>
               <input
                 name="name"
                 required
                 placeholder="e.g. Armour Of God Series, Looking Beneath The Surface..."
-                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm font-semibold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm font-semibold text-slate-900 outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-indigo-400"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-extrabold uppercase tracking-wider text-slate-600">
+              <label className="text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                 Description (Optional)
               </label>
               <textarea
                 name="description"
                 rows={4}
                 placeholder="Optional notes or details for this category..."
-                className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100"
+                className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:focus:border-indigo-400"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsCategorySheetOpen(false)}
-                className="h-11 rounded-xl px-5 font-bold"
+                className="h-11 rounded-xl px-5 font-bold dark:border-slate-700 dark:text-slate-300"
               >
                 Cancel
               </Button>

@@ -10,6 +10,7 @@ export type DreamCategory = {
   name: string
   description: string | null
   is_active: boolean
+  is_group?: boolean
   created_at: string
   parent?: Pick<DreamCategory, "id" | "name"> | null
 }
@@ -73,7 +74,7 @@ export async function getDreamCategories(includeInactive = false) {
   const supabase = await createClient()
   let query = supabase
     .from("dream_categories")
-    .select("id, parent_id, name, description, is_active, created_at, parent:dream_categories!parent_id(id, name)")
+    .select("id, parent_id, name, description, is_active, is_group, created_at, parent:dream_categories!parent_id(id, name)")
     .order("name", { ascending: true })
 
   if (!includeInactive) query = query.eq("is_active", true)
@@ -241,6 +242,7 @@ export async function createDreamCategory(formData: FormData) {
   const name = String(formData.get("name") || "").trim()
   const parentId = String(formData.get("parent_id") || "").trim()
   const description = String(formData.get("description") || "").trim()
+  const isGroup = String(formData.get("is_group") || "") === "true"
 
   if (!name) return { error: "Category name is required." }
 
@@ -248,6 +250,7 @@ export async function createDreamCategory(formData: FormData) {
     name,
     parent_id: parentId || null,
     description: description || null,
+    is_group: isGroup,
   })
 
   if (insertError) {
@@ -286,13 +289,14 @@ export async function updateDreamCategory(id: string, formData: FormData) {
   const name = String(formData.get("name") || "").trim()
   const parentId = String(formData.get("parent_id") || "").trim()
   const description = String(formData.get("description") || "").trim()
+  const isGroup = String(formData.get("is_group") || "") === "true"
 
   if (!name) return { error: "Category name is required." }
   if (parentId === id) return { error: "A category cannot be under itself." }
 
   const { error: updateError } = await supabase
     .from("dream_categories")
-    .update({ name, parent_id: parentId || null, description: description || null })
+    .update({ name, parent_id: parentId || null, description: description || null, is_group: isGroup && !parentId })
     .eq("id", id)
 
   if (updateError) {

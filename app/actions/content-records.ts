@@ -12,6 +12,7 @@ export type ContentCategory = {
   name: string
   description: string | null
   is_active: boolean
+  is_group?: boolean
   created_at: string
   parent?: Pick<ContentCategory, "id" | "name"> | null
 }
@@ -85,7 +86,7 @@ export async function getContentCategories(recordType: ContentRecordType, includ
   const supabase = await createClient()
   let query = supabase
     .from("content_record_categories")
-    .select("id, record_type, parent_id, name, description, is_active, created_at, parent:content_record_categories!parent_id(id, name)")
+    .select("id, record_type, parent_id, name, description, is_active, is_group, created_at, parent:content_record_categories!parent_id(id, name)")
     .eq("record_type", recordType)
     .order("name", { ascending: true })
 
@@ -162,6 +163,7 @@ export async function createContentCategory(recordType: ContentRecordType, formD
   const name = String(formData.get("name") || "").trim()
   const parentId = String(formData.get("parent_id") || "").trim()
   const description = String(formData.get("description") || "").trim()
+  const isGroup = String(formData.get("is_group") || "") === "true"
   if (!name) return { error: "Category name is required." }
 
   const { error: insertError } = await supabase.from("content_record_categories").insert({
@@ -169,6 +171,7 @@ export async function createContentCategory(recordType: ContentRecordType, formD
     parent_id: parentId || null,
     name,
     description: description || null,
+    is_group: isGroup,
   })
 
   if (insertError) return { error: insertError.message }
@@ -200,13 +203,14 @@ export async function updateContentCategory(recordType: ContentRecordType, id: s
   const name = String(formData.get("name") || "").trim()
   const parentId = String(formData.get("parent_id") || "").trim()
   const description = String(formData.get("description") || "").trim()
+  const isGroup = String(formData.get("is_group") || "") === "true"
 
   if (!name) return { error: "Category name is required." }
   if (parentId === id) return { error: "A category cannot be under itself." }
 
   const { error: updateError } = await supabase
     .from("content_record_categories")
-    .update({ name, parent_id: parentId || null, description: description || null })
+    .update({ name, parent_id: parentId || null, description: description || null, is_group: isGroup && !parentId })
     .eq("id", id)
     .eq("record_type", recordType)
 
