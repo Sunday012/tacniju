@@ -85,7 +85,7 @@ export async function getContentCategories(recordType: ContentRecordType, includ
   const supabase = await createClient()
   let query = supabase
     .from("content_record_categories")
-    .select("id, record_type, parent_id, name, description, is_active, created_at, parent:content_record_categories!content_record_categories_parent_id_fkey(id, name)")
+    .select("id, record_type, parent_id, name, description, is_active, created_at, parent:content_record_categories!parent_id(id, name)")
     .eq("record_type", recordType)
     .order("name", { ascending: true })
 

@@ -73,7 +73,7 @@ export async function getDreamCategories(includeInactive = false) {
   const supabase = await createClient()
   let query = supabase
     .from("dream_categories")
-    .select("id, parent_id, name, description, is_active, created_at, parent:dream_categories!dream_categories_parent_id_fkey(id, name)")
+    .select("id, parent_id, name, description, is_active, created_at, parent:dream_categories!parent_id(id, name)")
     .order("name", { ascending: true })
 
   if (!includeInactive) query = query.eq("is_active", true)

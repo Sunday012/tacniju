@@ -5,7 +5,7 @@ const path = require('path');
 async function run() {
     const client = new Client({
         user: 'postgres.venhucvbufytletsbojm',
-        password: 'orange99()',
+        password: 'tacniju99()',
         host: 'aws-1-eu-west-1.pooler.supabase.com',
         port: 6543,
         database: 'postgres',
