@@ -82,10 +82,10 @@ export function ContentCategoryActions({
           </DialogHeader>
           <form action={handleEdit} className="space-y-4">
             <label className="grid gap-2 text-sm font-bold text-slate-600">
-              Group
+              Parent Group
               <select name="parent_id" defaultValue={category.parent_id || ""} className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white">
-                <option value="">No group</option>
-                {categories.filter(item => item.id !== category.id).map(item => (
+                <option value="">None (Top-Level Group)</option>
+                {categories.filter(item => item.id !== category.id && item.parent_id === null).map(item => (
                   <option key={item.id} value={item.id}>{item.name}</option>
                 ))}
               </select>
