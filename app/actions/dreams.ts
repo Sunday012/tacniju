@@ -313,14 +313,19 @@ export async function deleteDreamCategory(id: string) {
   const { supabase, error } = await requireAdmin()
   if (error) return { error }
 
-  const { error: deleteError } = await supabase
+  const { data: deletedCategory, error: deleteError } = await supabase
     .from("dream_categories")
     .delete()
     .eq("id", id)
+    .select("id")
+    .maybeSingle()
 
   if (deleteError) {
     console.error("Error deleting dream category:", deleteError)
     return { error: deleteError.message }
+  }
+  if (!deletedCategory) {
+    return { error: "Category was not deleted. It may already be gone, or your account may not have delete permission." }
   }
 
   revalidatePath("/admin/records/dreams/category")

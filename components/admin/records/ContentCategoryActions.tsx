@@ -16,12 +16,14 @@ export function ContentCategoryActions({
   categories,
   groupOptions,
   isGroup = false,
+  onDeleted,
 }: {
   recordType: ContentRecordType
   category: ContentCategory
   categories: ContentCategory[]
   groupOptions?: ContentCategory[]
   isGroup?: boolean
+  onDeleted?: (categoryId: string) => void
 }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -62,6 +64,7 @@ export function ContentCategoryActions({
       }
       toast.success(isGroup ? "Group deleted" : "Category deleted")
       setIsDeleteOpen(false)
+      onDeleted?.(category.id)
       router.refresh()
     })
   }

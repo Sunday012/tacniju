@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Users, Loader2, Sparkles, AlertCircle } from "lucide-react";
+import { Users, Loader2, AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -44,7 +44,7 @@ export function TeamBuilder({ competitionId, entryCount }: { competitionId: stri
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <button className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white px-4 py-2.5 rounded-xl font-bold transition-all shadow-[0_4px_16px_rgba(99,102,241,0.3)]">
-          <Sparkles className="h-5 w-5" />
+          <Users className="h-5 w-5" />
           <span>Team Building</span>
         </button>
       </DialogTrigger>
@@ -89,7 +89,7 @@ export function TeamBuilder({ competitionId, entryCount }: { competitionId: stri
             >
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                 <>
-                  <Sparkles className="w-4 h-4" />
+                  <Users className="w-4 h-4" />
                   Generate Teams Now
                 </>
               )}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import {
@@ -58,6 +58,11 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
   const [isGroupSheetOpen, setIsGroupSheetOpen] = useState(false)
   const [isCategorySheetOpen, setIsCategorySheetOpen] = useState(false)
   const [selectedGroupId, setSelectedGroupId] = useState<string>("")
+  const [visibleCategories, setVisibleCategories] = useState<T[]>(categories)
+
+  useEffect(() => {
+    setVisibleCategories(categories)
+  }, [categories])
 
   // Group expand states: key is group ID, default expanded for all groups
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
@@ -66,7 +71,7 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
 
   // Map of child categories by parent_id
   const childrenMap = new Map<string, T[]>()
-  categories.forEach((c) => {
+  visibleCategories.forEach((c) => {
     if (c.parent_id) {
       const list = childrenMap.get(c.parent_id) || []
       list.push(c)
@@ -80,12 +85,20 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
   // Distinguish top-level items (parent_id === null):
   // 1. Groups: rows explicitly created as groups, plus older parent rows inferred from children.
   // 2. Ungrouped Categories: top-level category rows waiting to be assigned under a group.
-  const groups = categories.filter(isGroupCategory)
-  const ungroupedCategories = categories.filter(
+  const groups = visibleCategories.filter(isGroupCategory)
+  const ungroupedCategories = visibleCategories.filter(
     (c) => c.parent_id === null && !isGroupCategory(c)
   )
 
   const availableGroups = groups
+
+  function handleCategoryDeleted(categoryId: string) {
+    setVisibleCategories((current) =>
+      current
+        .filter((category) => category.id !== categoryId)
+        .map((category) => category.parent_id === categoryId ? { ...category, parent_id: null, parent: null } : category)
+    )
+  }
 
   function toggleGroupExpand(groupId: string) {
     setExpandedGroups((prev) => ({
@@ -261,14 +274,16 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
                         <ContentCategoryActions
                           recordType={recordType as any}
                           category={category as any}
-                          categories={categories as any}
+                          categories={visibleCategories as any}
                           groupOptions={availableGroups as any}
+                          onDeleted={handleCategoryDeleted}
                         />
                       ) : (
                         <DreamCategoryActions
                           category={category as any}
-                          categories={categories as any}
+                          categories={visibleCategories as any}
                           groupOptions={availableGroups as any}
+                          onDeleted={handleCategoryDeleted}
                         />
                       )}
                     </div>
@@ -370,16 +385,18 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
                       <ContentCategoryActions
                         recordType={recordType as any}
                         category={group as any}
-                        categories={categories as any}
+                        categories={visibleCategories as any}
                         groupOptions={availableGroups as any}
                         isGroup
+                        onDeleted={handleCategoryDeleted}
                       />
                     ) : (
                       <DreamCategoryActions
                         category={group as any}
-                        categories={categories as any}
+                        categories={visibleCategories as any}
                         groupOptions={availableGroups as any}
                         isGroup
+                        onDeleted={handleCategoryDeleted}
                       />
                     )}
                   </div>
@@ -435,14 +452,16 @@ export function CategoryHierarchyManager<T extends BaseCategory>({
                               <ContentCategoryActions
                                recordType={recordType as any}
                                category={category as any}
-                               categories={categories as any}
+                               categories={visibleCategories as any}
                                groupOptions={availableGroups as any}
+                               onDeleted={handleCategoryDeleted}
                              />
                            ) : (
                              <DreamCategoryActions
                                category={category as any}
-                               categories={categories as any}
+                               categories={visibleCategories as any}
                                groupOptions={availableGroups as any}
+                               onDeleted={handleCategoryDeleted}
                              />
                            )}
                           </div>

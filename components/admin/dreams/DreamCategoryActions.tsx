@@ -12,11 +12,13 @@ export function DreamCategoryActions({
   categories,
   groupOptions,
   isGroup = false,
+  onDeleted,
 }: {
   category: { id: string; parent_id: string | null; name: string; description: string | null; is_active: boolean; is_group?: boolean }
   categories: Array<{ id: string; name: string; parent_id?: string | null; is_group?: boolean }>
   groupOptions?: Array<{ id: string; name: string }>
   isGroup?: boolean
+  onDeleted?: (categoryId: string) => void
 }) {
   const [isPending, startTransition] = useTransition()
   const [isEditing, setIsEditing] = useState(false)
@@ -55,6 +57,7 @@ export function DreamCategoryActions({
       }
       toast.success(isGroup ? "Group deleted." : "Category deleted.")
       setIsDeleteOpen(false)
+      onDeleted?.(category.id)
     })
   }
 

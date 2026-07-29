@@ -28,6 +28,7 @@ import {
   BookOpenText,
   Building2,
   Mic2,
+  MicVocal,
   Music
 } from "lucide-react"
 
@@ -118,6 +119,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
         icon: BookMarked,
         children: [
           { name: "New", href: "/admin/records/teachings/new", icon: FileText },
+          { name: "Transcribe", href: "/admin/records/teachings/transcribe", icon: MicVocal },
           { name: "Category", href: "/admin/records/teachings/category", icon: BookMarked },
           { name: "Summary", href: "/admin/records/teachings/summary", icon: FileText },
         ],
