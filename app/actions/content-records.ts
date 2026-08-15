@@ -225,16 +225,24 @@ export async function deleteContentCategory(recordType: ContentRecordType, id: s
   const { supabase, error } = await requireAdmin()
   if (error) return { error }
 
-  const { data: deletedCategory, error: deleteError } = await supabase
+  const { data: existingCategory, error: existingError } = await supabase
     .from("content_record_categories")
-    .delete()
+    .select("id")
     .eq("id", id)
     .eq("record_type", recordType)
-    .select("id")
     .maybeSingle()
 
+  if (existingError) return { error: existingError.message }
+  if (!existingCategory) return { error: "This category is already gone. Refresh the page to update the list." }
+
+  const { count, error: deleteError } = await supabase
+    .from("content_record_categories")
+    .delete({ count: "exact" })
+    .eq("id", id)
+    .eq("record_type", recordType)
+
   if (deleteError) return { error: deleteError.message }
-  if (!deletedCategory) return { error: "Category was not deleted. It may already be gone, or your account may not have delete permission." }
+  if (!count) return { error: "Category was not deleted. Your database policy may not allow category deletes for this account." }
 
   revalidatePath(`/admin/records/${recordType}/category`)
   revalidatePath(`/admin/records/${recordType}/new`)

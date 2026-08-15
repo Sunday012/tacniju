@@ -313,19 +313,31 @@ export async function deleteDreamCategory(id: string) {
   const { supabase, error } = await requireAdmin()
   if (error) return { error }
 
-  const { data: deletedCategory, error: deleteError } = await supabase
+  const { data: existingCategory, error: existingError } = await supabase
     .from("dream_categories")
-    .delete()
-    .eq("id", id)
     .select("id")
+    .eq("id", id)
     .maybeSingle()
+
+  if (existingError) {
+    console.error("Error checking dream category:", existingError)
+    return { error: existingError.message }
+  }
+  if (!existingCategory) {
+    return { error: "This category is already gone. Refresh the page to update the list." }
+  }
+
+  const { count, error: deleteError } = await supabase
+    .from("dream_categories")
+    .delete({ count: "exact" })
+    .eq("id", id)
 
   if (deleteError) {
     console.error("Error deleting dream category:", deleteError)
     return { error: deleteError.message }
   }
-  if (!deletedCategory) {
-    return { error: "Category was not deleted. It may already be gone, or your account may not have delete permission." }
+  if (!count) {
+    return { error: "Dream category was not deleted because the database is missing the admin delete policy. Run scripts/049_dream_category_delete_policy.sql in Supabase." }
   }
 
   revalidatePath("/admin/records/dreams/category")

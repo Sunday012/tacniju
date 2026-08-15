@@ -50,6 +50,15 @@ CREATE POLICY "Admins can update dream categories" ON public.dream_categories
         )
     );
 
+DROP POLICY IF EXISTS "Admins can delete dream categories" ON public.dream_categories;
+CREATE POLICY "Admins can delete dream categories" ON public.dream_categories
+    FOR DELETE USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE id = auth.uid() AND is_admin = true
+        )
+    );
+
 DROP POLICY IF EXISTS "Admins can view all dreams" ON public.dreams;
 CREATE POLICY "Admins can view all dreams" ON public.dreams
     FOR SELECT USING (
