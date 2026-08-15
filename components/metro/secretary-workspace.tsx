@@ -95,7 +95,7 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const router = useRouter()
   const [membersView, setMembersView] = useState<"home" | "areas" | "members" | "areaDetail">("home")
-  const [accountView, setAccountView] = useState<"home" | "dues" | "bank">("home")
+  const [accountView, setAccountView] = useState<"home" | "events" | "dues" | "bank">("home")
   const [selectedAreaId, setSelectedAreaId] = useState("")
   const [eventSheetOpen, setEventSheetOpen] = useState(false)
   const [areaName, setAreaName] = useState("")
@@ -490,7 +490,23 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
 
       <TabsContent value="account">
         {accountView === "home" && (
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-3">
+            <button
+              type="button"
+              onClick={() => setAccountView("events")}
+              className="rounded-lg border border-slate-200 bg-white p-6 text-left shadow-sm transition-all hover:border-indigo-200 hover:shadow-md"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-widest text-slate-400">Account</p>
+                  <h2 className="mt-2 text-2xl font-extrabold text-slate-900">Events</h2>
+                  <p className="mt-2 text-sm text-slate-500">See everything tied to each event in one place.</p>
+                </div>
+                <CalendarDays className="h-7 w-7 text-indigo-500" />
+              </div>
+              <p className="mt-6 text-2xl font-bold text-slate-900">{data.events.length} Events</p>
+            </button>
+
             <button
               type="button"
               onClick={() => setAccountView("dues")}
@@ -522,6 +538,55 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
               </div>
               <p className="mt-6 text-2xl font-bold text-slate-900">{money.format(totalDues + bankIncome - bankExpense)}</p>
             </button>
+          </div>
+        )}
+
+        {accountView === "events" && (
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900">Events Account</h2>
+                <p className="text-sm text-slate-500">Attendance, dues, income, and expenses grouped by event.</p>
+              </div>
+              <Button variant="outline" onClick={() => setAccountView("home")}>Back</Button>
+            </div>
+            <Card>
+              <CardHeader><CardTitle>Event Records</CardTitle></CardHeader>
+              <CardContent className="p-0 overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Event</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-center">Attendance</TableHead>
+                      <TableHead className="text-center">Dues Paid</TableHead>
+                      <TableHead className="text-right">Dues</TableHead>
+                      <TableHead className="text-right">Income</TableHead>
+                      <TableHead className="text-right">Expenses</TableHead>
+                      <TableHead className="text-right">Balance</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {eventSummaries.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="py-8 text-center text-slate-400">No event records yet.</TableCell>
+                      </TableRow>
+                    ) : eventSummaries.map((item) => (
+                      <TableRow key={item.event.id}>
+                        <TableCell className="font-semibold">{item.event.name}</TableCell>
+                        <TableCell>{new Date(item.event.event_date).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-center">{item.attendanceCount}</TableCell>
+                        <TableCell className="text-center">{item.duesCount}</TableCell>
+                        <TableCell className="text-right">{money.format(item.duesTotal)}</TableCell>
+                        <TableCell className="text-right">{money.format(item.income)}</TableCell>
+                        <TableCell className="text-right">{money.format(item.expense)}</TableCell>
+                        <TableCell className="text-right font-bold">{money.format(item.balance)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </div>
         )}
 
