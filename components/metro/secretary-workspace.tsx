@@ -79,6 +79,12 @@ const money = new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN
 const logoUrl = "https://res.cloudinary.com/dzckvrvu9/image/upload/v1777993333/WhatsApp_Image_2026-05-01_at_08.37.56-removebg-preview_a8w3wt.png"
 const metroPrimaryButton = "bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 disabled:border disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
 
+function transactionTotal(transaction: Pick<Transaction, "amount" | "people_count">) {
+  const amount = Number(transaction.amount || 0)
+  const count = Number(transaction.people_count || 0)
+  return count > 0 ? amount * count : amount
+}
+
 const metroNavItems = [
   { value: "summary", label: "Summary", icon: LayoutDashboard },
   { value: "events", label: "Events", icon: CalendarDays },
@@ -189,8 +195,8 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
       const eventDues = data.dues.filter((item) => item.event_id === event.id)
       const transactions = data.transactions.filter((item) => item.event_id === event.id)
       const duesTotal = eventDues.reduce((sum, item) => sum + Number(item.amount || 0), 0)
-      const income = transactions.filter((item) => item.kind === "income").reduce((sum, item) => sum + Number(item.amount || 0), 0)
-      const expense = transactions.filter((item) => item.kind === "expense").reduce((sum, item) => sum + Number(item.amount || 0), 0)
+      const income = transactions.filter((item) => item.kind === "income").reduce((sum, item) => sum + transactionTotal(item), 0)
+      const expense = transactions.filter((item) => item.kind === "expense").reduce((sum, item) => sum + transactionTotal(item), 0)
       return { event, attendanceCount, duesCount: eventDues.length, duesTotal, income, expense, balance: duesTotal + income - expense }
     })
   }, [data.events, data.attendance, data.dues, data.transactions])
@@ -199,11 +205,11 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
     [data.dues]
   )
   const bankIncome = useMemo(
-    () => data.transactions.filter((item) => item.kind === "income").reduce((sum, item) => sum + Number(item.amount || 0), 0),
+    () => data.transactions.filter((item) => item.kind === "income").reduce((sum, item) => sum + transactionTotal(item), 0),
     [data.transactions]
   )
   const bankExpense = useMemo(
-    () => data.transactions.filter((item) => item.kind === "expense").reduce((sum, item) => sum + Number(item.amount || 0), 0),
+    () => data.transactions.filter((item) => item.kind === "expense").reduce((sum, item) => sum + transactionTotal(item), 0),
     [data.transactions]
   )
 
@@ -340,11 +346,11 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
   }
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-screen bg-[#F4F7FA] text-slate-900">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="metro-workspace flex min-h-screen bg-[#F4F7FA] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <MetroSidebar activeTab={activeTab} onTabChange={setActiveTab} onSignOut={handleSignOut} />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 border-b border-indigo-100/50 bg-white/75 px-5 py-4 shadow-sm backdrop-blur-2xl lg:hidden">
+        <header className="sticky top-0 z-30 border-b border-indigo-100/50 bg-white/75 px-5 py-4 shadow-sm backdrop-blur-2xl dark:border-slate-800 dark:bg-slate-950/85 lg:hidden">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm">
@@ -362,7 +368,7 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="flex h-dvh w-[280px] flex-col border-r border-slate-100 bg-white p-0">
+              <SheetContent side="left" className="metro-workspace flex h-dvh w-[280px] flex-col border-r border-slate-100 bg-white p-0 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100">
                 <SheetHeader className="border-b border-slate-100 bg-gradient-to-br from-indigo-600 to-violet-700 p-6">
                   <SheetTitle className="flex items-center gap-3 text-left text-white">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
@@ -580,7 +586,7 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
                 </div>
                 <FileText className="h-7 w-7 text-indigo-500" />
               </div>
-              <p className="mt-6 text-2xl font-bold text-slate-900">{money.format(totalDues + bankIncome - bankExpense)}</p>
+              <p className="mt-6 text-2xl font-bold text-slate-900">{money.format(bankIncome - bankExpense)}</p>
             </button>
           </div>
         )}
@@ -689,7 +695,7 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-xl font-extrabold text-slate-900">Levy</h2>
-                <p className="text-sm text-slate-500">Dues plus income, minus expenses.</p>
+                <p className="text-sm text-slate-500">Levy income minus expenses.</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" onClick={() => setAccountView("home")}>Back</Button>
@@ -731,8 +737,8 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
                       </div>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="space-y-2">
-                          <Label>Amount</Label>
-                          <Input type="number" min="0" placeholder="Amount" value={accountForm.amount} onChange={(e) => setAccountForm({ ...accountForm, amount: e.target.value })} />
+                          <Label>Levy amount</Label>
+                          <Input type="number" min="0" placeholder="Amount per head" value={accountForm.amount} onChange={(e) => setAccountForm({ ...accountForm, amount: e.target.value })} />
                         </div>
                         <div className="space-y-2">
                           <Label>People count</Label>
@@ -774,17 +780,24 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
                 </Sheet>
               </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-4">
-              <Stat label="Dues" value={money.format(totalDues)} icon={ReceiptText} />
-              <Stat label="Income" value={money.format(bankIncome)} icon={FileText} />
-              <Stat label="Expenses" value={money.format(bankExpense)} icon={FileText} />
-              <Stat label="Balance" value={money.format(totalDues + bankIncome - bankExpense)} icon={FileText} />
+            <div className="grid gap-4 md:grid-cols-3">
+              <Stat label="Levy Income" value={money.format(bankIncome)} icon={FileText} />
+              <Stat label="Levy Expenses" value={money.format(bankExpense)} icon={FileText} />
+              <Stat label="Levy Balance" value={money.format(bankIncome - bankExpense)} icon={FileText} />
             </div>
             <Card>
               <CardHeader><CardTitle>Levy Entries</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <Table>
-                  <TableHeader><TableRow><TableHead>Title</TableHead><TableHead>Type</TableHead><TableHead>Count</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Head Count</TableHead>
+                      <TableHead className="text-right">Levy Amount</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
                   <TableBody>
                     {data.transactions.map((item) => (
                       <TableRow key={item.id}>
@@ -792,6 +805,7 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
                         <TableCell><Badge variant={item.kind === "income" ? "default" : "destructive"}>{item.kind}</Badge></TableCell>
                         <TableCell>{item.people_count || "-"}</TableCell>
                         <TableCell className="text-right font-semibold">{money.format(Number(item.amount || 0))}</TableCell>
+                        <TableCell className="text-right font-semibold">{money.format(transactionTotal(item))}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -1186,7 +1200,7 @@ function MetroSidebar({
   onSignOut: () => void
 }) {
   return (
-    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col overflow-y-auto border-r border-[#E5E7EB]/50 bg-white/60 px-5 py-8 shadow-[4px_0_24px_rgba(0,0,0,0.02)] backdrop-blur-2xl lg:flex">
+    <aside className="metro-workspace sticky top-0 hidden h-screen w-64 shrink-0 flex-col overflow-y-auto border-r border-[#E5E7EB]/50 bg-white/60 px-5 py-8 shadow-[4px_0_24px_rgba(0,0,0,0.02)] backdrop-blur-2xl dark:border-slate-800 dark:bg-slate-950/90 dark:text-slate-100 lg:flex">
       <div className="mb-10 flex items-center gap-4 px-2">
         <div className="flex h-11 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm">
           <Image src={logoUrl} alt="TACN Logo" width={80} height={32} className="h-full w-full object-contain" />

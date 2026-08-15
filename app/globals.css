@@ -139,4 +139,60 @@
   .dark .voucher-entry-form .border-double {
     border-color: rgb(203 213 225) !important;
   }
+
+  .dark .metro-workspace [class*="shadow"] {
+    box-shadow: none !important;
+  }
+
+  .dark .metro-workspace [class*="bg-white/"],
+  .dark .metro-workspace [class~="bg-white"] {
+    background-color: rgb(15 23 42) !important;
+  }
+
+  .dark .metro-workspace [class*="bg-slate-50"],
+  .dark .metro-workspace [class*="bg-gray-50"] {
+    background-color: rgb(2 6 23) !important;
+  }
+
+  .dark .metro-workspace [class*="border-white/"],
+  .dark .metro-workspace [class~="border-white"],
+  .dark .metro-workspace [class*="border-slate-100"],
+  .dark .metro-workspace [class*="border-slate-200"],
+  .dark .metro-workspace [class*="border-gray-100"],
+  .dark .metro-workspace [class*="border-indigo-100"] {
+    border-color: rgb(30 41 59) !important;
+  }
+
+  .dark .metro-workspace [class*="text-slate-900"],
+  .dark .metro-workspace [class*="text-slate-800"],
+  .dark .metro-workspace [class*="text-gray-900"],
+  .dark .metro-workspace [class*="text-gray-800"],
+  .dark .metro-workspace [class*="text-gray-700"] {
+    color: rgb(241 245 249) !important;
+  }
+
+  .dark .metro-workspace [class*="text-slate-700"],
+  .dark .metro-workspace [class*="text-slate-600"],
+  .dark .metro-workspace [class*="text-slate-500"],
+  .dark .metro-workspace [class*="text-gray-600"],
+  .dark .metro-workspace [class*="text-gray-500"] {
+    color: rgb(148 163 184) !important;
+  }
+
+  .dark .metro-workspace input,
+  .dark .metro-workspace textarea,
+  .dark .metro-workspace button[role="combobox"] {
+    border-color: rgb(30 41 59);
+    background-color: rgb(15 23 42);
+    color: rgb(241 245 249);
+  }
+
+  .dark .metro-workspace input::placeholder,
+  .dark .metro-workspace textarea::placeholder {
+    color: rgb(100 116 139);
+  }
+
+  .dark .metro-workspace tr:hover {
+    background-color: rgb(15 23 42) !important;
+  }
 }
