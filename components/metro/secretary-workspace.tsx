@@ -1352,7 +1352,7 @@ function ChecklistPanel({
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input
                 className="pl-10"
-                placeholder="Search members by name, phone, sex, or area..."
+                placeholder={mode === "dues" ? "Search members by name or area..." : "Search members by name, phone, sex, or area..."}
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
               />
@@ -1380,17 +1380,17 @@ function ChecklistPanel({
               <TableRow>
                 <TableHead className="w-14">Mark</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Sex</TableHead>
+                {mode !== "dues" && <TableHead>Sex</TableHead>}
                 <TableHead>Area</TableHead>
-                <TableHead>Phone</TableHead>
+                {mode !== "dues" && <TableHead>Phone</TableHead>}
                 {mode === "dues" && <TableHead className="w-40 text-right">Amount</TableHead>}
-                <TableHead className="text-right">Status</TableHead>
+                {mode !== "dues" && <TableHead className="text-right">Status</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredRows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={mode === "dues" ? 7 : 6} className="py-8 text-center text-slate-400">No members match this filter.</TableCell>
+                  <TableCell colSpan={mode === "dues" ? 4 : 6} className="py-8 text-center text-slate-400">No members match this filter.</TableCell>
                 </TableRow>
               ) : filteredRows.map(({ member, area }) => {
                 const checked = marks.has(member.id)
@@ -1400,9 +1400,9 @@ function ChecklistPanel({
                       <Checkbox checked={checked} onCheckedChange={() => onToggle(member.id)} />
                     </TableCell>
                     <TableCell className="font-semibold text-slate-900">{member.full_name}</TableCell>
-                    <TableCell>{member.sex || "-"}</TableCell>
+                    {mode !== "dues" && <TableCell>{member.sex || "-"}</TableCell>}
                     <TableCell>{area.name}</TableCell>
-                    <TableCell>{member.phone_number || "-"}</TableCell>
+                    {mode !== "dues" && <TableCell>{member.phone_number || "-"}</TableCell>}
                     {mode === "dues" && (
                       <TableCell className="text-right">
                         <Input
@@ -1415,9 +1415,11 @@ function ChecklistPanel({
                         />
                       </TableCell>
                     )}
-                    <TableCell className="text-right">
-                      <Badge variant={checked ? "default" : "secondary"}>{checked ? "Selected" : "Not selected"}</Badge>
-                    </TableCell>
+                    {mode !== "dues" && (
+                      <TableCell className="text-right">
+                        <Badge variant={checked ? "default" : "secondary"}>{checked ? "Selected" : "Not selected"}</Badge>
+                      </TableCell>
+                    )}
                   </TableRow>
                 )
               })}
