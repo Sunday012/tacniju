@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useTransition } from "react"
 import Image from "next/image"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   CalendarDays,
@@ -10,7 +9,6 @@ import {
   Edit3,
   Filter,
   FileText,
-  Home,
   LayoutDashboard,
   Loader2,
   LogOut,
@@ -97,6 +95,7 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const router = useRouter()
   const [membersView, setMembersView] = useState<"home" | "areas" | "members" | "areaDetail">("home")
+  const [accountView, setAccountView] = useState<"home" | "dues" | "bank">("home")
   const [selectedAreaId, setSelectedAreaId] = useState("")
   const [eventSheetOpen, setEventSheetOpen] = useState(false)
   const [areaName, setAreaName] = useState("")
@@ -106,7 +105,14 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
   const [memoForm, setMemoForm] = useState({ id: "", title: "", body: "" })
   const [eventForm, setEventForm] = useState({ name: "", event_date: new Date().toISOString().slice(0, 10), description: "" })
   const [selectedEventId, setSelectedEventId] = useState(data.events[0]?.id || "")
-  const [duesAmount, setDuesAmount] = useState("0")
+  const [duesAmounts, setDuesAmounts] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {}
+    const eventId = data.events[0]?.id || ""
+    data.dues.filter((item) => item.event_id === eventId).forEach((item) => {
+      initial[item.member_id] = String(item.amount || "")
+    })
+    return initial
+  })
   const [accountForm, setAccountForm] = useState({
     event_id: data.events[0]?.id || "",
     kind: "income",
@@ -148,6 +154,18 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
       return { event, attendanceCount, duesCount: eventDues.length, duesTotal, income, expense, balance: duesTotal + income - expense }
     })
   }, [data.events, data.attendance, data.dues, data.transactions])
+  const totalDues = useMemo(
+    () => data.dues.reduce((sum, item) => sum + Number(item.amount || 0), 0),
+    [data.dues]
+  )
+  const bankIncome = useMemo(
+    () => data.transactions.filter((item) => item.kind === "income").reduce((sum, item) => sum + Number(item.amount || 0), 0),
+    [data.transactions]
+  )
+  const bankExpense = useMemo(
+    () => data.transactions.filter((item) => item.kind === "expense").reduce((sum, item) => sum + Number(item.amount || 0), 0),
+    [data.transactions]
+  )
 
   function run(action: () => Promise<{ success: boolean; message?: string }>, success: string) {
     startTransition(async () => {
@@ -166,6 +184,11 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
     setAccountForm((form) => ({ ...form, event_id: eventId }))
     setAttendanceMarks(new Set(data.attendance.filter((item) => item.event_id === eventId).map((item) => item.member_id)))
     setDuesMarks(new Set(data.dues.filter((item) => item.event_id === eventId).map((item) => item.member_id)))
+    const nextAmounts: Record<string, string> = {}
+    data.dues.filter((item) => item.event_id === eventId).forEach((item) => {
+      nextAmounts[item.member_id] = String(item.amount || "")
+    })
+    setDuesAmounts(nextAmounts)
   }
 
   function toggle(setter: (value: Set<string>) => void, source: Set<string>, id: string) {
@@ -173,6 +196,24 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
     if (next.has(id)) next.delete(id)
     else next.add(id)
     setter(next)
+  }
+
+  function handleDuesAmountChange(memberId: string, amount: string) {
+    setDuesAmounts((current) => ({ ...current, [memberId]: amount }))
+    setDuesMarks((current) => {
+      const next = new Set(current)
+      if (Number(amount || 0) > 0) next.add(memberId)
+      else next.delete(memberId)
+      return next
+    })
+  }
+
+  function saveDuesForEvent() {
+    const entries = Array.from(duesMarks).map((memberId) => ({
+      member_id: memberId,
+      amount: Number(duesAmounts[memberId] || 0),
+    }))
+    run(() => saveMetroDues(selectedEventId, entries), "Dues saved")
   }
 
   function resetAreaForm() {
@@ -431,82 +472,179 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
       </TabsContent>
 
       <TabsContent value="dues">
-        <div className="space-y-4">
-          <Card>
-            <CardHeader><CardTitle>Dues Amount</CardTitle></CardHeader>
-            <CardContent className="max-w-xs">
-              <Label>Amount per person</Label>
-              <Input type="number" min="0" value={duesAmount} onChange={(e) => setDuesAmount(e.target.value)} />
-            </CardContent>
-          </Card>
-          <ChecklistPanel
-            title="Mark Dues Paid"
-            selectedEventId={selectedEventId}
-            events={data.events}
-            groups={membersByArea}
-            marks={duesMarks}
-            onEventChange={syncEvent}
-            onToggle={(id) => toggle(setDuesMarks, duesMarks, id)}
-            onSave={() => run(() => saveMetroDues(selectedEventId, Array.from(duesMarks), Number(duesAmount || 0)), "Dues saved")}
-            disabled={isPending}
-          />
-        </div>
+        <ChecklistPanel
+          title="Mark Dues Paid"
+          selectedEventId={selectedEventId}
+          events={data.events}
+          groups={membersByArea}
+          marks={duesMarks}
+          duesAmounts={duesAmounts}
+          mode="dues"
+          onAmountChange={handleDuesAmountChange}
+          onEventChange={syncEvent}
+          onToggle={(id) => toggle(setDuesMarks, duesMarks, id)}
+          onSave={saveDuesForEvent}
+          disabled={isPending}
+        />
       </TabsContent>
 
       <TabsContent value="account">
-        <Card>
-          <CardHeader><CardTitle>Income & Expenses</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-5">
-              <Select value={accountForm.event_id || "none"} onValueChange={(value) => setAccountForm({ ...accountForm, event_id: value === "none" ? "" : value })}>
-                <SelectTrigger><SelectValue placeholder="Event" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No event</SelectItem>
-                  {data.events.map((event) => <SelectItem key={event.id} value={event.id}>{event.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={accountForm.kind} onValueChange={(value) => setAccountForm({ ...accountForm, kind: value })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="income">Income</SelectItem>
-                  <SelectItem value="expense">Expense</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input placeholder="Title" value={accountForm.title} onChange={(e) => setAccountForm({ ...accountForm, title: e.target.value })} />
-              <Input type="number" min="0" placeholder="Amount" value={accountForm.amount} onChange={(e) => setAccountForm({ ...accountForm, amount: e.target.value })} />
-              <Input type="number" min="0" placeholder="People count" value={accountForm.people_count} onChange={(e) => setAccountForm({ ...accountForm, people_count: e.target.value })} />
-              <Textarea className="md:col-span-5" placeholder="Notes" value={accountForm.notes} onChange={(e) => setAccountForm({ ...accountForm, notes: e.target.value })} />
-              <Button
-                className={metroPrimaryButton}
-                disabled={isPending || !accountForm.title || !accountForm.amount}
-                onClick={() => run(() => createMetroTransaction({
-                  event_id: accountForm.event_id,
-                  kind: accountForm.kind as "income" | "expense",
-                  title: accountForm.title,
-                  amount: Number(accountForm.amount || 0),
-                  people_count: Number(accountForm.people_count || 0),
-                  notes: accountForm.notes,
-                }), "Account entry saved")}
-              >
-                <ReceiptText className="mr-2 h-4 w-4" />
-                Save Entry
-              </Button>
+        {accountView === "home" && (
+          <div className="grid gap-5 md:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setAccountView("dues")}
+              className="rounded-lg border border-slate-200 bg-white p-6 text-left shadow-sm transition-all hover:border-indigo-200 hover:shadow-md"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-widest text-slate-400">Account</p>
+                  <h2 className="mt-2 text-2xl font-extrabold text-slate-900">Dues</h2>
+                  <p className="mt-2 text-sm text-slate-500">View dues recorded from the Dues page.</p>
+                </div>
+                <ReceiptText className="h-7 w-7 text-indigo-500" />
+              </div>
+              <p className="mt-6 text-2xl font-bold text-slate-900">{money.format(totalDues)}</p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setAccountView("bank")}
+              className="rounded-lg border border-slate-200 bg-white p-6 text-left shadow-sm transition-all hover:border-indigo-200 hover:shadow-md"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-widest text-slate-400">Account</p>
+                  <h2 className="mt-2 text-2xl font-extrabold text-slate-900">Bank</h2>
+                  <p className="mt-2 text-sm text-slate-500">Record money that entered or left the account.</p>
+                </div>
+                <FileText className="h-7 w-7 text-indigo-500" />
+              </div>
+              <p className="mt-6 text-2xl font-bold text-slate-900">{money.format(totalDues + bankIncome - bankExpense)}</p>
+            </button>
+          </div>
+        )}
+
+        {accountView === "dues" && (
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900">Dues Account</h2>
+                <p className="text-sm text-slate-500">These records come from the Dues page.</p>
+              </div>
+              <Button variant="outline" onClick={() => setAccountView("home")}>Back</Button>
             </div>
-            <Table>
-              <TableHeader><TableRow><TableHead>Title</TableHead><TableHead>Type</TableHead><TableHead>Count</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
-              <TableBody>
-                {data.transactions.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>{item.title}</TableCell>
-                    <TableCell><Badge variant={item.kind === "income" ? "default" : "destructive"}>{item.kind}</Badge></TableCell>
-                    <TableCell>{item.people_count || "-"}</TableCell>
-                    <TableCell className="text-right font-semibold">{money.format(Number(item.amount || 0))}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+            <div className="grid gap-4 md:grid-cols-3">
+              <Stat label="Dues Total" value={money.format(totalDues)} icon={ReceiptText} />
+              <Stat label="People Paid" value={data.dues.length.toString()} icon={Users} />
+              <Stat label="Events" value={new Set(data.dues.map((item) => item.event_id)).size.toString()} icon={CalendarDays} />
+            </div>
+            <Card>
+              <CardHeader><CardTitle>Dues Records</CardTitle></CardHeader>
+              <CardContent className="p-0 overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Event</TableHead>
+                      <TableHead>Member</TableHead>
+                      <TableHead>Area</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.dues.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="py-8 text-center text-slate-400">No dues recorded yet.</TableCell>
+                      </TableRow>
+                    ) : data.dues.map((due) => {
+                      const event = data.events.find((item) => item.id === due.event_id)
+                      const member = data.members.find((item) => item.id === due.member_id)
+                      return (
+                        <TableRow key={`${due.event_id}-${due.member_id}`}>
+                          <TableCell className="font-semibold">{event?.name || "Unknown event"}</TableCell>
+                          <TableCell>{member?.full_name || "Unknown member"}</TableCell>
+                          <TableCell>{member?.area?.name || "No area"}</TableCell>
+                          <TableCell className="text-right font-semibold">{money.format(Number(due.amount || 0))}</TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {accountView === "bank" && (
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900">Bank Account</h2>
+                <p className="text-sm text-slate-500">Dues plus income, minus expenses.</p>
+              </div>
+              <Button variant="outline" onClick={() => setAccountView("home")}>Back</Button>
+            </div>
+            <div className="grid gap-4 md:grid-cols-4">
+              <Stat label="Dues" value={money.format(totalDues)} icon={ReceiptText} />
+              <Stat label="Income" value={money.format(bankIncome)} icon={FileText} />
+              <Stat label="Expenses" value={money.format(bankExpense)} icon={FileText} />
+              <Stat label="Balance" value={money.format(totalDues + bankIncome - bankExpense)} icon={FileText} />
+            </div>
+            <Card>
+              <CardHeader><CardTitle>Income & Expenses</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 md:grid-cols-5">
+                  <Select value={accountForm.event_id || "none"} onValueChange={(value) => setAccountForm({ ...accountForm, event_id: value === "none" ? "" : value })}>
+                    <SelectTrigger><SelectValue placeholder="Event" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No event</SelectItem>
+                      {data.events.map((event) => <SelectItem key={event.id} value={event.id}>{event.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={accountForm.kind} onValueChange={(value) => setAccountForm({ ...accountForm, kind: value })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="income">Income</SelectItem>
+                      <SelectItem value="expense">Expense</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input placeholder="Title" value={accountForm.title} onChange={(e) => setAccountForm({ ...accountForm, title: e.target.value })} />
+                  <Input type="number" min="0" placeholder="Amount" value={accountForm.amount} onChange={(e) => setAccountForm({ ...accountForm, amount: e.target.value })} />
+                  <Input type="number" min="0" placeholder="People count" value={accountForm.people_count} onChange={(e) => setAccountForm({ ...accountForm, people_count: e.target.value })} />
+                  <Textarea className="md:col-span-5" placeholder="Notes" value={accountForm.notes} onChange={(e) => setAccountForm({ ...accountForm, notes: e.target.value })} />
+                  <Button
+                    className={metroPrimaryButton}
+                    disabled={isPending || !accountForm.title || !accountForm.amount}
+                    onClick={() => run(() => createMetroTransaction({
+                      event_id: accountForm.event_id,
+                      kind: accountForm.kind as "income" | "expense",
+                      title: accountForm.title,
+                      amount: Number(accountForm.amount || 0),
+                      people_count: Number(accountForm.people_count || 0),
+                      notes: accountForm.notes,
+                    }), "Account entry saved")}
+                  >
+                    <ReceiptText className="mr-2 h-4 w-4" />
+                    Save Entry
+                  </Button>
+                </div>
+                <Table>
+                  <TableHeader><TableRow><TableHead>Title</TableHead><TableHead>Type</TableHead><TableHead>Count</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {data.transactions.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>{item.title}</TableCell>
+                        <TableCell><Badge variant={item.kind === "income" ? "default" : "destructive"}>{item.kind}</Badge></TableCell>
+                        <TableCell>{item.people_count || "-"}</TableCell>
+                        <TableCell className="text-right font-semibold">{money.format(Number(item.amount || 0))}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </TabsContent>
 
       <TabsContent value="members" className="space-y-4">
@@ -840,10 +978,6 @@ function MetroNav({
       <div className="border-t border-slate-100 pt-6">
         <p className="mb-2 px-3 text-xs font-bold uppercase tracking-widest text-slate-400/80">Quick Links</p>
         <div className="space-y-1">
-          <Link href="/admin" className="flex items-center gap-3.5 rounded-lg px-4 py-2.5 text-sm font-medium tracking-wide text-slate-500 hover:bg-slate-100/80 hover:text-slate-900">
-            <Home className="h-5 w-5 text-slate-400" />
-            Admin Dashboard
-          </Link>
           <button type="button" onClick={onSignOut} className="flex w-full items-center gap-3.5 rounded-lg px-4 py-2.5 text-left text-sm font-medium tracking-wide text-slate-500 hover:bg-slate-100/80 hover:text-slate-900">
             <LogOut className="h-5 w-5 text-slate-400" />
             Sign Out
@@ -874,7 +1008,10 @@ function ChecklistPanel({
   events,
   groups,
   marks,
+  duesAmounts,
+  mode = "attendance",
   disabled,
+  onAmountChange,
   onEventChange,
   onToggle,
   onSave,
@@ -884,7 +1021,10 @@ function ChecklistPanel({
   events: Event[]
   groups: { area: Area; members: Member[] }[]
   marks: Set<string>
+  duesAmounts?: Record<string, string>
+  mode?: "attendance" | "dues"
   disabled: boolean
+  onAmountChange?: (memberId: string, amount: string) => void
   onEventChange: (eventId: string) => void
   onToggle: (memberId: string) => void
   onSave: () => void
@@ -964,13 +1104,14 @@ function ChecklistPanel({
                 <TableHead>Sex</TableHead>
                 <TableHead>Area</TableHead>
                 <TableHead>Phone</TableHead>
+                {mode === "dues" && <TableHead className="w-40 text-right">Amount</TableHead>}
                 <TableHead className="text-right">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredRows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-slate-400">No members match this filter.</TableCell>
+                  <TableCell colSpan={mode === "dues" ? 7 : 6} className="py-8 text-center text-slate-400">No members match this filter.</TableCell>
                 </TableRow>
               ) : filteredRows.map(({ member, area }) => {
                 const checked = marks.has(member.id)
@@ -983,6 +1124,18 @@ function ChecklistPanel({
                     <TableCell>{member.sex || "-"}</TableCell>
                     <TableCell>{area.name}</TableCell>
                     <TableCell>{member.phone_number || "-"}</TableCell>
+                    {mode === "dues" && (
+                      <TableCell className="text-right">
+                        <Input
+                          className="ml-auto h-9 w-32 text-right"
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={duesAmounts?.[member.id] || ""}
+                          onChange={(event) => onAmountChange?.(member.id, event.target.value)}
+                        />
+                      </TableCell>
+                    )}
                     <TableCell className="text-right">
                       <Badge variant={checked ? "default" : "secondary"}>{checked ? "Selected" : "Not selected"}</Badge>
                     </TableCell>

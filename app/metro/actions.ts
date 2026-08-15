@@ -195,7 +195,7 @@ export async function saveMetroAttendance(eventId: string, memberIds: string[]) 
   return { success: true }
 }
 
-export async function saveMetroDues(eventId: string, memberIds: string[], amount: number) {
+export async function saveMetroDues(eventId: string, entries: { member_id: string; amount: number }[]) {
   const adminSupabase = await getAdminClient()
   const { error: deleteError } = await adminSupabase
     .from("metro_dues")
@@ -204,10 +204,10 @@ export async function saveMetroDues(eventId: string, memberIds: string[], amount
 
   if (deleteError) return { success: false, message: deleteError.message }
 
-  if (memberIds.length > 0) {
+  if (entries.length > 0) {
     const { error } = await adminSupabase
       .from("metro_dues")
-      .insert(memberIds.map((member_id) => ({ event_id: eventId, member_id, amount })))
+      .insert(entries.map((entry) => ({ event_id: eventId, member_id: entry.member_id, amount: entry.amount })))
     if (error) return { success: false, message: error.message }
   }
 
