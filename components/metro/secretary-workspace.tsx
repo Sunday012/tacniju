@@ -84,7 +84,7 @@ const metroNavItems = [
   { value: "events", label: "Events", icon: CalendarDays },
   { value: "attendance", label: "Attendance", icon: Users },
   { value: "dues", label: "Dues", icon: ReceiptText },
-  { value: "account", label: "Account", icon: FileText },
+  { value: "account", label: "Bank", icon: FileText },
   { value: "members", label: "Areas & Members", icon: MapPin },
   { value: "memos", label: "Memos", icon: ClipboardCopy },
 ]
@@ -95,13 +95,21 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const router = useRouter()
   const [membersView, setMembersView] = useState<"home" | "areas" | "members" | "areaDetail">("home")
-  const [accountView, setAccountView] = useState<"home" | "events" | "dues" | "bank">("home")
+  const [accountView, setAccountView] = useState<"home" | "events" | "dues" | "levy">("home")
   const [selectedAreaId, setSelectedAreaId] = useState("")
   const [eventSheetOpen, setEventSheetOpen] = useState(false)
+  const [levySheetOpen, setLevySheetOpen] = useState(false)
+  const [memberSheetOpen, setMemberSheetOpen] = useState(false)
+  const [areaSheetOpen, setAreaSheetOpen] = useState(false)
   const [areaName, setAreaName] = useState("")
   const [editingAreaId, setEditingAreaId] = useState("")
+  const [areaSearchTerm, setAreaSearchTerm] = useState("")
+  const [areaMemberFilter, setAreaMemberFilter] = useState("all")
   const [memberForm, setMemberForm] = useState({ full_name: "", sex: "", area_id: "", phone_number: "" })
   const [editingMemberId, setEditingMemberId] = useState("")
+  const [memberSearchTerm, setMemberSearchTerm] = useState("")
+  const [memberAreaFilter, setMemberAreaFilter] = useState("all")
+  const [memberSexFilter, setMemberSexFilter] = useState("all")
   const [memoForm, setMemoForm] = useState({ id: "", title: "", body: "" })
   const [eventForm, setEventForm] = useState({ name: "", event_date: new Date().toISOString().slice(0, 10), description: "" })
   const [selectedEventId, setSelectedEventId] = useState(data.events[0]?.id || "")
@@ -142,6 +150,38 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
     () => membersByArea.find((group) => group.area.id === selectedAreaId) || null,
     [membersByArea, selectedAreaId]
   )
+  const filteredAreaGroups = useMemo(() => {
+    const normalizedSearch = areaSearchTerm.trim().toLowerCase()
+
+    return membersByArea.filter((group) => {
+      const matchesMemberFilter =
+        areaMemberFilter === "all" ||
+        (areaMemberFilter === "with-members" && group.members.length > 0) ||
+        (areaMemberFilter === "empty" && group.members.length === 0)
+      const searchable = [
+        group.area.name,
+        ...group.members.map((member) => member.full_name),
+      ].join(" ").toLowerCase()
+
+      return matchesMemberFilter && (!normalizedSearch || searchable.includes(normalizedSearch))
+    })
+  }, [areaMemberFilter, areaSearchTerm, membersByArea])
+  const filteredMembers = useMemo(() => {
+    const normalizedSearch = memberSearchTerm.trim().toLowerCase()
+
+    return data.members.filter((member) => {
+      const matchesArea = memberAreaFilter === "all" || (memberAreaFilter === "none" ? !member.area_id : member.area_id === memberAreaFilter)
+      const matchesSex = memberSexFilter === "all" || member.sex === memberSexFilter
+      const searchable = [
+        member.full_name,
+        member.sex || "",
+        member.phone_number || "",
+        member.area?.name || "No area",
+      ].join(" ").toLowerCase()
+
+      return matchesArea && matchesSex && (!normalizedSearch || searchable.includes(normalizedSearch))
+    })
+  }, [data.members, memberAreaFilter, memberSearchTerm, memberSexFilter])
 
   const eventSummaries = useMemo(() => {
     return data.events.map((event) => {
@@ -235,12 +275,14 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
       editingAreaId ? "Area updated" : "Area created"
     )
     resetAreaForm()
+    setAreaSheetOpen(false)
   }
 
   function handleEditArea(area: Area) {
     setMembersView("areas")
     setEditingAreaId(area.id)
     setAreaName(area.name)
+    setAreaSheetOpen(true)
   }
 
   function openAreaMembers(areaId: string) {
@@ -262,6 +304,7 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
       editingMemberId ? "Member updated" : "Member saved"
     )
     resetMemberForm()
+    setMemberSheetOpen(false)
   }
 
   function handleSaveEvent() {
@@ -280,6 +323,7 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
       area_id: member.area_id || "",
       phone_number: member.phone_number || "",
     })
+    setMemberSheetOpen(true)
   }
 
   function handleDeleteMember(member: Member) {
@@ -525,14 +569,14 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
 
             <button
               type="button"
-              onClick={() => setAccountView("bank")}
+              onClick={() => setAccountView("levy")}
               className="rounded-lg border border-slate-200 bg-white p-6 text-left shadow-sm transition-all hover:border-indigo-200 hover:shadow-md"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-widest text-slate-400">Account</p>
-                  <h2 className="mt-2 text-2xl font-extrabold text-slate-900">Bank</h2>
-                  <p className="mt-2 text-sm text-slate-500">Record money that entered or left the account.</p>
+                  <h2 className="mt-2 text-2xl font-extrabold text-slate-900">Levy</h2>
+                  <p className="mt-2 text-sm text-slate-500">Record levy income and expenses.</p>
                 </div>
                 <FileText className="h-7 w-7 text-indigo-500" />
               </div>
@@ -545,7 +589,7 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
           <div className="space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl font-extrabold text-slate-900">Events Account</h2>
+                <h2 className="text-xl font-extrabold text-slate-900">Event Account Summary</h2>
                 <p className="text-sm text-slate-500">Attendance, dues, income, and expenses grouped by event.</p>
               </div>
               <Button variant="outline" onClick={() => setAccountView("home")}>Back</Button>
@@ -640,14 +684,95 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
           </div>
         )}
 
-        {accountView === "bank" && (
+        {accountView === "levy" && (
           <div className="space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl font-extrabold text-slate-900">Bank Account</h2>
+                <h2 className="text-xl font-extrabold text-slate-900">Levy</h2>
                 <p className="text-sm text-slate-500">Dues plus income, minus expenses.</p>
               </div>
-              <Button variant="outline" onClick={() => setAccountView("home")}>Back</Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => setAccountView("home")}>Back</Button>
+                <Sheet open={levySheetOpen} onOpenChange={setLevySheetOpen}>
+                  <SheetTrigger asChild>
+                    <Button className={metroPrimaryButton}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+                    <SheetHeader>
+                      <SheetTitle>Create Levy Entry</SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-8 space-y-4">
+                      <div className="space-y-2">
+                        <Label>Event</Label>
+                        <Select value={accountForm.event_id || "none"} onValueChange={(value) => setAccountForm({ ...accountForm, event_id: value === "none" ? "" : value })}>
+                          <SelectTrigger><SelectValue placeholder="Event" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">No event</SelectItem>
+                            {data.events.map((event) => <SelectItem key={event.id} value={event.id}>{event.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Type</Label>
+                        <Select value={accountForm.kind} onValueChange={(value) => setAccountForm({ ...accountForm, kind: value })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="income">Income</SelectItem>
+                            <SelectItem value="expense">Expense</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Title</Label>
+                        <Input placeholder="Title" value={accountForm.title} onChange={(e) => setAccountForm({ ...accountForm, title: e.target.value })} />
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label>Amount</Label>
+                          <Input type="number" min="0" placeholder="Amount" value={accountForm.amount} onChange={(e) => setAccountForm({ ...accountForm, amount: e.target.value })} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>People count</Label>
+                          <Input type="number" min="0" placeholder="People count" value={accountForm.people_count} onChange={(e) => setAccountForm({ ...accountForm, people_count: e.target.value })} />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Notes</Label>
+                        <Textarea className="min-h-[120px]" placeholder="Notes" value={accountForm.notes} onChange={(e) => setAccountForm({ ...accountForm, notes: e.target.value })} />
+                      </div>
+                      <Button
+                        className={metroPrimaryButton}
+                        disabled={isPending || !accountForm.title || !accountForm.amount}
+                        onClick={() => {
+                          run(() => createMetroTransaction({
+                            event_id: accountForm.event_id,
+                            kind: accountForm.kind as "income" | "expense",
+                            title: accountForm.title,
+                            amount: Number(accountForm.amount || 0),
+                            people_count: Number(accountForm.people_count || 0),
+                            notes: accountForm.notes,
+                          }), "Levy entry saved")
+                          setAccountForm({
+                            event_id: data.events[0]?.id || "",
+                            kind: "income",
+                            title: "",
+                            amount: "",
+                            people_count: "",
+                            notes: "",
+                          })
+                          setLevySheetOpen(false)
+                        }}
+                      >
+                        <ReceiptText className="mr-2 h-4 w-4" />
+                        Save Entry
+                      </Button>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
             </div>
             <div className="grid gap-4 md:grid-cols-4">
               <Stat label="Dues" value={money.format(totalDues)} icon={ReceiptText} />
@@ -656,43 +781,8 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
               <Stat label="Balance" value={money.format(totalDues + bankIncome - bankExpense)} icon={FileText} />
             </div>
             <Card>
-              <CardHeader><CardTitle>Income & Expenses</CardTitle></CardHeader>
+              <CardHeader><CardTitle>Levy Entries</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid gap-3 md:grid-cols-5">
-                  <Select value={accountForm.event_id || "none"} onValueChange={(value) => setAccountForm({ ...accountForm, event_id: value === "none" ? "" : value })}>
-                    <SelectTrigger><SelectValue placeholder="Event" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No event</SelectItem>
-                      {data.events.map((event) => <SelectItem key={event.id} value={event.id}>{event.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Select value={accountForm.kind} onValueChange={(value) => setAccountForm({ ...accountForm, kind: value })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="income">Income</SelectItem>
-                      <SelectItem value="expense">Expense</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Input placeholder="Title" value={accountForm.title} onChange={(e) => setAccountForm({ ...accountForm, title: e.target.value })} />
-                  <Input type="number" min="0" placeholder="Amount" value={accountForm.amount} onChange={(e) => setAccountForm({ ...accountForm, amount: e.target.value })} />
-                  <Input type="number" min="0" placeholder="People count" value={accountForm.people_count} onChange={(e) => setAccountForm({ ...accountForm, people_count: e.target.value })} />
-                  <Textarea className="md:col-span-5" placeholder="Notes" value={accountForm.notes} onChange={(e) => setAccountForm({ ...accountForm, notes: e.target.value })} />
-                  <Button
-                    className={metroPrimaryButton}
-                    disabled={isPending || !accountForm.title || !accountForm.amount}
-                    onClick={() => run(() => createMetroTransaction({
-                      event_id: accountForm.event_id,
-                      kind: accountForm.kind as "income" | "expense",
-                      title: accountForm.title,
-                      amount: Number(accountForm.amount || 0),
-                      people_count: Number(accountForm.people_count || 0),
-                      notes: accountForm.notes,
-                    }), "Account entry saved")}
-                  >
-                    <ReceiptText className="mr-2 h-4 w-4" />
-                    Save Entry
-                  </Button>
-                </div>
                 <Table>
                   <TableHeader><TableRow><TableHead>Title</TableHead><TableHead>Type</TableHead><TableHead>Count</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
                   <TableBody>
@@ -756,61 +846,113 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
                 <h2 className="text-xl font-extrabold text-slate-900">Areas</h2>
                 <p className="text-sm text-slate-500">Each area shows its membership list.</p>
               </div>
-              <Button variant="outline" onClick={() => { resetAreaForm(); setSelectedAreaId(""); setMembersView("home") }}>Back</Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => { resetAreaForm(); setSelectedAreaId(""); setAreaSheetOpen(false); setMembersView("home") }}>Back</Button>
+                <Sheet open={areaSheetOpen} onOpenChange={setAreaSheetOpen}>
+                  <SheetTrigger asChild>
+                    <Button className={metroPrimaryButton} onClick={resetAreaForm}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+                    <SheetHeader>
+                      <SheetTitle>{editingAreaId ? "Edit Area" : "Create Area"}</SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-8 space-y-4">
+                      <div className="space-y-2">
+                        <Label>Area name</Label>
+                        <Input placeholder="Area name" value={areaName} onChange={(e) => setAreaName(e.target.value)} />
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button className={metroPrimaryButton} disabled={isPending || !areaName.trim()} onClick={handleSaveArea}>
+                          {editingAreaId ? "Update Area" : "Save Area"}
+                        </Button>
+                        {editingAreaId && <Button variant="outline" onClick={resetAreaForm}>Cancel Edit</Button>}
+                      </div>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
             </div>
 
             <Card>
-              <CardHeader><CardTitle>{editingAreaId ? "Edit Area" : "Create Area"}</CardTitle></CardHeader>
-              <CardContent className="flex flex-wrap gap-3">
-                <Input className="max-w-sm" placeholder="Area name" value={areaName} onChange={(e) => setAreaName(e.target.value)} />
-                <Button className={metroPrimaryButton} disabled={isPending || !areaName.trim()} onClick={handleSaveArea}>
-                  {editingAreaId ? "Update Area" : "Add Area"}
-                </Button>
-                {editingAreaId && <Button variant="outline" onClick={resetAreaForm}>Cancel Edit</Button>}
-              </CardContent>
-            </Card>
-
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {membersByArea.map((group) => (
-                <div
-                  key={group.area.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => openAreaMembers(group.area.id)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") openAreaMembers(group.area.id)
-                  }}
-                  className="cursor-pointer rounded-lg border border-slate-200 bg-white shadow-sm transition-all hover:border-indigo-200 hover:shadow-md"
-                >
-                  <div className="flex items-start justify-between gap-3 px-4 py-4">
-                    <div>
-                      <h3 className="font-bold text-slate-900">{group.area.name}</h3>
-                      <p className="text-xs text-slate-500">{group.members.length} {group.members.length === 1 ? "member" : "members"}</p>
+              <CardHeader><CardTitle>Area List</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-lg border border-slate-200 bg-white p-4">
+                  <div className="grid gap-3 lg:grid-cols-[1fr_220px]">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <Input
+                        className="pl-10"
+                        placeholder="Search areas or members..."
+                        value={areaSearchTerm}
+                        onChange={(event) => setAreaSearchTerm(event.target.value)}
+                      />
                     </div>
-                    {group.area.id !== "unassigned" && (
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-700"
-                          onClick={(event) => { event.stopPropagation(); handleEditArea(group.area) }}
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700"
-                          onClick={(event) => { event.stopPropagation(); handleDeleteArea(group.area) }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
+                    <Select value={areaMemberFilter} onValueChange={setAreaMemberFilter}>
+                      <SelectTrigger>
+                        <div className="flex items-center gap-2">
+                          <Filter className="h-4 w-4 text-slate-500" />
+                          <SelectValue placeholder="Members" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Areas</SelectItem>
+                        <SelectItem value="with-members">With Members</SelectItem>
+                        <SelectItem value="empty">Empty Areas</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {filteredAreaGroups.length === 0 ? (
+                    <div className="rounded-lg border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-400 md:col-span-2 xl:col-span-3">
+                      No areas match this filter.
+                    </div>
+                  ) : filteredAreaGroups.map((group) => (
+                    <div
+                      key={group.area.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openAreaMembers(group.area.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") openAreaMembers(group.area.id)
+                      }}
+                      className="cursor-pointer rounded-lg border border-slate-200 bg-white shadow-sm transition-all hover:border-indigo-200 hover:shadow-md"
+                    >
+                      <div className="flex items-start justify-between gap-3 px-4 py-4">
+                        <div>
+                          <h3 className="font-bold text-slate-900">{group.area.name}</h3>
+                          <p className="text-xs text-slate-500">{group.members.length} {group.members.length === 1 ? "member" : "members"}</p>
+                        </div>
+                        {group.area.id !== "unassigned" && (
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-700"
+                              onClick={(event) => { event.stopPropagation(); handleEditArea(group.area) }}
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700"
+                              onClick={(event) => { event.stopPropagation(); handleDeleteArea(group.area) }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
@@ -872,39 +1014,92 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
                 <h2 className="text-xl font-extrabold text-slate-900">Members</h2>
                 <p className="text-sm text-slate-500">Create members manually and assign each person to an area.</p>
               </div>
-              <Button variant="outline" onClick={() => { resetMemberForm(); setMembersView("home") }}>Back</Button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => { resetMemberForm(); setMemberSheetOpen(false); setMembersView("home") }}>Back</Button>
+                <Sheet open={memberSheetOpen} onOpenChange={setMemberSheetOpen}>
+                  <SheetTrigger asChild>
+                    <Button className={metroPrimaryButton} onClick={resetMemberForm}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+                    <SheetHeader>
+                      <SheetTitle>{editingMemberId ? "Edit Member" : "Create Member"}</SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-8 space-y-4">
+                      <div className="space-y-2">
+                        <Label>Full name</Label>
+                        <Input placeholder="Full name" value={memberForm.full_name} onChange={(e) => setMemberForm({ ...memberForm, full_name: e.target.value })} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Sex</Label>
+                        <Select value={memberForm.sex || "none"} onValueChange={(value) => setMemberForm({ ...memberForm, sex: value === "none" ? "" : value })}>
+                          <SelectTrigger><SelectValue placeholder="Sex" /></SelectTrigger>
+                          <SelectContent><SelectItem value="none">Sex</SelectItem><SelectItem value="male">Male</SelectItem><SelectItem value="female">Female</SelectItem></SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Area</Label>
+                        <Select value={memberForm.area_id || "none"} onValueChange={(value) => setMemberForm({ ...memberForm, area_id: value === "none" ? "" : value })}>
+                          <SelectTrigger><SelectValue placeholder="Area" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">No area</SelectItem>
+                            {data.areas.map((area) => <SelectItem key={area.id} value={area.id}>{area.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Phone number</Label>
+                        <Input placeholder="Phone number" value={memberForm.phone_number} onChange={(e) => setMemberForm({ ...memberForm, phone_number: e.target.value })} />
+                      </div>
+                      <Button className={metroPrimaryButton} disabled={isPending || !memberForm.full_name.trim()} onClick={handleSaveMember}>
+                        {editingMemberId ? "Update Member" : "Save Member"}
+                      </Button>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
             </div>
 
             <Card>
-              <CardHeader><CardTitle>{editingMemberId ? "Edit Member" : "Create Member"}</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-3 md:grid-cols-4">
-                  <Input placeholder="Full name" value={memberForm.full_name} onChange={(e) => setMemberForm({ ...memberForm, full_name: e.target.value })} />
-                  <Select value={memberForm.sex || "none"} onValueChange={(value) => setMemberForm({ ...memberForm, sex: value === "none" ? "" : value })}>
-                    <SelectTrigger><SelectValue placeholder="Sex" /></SelectTrigger>
-                    <SelectContent><SelectItem value="none">Sex</SelectItem><SelectItem value="male">Male</SelectItem><SelectItem value="female">Female</SelectItem></SelectContent>
-                  </Select>
-                  <Select value={memberForm.area_id || "none"} onValueChange={(value) => setMemberForm({ ...memberForm, area_id: value === "none" ? "" : value })}>
-                    <SelectTrigger><SelectValue placeholder="Area" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">No area</SelectItem>
-                      {data.areas.map((area) => <SelectItem key={area.id} value={area.id}>{area.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                  <Input placeholder="Phone number" value={memberForm.phone_number} onChange={(e) => setMemberForm({ ...memberForm, phone_number: e.target.value })} />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button className={metroPrimaryButton} disabled={isPending || !memberForm.full_name.trim()} onClick={handleSaveMember}>
-                    {editingMemberId ? "Update Member" : "Save Member"}
-                  </Button>
-                  {editingMemberId && <Button variant="outline" onClick={resetMemberForm}>Cancel Edit</Button>}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
               <CardHeader><CardTitle>Membership List</CardTitle></CardHeader>
-              <CardContent className="p-0 overflow-x-auto">
+              <CardContent className="space-y-4">
+                <div className="rounded-lg border border-slate-200 bg-white p-4">
+                  <div className="grid gap-3 lg:grid-cols-[1fr_220px_220px]">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                      <Input
+                        className="pl-10"
+                        placeholder="Search members by name, phone, sex, or area..."
+                        value={memberSearchTerm}
+                        onChange={(event) => setMemberSearchTerm(event.target.value)}
+                      />
+                    </div>
+                    <Select value={memberAreaFilter} onValueChange={setMemberAreaFilter}>
+                      <SelectTrigger>
+                        <div className="flex items-center gap-2">
+                          <Filter className="h-4 w-4 text-slate-500" />
+                          <SelectValue placeholder="Area" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Areas</SelectItem>
+                        <SelectItem value="none">No area</SelectItem>
+                        {data.areas.map((area) => <SelectItem key={area.id} value={area.id}>{area.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Select value={memberSexFilter} onValueChange={setMemberSexFilter}>
+                      <SelectTrigger><SelectValue placeholder="Sex" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Sex</SelectItem>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="overflow-x-auto rounded-lg border border-slate-200">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -916,7 +1111,11 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {data.members.map((member) => (
+                    {filteredMembers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="py-8 text-center text-slate-400">No members match this filter.</TableCell>
+                      </TableRow>
+                    ) : filteredMembers.map((member) => (
                       <TableRow key={member.id}>
                         <TableCell className="font-semibold">{member.full_name}</TableCell>
                         <TableCell>{member.sex || "-"}</TableCell>
@@ -936,6 +1135,7 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </div>
