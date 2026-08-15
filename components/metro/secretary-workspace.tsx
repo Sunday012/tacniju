@@ -1,8 +1,26 @@
 "use client"
 
 import { useMemo, useState, useTransition } from "react"
-import { CalendarDays, ClipboardCopy, FileText, Loader2, MapPin, Plus, ReceiptText, Users } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import {
+  CalendarDays,
+  ClipboardCopy,
+  FileText,
+  Home,
+  LayoutDashboard,
+  Loader2,
+  LogOut,
+  MapPin,
+  Menu,
+  Mic2,
+  Plus,
+  ReceiptText,
+  Users,
+} from "lucide-react"
 import { toast } from "sonner"
+import { createClient } from "@/lib/client"
 import {
   createMetroArea,
   createMetroEvent,
@@ -12,7 +30,7 @@ import {
   saveMetroAttendance,
   saveMetroDues,
   updateMetroMemo,
-} from "@/app/admin/metro/actions"
+} from "@/app/metro/actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -20,7 +38,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 
@@ -51,9 +70,24 @@ type WorkspaceData = {
 }
 
 const money = new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 })
+const logoUrl = "https://res.cloudinary.com/dzckvrvu9/image/upload/v1777993333/WhatsApp_Image_2026-05-01_at_08.37.56-removebg-preview_a8w3wt.png"
+const metroPrimaryButton = "bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 disabled:border disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
+
+const metroNavItems = [
+  { value: "summary", label: "Summary", icon: LayoutDashboard },
+  { value: "events", label: "Events", icon: CalendarDays },
+  { value: "attendance", label: "Attendance", icon: Users },
+  { value: "dues", label: "Dues", icon: ReceiptText },
+  { value: "account", label: "Account", icon: FileText },
+  { value: "members", label: "Areas & Members", icon: MapPin },
+  { value: "memos", label: "Memos", icon: ClipboardCopy },
+]
 
 export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
   const [isPending, startTransition] = useTransition()
+  const [activeTab, setActiveTab] = useState("summary")
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const router = useRouter()
   const [areaName, setAreaName] = useState("")
   const [memberForm, setMemberForm] = useState({ full_name: "", sex: "", area_id: "", phone_number: "" })
   const [memoForm, setMemoForm] = useState({ id: "", title: "", body: "" })
@@ -120,17 +154,60 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
     setter(next)
   }
 
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    await fetch("/api/auth/signout", { method: "POST" })
+    router.push("/select-church")
+  }
+
   return (
-    <Tabs defaultValue="summary" className="space-y-6">
-      <TabsList className="h-auto flex flex-wrap justify-start bg-white border border-slate-200 p-1">
-        <TabsTrigger value="summary">Summary</TabsTrigger>
-        <TabsTrigger value="events">Events</TabsTrigger>
-        <TabsTrigger value="attendance">Attendance</TabsTrigger>
-        <TabsTrigger value="dues">Dues</TabsTrigger>
-        <TabsTrigger value="account">Account</TabsTrigger>
-        <TabsTrigger value="members">Areas & Members</TabsTrigger>
-        <TabsTrigger value="memos">Memos</TabsTrigger>
-      </TabsList>
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex min-h-screen bg-[#F4F7FA] text-slate-900">
+      <MetroSidebar activeTab={activeTab} onTabChange={setActiveTab} onSignOut={handleSignOut} />
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-30 border-b border-indigo-100/50 bg-white/75 px-5 py-4 shadow-sm backdrop-blur-2xl lg:hidden">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm">
+                <Image src={logoUrl} alt="TACN Logo" width={80} height={32} className="h-full w-full object-contain" />
+              </div>
+              <div>
+                <h1 className="text-base font-extrabold leading-tight text-slate-900">Metro Choir</h1>
+                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-slate-500">Secretary</p>
+              </div>
+            </div>
+
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-lg text-slate-600 hover:bg-indigo-50 hover:text-indigo-700">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="flex h-dvh w-[280px] flex-col border-r border-slate-100 bg-white p-0">
+                <SheetHeader className="border-b border-slate-100 bg-gradient-to-br from-indigo-600 to-violet-700 p-6">
+                  <SheetTitle className="flex items-center gap-3 text-left text-white">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
+                      <Mic2 className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-base font-extrabold leading-tight">Metro Choir</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-200">Secretary Workspace</p>
+                    </div>
+                  </SheetTitle>
+                </SheetHeader>
+                <MetroNav activeTab={activeTab} onTabChange={(value) => { setActiveTab(value); setMobileOpen(false) }} onSignOut={handleSignOut} />
+              </SheetContent>
+            </Sheet>
+          </div>
+        </header>
+
+        <main className="flex-1 p-6 md:p-10">
+          <div className="mx-auto max-w-7xl space-y-6">
+            <div>
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Metro Youth Choir</h1>
+              <p className="mt-2 text-slate-600">Secretary workspace for memos, members, events, attendance, dues, and account summaries.</p>
+            </div>
 
       <TabsContent value="summary" className="space-y-4">
         <div className="grid gap-4 md:grid-cols-4">
@@ -181,7 +258,7 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
             <Input placeholder="Rehearsal, meeting, programme..." value={eventForm.name} onChange={(e) => setEventForm({ ...eventForm, name: e.target.value })} />
             <Input type="date" value={eventForm.event_date} onChange={(e) => setEventForm({ ...eventForm, event_date: e.target.value })} />
             <Textarea className="md:col-span-2" placeholder="Theme, topic, or short description..." value={eventForm.description} onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })} />
-            <Button disabled={isPending || !eventForm.name || !eventForm.event_date} onClick={() => run(() => createMetroEvent(eventForm), "Event created")}>
+            <Button className={metroPrimaryButton} disabled={isPending || !eventForm.name || !eventForm.event_date} onClick={() => run(() => createMetroEvent(eventForm), "Event created")}>
               {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
               Save Event
             </Button>
@@ -250,6 +327,7 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
               <Input type="number" min="0" placeholder="People count" value={accountForm.people_count} onChange={(e) => setAccountForm({ ...accountForm, people_count: e.target.value })} />
               <Textarea className="md:col-span-5" placeholder="Notes" value={accountForm.notes} onChange={(e) => setAccountForm({ ...accountForm, notes: e.target.value })} />
               <Button
+                className={metroPrimaryButton}
                 disabled={isPending || !accountForm.title || !accountForm.amount}
                 onClick={() => run(() => createMetroTransaction({
                   event_id: accountForm.event_id,
@@ -286,7 +364,7 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
           <CardHeader><CardTitle>Areas</CardTitle></CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             <Input className="max-w-xs" placeholder="Area name" value={areaName} onChange={(e) => setAreaName(e.target.value)} />
-            <Button disabled={isPending || !areaName.trim()} onClick={() => run(() => createMetroArea(areaName), "Area created")}>Add Area</Button>
+            <Button className={metroPrimaryButton} disabled={isPending || !areaName.trim()} onClick={() => run(() => createMetroArea(areaName), "Area created")}>Add Area</Button>
             {data.areas.map((area) => <Badge key={area.id} variant="secondary" className="px-3 py-1">{area.name}</Badge>)}
           </CardContent>
         </Card>
@@ -307,7 +385,7 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
                 </SelectContent>
               </Select>
               <Input placeholder="Phone number" value={memberForm.phone_number} onChange={(e) => setMemberForm({ ...memberForm, phone_number: e.target.value })} />
-              <Button disabled={isPending || !memberForm.full_name.trim()} onClick={() => run(() => createMetroMember(memberForm), "Member saved")}>Save Member</Button>
+              <Button className={metroPrimaryButton} disabled={isPending || !memberForm.full_name.trim()} onClick={() => run(() => createMetroMember(memberForm), "Member saved")}>Save Member</Button>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               {membersByArea.map((group) => (
@@ -335,7 +413,7 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
             <Input placeholder="Memo title" value={memoForm.title} onChange={(e) => setMemoForm({ ...memoForm, title: e.target.value })} />
             <Textarea className="min-h-[360px] font-mono text-sm" placeholder="Write the memo here..." value={memoForm.body} onChange={(e) => setMemoForm({ ...memoForm, body: e.target.value })} />
             <div className="flex flex-wrap gap-2">
-              <Button disabled={isPending || !memoForm.title.trim()} onClick={() => run(() => memoForm.id ? updateMetroMemo(memoForm.id, memoForm) : createMetroMemo(memoForm), "Memo saved")}>Save Memo</Button>
+              <Button className={metroPrimaryButton} disabled={isPending || !memoForm.title.trim()} onClick={() => run(() => memoForm.id ? updateMetroMemo(memoForm.id, memoForm) : createMetroMemo(memoForm), "Memo saved")}>Save Memo</Button>
               <Button variant="outline" onClick={() => navigator.clipboard.writeText(`${memoForm.title}\n\n${memoForm.body}`).then(() => toast.success("Memo copied"))}>
                 <ClipboardCopy className="mr-2 h-4 w-4" />
                 Copy
@@ -355,7 +433,91 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
           </CardContent>
         </Card>
       </TabsContent>
+          </div>
+        </main>
+      </div>
     </Tabs>
+  )
+}
+
+function MetroSidebar({
+  activeTab,
+  onTabChange,
+  onSignOut,
+}: {
+  activeTab: string
+  onTabChange: (value: string) => void
+  onSignOut: () => void
+}) {
+  return (
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col overflow-y-auto border-r border-[#E5E7EB]/50 bg-white/60 px-5 py-8 shadow-[4px_0_24px_rgba(0,0,0,0.02)] backdrop-blur-2xl lg:flex">
+      <div className="mb-10 flex items-center gap-4 px-2">
+        <div className="flex h-11 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white p-1.5 shadow-sm">
+          <Image src={logoUrl} alt="TACN Logo" width={80} height={32} className="h-full w-full object-contain" />
+        </div>
+        <div>
+          <h2 className="text-xl font-extrabold leading-tight tracking-tight text-slate-900">Metro</h2>
+          <p className="mt-0.5 text-[11px] font-bold uppercase tracking-widest text-slate-500">Secretary</p>
+        </div>
+      </div>
+
+      <MetroNav activeTab={activeTab} onTabChange={onTabChange} onSignOut={onSignOut} />
+    </aside>
+  )
+}
+
+function MetroNav({
+  activeTab,
+  onTabChange,
+  onSignOut,
+}: {
+  activeTab: string
+  onTabChange: (value: string) => void
+  onSignOut: () => void
+}) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col p-5 lg:p-0">
+      <div className="flex-1 space-y-6">
+        <div>
+          <p className="mb-2 px-3 text-xs font-bold uppercase tracking-widest text-slate-400/80">Workspace</p>
+          <div className="space-y-1">
+            {metroNavItems.map((item) => {
+              const Icon = item.icon
+              const active = activeTab === item.value
+              return (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => onTabChange(item.value)}
+                  className={`flex w-full items-center gap-3.5 rounded-lg px-4 py-2.5 text-left text-sm tracking-wide transition-all ${
+                    active
+                      ? "bg-indigo-600/10 font-semibold text-indigo-700"
+                      : "font-medium text-slate-500 hover:bg-slate-100/80 hover:text-slate-900"
+                  }`}
+                >
+                  <Icon className={`h-5 w-5 ${active ? "text-indigo-600" : "text-slate-400"}`} />
+                  <span>{item.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="border-t border-slate-100 pt-6">
+        <p className="mb-2 px-3 text-xs font-bold uppercase tracking-widest text-slate-400/80">Quick Links</p>
+        <div className="space-y-1">
+          <Link href="/admin" className="flex items-center gap-3.5 rounded-lg px-4 py-2.5 text-sm font-medium tracking-wide text-slate-500 hover:bg-slate-100/80 hover:text-slate-900">
+            <Home className="h-5 w-5 text-slate-400" />
+            Admin Dashboard
+          </Link>
+          <button type="button" onClick={onSignOut} className="flex w-full items-center gap-3.5 rounded-lg px-4 py-2.5 text-left text-sm font-medium tracking-wide text-slate-500 hover:bg-slate-100/80 hover:text-slate-900">
+            <LogOut className="h-5 w-5 text-slate-400" />
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -405,7 +567,7 @@ function ChecklistPanel({
               {events.map((event) => <SelectItem key={event.id} value={event.id}>{event.name}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Button disabled={disabled || !selectedEventId} onClick={onSave}>Save {marks.size}</Button>
+          <Button className={metroPrimaryButton} disabled={disabled || !selectedEventId} onClick={onSave}>Save {marks.size}</Button>
         </div>
       </CardHeader>
       <CardContent className="grid gap-4 md:grid-cols-2">

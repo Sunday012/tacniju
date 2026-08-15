@@ -55,7 +55,6 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
       { name: "Reservations", href: "/admin/reservations", icon: Hash },
       { name: "Meal Tickets", href: "/admin/meal-tickets", icon: Ticket },
       { name: "Dining Hall", href: "/admin/dining-hall", icon: Utensils },
-      { name: "Metro Choir", href: "/admin/metro", icon: Mic2 },
       { name: "Families", href: "/admin/families", icon: Users },
       { name: "Departments", href: "/admin/departments", icon: Building2 },
     ]

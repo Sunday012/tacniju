@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { createClient } from "@/lib/server"
 
-const METRO_PATH = "/admin/metro"
+const METRO_PATH = "/metro"
 
 async function getAdminClient() {
   const supabase = await createClient()
