@@ -8,6 +8,7 @@ import {
   CalendarDays,
   ClipboardCopy,
   Edit3,
+  Filter,
   FileText,
   Home,
   LayoutDashboard,
@@ -18,6 +19,7 @@ import {
   Mic2,
   Plus,
   ReceiptText,
+  Search,
   Trash2,
   Users,
 } from "lucide-react"
@@ -94,7 +96,9 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
   const [activeTab, setActiveTab] = useState("summary")
   const [mobileOpen, setMobileOpen] = useState(false)
   const router = useRouter()
-  const [membersView, setMembersView] = useState<"home" | "areas" | "members">("home")
+  const [membersView, setMembersView] = useState<"home" | "areas" | "members" | "areaDetail">("home")
+  const [selectedAreaId, setSelectedAreaId] = useState("")
+  const [eventSheetOpen, setEventSheetOpen] = useState(false)
   const [areaName, setAreaName] = useState("")
   const [editingAreaId, setEditingAreaId] = useState("")
   const [memberForm, setMemberForm] = useState({ full_name: "", sex: "", area_id: "", phone_number: "" })
@@ -128,6 +132,10 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
     const unassigned = data.members.filter((member) => !member.area_id)
     return unassigned.length ? [...groups, { area: { id: "unassigned", name: "Unassigned" }, members: unassigned }] : groups
   }, [data.areas, data.members])
+  const selectedAreaGroup = useMemo(
+    () => membersByArea.find((group) => group.area.id === selectedAreaId) || null,
+    [membersByArea, selectedAreaId]
+  )
 
   const eventSummaries = useMemo(() => {
     return data.events.map((event) => {
@@ -194,6 +202,11 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
     setAreaName(area.name)
   }
 
+  function openAreaMembers(areaId: string) {
+    setSelectedAreaId(areaId)
+    setMembersView("areaDetail")
+  }
+
   function handleDeleteArea(area: Area) {
     if (!confirm(`Delete ${area.name}? Members in this area will become unassigned.`)) return
     run(() => deleteMetroArea(area.id), "Area deleted")
@@ -208,6 +221,13 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
       editingMemberId ? "Member updated" : "Member saved"
     )
     resetMemberForm()
+  }
+
+  function handleSaveEvent() {
+    if (!eventForm.name || !eventForm.event_date) return
+    run(() => createMetroEvent(eventForm), "Event created")
+    setEventForm({ name: "", event_date: new Date().toISOString().slice(0, 10), description: "" })
+    setEventSheetOpen(false)
   }
 
   function handleEditMember(member: Member) {
@@ -324,17 +344,74 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
         </Card>
       </TabsContent>
 
-      <TabsContent value="events">
+      <TabsContent value="events" className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-extrabold text-slate-900">Events</h2>
+            <p className="text-sm text-slate-500">Created events appear here and can be used for attendance, dues, and account records.</p>
+          </div>
+          <Sheet open={eventSheetOpen} onOpenChange={setEventSheetOpen}>
+            <SheetTrigger asChild>
+              <Button className={metroPrimaryButton}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Event
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+              <SheetHeader>
+                <SheetTitle>Create Event</SheetTitle>
+              </SheetHeader>
+              <div className="mt-8 space-y-4">
+                <div className="space-y-2">
+                  <Label>Event Name</Label>
+                  <Input placeholder="Rehearsal, meeting, programme..." value={eventForm.name} onChange={(e) => setEventForm({ ...eventForm, name: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Event Date</Label>
+                  <Input type="date" value={eventForm.event_date} onChange={(e) => setEventForm({ ...eventForm, event_date: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Description / Theme</Label>
+                  <Textarea className="min-h-[140px]" placeholder="Theme, topic, or short description..." value={eventForm.description} onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })} />
+                </div>
+                <Button className={metroPrimaryButton} disabled={isPending || !eventForm.name || !eventForm.event_date} onClick={handleSaveEvent}>
+                  {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+                  Save Event
+                </Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+
         <Card>
-          <CardHeader><CardTitle>Create Event</CardTitle></CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-[1fr_180px]">
-            <Input placeholder="Rehearsal, meeting, programme..." value={eventForm.name} onChange={(e) => setEventForm({ ...eventForm, name: e.target.value })} />
-            <Input type="date" value={eventForm.event_date} onChange={(e) => setEventForm({ ...eventForm, event_date: e.target.value })} />
-            <Textarea className="md:col-span-2" placeholder="Theme, topic, or short description..." value={eventForm.description} onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })} />
-            <Button className={metroPrimaryButton} disabled={isPending || !eventForm.name || !eventForm.event_date} onClick={() => run(() => createMetroEvent(eventForm), "Event created")}>
-              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
-              Save Event
-            </Button>
+          <CardHeader><CardTitle>Event List</CardTitle></CardHeader>
+          <CardContent className="p-0 overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Event</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Description / Theme</TableHead>
+                  <TableHead className="text-center">Attendance</TableHead>
+                  <TableHead className="text-center">Dues Paid</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {eventSummaries.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-8 text-center text-slate-400">No events created yet.</TableCell>
+                  </TableRow>
+                ) : eventSummaries.map((item) => (
+                  <TableRow key={item.event.id}>
+                    <TableCell className="font-semibold">{item.event.name}</TableCell>
+                    <TableCell>{new Date(item.event.event_date).toLocaleDateString()}</TableCell>
+                    <TableCell className="max-w-md truncate text-slate-500">{item.event.description || "-"}</TableCell>
+                    <TableCell className="text-center">{item.attendanceCount}</TableCell>
+                    <TableCell className="text-center">{item.duesCount}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </TabsContent>
@@ -476,7 +553,7 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
                 <h2 className="text-xl font-extrabold text-slate-900">Areas</h2>
                 <p className="text-sm text-slate-500">Each area shows its membership list.</p>
               </div>
-              <Button variant="outline" onClick={() => { resetAreaForm(); setMembersView("home") }}>Back</Button>
+              <Button variant="outline" onClick={() => { resetAreaForm(); setSelectedAreaId(""); setMembersView("home") }}>Back</Button>
             </div>
 
             <Card>
@@ -492,46 +569,96 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
 
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {membersByArea.map((group) => (
-                <div key={group.area.id} className="rounded-lg border border-slate-200 bg-white shadow-sm">
-                  <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3">
+                <div
+                  key={group.area.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openAreaMembers(group.area.id)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") openAreaMembers(group.area.id)
+                  }}
+                  className="cursor-pointer rounded-lg border border-slate-200 bg-white shadow-sm transition-all hover:border-indigo-200 hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between gap-3 px-4 py-4">
                     <div>
                       <h3 className="font-bold text-slate-900">{group.area.name}</h3>
                       <p className="text-xs text-slate-500">{group.members.length} {group.members.length === 1 ? "member" : "members"}</p>
                     </div>
                     {group.area.id !== "unassigned" && (
                       <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-700" onClick={() => handleEditArea(group.area)}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-700"
+                          onClick={(event) => { event.stopPropagation(); handleEditArea(group.area) }}
+                        >
                           <Edit3 className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700" onClick={() => handleDeleteArea(group.area)}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700"
+                          onClick={(event) => { event.stopPropagation(); handleDeleteArea(group.area) }}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     )}
                   </div>
-                  <div className="divide-y divide-slate-100">
-                    {group.members.length === 0 ? (
-                      <p className="px-4 py-5 text-sm text-slate-400">No members yet.</p>
-                    ) : group.members.map((member) => (
-                      <div key={member.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                        <div>
-                          <p className="font-semibold text-slate-800">{member.full_name}</p>
-                          <p className="text-xs text-slate-500">{member.phone_number || member.sex || "No phone number"}</p>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-700" onClick={() => handleEditMember(member)}>
-                            <Edit3 className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700" onClick={() => handleDeleteMember(member)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {membersView === "areaDetail" && selectedAreaGroup && (
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900">{selectedAreaGroup.area.name}</h2>
+                <p className="text-sm text-slate-500">{selectedAreaGroup.members.length} {selectedAreaGroup.members.length === 1 ? "member" : "members"} in this area.</p>
+              </div>
+              <Button variant="outline" onClick={() => { setSelectedAreaId(""); setMembersView("areas") }}>Back to Areas</Button>
+            </div>
+
+            <Card>
+              <CardHeader><CardTitle>Membership List</CardTitle></CardHeader>
+              <CardContent className="p-0 overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Sex</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedAreaGroup.members.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="py-8 text-center text-slate-400">No members in this area yet.</TableCell>
+                      </TableRow>
+                    ) : selectedAreaGroup.members.map((member) => (
+                      <TableRow key={member.id}>
+                        <TableCell className="font-semibold">{member.full_name}</TableCell>
+                        <TableCell>{member.sex || "-"}</TableCell>
+                        <TableCell>{member.phone_number || "-"}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-700" onClick={() => handleEditMember(member)}>
+                              <Edit3 className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700" onClick={() => handleDeleteMember(member)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </div>
         )}
 
@@ -762,6 +889,29 @@ function ChecklistPanel({
   onToggle: (memberId: string) => void
   onSave: () => void
 }) {
+  const [searchTerm, setSearchTerm] = useState("")
+  const [areaFilter, setAreaFilter] = useState("all")
+
+  const rows = useMemo(
+    () => groups.flatMap((group) => group.members.map((member) => ({ member, area: group.area }))),
+    [groups]
+  )
+  const filteredRows = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase()
+
+    return rows.filter(({ member, area }) => {
+      const matchesArea = areaFilter === "all" || area.id === areaFilter
+      const searchable = [
+        member.full_name,
+        member.sex || "",
+        member.phone_number || "",
+        area.name,
+      ].join(" ").toLowerCase()
+
+      return matchesArea && (!normalizedSearch || searchable.includes(normalizedSearch))
+    })
+  }, [areaFilter, rows, searchTerm])
+
   return (
     <Card>
       <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -776,23 +926,72 @@ function ChecklistPanel({
           <Button className={metroPrimaryButton} disabled={disabled || !selectedEventId} onClick={onSave}>Save {marks.size}</Button>
         </div>
       </CardHeader>
-      <CardContent className="grid gap-4 md:grid-cols-2">
-        {groups.map((group) => (
-          <div key={group.area.id} className="rounded-lg border border-slate-200 bg-white">
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-              <span className="font-semibold">{group.area.name}</span>
-              <Badge variant="secondary">{group.members.filter((member) => marks.has(member.id)).length}/{group.members.length}</Badge>
+      <CardContent className="space-y-4">
+        <div className="rounded-lg border border-slate-200 bg-white p-4">
+          <div className="grid gap-3 lg:grid-cols-[1fr_260px]">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                className="pl-10"
+                placeholder="Search members by name, phone, sex, or area..."
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
             </div>
-            <div className="divide-y divide-slate-100">
-              {group.members.map((member) => (
-                <label key={member.id} className="flex cursor-pointer items-center gap-3 px-4 py-3 text-sm hover:bg-slate-50">
-                  <Checkbox checked={marks.has(member.id)} onCheckedChange={() => onToggle(member.id)} />
-                  <span className="font-medium">{member.full_name}</span>
-                </label>
-              ))}
-            </div>
+            <Select value={areaFilter} onValueChange={setAreaFilter}>
+              <SelectTrigger>
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-slate-500" />
+                  <SelectValue placeholder="Filter by area" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Areas</SelectItem>
+                {groups.map((group) => (
+                  <SelectItem key={group.area.id} value={group.area.id}>{group.area.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        ))}
+        </div>
+
+        <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-14">Mark</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Sex</TableHead>
+                <TableHead>Area</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead className="text-right">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredRows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="py-8 text-center text-slate-400">No members match this filter.</TableCell>
+                </TableRow>
+              ) : filteredRows.map(({ member, area }) => {
+                const checked = marks.has(member.id)
+                return (
+                  <TableRow key={member.id} className="hover:bg-slate-50">
+                    <TableCell>
+                      <Checkbox checked={checked} onCheckedChange={() => onToggle(member.id)} />
+                    </TableCell>
+                    <TableCell className="font-semibold text-slate-900">{member.full_name}</TableCell>
+                    <TableCell>{member.sex || "-"}</TableCell>
+                    <TableCell>{area.name}</TableCell>
+                    <TableCell>{member.phone_number || "-"}</TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant={checked ? "default" : "secondary"}>{checked ? "Selected" : "Not selected"}</Badge>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   )
