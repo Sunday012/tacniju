@@ -73,6 +73,26 @@ export async function createMetroArea(name: string) {
   return { success: true }
 }
 
+export async function updateMetroArea(id: string, name: string) {
+  const adminSupabase = await getAdminClient()
+  const { error } = await adminSupabase
+    .from("metro_areas")
+    .update({ name: name.trim() })
+    .eq("id", id)
+
+  if (error) return { success: false, message: error.message }
+  revalidatePath(METRO_PATH)
+  return { success: true }
+}
+
+export async function deleteMetroArea(id: string) {
+  const adminSupabase = await getAdminClient()
+  const { error } = await adminSupabase.from("metro_areas").delete().eq("id", id)
+  if (error) return { success: false, message: error.message }
+  revalidatePath(METRO_PATH)
+  return { success: true }
+}
+
 export async function createMetroMember(input: {
   full_name: string
   sex?: string
@@ -86,6 +106,36 @@ export async function createMetroMember(input: {
     area_id: input.area_id || null,
     phone_number: input.phone_number?.trim() || null,
   })
+  if (error) return { success: false, message: error.message }
+  revalidatePath(METRO_PATH)
+  return { success: true }
+}
+
+export async function updateMetroMember(id: string, input: {
+  full_name: string
+  sex?: string
+  area_id?: string
+  phone_number?: string
+}) {
+  const adminSupabase = await getAdminClient()
+  const { error } = await adminSupabase
+    .from("metro_members")
+    .update({
+      full_name: input.full_name.trim(),
+      sex: input.sex || null,
+      area_id: input.area_id || null,
+      phone_number: input.phone_number?.trim() || null,
+    })
+    .eq("id", id)
+
+  if (error) return { success: false, message: error.message }
+  revalidatePath(METRO_PATH)
+  return { success: true }
+}
+
+export async function deleteMetroMember(id: string) {
+  const adminSupabase = await getAdminClient()
+  const { error } = await adminSupabase.from("metro_members").delete().eq("id", id)
   if (error) return { success: false, message: error.message }
   revalidatePath(METRO_PATH)
   return { success: true }

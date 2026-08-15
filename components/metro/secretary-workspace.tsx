@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import {
   CalendarDays,
   ClipboardCopy,
+  Edit3,
   FileText,
   Home,
   LayoutDashboard,
@@ -17,6 +18,7 @@ import {
   Mic2,
   Plus,
   ReceiptText,
+  Trash2,
   Users,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -27,8 +29,12 @@ import {
   createMetroMember,
   createMetroMemo,
   createMetroTransaction,
+  deleteMetroArea,
+  deleteMetroMember,
   saveMetroAttendance,
   saveMetroDues,
+  updateMetroArea,
+  updateMetroMember,
   updateMetroMemo,
 } from "@/app/metro/actions"
 import { Badge } from "@/components/ui/badge"
@@ -88,8 +94,11 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
   const [activeTab, setActiveTab] = useState("summary")
   const [mobileOpen, setMobileOpen] = useState(false)
   const router = useRouter()
+  const [membersView, setMembersView] = useState<"home" | "areas" | "members">("home")
   const [areaName, setAreaName] = useState("")
+  const [editingAreaId, setEditingAreaId] = useState("")
   const [memberForm, setMemberForm] = useState({ full_name: "", sex: "", area_id: "", phone_number: "" })
+  const [editingMemberId, setEditingMemberId] = useState("")
   const [memoForm, setMemoForm] = useState({ id: "", title: "", body: "" })
   const [eventForm, setEventForm] = useState({ name: "", event_date: new Date().toISOString().slice(0, 10), description: "" })
   const [selectedEventId, setSelectedEventId] = useState(data.events[0]?.id || "")
@@ -135,8 +144,12 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
   function run(action: () => Promise<{ success: boolean; message?: string }>, success: string) {
     startTransition(async () => {
       const result = await action()
-      if (result.success) toast.success(success)
-      else toast.error(result.message || "Action failed")
+      if (result.success) {
+        toast.success(success)
+        router.refresh()
+      } else {
+        toast.error(result.message || "Action failed")
+      }
     })
   }
 
@@ -152,6 +165,66 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
     if (next.has(id)) next.delete(id)
     else next.add(id)
     setter(next)
+  }
+
+  function resetAreaForm() {
+    setAreaName("")
+    setEditingAreaId("")
+  }
+
+  function resetMemberForm() {
+    setMemberForm({ full_name: "", sex: "", area_id: "", phone_number: "" })
+    setEditingMemberId("")
+  }
+
+  function handleSaveArea() {
+    const trimmedName = areaName.trim()
+    if (!trimmedName) return
+
+    run(
+      () => editingAreaId ? updateMetroArea(editingAreaId, trimmedName) : createMetroArea(trimmedName),
+      editingAreaId ? "Area updated" : "Area created"
+    )
+    resetAreaForm()
+  }
+
+  function handleEditArea(area: Area) {
+    setMembersView("areas")
+    setEditingAreaId(area.id)
+    setAreaName(area.name)
+  }
+
+  function handleDeleteArea(area: Area) {
+    if (!confirm(`Delete ${area.name}? Members in this area will become unassigned.`)) return
+    run(() => deleteMetroArea(area.id), "Area deleted")
+    if (editingAreaId === area.id) resetAreaForm()
+  }
+
+  function handleSaveMember() {
+    if (!memberForm.full_name.trim()) return
+
+    run(
+      () => editingMemberId ? updateMetroMember(editingMemberId, memberForm) : createMetroMember(memberForm),
+      editingMemberId ? "Member updated" : "Member saved"
+    )
+    resetMemberForm()
+  }
+
+  function handleEditMember(member: Member) {
+    setMembersView("members")
+    setEditingMemberId(member.id)
+    setMemberForm({
+      full_name: member.full_name,
+      sex: member.sex || "",
+      area_id: member.area_id || "",
+      phone_number: member.phone_number || "",
+    })
+  }
+
+  function handleDeleteMember(member: Member) {
+    if (!confirm(`Delete ${member.full_name}? This will remove their attendance and dues records too.`)) return
+    run(() => deleteMetroMember(member.id), "Member deleted")
+    if (editingMemberId === member.id) resetMemberForm()
   }
 
   async function handleSignOut() {
@@ -360,50 +433,183 @@ export function MetroSecretaryWorkspace({ data }: { data: WorkspaceData }) {
       </TabsContent>
 
       <TabsContent value="members" className="space-y-4">
-        <Card>
-          <CardHeader><CardTitle>Areas</CardTitle></CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            <Input className="max-w-xs" placeholder="Area name" value={areaName} onChange={(e) => setAreaName(e.target.value)} />
-            <Button className={metroPrimaryButton} disabled={isPending || !areaName.trim()} onClick={() => run(() => createMetroArea(areaName), "Area created")}>Add Area</Button>
-            {data.areas.map((area) => <Badge key={area.id} variant="secondary" className="px-3 py-1">{area.name}</Badge>)}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle>Members</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-4">
-              <Input placeholder="Full name" value={memberForm.full_name} onChange={(e) => setMemberForm({ ...memberForm, full_name: e.target.value })} />
-              <Select value={memberForm.sex || "none"} onValueChange={(value) => setMemberForm({ ...memberForm, sex: value === "none" ? "" : value })}>
-                <SelectTrigger><SelectValue placeholder="Sex" /></SelectTrigger>
-                <SelectContent><SelectItem value="none">Sex</SelectItem><SelectItem value="male">Male</SelectItem><SelectItem value="female">Female</SelectItem></SelectContent>
-              </Select>
-              <Select value={memberForm.area_id || "none"} onValueChange={(value) => setMemberForm({ ...memberForm, area_id: value === "none" ? "" : value })}>
-                <SelectTrigger><SelectValue placeholder="Area" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No area</SelectItem>
-                  {data.areas.map((area) => <SelectItem key={area.id} value={area.id}>{area.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Input placeholder="Phone number" value={memberForm.phone_number} onChange={(e) => setMemberForm({ ...memberForm, phone_number: e.target.value })} />
-              <Button className={metroPrimaryButton} disabled={isPending || !memberForm.full_name.trim()} onClick={() => run(() => createMetroMember(memberForm), "Member saved")}>Save Member</Button>
+        {membersView === "home" && (
+          <div className="grid gap-5 md:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setMembersView("areas")}
+              className="group rounded-lg border border-slate-200 bg-white p-6 text-left shadow-sm transition-all hover:border-indigo-200 hover:shadow-md"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-widest text-slate-400">Manage</p>
+                  <h2 className="mt-2 text-2xl font-extrabold text-slate-900">Areas</h2>
+                  <p className="mt-2 text-sm text-slate-500">Create areas and view each area's membership list.</p>
+                </div>
+                <MapPin className="h-7 w-7 text-indigo-500" />
+              </div>
+              <Badge className="mt-6 bg-indigo-50 text-indigo-700 hover:bg-indigo-50">{data.areas.length} Areas</Badge>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMembersView("members")}
+              className="group rounded-lg border border-slate-200 bg-white p-6 text-left shadow-sm transition-all hover:border-indigo-200 hover:shadow-md"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-widest text-slate-400">Manage</p>
+                  <h2 className="mt-2 text-2xl font-extrabold text-slate-900">Members</h2>
+                  <p className="mt-2 text-sm text-slate-500">Add, edit, delete, and assign choir members to areas.</p>
+                </div>
+                <Users className="h-7 w-7 text-indigo-500" />
+              </div>
+              <Badge className="mt-6 bg-indigo-50 text-indigo-700 hover:bg-indigo-50">{data.members.length} Members</Badge>
+            </button>
+          </div>
+        )}
+
+        {membersView === "areas" && (
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900">Areas</h2>
+                <p className="text-sm text-slate-500">Each area shows its membership list.</p>
+              </div>
+              <Button variant="outline" onClick={() => { resetAreaForm(); setMembersView("home") }}>Back</Button>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
+
+            <Card>
+              <CardHeader><CardTitle>{editingAreaId ? "Edit Area" : "Create Area"}</CardTitle></CardHeader>
+              <CardContent className="flex flex-wrap gap-3">
+                <Input className="max-w-sm" placeholder="Area name" value={areaName} onChange={(e) => setAreaName(e.target.value)} />
+                <Button className={metroPrimaryButton} disabled={isPending || !areaName.trim()} onClick={handleSaveArea}>
+                  {editingAreaId ? "Update Area" : "Add Area"}
+                </Button>
+                {editingAreaId && <Button variant="outline" onClick={resetAreaForm}>Cancel Edit</Button>}
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {membersByArea.map((group) => (
-                <div key={group.area.id} className="rounded-lg border border-slate-200 bg-white">
-                  <div className="border-b border-slate-100 px-4 py-3 font-semibold">{group.area.name}</div>
+                <div key={group.area.id} className="rounded-lg border border-slate-200 bg-white shadow-sm">
+                  <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-4 py-3">
+                    <div>
+                      <h3 className="font-bold text-slate-900">{group.area.name}</h3>
+                      <p className="text-xs text-slate-500">{group.members.length} {group.members.length === 1 ? "member" : "members"}</p>
+                    </div>
+                    {group.area.id !== "unassigned" && (
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-700" onClick={() => handleEditArea(group.area)}>
+                          <Edit3 className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700" onClick={() => handleDeleteArea(group.area)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                   <div className="divide-y divide-slate-100">
-                    {group.members.map((member) => (
+                    {group.members.length === 0 ? (
+                      <p className="px-4 py-5 text-sm text-slate-400">No members yet.</p>
+                    ) : group.members.map((member) => (
                       <div key={member.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                        <span className="font-medium">{member.full_name}</span>
-                        <span className="text-slate-500">{member.phone_number || member.sex || ""}</span>
+                        <div>
+                          <p className="font-semibold text-slate-800">{member.full_name}</p>
+                          <p className="text-xs text-slate-500">{member.phone_number || member.sex || "No phone number"}</p>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-700" onClick={() => handleEditMember(member)}>
+                            <Edit3 className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700" onClick={() => handleDeleteMember(member)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        )}
+
+        {membersView === "members" && (
+          <div className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900">Members</h2>
+                <p className="text-sm text-slate-500">Create members manually and assign each person to an area.</p>
+              </div>
+              <Button variant="outline" onClick={() => { resetMemberForm(); setMembersView("home") }}>Back</Button>
+            </div>
+
+            <Card>
+              <CardHeader><CardTitle>{editingMemberId ? "Edit Member" : "Create Member"}</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 md:grid-cols-4">
+                  <Input placeholder="Full name" value={memberForm.full_name} onChange={(e) => setMemberForm({ ...memberForm, full_name: e.target.value })} />
+                  <Select value={memberForm.sex || "none"} onValueChange={(value) => setMemberForm({ ...memberForm, sex: value === "none" ? "" : value })}>
+                    <SelectTrigger><SelectValue placeholder="Sex" /></SelectTrigger>
+                    <SelectContent><SelectItem value="none">Sex</SelectItem><SelectItem value="male">Male</SelectItem><SelectItem value="female">Female</SelectItem></SelectContent>
+                  </Select>
+                  <Select value={memberForm.area_id || "none"} onValueChange={(value) => setMemberForm({ ...memberForm, area_id: value === "none" ? "" : value })}>
+                    <SelectTrigger><SelectValue placeholder="Area" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No area</SelectItem>
+                      {data.areas.map((area) => <SelectItem key={area.id} value={area.id}>{area.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Input placeholder="Phone number" value={memberForm.phone_number} onChange={(e) => setMemberForm({ ...memberForm, phone_number: e.target.value })} />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button className={metroPrimaryButton} disabled={isPending || !memberForm.full_name.trim()} onClick={handleSaveMember}>
+                    {editingMemberId ? "Update Member" : "Save Member"}
+                  </Button>
+                  {editingMemberId && <Button variant="outline" onClick={resetMemberForm}>Cancel Edit</Button>}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Membership List</CardTitle></CardHeader>
+              <CardContent className="p-0 overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Sex</TableHead>
+                      <TableHead>Area</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.members.map((member) => (
+                      <TableRow key={member.id}>
+                        <TableCell className="font-semibold">{member.full_name}</TableCell>
+                        <TableCell>{member.sex || "-"}</TableCell>
+                        <TableCell>{member.area?.name || "No area"}</TableCell>
+                        <TableCell>{member.phone_number || "-"}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-500 hover:text-indigo-700" onClick={() => handleEditMember(member)}>
+                              <Edit3 className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700" onClick={() => handleDeleteMember(member)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </TabsContent>
 
       <TabsContent value="memos" className="grid gap-4 lg:grid-cols-[1fr_360px]">
