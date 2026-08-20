@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Building2, MessageSquareText, Trash2 } from "lucide-react"
+import { ArrowLeft, Building2, MessageSquareText, Search, Trash2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,7 +14,7 @@ import { deleteLedger, type LedgerBalance } from "@/app/management/actions"
 import { deleteVoucher } from "@/app/vouchers/actions"
 import { AdjustBalanceDialog } from "@/components/accounting/adjust-balance-dialog"
 import { toast } from "sonner"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 type Metric = {
   label: string
@@ -111,10 +111,33 @@ export function InfoRecordProfile({
 }) {
   const router = useRouter()
   const [deletingVoucherId, setDeletingVoucherId] = useState<string | null>(null)
+  const [transactionSearch, setTransactionSearch] = useState("")
   const currentYear = new Date().getFullYear()
   const startDate = transactionStartDate || `${currentYear}-01-01`
   const endDate = transactionEndDate || `${currentYear}-12-31`
   const transactionPeriod = `${formatIsoDate(startDate)} to ${formatIsoDate(endDate)}`
+  const visibleTransactionRows = useMemo(() => {
+    const query = transactionSearch.trim().toLowerCase()
+    return [...transactionRows]
+      .sort((a, b) => {
+        const dateDiff = new Date(a.date).getTime() - new Date(b.date).getTime()
+        if (dateDiff !== 0) return dateDiff
+        return String(a.voucherNumber || "").localeCompare(String(b.voucherNumber || ""))
+      })
+      .filter(row => {
+        if (!query) return true
+        const displayAmounts = getTransactionDisplayAmounts(row, transactionDisplayMode)
+        const searchable = [
+          formatIsoDate(row.date),
+          row.detailName,
+          row.voucherType,
+          row.voucherNumber || "",
+          displayAmounts.debit.toFixed(2),
+          displayAmounts.credit.toFixed(2),
+        ].join(" ").toLowerCase()
+        return searchable.includes(query)
+      })
+  }, [transactionRows, transactionSearch, transactionDisplayMode])
 
   async function handleDeleteVoucher(row: LedgerTransactionRow) {
     if (!confirm(`Delete ${row.voucherType} voucher ${row.voucherNumber || ""}? This removes it from every account it touches.`)) return
@@ -245,6 +268,15 @@ export function InfoRecordProfile({
                       <Input id="end" name="end" type="date" defaultValue={endDate} className="w-full sm:w-[180px]" onChange={(event) => event.currentTarget.form?.requestSubmit()} />
                     </div>
                   </form>
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Input
+                      value={transactionSearch}
+                      onChange={event => setTransactionSearch(event.target.value)}
+                      placeholder="Search transactions"
+                      className="h-11 pl-9"
+                    />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
@@ -261,14 +293,14 @@ export function InfoRecordProfile({
                     </TableRow>
                   </TableHeader>
                   <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
-                    {transactionRows.length === 0 ? (
+                    {visibleTransactionRows.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={7} className="py-8 text-center text-slate-500">
-                          No transactions recorded for this period.
+                          {transactionRows.length === 0 ? "No transactions recorded for this period." : "No transactions match your search."}
                         </TableCell>
                       </TableRow>
                     ) : (
-                      transactionRows.map(item => {
+                      visibleTransactionRows.map(item => {
                         const displayAmounts = getTransactionDisplayAmounts(item, transactionDisplayMode)
                         return (
                           <TableRow key={item.id} className="cursor-pointer">

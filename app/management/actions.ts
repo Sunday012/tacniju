@@ -350,7 +350,7 @@ export async function updateLedger(id: string, payload: Partial<Omit<Ledger, "id
     revalidatePath("/accounting")
 }
 
-export async function adjustLedgerBalance(id: string, payload: { adjustmentType: "add" | "reduce"; amount: number; note?: string }) {
+export async function adjustLedgerBalance(id: string, payload: { adjustmentType: "add" | "reduce"; amount: number; note?: string; date?: string }) {
     const supabase = await createClient()
     const orgId = await getOrgId()
     const amount = Number(payload.amount || 0)
@@ -373,8 +373,13 @@ export async function adjustLedgerBalance(id: string, payload: { adjustmentType:
         : Number(ledger.opening_balance || 0)
     const adjustedOpening = currentOpening + (payload.adjustmentType === "add" ? amount : -amount)
     const note = payload.note?.trim()
-    const description = note
-        ? [ledger.description, `Balance adjusted: ${note}`].filter(Boolean).join("\n")
+    const date = payload.date?.trim()
+    const adjustmentNote = [
+        date ? `Date: ${date}` : null,
+        note || null,
+    ].filter(Boolean).join(" - ")
+    const description = adjustmentNote
+        ? [ledger.description, `Balance adjusted: ${adjustmentNote}`].filter(Boolean).join("\n")
         : ledger.description
 
     const { error } = await supabase
@@ -390,6 +395,14 @@ export async function adjustLedgerBalance(id: string, payload: { adjustmentType:
     if (error) throw error
     revalidatePath("/management")
     revalidatePath("/accounting")
+    revalidatePath("/accounting/info")
+    revalidatePath("/accounting/info/bank-account")
+    revalidatePath(`/accounting/info/bank-account/${id}`)
+    revalidatePath("/accounting/info/ledger")
+    revalidatePath(`/accounting/info/ledger/${id}`)
+    revalidatePath("/accounting/info/party")
+    revalidatePath(`/accounting/info/party/${id}`)
+    revalidatePath("/accounting/statements")
     return { success: true }
 }
 

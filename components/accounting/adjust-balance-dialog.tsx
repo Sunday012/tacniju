@@ -21,13 +21,14 @@ export function AdjustBalanceDialog({ ledgerId, ledgerName, balance }: { ledgerI
   const [adjustmentType, setAdjustmentType] = useState<"add" | "reduce">("add")
   const [amount, setAmount] = useState("")
   const [note, setNote] = useState("")
+  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [isPending, startTransition] = useTransition()
   const signed = (balance?.type === "Cr" ? -1 : 1) * Number(balance?.amount || 0)
   const nextSigned = signed + (adjustmentType === "add" ? Number(amount || 0) : -Number(amount || 0))
 
   function submit() {
     startTransition(async () => {
-      const result = await adjustLedgerBalance(ledgerId, { adjustmentType, amount: Number(amount || 0), note })
+      const result = await adjustLedgerBalance(ledgerId, { adjustmentType, amount: Number(amount || 0), note, date })
       if (!result.success) {
         toast.error(result.error)
         return
@@ -36,6 +37,7 @@ export function AdjustBalanceDialog({ ledgerId, ledgerName, balance }: { ledgerI
       setOpen(false)
       setAmount("")
       setNote("")
+      setDate(new Date().toISOString().slice(0, 10))
       router.refresh()
     })
   }
@@ -60,6 +62,10 @@ export function AdjustBalanceDialog({ ledgerId, ledgerName, balance }: { ledgerI
               <button type="button" onClick={() => setAdjustmentType("add")} className={`h-10 rounded-lg text-sm font-black ${adjustmentType === "add" ? "bg-emerald-500 text-white" : "text-slate-500"}`}>+ Add Balance</button>
               <button type="button" onClick={() => setAdjustmentType("reduce")} className={`h-10 rounded-lg text-sm font-black ${adjustmentType === "reduce" ? "bg-slate-900 text-white dark:bg-slate-950" : "text-slate-500"}`}>- Reduce Balance</button>
             </div>
+          </div>
+          <div>
+            <Label htmlFor="adjustment-date">Date</Label>
+            <Input id="adjustment-date" type="date" value={date} onChange={event => setDate(event.target.value)} className="mt-2" />
           </div>
           <Input type="number" min="0" step="0.01" value={amount} onChange={event => setAmount(event.target.value)} placeholder="Amount" />
           <Input value={note} onChange={event => setNote(event.target.value)} placeholder="Note or remarks" />

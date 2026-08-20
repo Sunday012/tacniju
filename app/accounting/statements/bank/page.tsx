@@ -1,11 +1,5 @@
-import { AccountingShell } from "@/components/accounting/accounting-shell"
+import { StatementReportPage } from "@/components/accounting/statement-report"
 
-export default function BankStatementPage() {
-  return (
-    <AccountingShell title="Bank Statement" backHref="/accounting/statements" backLabel="Statements">
-      <div className="rounded-xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">
-        Bank Statement setup is ready.
-      </div>
-    </AccountingShell>
-  )
+export default function BankStatementPage({ searchParams }: { searchParams?: { ledger?: string; start?: string; end?: string } }) {
+  return <StatementReportPage title="Bank Statement" optionKind="bank" searchParams={searchParams} />
 }

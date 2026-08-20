@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { AccountingShell } from "@/components/accounting/accounting-shell"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { getBillPendingRows } from "../bill-pending/actions"
@@ -9,8 +8,15 @@ function money(value: number) {
 
 export default async function OutstandingReceivablePage() {
   const [sales, income] = await Promise.all([getBillPendingRows("sales"), getBillPendingRows("income")])
-  const rows = [...sales, ...income]
-  const total = rows.reduce((sum, row) => sum + row.pendingValue, 0)
+  const rows = Array.from([...sales, ...income].reduce((map, row) => {
+    const current = map.get(row.party) || { party: row.party, vouchers: 0, amount: 0 }
+    current.vouchers += 1
+    current.amount += row.pendingValue
+    map.set(row.party, current)
+    return map
+  }, new Map<string, { party: string; vouchers: number; amount: number }>()).values())
+    .sort((a, b) => b.amount - a.amount || a.party.localeCompare(b.party))
+  const total = rows.reduce((sum, row) => sum + row.amount, 0)
 
   return (
     <AccountingShell title="Outstanding Receivables" backHref="/accounting/display/statement-of-accounts" backLabel="Statement of Accounts">
@@ -18,7 +24,7 @@ export default async function OutstandingReceivablePage() {
         <TableHeader>
           <TableRow>
             <TableHead>Party</TableHead>
-            <TableHead>Voucher</TableHead>
+            <TableHead className="text-right">Open Vouchers</TableHead>
             <TableHead className="text-right">Amount Owed</TableHead>
           </TableRow>
         </TableHeader>
@@ -26,10 +32,10 @@ export default async function OutstandingReceivablePage() {
           {rows.length === 0 ? (
             <TableRow><TableCell colSpan={3} className="py-8 text-center text-slate-500">No outstanding receivables.</TableCell></TableRow>
           ) : rows.map(row => (
-            <TableRow key={row.id}>
+            <TableRow key={row.party}>
               <TableCell className="font-bold">{row.party}</TableCell>
-              <TableCell><Link href={`/accounting/vouchers/${row.voucherType.toLowerCase()}/${row.id}`} className="hover:text-indigo-700 hover:underline">{row.voucherNo}</Link></TableCell>
-              <TableCell className="text-right font-mono font-bold">{money(row.pendingValue)}</TableCell>
+              <TableCell className="text-right font-mono">{row.vouchers.toLocaleString()}</TableCell>
+              <TableCell className="text-right font-mono font-bold">{money(row.amount)}</TableCell>
             </TableRow>
           ))}
           <TableRow className="bg-slate-50">
