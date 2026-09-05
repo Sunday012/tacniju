@@ -52,6 +52,28 @@ function optionalVoucherValue(value: string | undefined) {
     return value
 }
 
+function revalidateAccountingViews(ledgerIds: string[] = []) {
+    const uniqueLedgerIds = Array.from(new Set(ledgerIds.filter(Boolean)))
+
+    revalidatePath("/vouchers")
+    revalidatePath("/inventory")
+    revalidatePath("/accounting")
+    revalidatePath("/accounting/day-book")
+    revalidatePath("/accounting/info")
+    revalidatePath("/accounting/info/bank-account")
+    revalidatePath("/accounting/banking")
+    revalidatePath("/accounting/info/ledger")
+    revalidatePath("/accounting/info/party")
+    revalidatePath("/accounting/statements")
+    revalidatePath("/accounting/programs")
+
+    for (const ledgerId of uniqueLedgerIds) {
+        revalidatePath(`/accounting/info/bank-account/${ledgerId}`)
+        revalidatePath(`/accounting/info/ledger/${ledgerId}`)
+        revalidatePath(`/accounting/info/party/${ledgerId}`)
+    }
+}
+
 export async function saveVoucher(payload: VoucherFormPayload) {
     const supabase = await createClient()
     const orgId = await getOrgId()
@@ -122,10 +144,7 @@ export async function saveVoucher(payload: VoucherFormPayload) {
         }
     }
 
-    revalidatePath("/vouchers")
-    revalidatePath("/inventory")
-    revalidatePath("/accounting")
-    revalidatePath("/accounting/programs")
+    revalidateAccountingViews(payload.ledger_entries.map(entry => entry.ledger_id))
     if (payload.voucher_type === "Expense") revalidatePath("/accounting/display/expense-purchase-register")
     if (payload.voucher_type === "Income") revalidatePath("/accounting/display/income-register")
     return header
@@ -162,7 +181,7 @@ export async function updateVoucher(payload: VoucherUpdatePayload) {
 
     const { data: existingEntries, error: existingEntriesError } = await supabase
         .from("voucher_entries")
-        .select("id")
+        .select("id, ledger_id")
         .eq("voucher_id", payload.id)
 
     if (existingEntriesError) throw existingEntriesError
@@ -239,11 +258,10 @@ export async function updateVoucher(payload: VoucherUpdatePayload) {
         if (itemErr) throw itemErr
     }
 
-    revalidatePath("/vouchers")
-    revalidatePath("/inventory")
-    revalidatePath("/accounting")
-    revalidatePath("/accounting/day-book")
-    revalidatePath("/accounting/programs")
+    revalidateAccountingViews([
+        ...(existingEntries || []).map(entry => entry.ledger_id as string),
+        ...payload.ledger_entries.map(entry => entry.ledger_id),
+    ])
     if (payload.voucher_type === "Expense") revalidatePath("/accounting/display/expense-purchase-register")
     if (payload.voucher_type === "Income") revalidatePath("/accounting/display/income-register")
     revalidatePath(`/accounting/vouchers/${payload.voucher_type.toLowerCase()}/${payload.id}`)
@@ -323,6 +341,20 @@ export async function deleteVoucher(id: string) {
     const supabase = await createClient()
     const orgId = await getOrgId()
 
+    const { data: existing, error: existingError } = await supabase
+        .from("vouchers")
+        .select(`
+            voucher_type,
+            voucher_entries (
+                ledger_id
+            )
+        `)
+        .eq("id", id)
+        .eq("org_id", orgId)
+        .maybeSingle()
+
+    if (existingError) throw existingError
+
     const { error } = await supabase
         .from("vouchers")
         .delete()
@@ -331,11 +363,7 @@ export async function deleteVoucher(id: string) {
 
     if (error) throw error
 
-    revalidatePath("/vouchers")
-    revalidatePath("/inventory")
-    revalidatePath("/accounting")
-    revalidatePath("/accounting/day-book")
-    revalidatePath("/accounting/programs")
+    revalidateAccountingViews((existing?.voucher_entries || []).map((entry: any) => entry.ledger_id as string))
     revalidatePath("/accounting/display/expense-purchase-register")
     revalidatePath("/accounting/display/income-register")
 }

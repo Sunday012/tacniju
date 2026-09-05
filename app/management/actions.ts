@@ -275,30 +275,62 @@ export async function getLedgers() {
 
 export type LedgerBalance = { amount: number; type: 'Dr' | 'Cr' }
 
+async function getVoucherEntryMovements(supabase: Awaited<ReturnType<typeof createClient>>, orgId: string) {
+    const { data: vouchers, error: vouchersError } = await supabase
+        .from("vouchers")
+        .select("id")
+        .eq("org_id", orgId)
+
+    if (vouchersError) {
+        console.error("Error fetching vouchers for ledger balances:", vouchersError)
+        return new Map<string, { dr: number; cr: number }>()
+    }
+
+    const voucherIds = (vouchers || []).map(voucher => voucher.id as string)
+    const moves = new Map<string, { dr: number; cr: number }>()
+
+    for (let index = 0; index < voucherIds.length; index += 500) {
+        const batch = voucherIds.slice(index, index + 500)
+        if (batch.length === 0) continue
+
+        const { data: movements, error: movementsError } = await supabase
+            .from("voucher_entries")
+            .select("ledger_id, debit_amount, credit_amount")
+            .in("voucher_id", batch)
+
+        if (movementsError) {
+            console.error("Error fetching voucher entries for ledger balances:", movementsError)
+            continue
+        }
+
+        for (const movement of movements || []) {
+            const id = movement.ledger_id as string
+            const curr = moves.get(id) || { dr: 0, cr: 0 }
+            curr.dr += Number(movement.debit_amount || 0)
+            curr.cr += Number(movement.credit_amount || 0)
+            moves.set(id, curr)
+        }
+    }
+
+    return moves
+}
+
 // Current (closing) balance per ledger: opening balance + netted voucher movements.
 export async function getLedgerBalances(): Promise<Record<string, LedgerBalance>> {
     const supabase = await createClient()
     const orgId = await getOrgId()
 
-    const { data: ledgersData } = await supabase
+    const { data: ledgersData, error: ledgersError } = await supabase
         .from("ledgers")
         .select("id, opening_balance, balance_type")
         .eq("org_id", orgId)
 
-    const { data: movements } = await supabase
-        .from("voucher_entries")
-        .select("ledger_id, debit_amount, credit_amount, vouchers!inner(org_id)")
-        .eq("vouchers.org_id", orgId)
-
-    const moves = new Map<string, { dr: number; cr: number }>()
-    for (const m of movements || []) {
-        const id = m.ledger_id as string
-        const curr = moves.get(id) || { dr: 0, cr: 0 }
-        curr.dr += Number(m.debit_amount || 0)
-        curr.cr += Number(m.credit_amount || 0)
-        moves.set(id, curr)
+    if (ledgersError) {
+        console.error("Error fetching ledgers for balances:", ledgersError)
+        return {}
     }
 
+    const moves = await getVoucherEntryMovements(supabase, orgId)
     const balances: Record<string, LedgerBalance> = {}
     for (const ledger of ledgersData || []) {
         const openingDr = ledger.balance_type === 'Dr' ? Number(ledger.opening_balance || 0) : 0
