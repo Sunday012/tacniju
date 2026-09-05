@@ -63,6 +63,11 @@ export default async function LedgerProfilePage({
       adjustLedgerId={ledger.id}
       adjustLedgerName={ledger.name}
       adjustBalance={balance}
+      legacyOpeningAdjustment={{
+        ledgerId: ledger.id,
+        amount: Number(ledger.opening_balance || 0),
+        type: ledger.balance_type,
+      }}
     />
   )
 }

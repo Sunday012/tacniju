@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Building2, MessageSquareText, Search, Trash2 } from "lucide-react"
+import { ArrowLeft, Building2, FilePlus2, MessageSquareText, Search, Trash2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { LedgerTransactionRow } from "@/app/accounting/actions"
-import { deleteLedger, type LedgerBalance } from "@/app/management/actions"
+import { deleteLedger, resetLedgerOpeningBalance, type LedgerBalance } from "@/app/management/actions"
 import { deleteVoucher } from "@/app/vouchers/actions"
 import { AdjustBalanceDialog } from "@/components/accounting/adjust-balance-dialog"
 import { toast } from "sonner"
@@ -33,6 +33,16 @@ type DetailSection = {
 
 type TransactionDisplayMode = "raw" | "bank-daybook" | "ledger-party"
 
+type LegacyOpeningAdjustment = {
+  ledgerId: string
+  amount: number
+  type: "Dr" | "Cr"
+}
+
+type VisibleTransactionRow = LedgerTransactionRow & {
+  rowKind?: "voucher" | "legacy-opening-adjustment"
+}
+
 function formatIsoDate(dateValue: string) {
   const [year, month, day] = dateValue.split("-")
   if (!year || !month || !day) return dateValue
@@ -45,7 +55,7 @@ function getVoucherHref(voucherType: string, voucherId: string) {
 }
 
 function getTransactionDisplayAmounts(item: LedgerTransactionRow, mode: TransactionDisplayMode) {
-  if (mode === "raw") {
+  if (mode === "raw" || item.voucherType === "Contra") {
     return {
       debit: item.debitAmount,
       credit: item.creditAmount,
@@ -72,6 +82,27 @@ function getTransactionDisplayAmounts(item: LedgerTransactionRow, mode: Transact
   }
 }
 
+function getTransactionName(item: LedgerTransactionRow, displayAmounts: { debit: number; credit: number }) {
+  if (item.detailName !== "Adjusted Balance") return item.detailName
+  return `Adjusted Balance (${displayAmounts.debit > 0 ? "+" : "-"})`
+}
+
+function makeLegacyOpeningRow(adjustment: LegacyOpeningAdjustment): VisibleTransactionRow | null {
+  if (adjustment.amount <= 0) return null
+
+  return {
+    id: `legacy-opening-${adjustment.ledgerId}`,
+    voucherId: "",
+    voucherNumber: "-",
+    voucherType: "Opening",
+    detailName: `Previous Balance Adjustment (${adjustment.type === "Dr" ? "+" : "-"})`,
+    date: "",
+    debitAmount: adjustment.type === "Dr" ? adjustment.amount : 0,
+    creditAmount: adjustment.type === "Cr" ? adjustment.amount : 0,
+    rowKind: "legacy-opening-adjustment",
+  }
+}
+
 export function InfoRecordProfile({
   title,
   subtitle,
@@ -90,6 +121,7 @@ export function InfoRecordProfile({
   adjustLedgerId,
   adjustLedgerName,
   adjustBalance,
+  legacyOpeningAdjustment,
 }: {
   title: string
   subtitle?: string
@@ -108,6 +140,7 @@ export function InfoRecordProfile({
   adjustLedgerId?: string
   adjustLedgerName?: string
   adjustBalance?: LedgerBalance | null
+  legacyOpeningAdjustment?: LegacyOpeningAdjustment | null
 }) {
   const router = useRouter()
   const [deletingVoucherId, setDeletingVoucherId] = useState<string | null>(null)
@@ -118,8 +151,11 @@ export function InfoRecordProfile({
   const transactionPeriod = `${formatIsoDate(startDate)} to ${formatIsoDate(endDate)}`
   const visibleTransactionRows = useMemo(() => {
     const query = transactionSearch.trim().toLowerCase()
-    return [...transactionRows]
+    const legacyRow = legacyOpeningAdjustment ? makeLegacyOpeningRow(legacyOpeningAdjustment) : null
+    return [...(legacyRow ? [legacyRow] : []), ...transactionRows]
       .sort((a, b) => {
+        if (a.rowKind === "legacy-opening-adjustment") return -1
+        if (b.rowKind === "legacy-opening-adjustment") return 1
         const dateDiff = new Date(a.date).getTime() - new Date(b.date).getTime()
         if (dateDiff !== 0) return dateDiff
         return String(a.voucherNumber || "").localeCompare(String(b.voucherNumber || ""))
@@ -137,7 +173,23 @@ export function InfoRecordProfile({
         ].join(" ").toLowerCase()
         return searchable.includes(query)
       })
-  }, [transactionRows, transactionSearch, transactionDisplayMode])
+  }, [legacyOpeningAdjustment, transactionRows, transactionSearch, transactionDisplayMode])
+
+  async function handleResetOpeningBalance(ledgerId: string) {
+    if (!confirm("Undo this previous balance adjustment? This resets the stored opening balance to zero.")) return
+
+    try {
+      const result = await resetLedgerOpeningBalance(ledgerId)
+      if (!result.success) {
+        toast.error(result.error)
+        return
+      }
+      toast.success("Previous balance adjustment undone")
+      router.refresh()
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to undo previous balance adjustment")
+    }
+  }
 
   async function handleDeleteVoucher(row: LedgerTransactionRow) {
     if (!confirm(`Delete ${row.voucherType} voucher ${row.voucherNumber || ""}? This removes it from every account it touches.`)) return
@@ -171,16 +223,16 @@ export function InfoRecordProfile({
   return (
     <div className="min-h-screen bg-[#F4F7FA] text-slate-900">
       <div className="bg-[#ececff]">
-        <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8">
-          <Link href={backHref} className="inline-flex items-center gap-2 text-base font-medium text-slate-700 transition hover:text-slate-950">
+        <div className="mx-auto max-w-5xl px-4 py-4 sm:px-6 lg:px-8">
+          <Link href={backHref} className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 transition hover:text-slate-950">
             <ArrowLeft className="h-5 w-5" />
             Back to {backLabel}
           </Link>
 
-          <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">{title}</h1>
-              {subtitle ? <p className="mt-2 text-base text-slate-600">{subtitle}</p> : null}
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{title}</h1>
+              {subtitle ? <p className="mt-1 text-sm text-slate-600">{subtitle}</p> : null}
             </div>
             {deleteLedgerId ? (
               <Button type="button" variant="outline" onClick={handleDeleteRecord} className="h-10 border-red-200 bg-red-50 px-3 text-red-600 hover:border-red-300 hover:bg-red-100 hover:text-red-700">
@@ -190,11 +242,11 @@ export function InfoRecordProfile({
             ) : null}
           </div>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
             {metrics.map(metric => (
               <div key={metric.label} className="border-l border-slate-500/50 pl-5">
-                <p className="text-xl font-medium text-slate-700">{metric.label}</p>
-                <p className="mt-2 text-4xl font-semibold tracking-tight text-slate-950">{metric.value}</p>
+                <p className="text-base font-medium text-slate-700">{metric.label}</p>
+                <p className="mt-1 text-3xl font-semibold tracking-tight text-slate-950">{metric.value}</p>
               </div>
             ))}
           </div>
@@ -245,6 +297,10 @@ export function InfoRecordProfile({
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <CardTitle className="text-2xl font-semibold text-slate-900">Transactions</CardTitle>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                      <Link href="/accounting/vouchers" className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50">
+                        <FilePlus2 className="h-4 w-4" />
+                        Add Voucher
+                      </Link>
                       {adjustLedgerId ? (
                         <AdjustBalanceDialog
                           ledgerId={adjustLedgerId}
@@ -302,19 +358,25 @@ export function InfoRecordProfile({
                     ) : (
                       visibleTransactionRows.map(item => {
                         const displayAmounts = getTransactionDisplayAmounts(item, transactionDisplayMode)
+                        const transactionName = getTransactionName(item, displayAmounts)
+                        const isLegacyOpening = item.rowKind === "legacy-opening-adjustment"
                         return (
                           <TableRow key={item.id} className="cursor-pointer">
-                            <TableCell className="text-slate-500">{formatIsoDate(item.date)}</TableCell>
+                            <TableCell className="text-slate-500">{isLegacyOpening ? "Before vouchers" : formatIsoDate(item.date)}</TableCell>
                             <TableCell className="font-medium text-slate-800">
-                              <Link href={getVoucherHref(item.voucherType, item.voucherId)} className="block hover:text-indigo-700">
-                                {item.detailName}
-                              </Link>
+                              {isLegacyOpening ? transactionName : (
+                                <Link href={getVoucherHref(item.voucherType, item.voucherId)} className="block hover:text-indigo-700">
+                                  {transactionName}
+                                </Link>
+                              )}
                             </TableCell>
                             <TableCell className="pl-8 text-slate-500">{item.voucherType}</TableCell>
                             <TableCell className="text-slate-500">
-                              <Link href={getVoucherHref(item.voucherType, item.voucherId)} className="hover:text-indigo-700">
-                                {item.voucherNumber || "-"}
-                              </Link>
+                              {isLegacyOpening ? "-" : (
+                                <Link href={getVoucherHref(item.voucherType, item.voucherId)} className="hover:text-indigo-700">
+                                  {item.voucherNumber || "-"}
+                                </Link>
+                              )}
                             </TableCell>
                             <TableCell className="text-right text-slate-700">
                               {displayAmounts.debit > 0 ? displayAmounts.debit.toLocaleString(undefined, { minimumFractionDigits: 2 }) : "-"}
@@ -325,9 +387,9 @@ export function InfoRecordProfile({
                             <TableCell className="text-right">
                               <button
                                 type="button"
-                                onClick={() => handleDeleteVoucher(item)}
-                                disabled={deletingVoucherId === item.voucherId}
-                                title={`Delete ${item.voucherType} voucher ${item.voucherNumber || ""}`}
+                                onClick={() => isLegacyOpening && legacyOpeningAdjustment ? handleResetOpeningBalance(legacyOpeningAdjustment.ledgerId) : handleDeleteVoucher(item)}
+                                disabled={!isLegacyOpening && deletingVoucherId === item.voucherId}
+                                title={isLegacyOpening ? "Undo previous balance adjustment" : `Delete ${item.voucherType} voucher ${item.voucherNumber || ""}`}
                                 className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                               >
                                 <Trash2 className="h-4 w-4" />

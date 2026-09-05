@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/server"
 import { revalidatePath } from "next/cache"
 import { getAccountingOrgId } from "@/lib/accounting-org"
+import { getNextVoucherNo, getVoucherPrefix } from "@/lib/voucher-numbering"
 
 async function getOrgId() {
     return getAccountingOrgId()
@@ -30,6 +31,66 @@ export async function getAccountGroups() {
         return []
     }
     return data as AccountGroup[]
+}
+
+async function getOrCreateAccountGroup(
+    supabase: Awaited<ReturnType<typeof createClient>>,
+    orgId: string,
+    name: string,
+    nature: AccountGroup["nature"]
+) {
+    const { data: existing } = await supabase
+        .from("account_groups")
+        .select("id")
+        .eq("org_id", orgId)
+        .eq("name", name)
+        .order("created_at", { ascending: true })
+        .limit(1)
+
+    if (existing && existing.length > 0) return existing[0].id as string
+
+    const { data, error } = await supabase
+        .from("account_groups")
+        .insert({ org_id: orgId, name, nature, parent_id: null })
+        .select("id")
+        .single()
+
+    if (error) throw error
+    return data.id as string
+}
+
+async function getOrCreateBalanceAdjustmentLedger(supabase: Awaited<ReturnType<typeof createClient>>, orgId: string) {
+    const { data: existing } = await supabase
+        .from("ledgers")
+        .select("id")
+        .eq("org_id", orgId)
+        .eq("name", "Balance Adjustment")
+        .eq("ledger_kind", "ledger")
+        .order("created_at", { ascending: true })
+        .limit(1)
+
+    if (existing && existing.length > 0) return existing[0].id as string
+
+    const groupId = await getOrCreateAccountGroup(supabase, orgId, "Balance Adjustments", "Expense")
+    const { data, error } = await supabase
+        .from("ledgers")
+        .insert({
+            org_id: orgId,
+            group_id: groupId,
+            name: "Balance Adjustment",
+            opening_balance: 0,
+            balance_type: "Dr",
+            is_cash_bank: false,
+            ledger_kind: "ledger",
+            source_context: "accounting",
+            active: true,
+            description: "Counter-ledger for manual balance adjustment vouchers.",
+        })
+        .select("id")
+        .single()
+
+    if (error) throw error
+    return data.id as string
 }
 
 export async function createAccountGroup(payload: Omit<AccountGroup, "id">) {
@@ -392,7 +453,7 @@ export async function adjustLedgerBalance(id: string, payload: { adjustmentType:
 
     const { data: ledger, error: fetchError } = await supabase
         .from("ledgers")
-        .select("id, opening_balance, balance_type, description")
+        .select("id, name")
         .eq("id", id)
         .eq("org_id", orgId)
         .maybeSingle()
@@ -400,31 +461,64 @@ export async function adjustLedgerBalance(id: string, payload: { adjustmentType:
     if (fetchError) throw fetchError
     if (!ledger) return { success: false, error: "Ledger not found." }
 
-    const currentOpening = ledger.balance_type === "Cr"
-        ? -Number(ledger.opening_balance || 0)
-        : Number(ledger.opening_balance || 0)
-    const adjustedOpening = currentOpening + (payload.adjustmentType === "add" ? amount : -amount)
     const note = payload.note?.trim()
-    const date = payload.date?.trim()
-    const adjustmentNote = [
-        date ? `Date: ${date}` : null,
+    const date = payload.date?.trim() || new Date().toISOString().slice(0, 10)
+    const adjustmentLedgerId = await getOrCreateBalanceAdjustmentLedger(supabase, orgId)
+    const voucherType = "Contra"
+    const prefix = getVoucherPrefix(voucherType)
+    const { data: lastVoucher } = await supabase
+        .from("vouchers")
+        .select("voucher_no")
+        .eq("org_id", orgId)
+        .eq("voucher_type", voucherType)
+        .like("voucher_no", `${prefix}-%`)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    const voucherNo = getNextVoucherNo(voucherType, lastVoucher ? [lastVoucher] : [])
+    const narration = [
+        `${payload.adjustmentType === "add" ? "Added" : "Reduced"} balance for ${ledger.name}`,
         note || null,
     ].filter(Boolean).join(" - ")
-    const description = adjustmentNote
-        ? [ledger.description, `Balance adjusted: ${adjustmentNote}`].filter(Boolean).join("\n")
-        : ledger.description
 
-    const { error } = await supabase
-        .from("ledgers")
-        .update({
-            opening_balance: Math.abs(adjustedOpening),
-            balance_type: adjustedOpening < 0 ? "Cr" : "Dr",
-            description,
+    const { data: header, error: headerError } = await supabase
+        .from("vouchers")
+        .insert({
+            org_id: orgId,
+            voucher_type: voucherType,
+            voucher_no: voucherNo,
+            date,
+            reference: "balance-adjustment",
+            narration,
         })
-        .eq("id", id)
-        .eq("org_id", orgId)
+        .select("id")
+        .single()
 
-    if (error) throw error
+    if (headerError) throw headerError
+
+    const ledgerEntry = {
+        voucher_id: header.id,
+        ledger_id: id,
+        debit_amount: payload.adjustmentType === "add" ? amount : 0,
+        credit_amount: payload.adjustmentType === "reduce" ? amount : 0,
+    }
+    const adjustmentEntry = {
+        voucher_id: header.id,
+        ledger_id: adjustmentLedgerId,
+        debit_amount: payload.adjustmentType === "reduce" ? amount : 0,
+        credit_amount: payload.adjustmentType === "add" ? amount : 0,
+        adjustment_reference: "Adjusted Balance",
+    }
+
+    const { error: entriesError } = await supabase
+        .from("voucher_entries")
+        .insert([ledgerEntry, adjustmentEntry])
+
+    if (entriesError) {
+        await supabase.from("vouchers").delete().eq("id", header.id)
+        throw entriesError
+    }
+
     revalidatePath("/management")
     revalidatePath("/accounting")
     revalidatePath("/accounting/info")
@@ -435,6 +529,40 @@ export async function adjustLedgerBalance(id: string, payload: { adjustmentType:
     revalidatePath("/accounting/info/party")
     revalidatePath(`/accounting/info/party/${id}`)
     revalidatePath("/accounting/statements")
+    revalidatePath("/accounting/day-book")
+    revalidatePath("/accounting/display/receipt-register")
+    revalidatePath("/accounting/display/payment-register")
+    return { success: true }
+}
+
+export async function resetLedgerOpeningBalance(id: string) {
+    const supabase = await createClient()
+    const orgId = await getOrgId()
+
+    if (!id) return { success: false, error: "Ledger is required." }
+
+    const { error } = await supabase
+        .from("ledgers")
+        .update({
+            opening_balance: 0,
+            balance_type: "Dr",
+        })
+        .eq("id", id)
+        .eq("org_id", orgId)
+
+    if (error) throw error
+
+    revalidatePath("/management")
+    revalidatePath("/accounting")
+    revalidatePath("/accounting/info")
+    revalidatePath("/accounting/info/bank-account")
+    revalidatePath(`/accounting/info/bank-account/${id}`)
+    revalidatePath("/accounting/info/ledger")
+    revalidatePath(`/accounting/info/ledger/${id}`)
+    revalidatePath("/accounting/info/party")
+    revalidatePath(`/accounting/info/party/${id}`)
+    revalidatePath("/accounting/statements")
+    revalidatePath("/accounting/day-book")
     return { success: true }
 }
 

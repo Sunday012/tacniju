@@ -67,6 +67,11 @@ export default async function BankAccountProfilePage({
       adjustLedgerId={account.id}
       adjustLedgerName={account.name}
       adjustBalance={currentBalance}
+      legacyOpeningAdjustment={{
+        ledgerId: account.id,
+        amount: Number(account.opening_balance || 0),
+        type: account.balance_type,
+      }}
     />
   )
 }
