@@ -1,13 +1,16 @@
+import { BarChart3, FileBarChart } from "lucide-react"
 import { AccountingShell } from "@/components/accounting/accounting-shell"
-import { ProgramsManager } from "@/components/accounting/programs-manager"
-import { getAccountingPrograms } from "@/app/accounting/actions"
+import { AccountingMenuList } from "@/components/accounting/accounting-menu-list"
 
-export default async function AccountingProgramsPage() {
-  const programs = await getAccountingPrograms()
+const programItems = [
+  { href: "/accounting/programs/budget", label: "Budget", icon: BarChart3 },
+  { href: "/accounting/programs/reports", label: "Reports", icon: FileBarChart },
+]
 
+export default function AccountingProgramsPage() {
   return (
-    <AccountingShell title="Programs" framed={false}>
-      <ProgramsManager programs={programs} hideTitle />
+    <AccountingShell title="Programs">
+      <AccountingMenuList items={programItems} />
     </AccountingShell>
   )
 }

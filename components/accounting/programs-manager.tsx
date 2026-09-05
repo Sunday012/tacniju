@@ -102,7 +102,7 @@ export function ProgramsManager({ programs, hideTitle = false }: { programs: Acc
           ) : programs.map(program => (
             <TableRow key={program.id}>
               <TableCell>
-                <Link href={`/accounting/programs/${program.id}`} className="font-bold text-slate-800 hover:text-indigo-700 hover:underline">
+                <Link href={`/accounting/programs/events/${program.id}`} className="font-bold text-slate-800 hover:text-indigo-700 hover:underline">
                   {program.name}
                 </Link>
               </TableCell>

@@ -66,6 +66,7 @@ function revalidateAccountingViews(ledgerIds: string[] = []) {
     revalidatePath("/accounting/info/party")
     revalidatePath("/accounting/statements")
     revalidatePath("/accounting/programs")
+    revalidatePath("/accounting/programs/events")
 
     for (const ledgerId of uniqueLedgerIds) {
         revalidatePath(`/accounting/info/bank-account/${ledgerId}`)
@@ -295,6 +296,65 @@ export async function getRecentVouchers() {
         return []
     }
     return data
+}
+
+export type VoucherStatisticsRow = {
+    voucher_type: VoucherType | string
+    count: number
+    total: number
+}
+
+export async function getVoucherStatistics() {
+    const supabase = await createClient()
+    const orgId = await getOrgId()
+    const pageSize = 1000
+    const summary = new Map<string, { count: number; total: number }>()
+
+    for (let from = 0; ; from += pageSize) {
+        const { data, error } = await supabase
+            .from("vouchers")
+            .select(`
+                id,
+                voucher_type,
+                voucher_entries (
+                    debit_amount,
+                    credit_amount
+                )
+            `)
+            .eq("org_id", orgId)
+            .order("created_at", { ascending: false })
+            .range(from, from + pageSize - 1)
+
+        if (error) {
+            console.error("Error fetching voucher statistics:", error)
+            return []
+        }
+
+        for (const voucher of data || []) {
+            const type = (voucher.voucher_type as string) || "Voucher"
+            const current = summary.get(type) || { count: 0, total: 0 }
+            const debitTotal = (voucher.voucher_entries || []).reduce(
+                (sum: number, entry: any) => sum + Number(entry.debit_amount || 0),
+                0
+            )
+            const creditTotal = (voucher.voucher_entries || []).reduce(
+                (sum: number, entry: any) => sum + Number(entry.credit_amount || 0),
+                0
+            )
+            summary.set(type, {
+                count: current.count + 1,
+                total: current.total + Math.max(debitTotal, creditTotal),
+            })
+        }
+
+        if (!data || data.length < pageSize) break
+    }
+
+    return Array.from(summary.entries()).map(([voucher_type, row]) => ({
+        voucher_type,
+        count: row.count,
+        total: row.total,
+    })) as VoucherStatisticsRow[]
 }
 
 export async function getVoucherById(id: string) {

@@ -29,8 +29,8 @@ export default async function AccountingProgramDetailPage({
     <AccountingShell
       title={data.program.name}
       framed={false}
-      backHref="/accounting/programs"
-      backLabel="Programs"
+      backHref="/accounting/programs/events"
+      backLabel="Events"
       hero={{
         title: data.program.name,
         subtitle: "Program Voucher Register",

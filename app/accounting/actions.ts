@@ -581,6 +581,7 @@ export async function createAccountingProgram(formData: FormData) {
   if (error) return { error: error.message }
 
   revalidatePath("/accounting/programs")
+  revalidatePath("/accounting/programs/events")
   revalidatePath("/accounting/vouchers/payment")
   return { success: true }
 }
@@ -609,6 +610,7 @@ export async function deleteAccountingProgram(id: string) {
   if (error) return { error: error.message }
 
   revalidatePath("/accounting/programs")
+  revalidatePath("/accounting/programs/events")
   revalidatePath("/accounting/vouchers/payment")
   return { success: true }
 }
