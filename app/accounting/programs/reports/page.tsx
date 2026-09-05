@@ -3,12 +3,12 @@ import { AccountingShell } from "@/components/accounting/accounting-shell"
 import { AccountingMenuList } from "@/components/accounting/accounting-menu-list"
 
 const reportItems = [
-  { href: "/accounting/programs/events", label: "Events Reports", icon: ClipboardList },
-  { href: "/dashboard/attendance", label: "Attendance Report", icon: Users },
-  { href: "/accounting/display/expense-purchase-register", label: "Expenses Report", icon: TrendingDown },
-  { href: "/accounting/display/income-register", label: "Income Report", icon: TrendingUp },
-  { href: "/accounting/display/outstanding-receivable", label: "Debtor's Report", icon: FileBarChart },
-  { href: "/accounting/display/outstanding-payable", label: "Creditor's Report", icon: Landmark },
+  { href: "/accounting/programs/reports/events", label: "Events Reports", icon: ClipboardList },
+  { href: "/accounting/programs/reports/attendance", label: "Attendance Report", icon: Users },
+  { href: "/accounting/programs/reports/expenses", label: "Expenses Report", icon: TrendingDown },
+  { href: "/accounting/programs/reports/income", label: "Income Report", icon: TrendingUp },
+  { href: "/accounting/programs/reports/debtors", label: "Debtor's Report", icon: FileBarChart },
+  { href: "/accounting/programs/reports/creditors", label: "Creditor's Report", icon: Landmark },
 ]
 
 export default function ProgramReportsPage() {
