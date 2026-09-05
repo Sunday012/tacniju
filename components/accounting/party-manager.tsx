@@ -117,42 +117,34 @@ export function PartyManager({ parties, balances = {}, hideTitle = false }: { pa
   }
 
   const partyDetailPanel = selectedParty ? (
-    <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-500">Party Record</p>
-        <h2 className="mt-2 text-2xl font-extrabold text-slate-900">{selectedParty.name}</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          {selectedParty.ledgerId ? "Manual Party" : "Auto Party"}
-        </p>
-      </div>
-
+    <div className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Phone</p>
-          <p className="mt-2 text-lg font-semibold text-slate-800">{selectedParty.phone_number || "-"}</p>
+          <p className="mt-2 break-words text-lg font-semibold text-slate-800">{selectedParty.phone_number || "-"}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Reservation</p>
-          <p className="mt-2 text-lg font-semibold text-slate-800">{selectedParty.reservation_number || "-"}</p>
+          <p className="mt-2 break-words text-lg font-semibold text-slate-800">{selectedParty.reservation_number || "-"}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Current Balance</p>
-          <p className={`mt-2 text-lg font-semibold ${formatBalance(selectedParty).amount >= 0 ? "text-emerald-600" : "text-red-600"}`}>{formatBalance(selectedParty).label}</p>
+          <p className={`mt-2 break-words text-lg font-semibold ${formatBalance(selectedParty).amount >= 0 ? "text-emerald-600" : "text-red-600"}`}>{formatBalance(selectedParty).label}</p>
         </div>
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Linked Ledger</p>
-          <p className="mt-2 text-lg font-semibold text-slate-800">{selectedParty.ledgerId || "-"}</p>
+          <p className="mt-2 break-all text-base font-semibold text-slate-800">{selectedParty.ledgerId || "-"}</p>
         </div>
       </div>
 
-      <div className="flex justify-end">
-        <div className="mr-auto">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+        <div className="sm:mr-auto">
           <Button
             type="button"
             variant="outline"
             onClick={() => handleDeleteParty(selectedParty)}
             disabled={isPending || !selectedParty.ledgerId}
-            className="h-10 border-red-200 bg-red-50 px-3 text-red-600 hover:border-red-300 hover:bg-red-100 hover:text-red-700"
+            className="h-10 w-full border-red-200 bg-red-50 px-3 text-red-600 hover:border-red-300 hover:bg-red-100 hover:text-red-700 sm:w-auto"
             title={selectedParty.ledgerId ? `Delete ${selectedParty.name}` : "Auto parties come from member records and can't be deleted here"}
           >
             <Trash2 className="mr-2 h-4 w-4" />
@@ -160,11 +152,11 @@ export function PartyManager({ parties, balances = {}, hideTitle = false }: { pa
           </Button>
         </div>
         {selectedParty.ledgerId && (
-          <div className="mr-2">
+          <div className="sm:mr-2">
             <AdjustBalanceDialog ledgerId={selectedParty.ledgerId} ledgerName={selectedParty.name} balance={balances[selectedParty.ledgerId]} />
           </div>
         )}
-        <Button asChild className="bg-indigo-600 text-white hover:bg-indigo-700">
+        <Button asChild className="w-full bg-indigo-600 text-white hover:bg-indigo-700 sm:w-auto">
           <Link href={`/accounting/info/party/${selectedParty.id}`}>View Full Page</Link>
         </Button>
       </div>
@@ -175,24 +167,24 @@ export function PartyManager({ parties, balances = {}, hideTitle = false }: { pa
     <div className="space-y-8">
       {isDesktop ? (
         <Sheet open={Boolean(selectedParty)} onOpenChange={(open) => !open && setSelectedParty(null)}>
-          <SheetContent side="right" className="w-full overflow-y-auto border-slate-200 bg-slate-50 p-0 text-slate-900 sm:max-w-xl">
-            <SheetHeader className="border-b border-slate-200 px-6 py-5">
+          <SheetContent side="right" className="flex h-dvh w-full flex-col overflow-hidden border-slate-200 bg-slate-50 p-0 text-slate-900 sm:max-w-xl">
+            <SheetHeader className="shrink-0 border-b border-slate-200 px-6 py-5">
               <SheetTitle>{selectedParty?.name || "Party Details"}</SheetTitle>
               <SheetDescription>Review the selected party record and continue to the full profile page.</SheetDescription>
             </SheetHeader>
-            <div className="px-6 py-5">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-5">
               {partyDetailPanel}
             </div>
           </SheetContent>
         </Sheet>
       ) : (
         <Drawer open={Boolean(selectedParty)} onOpenChange={(open) => !open && setSelectedParty(null)}>
-          <DrawerContent className="border-slate-200 bg-slate-50 text-slate-900">
-            <DrawerHeader>
+          <DrawerContent className="overflow-hidden border-slate-200 bg-slate-50 text-slate-900">
+            <DrawerHeader className="shrink-0">
               <DrawerTitle>{selectedParty?.name || "Party Details"}</DrawerTitle>
               <DrawerDescription>Review the selected party record and continue to the full profile page.</DrawerDescription>
             </DrawerHeader>
-            <div className="px-4 pb-6">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6">
               {partyDetailPanel}
             </div>
           </DrawerContent>

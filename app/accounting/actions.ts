@@ -277,6 +277,10 @@ export type LedgerTransactionRow = {
   voucherNumber: string | null
   voucherType: string
   detailName: string
+  detailLedgerId: string | null
+  detailLedgerKind: "ledger" | "party" | "bank" | string | null
+  detailSourceProfileId: string | null
+  detailIsCashBank: boolean | null
   debitAmount: number
   creditAmount: number
 }
@@ -306,7 +310,7 @@ async function fetchLedgerTransactions(ledgerIds: string[], startDate?: string, 
           debit_amount,
           credit_amount,
           adjustment_reference,
-          ledgers!voucher_entries_ledger_id_fkey(name)
+          ledgers!voucher_entries_ledger_id_fkey(id, name, ledger_kind, source_profile_id, is_cash_bank)
         )
       )
     `)
@@ -336,7 +340,8 @@ async function fetchLedgerTransactions(ledgerIds: string[], startDate?: string, 
     ))
     const counterparty = sameAmountOpposite || oppositeEntries[0]
     const referenceName = counterparty?.adjustment_reference
-    const ledgerName = counterparty?.ledgers?.name
+    const counterpartyLedger = counterparty?.ledgers
+    const ledgerName = counterpartyLedger?.name
 
     return {
       id: entry.id as string,
@@ -345,6 +350,10 @@ async function fetchLedgerTransactions(ledgerIds: string[], startDate?: string, 
       voucherNumber: (entry.vouchers?.voucher_no as string | null) || null,
       voucherType: (entry.vouchers?.voucher_type as string) || "Voucher",
       detailName: (referenceName || ledgerName || "Ledger") as string,
+      detailLedgerId: (counterpartyLedger?.id as string | null) || (counterparty?.ledger_id as string | null) || null,
+      detailLedgerKind: (counterpartyLedger?.ledger_kind as string | null) || null,
+      detailSourceProfileId: (counterpartyLedger?.source_profile_id as string | null) || null,
+      detailIsCashBank: typeof counterpartyLedger?.is_cash_bank === "boolean" ? counterpartyLedger.is_cash_bank : null,
       debitAmount: Number(entry.debit_amount || 0),
       creditAmount: Number(entry.credit_amount || 0),
     }

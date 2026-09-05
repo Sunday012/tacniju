@@ -11,6 +11,7 @@ export type BillPendingRow = {
   voucherNo: string
   voucherType: string
   party: string
+  partyId: string | null
   itemName: string
   initialQty: number
   pendingQty: number
@@ -55,7 +56,12 @@ function getParty(voucherType: string, entries: any[] = []) {
     if (voucherType === "Income") return Number(entry.debit_amount || 0) > 0
     return true
   })
-  return (preferred[0] || nonCash[0] || entries[0])?.ledgers?.name || "-"
+  const entry = preferred[0] || nonCash[0] || entries[0]
+  const ledger = entry?.ledgers
+  return {
+    name: ledger?.name || "-",
+    id: ledger?.ledger_kind === "party" ? (ledger.source_profile_id || entry?.ledger_id || null) : null,
+  }
 }
 
 function getItemSummary(items: any[] = []) {
@@ -89,7 +95,7 @@ export async function getBillPendingRows(kind: BillPendingKind): Promise<BillPen
         credit_amount,
         adjustment_method,
         adjustment_reference,
-        ledgers ( name, is_cash_bank )
+        ledgers ( name, is_cash_bank, ledger_kind, source_profile_id )
       ),
       voucher_items (
         qty,
@@ -145,13 +151,15 @@ export async function getBillPendingRows(kind: BillPendingKind): Promise<BillPen
       const pendingQty = value > 0 && itemSummary.qty > 0
         ? Math.max(itemSummary.qty * (pendingValue / value), 0)
         : 0
+      const party = getParty(voucher.voucher_type, voucher.voucher_entries || [])
 
       return {
         id: voucher.id,
         date: voucher.date,
         voucherNo: voucher.voucher_no,
         voucherType: voucher.voucher_type,
-        party: getParty(voucher.voucher_type, voucher.voucher_entries || []),
+        party: party.name,
+        partyId: party.id,
         itemName: itemSummary.itemName,
         initialQty: itemSummary.qty,
         pendingQty,

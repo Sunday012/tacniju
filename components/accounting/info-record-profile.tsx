@@ -87,6 +87,17 @@ function getTransactionName(item: LedgerTransactionRow, displayAmounts: { debit:
   return `Adjusted Balance (${displayAmounts.debit > 0 ? "+" : "-"})`
 }
 
+function getTransactionDetailHref(item: LedgerTransactionRow) {
+  if (!item.detailLedgerId) return null
+  if (item.detailLedgerKind === "party") {
+    return `/accounting/info/party/${item.detailSourceProfileId || item.detailLedgerId}`
+  }
+  if (item.detailLedgerKind === "bank" || item.detailIsCashBank) {
+    return `/accounting/info/bank-account/${item.detailLedgerId}`
+  }
+  return `/accounting/info/ledger/${item.detailLedgerId}`
+}
+
 function makeLegacyOpeningRow(adjustment: LegacyOpeningAdjustment): VisibleTransactionRow | null {
   if (adjustment.amount <= 0) return null
 
@@ -97,6 +108,10 @@ function makeLegacyOpeningRow(adjustment: LegacyOpeningAdjustment): VisibleTrans
     voucherType: "Opening",
     detailName: `Previous Balance Adjustment (${adjustment.type === "Dr" ? "+" : "-"})`,
     date: "",
+    detailLedgerId: null,
+    detailLedgerKind: null,
+    detailSourceProfileId: null,
+    detailIsCashBank: null,
     debitAmount: adjustment.type === "Dr" ? adjustment.amount : 0,
     creditAmount: adjustment.type === "Cr" ? adjustment.amount : 0,
     rowKind: "legacy-opening-adjustment",
@@ -361,15 +376,16 @@ export function InfoRecordProfile({
                         const displayAmounts = getTransactionDisplayAmounts(item, transactionDisplayMode)
                         const transactionName = getTransactionName(item, displayAmounts)
                         const isLegacyOpening = item.rowKind === "legacy-opening-adjustment"
+                        const detailHref = getTransactionDetailHref(item)
                         return (
                           <TableRow key={item.id} className="cursor-pointer">
                             <TableCell className="text-slate-500">{isLegacyOpening ? "Before vouchers" : formatIsoDate(item.date)}</TableCell>
                             <TableCell className="font-medium text-slate-800">
-                              {isLegacyOpening ? transactionName : (
-                                <Link href={getVoucherHref(item.voucherType, item.voucherId)} className="block hover:text-indigo-700">
+                              {detailHref ? (
+                                <Link href={detailHref} className="block hover:text-indigo-700">
                                   {transactionName}
                                 </Link>
-                              )}
+                              ) : transactionName}
                             </TableCell>
                             <TableCell className="pl-8 text-slate-500">{item.voucherType}</TableCell>
                             <TableCell className="text-slate-500">

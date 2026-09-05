@@ -31,6 +31,15 @@ function formatNumber(value: number, decimals = 2) {
   })
 }
 
+function partyLink(partyId: string | null, party: string, className = "hover:text-indigo-700") {
+  if (!partyId) return party
+  return (
+    <Link href={`/accounting/info/party/${partyId}`} className={className}>
+      {party}
+    </Link>
+  )
+}
+
 export default async function BillPendingPage({ params }: { params: { kind: BillPendingKind } }) {
   const config = reportConfig[params.kind]
   if (!config) notFound()
@@ -72,10 +81,12 @@ export default async function BillPendingPage({ params }: { params: { kind: Bill
                       </Link>
                     </TableCell>
                     <TableCell className="min-w-[260px] text-sm">
-                      <div className="font-bold text-slate-800">{isInventoryReport ? row.itemName : row.party}</div>
+                      <div className="font-bold text-slate-800">
+                        {isInventoryReport ? row.itemName : partyLink(row.partyId, row.party)}
+                      </div>
                       {isInventoryReport ? (
                         <div className="mt-0.5 text-xs italic text-slate-500">
-                          {params.kind === "sales" ? "To:" : "From:"} {row.party}
+                          {params.kind === "sales" ? "To:" : "From:"} {partyLink(row.partyId, row.party, "hover:text-indigo-700 hover:underline")}
                         </div>
                       ) : (
                         <div className="mt-0.5 text-xs italic text-slate-500">Ref: {row.voucherNo}</div>
