@@ -152,7 +152,8 @@ export function InfoRecordProfile({
   const visibleTransactionRows = useMemo(() => {
     const query = transactionSearch.trim().toLowerCase()
     const legacyRow = legacyOpeningAdjustment ? makeLegacyOpeningRow(legacyOpeningAdjustment) : null
-    return [...(legacyRow ? [legacyRow] : []), ...transactionRows]
+    const rows: VisibleTransactionRow[] = [...(legacyRow ? [legacyRow] : []), ...transactionRows]
+    return rows
       .sort((a, b) => {
         if (a.rowKind === "legacy-opening-adjustment") return -1
         if (b.rowKind === "legacy-opening-adjustment") return 1
