@@ -10,6 +10,7 @@ export type BillPendingRow = {
   date: string
   voucherNo: string
   voucherType: string
+  reference: string | null
   party: string
   partyId: string | null
   itemName: string
@@ -89,6 +90,7 @@ export async function getBillPendingRows(kind: BillPendingKind): Promise<BillPen
       date,
       voucher_no,
       voucher_type,
+      reference,
       voucher_entries (
         ledger_id,
         debit_amount,
@@ -158,6 +160,7 @@ export async function getBillPendingRows(kind: BillPendingKind): Promise<BillPen
         date: voucher.date,
         voucherNo: voucher.voucher_no,
         voucherType: voucher.voucher_type,
+        reference: (voucher.reference as string | null) || null,
         party: party.name,
         partyId: party.id,
         itemName: itemSummary.itemName,

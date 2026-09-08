@@ -359,8 +359,8 @@ export function InfoRecordProfile({
                       <TableHead>Name</TableHead>
                       <TableHead className="pl-8">VCH Type</TableHead>
                       <TableHead>VCH No.</TableHead>
-                      <TableHead className="text-right">Debit (NGN)</TableHead>
-                      <TableHead className="text-right">Credit (NGN)</TableHead>
+                      <TableHead className="text-right">Money In</TableHead>
+                      <TableHead className="text-right">Money Out</TableHead>
                       <TableHead className="w-12 text-right"><span className="sr-only">Delete</span></TableHead>
                     </TableRow>
                   </TableHeader>
