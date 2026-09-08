@@ -47,12 +47,12 @@ export async function StatementReportPage({
             <p className="mt-1 text-lg font-black text-slate-900 dark:text-slate-100">{selectedLedger?.name || "-"}</p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <p className="text-xs font-black uppercase tracking-widest text-slate-500">Total Debit</p>
-            <p className="mt-1 font-mono text-lg font-black text-red-600">₦{money(report.totalDebit)}</p>
+            <p className="text-xs font-black uppercase tracking-widest text-slate-500">Total Money In</p>
+            <p className="mt-1 font-mono text-lg font-black text-emerald-600">₦{money(report.totalDebit)}</p>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <p className="text-xs font-black uppercase tracking-widest text-slate-500">Total Credit</p>
-            <p className="mt-1 font-mono text-lg font-black text-emerald-600">₦{money(report.totalCredit)}</p>
+            <p className="text-xs font-black uppercase tracking-widest text-slate-500">Total Money Out</p>
+            <p className="mt-1 font-mono text-lg font-black text-red-600">₦{money(report.totalCredit)}</p>
           </div>
         </div>
 
@@ -64,8 +64,8 @@ export async function StatementReportPage({
                 <TableHead>Voucher</TableHead>
                 <TableHead>Particulars</TableHead>
                 <TableHead>Narration</TableHead>
-                <TableHead className="text-right">Debit</TableHead>
-                <TableHead className="text-right">Credit</TableHead>
+                <TableHead className="text-right">Money In</TableHead>
+                <TableHead className="text-right">Money Out</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -84,14 +84,14 @@ export async function StatementReportPage({
                   </TableCell>
                   <TableCell className="max-w-[260px] truncate text-slate-700 dark:text-slate-300">{row.particulars}</TableCell>
                   <TableCell className="max-w-[320px] truncate text-slate-500">{row.narration || "-"}</TableCell>
-                  <TableCell className="text-right font-mono font-semibold text-red-600">{money(row.debit)}</TableCell>
-                  <TableCell className="text-right font-mono font-semibold text-emerald-600">{money(row.credit)}</TableCell>
+                  <TableCell className="text-right font-mono font-semibold text-emerald-600">{money(row.debit)}</TableCell>
+                  <TableCell className="text-right font-mono font-semibold text-red-600">{money(row.credit)}</TableCell>
                 </TableRow>
               ))}
               <TableRow className="bg-slate-50 font-black dark:bg-slate-950">
                 <TableCell colSpan={4} className="text-right">Total</TableCell>
-                <TableCell className="text-right font-mono text-red-600">{money(report.totalDebit)}</TableCell>
-                <TableCell className="text-right font-mono text-emerald-600">{money(report.totalCredit)}</TableCell>
+                <TableCell className="text-right font-mono text-emerald-600">{money(report.totalDebit)}</TableCell>
+                <TableCell className="text-right font-mono text-red-600">{money(report.totalCredit)}</TableCell>
               </TableRow>
             </TableBody>
           </Table>
