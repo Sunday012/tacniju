@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Toaster } from "@/components/ui/sonner"
 import { Analytics } from "@vercel/analytics/next"
 import { PwaServiceWorker } from "@/components/pwa-service-worker"
+import { PwaInstallPrompt } from "@/components/pwa-install-prompt"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -73,6 +74,7 @@ export default function RootLayout({
           <Toaster />
           <ThemeToggle />
           <PwaServiceWorker />
+          <PwaInstallPrompt />
         </ThemeProvider>
       </body>
     </html>

@@ -3,14 +3,7 @@ import { ProductionMenuList, productionMenuItems } from "@/app/accounting/produc
 
 export default function AccountingInventoryPage() {
   return (
-    <AccountingShell
-      title="Inventory Information"
-      hero={{
-        eyebrow: "Inventory Info",
-        title: "Inventory Information",
-        badge: "Stock",
-      }}
-    >
+    <AccountingShell title="Inventory Information">
       <ProductionMenuList items={productionMenuItems} />
     </AccountingShell>
   )

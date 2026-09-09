@@ -11,6 +11,7 @@ type ProductionMenuItem = {
 export const productionMenuItems: ProductionMenuItem[] = [
   { label: "Production", href: "/accounting/inventory/production", icon: Boxes },
   { label: "Consumption", href: "/accounting/inventory/consumption", icon: Truck },
+  { label: "Reports", href: "/accounting/inventory/reports", icon: FileBarChart },
 ]
 
 export const inventoryProductionItems: ProductionMenuItem[] = [
