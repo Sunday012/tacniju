@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Godware">
+  <rect width="512" height="512" rx="112" fill="#1e1b4b"/>
+  <circle cx="256" cy="256" r="176" fill="#4338ca"/>
+  <path fill="#facc15" d="M256 92 108 180v28h296v-28L256 92Z"/>
+  <path fill="#fff" d="M142 230h44v138h-44V230Zm92 0h44v138h-44V230Zm92 0h44v138h-44V230ZM118 392h276v38H118v-38Z"/>
+  <path fill="#34d399" d="M256 138 148 202h216l-108-64Z"/>
+</svg>

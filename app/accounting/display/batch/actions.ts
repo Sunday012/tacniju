@@ -17,9 +17,18 @@ export type BatchListItem = {
   totalQty: number
 }
 
-export async function getBatches(): Promise<BatchListItem[]> {
+type StockBatchMode = "batch" | "takeaway"
+
+function getBatchModeConfig(mode: StockBatchMode) {
+  return mode === "takeaway"
+    ? { prefix: "TAK", narration: "Takeaway", movementType: "OUT" as const }
+    : { prefix: "BAT", narration: "Batch", movementType: "IN" as const }
+}
+
+export async function getBatches(mode: StockBatchMode = "batch"): Promise<BatchListItem[]> {
   const supabase = await createClient()
   const orgId = await getOrgId()
+  const config = getBatchModeConfig(mode)
 
   const { data, error } = await supabase
     .from("vouchers")
@@ -34,7 +43,7 @@ export async function getBatches(): Promise<BatchListItem[]> {
     `)
     .eq("org_id", orgId)
     .eq("voucher_type", "Purchase")
-    .like("voucher_no", "BAT-%")
+    .like("voucher_no", `${config.prefix}-%`)
     .not("reference", "is", null)
     .order("created_at", { ascending: true })
 
@@ -85,13 +94,19 @@ export async function saveBatch(prevState: any, formData: FormData) {
   const supabase = await createClient()
   const orgId = await getOrgId()
   const { data: { user } } = await supabase.auth.getUser()
+  const mode = String(formData.get("batch_mode") || "batch") === "takeaway" ? "takeaway" : "batch"
+  const config = getBatchModeConfig(mode)
   const batchId = String(formData.get("batch_id") || "").trim()
   const batchNo = String(formData.get("batch_no") || "").trim()
   const narration = String(formData.get("narration") || "").trim()
   const returnTo = String(formData.get("return_to") || "").trim()
-  const baseHref = returnTo === "production" ? "/accounting/production/batch-summary" : "/accounting/display/batch"
+  const baseHref = returnTo === "consumption"
+    ? "/accounting/inventory/consumption/takeaway-summary"
+    : returnTo === "production"
+      ? "/accounting/inventory/production/batch-summary"
+      : "/accounting/display/batch"
 
-  if (!batchNo) return { error: "Batch No is required" }
+  if (!batchNo) return { error: `${config.narration} No is required` }
 
   const rowIndexes = Array.from(formData.keys()).reduce((indexes, key) => {
     const match = String(key).match(/^(item|qty)_(\d+)$/)
@@ -135,7 +150,7 @@ export async function saveBatch(prevState: any, formData: FormData) {
       .from("vouchers")
       .update({
         reference: batchNo,
-        narration: narration || "Batch",
+        narration: narration || config.narration,
       })
       .eq("id", batchId)
       .eq("org_id", orgId)
@@ -147,13 +162,13 @@ export async function saveBatch(prevState: any, formData: FormData) {
       .from("vouchers")
       .select("voucher_no")
       .eq("org_id", orgId)
-      .like("voucher_no", "BAT-%")
+      .like("voucher_no", `${config.prefix}-%`)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle()
 
     const lastNumber = Number(String(lastVoucher?.voucher_no || "").split("-")[1] || 0)
-    const voucherNo = `BAT-${String(lastNumber + 1).padStart(3, "0")}`
+    const voucherNo = `${config.prefix}-${String(lastNumber + 1).padStart(3, "0")}`
     const { data: voucher, error } = await supabase
       .from("vouchers")
       .insert({
@@ -162,7 +177,7 @@ export async function saveBatch(prevState: any, formData: FormData) {
         voucher_no: voucherNo,
         date: new Date().toISOString().slice(0, 10),
         reference: batchNo,
-        narration: narration || "Batch",
+        narration: narration || config.narration,
         created_by: user?.id || null,
       })
       .select("id")
@@ -179,7 +194,7 @@ export async function saveBatch(prevState: any, formData: FormData) {
       qty: row.qty,
       rate: 0,
       amount: 0,
-      movement_type: "IN",
+      movement_type: config.movementType,
     }
   }))
 
@@ -187,8 +202,12 @@ export async function saveBatch(prevState: any, formData: FormData) {
 
   revalidatePath("/accounting/display/batch")
   revalidatePath("/accounting/production/batch-summary")
+  revalidatePath("/accounting/inventory/production/batch-summary")
+  revalidatePath("/accounting/inventory/consumption/takeaway-summary")
   revalidatePath(`/accounting/display/batch/${voucherId}`)
   revalidatePath(`/accounting/production/batch-summary/${voucherId}`)
+  revalidatePath(`/accounting/inventory/production/batch-summary/${voucherId}`)
+  revalidatePath(`/accounting/inventory/consumption/takeaway-summary/${voucherId}`)
   revalidatePath("/accounting/stock-summary")
   redirect(`${baseHref}/${voucherId}`)
 }
@@ -217,6 +236,8 @@ export async function deleteBatch(batchId: string, returnTo = "") {
 
   revalidatePath("/accounting/display/batch")
   revalidatePath("/accounting/production/batch-summary")
+  revalidatePath("/accounting/inventory/production/batch-summary")
+  revalidatePath("/accounting/inventory/consumption/takeaway-summary")
   revalidatePath("/accounting/stock-summary")
-  redirect(returnTo === "production" ? "/accounting/production/batch-summary" : "/accounting/display/batch")
+  redirect(returnTo === "consumption" ? "/accounting/inventory/consumption/takeaway-summary" : returnTo === "production" ? "/accounting/inventory/production/batch-summary" : "/accounting/display/batch")
 }

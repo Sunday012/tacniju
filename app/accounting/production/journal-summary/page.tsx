@@ -4,13 +4,19 @@ import { Edit3 } from "lucide-react"
 import { getProductionJournalSummaries } from "../actions"
 import { DeleteProductionJournalButton } from "@/components/accounting/production/DeleteProductionJournalButton"
 
-export default async function JournalSummaryPage() {
+export async function JournalSummaryScreen({
+  backHref = "/accounting/production",
+  backLabel = "Production",
+}: {
+  backHref?: string
+  backLabel?: string
+}) {
   const rows = await getProductionJournalSummaries()
   const rawMaterialRows = rows.filter(row => row.journalType === "Raw Material")
   const stockJournalRows = rows.filter(row => row.journalType === "Production")
 
   return (
-    <AccountingShell title="Journal Summary" backHref="/accounting/production" backLabel="Production" showTitle={false}>
+    <AccountingShell title="Journal Summary" backHref={backHref} backLabel={backLabel} showTitle={false}>
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-xl font-extrabold text-slate-800">Journal Summary</h2>
         <JournalSummaryTable
@@ -71,7 +77,7 @@ function JournalSummaryTable({
                 <td className="px-5 py-4">
                   <div className="flex justify-end gap-2">
                     <Link
-                      href={`${row.journalType === "Raw Material" ? "/accounting/production/raw-material-journal" : "/accounting/production/stock-journal"}?edit=${row.id}`}
+                      href={`${row.journalType === "Raw Material" ? "/accounting/inventory/consumption/kitchen" : "/accounting/production/stock-journal"}?edit=${row.id}`}
                       className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-indigo-200 bg-white px-3 text-xs font-black text-indigo-600 hover:bg-indigo-50"
                     >
                       <Edit3 className="h-3.5 w-3.5" />
@@ -87,4 +93,8 @@ function JournalSummaryTable({
       </div>
     </section>
   )
+}
+
+export default async function JournalSummaryPage() {
+  return <JournalSummaryScreen />
 }

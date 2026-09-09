@@ -37,6 +37,12 @@ type ProgramOption = {
     amount_to_contribute?: number
 }
 
+type BatchReferenceOption = {
+    id: string
+    batchNo: string
+    voucherNo: string
+}
+
 type ReferenceOption = {
     value: string
     label: string
@@ -182,6 +188,7 @@ export function VoucherEntry({
     fixedType,
     parties = [],
     programs = [],
+    batchReferences = [],
     balances = {},
     initialVoucher = null,
     pendingBills = [],
@@ -192,6 +199,7 @@ export function VoucherEntry({
     fixedType?: VoucherType,
     parties?: PartyOption[],
     programs?: ProgramOption[],
+    batchReferences?: BatchReferenceOption[],
     balances?: Record<string, LedgerBalance>,
     initialVoucher?: any | null,
     pendingBills?: PendingBillOption[],
@@ -202,6 +210,10 @@ export function VoucherEntry({
     const [date, setDate] = useState(initialVoucher?.date || new Date().toISOString().slice(0, 10))
     const [narration, setNarration] = useState(initialVoucher?.narration || "")
     const [reference, setReference] = useState(initialVoucher?.reference || "")
+    const referenceOptions = voucherType === "Purchase"
+        ? batchReferences.map(batch => ({ value: batch.voucherNo || batch.id, label: batch.batchNo }))
+        : programs.map(program => ({ value: program.id, label: program.name }))
+    const referenceLabel = voucherType === "Purchase" ? "Batch" : "Program"
 
     const [selectedItems, setSelectedItems] = useState<VoucherItemPayload[]>(() => buildInitialItems(initialVoucher))
     // We add 'amount' to support single-entry mode (Payment, Receipt, Contra)
@@ -832,14 +844,11 @@ export function VoucherEntry({
                             <Input type="date" value={date} onChange={e => setDate(e.target.value)} required className="h-8 max-w-44 bg-transparent border-t-0 border-x-0 border-b-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-slate-400 px-1 [&::-webkit-calendar-picker-indicator]:hidden" />
                         </div>
                         <div className="flex items-center gap-2">
-                            <Label className="w-16 text-slate-500">Program</Label>
+                            <Label className="w-16 text-slate-500">{referenceLabel}</Label>
                             <ComboboxInput
                                 value={reference}
                                 onChange={setReference}
-                                options={programs.map(program => ({
-                                    value: program.id,
-                                    label: program.name,
-                                }))}
+                                options={referenceOptions}
                                 placeholder=""
                                 className="h-8 max-w-72"
                                 inputClassName="h-8 bg-transparent border-t-0 border-x-0 border-b-slate-200 rounded-none focus-visible:ring-0 focus-visible:border-slate-400 px-1 shadow-none"

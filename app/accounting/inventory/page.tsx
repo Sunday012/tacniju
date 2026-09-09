@@ -1,21 +1,17 @@
 import { AccountingShell } from "@/components/accounting/accounting-shell"
-import { ItemManager } from "@/components/inventory/item-manager"
-import { getItems } from "@/app/inventory/actions"
+import { ProductionMenuList, productionMenuItems } from "@/app/accounting/production/production-menu"
 
-export default async function AccountingInventoryPage() {
-  const items = await getItems()
-
+export default function AccountingInventoryPage() {
   return (
     <AccountingShell
-      title="Inventory Management"
-      framed={false}
+      title="Inventory Information"
       hero={{
-        eyebrow: "Accounting Inventory",
-        title: "Inventory Management",
+        eyebrow: "Inventory Info",
+        title: "Inventory Information",
         badge: "Stock",
       }}
     >
-      <ItemManager items={items} hideTitle />
+      <ProductionMenuList items={productionMenuItems} />
     </AccountingShell>
   )
 }

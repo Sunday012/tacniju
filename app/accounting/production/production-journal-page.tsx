@@ -9,11 +9,15 @@ export async function ProductionJournalPage({
   title,
   subtitle,
   initialJournal,
+  backHref = "/accounting/production",
+  backLabel = "Production",
 }: {
   journalType: "Production" | "Raw Material"
   title: string
   subtitle: string
   initialJournal?: ProductionJournalDetail | null
+  backHref?: string
+  backLabel?: string
 }) {
   const items = await getItems()
   const innerTitle = journalType === "Raw Material" ? "Raw Materials" : "Production"
@@ -25,7 +29,7 @@ export async function ProductionJournalPage({
     : { title: "Produced Items / Output", icon: "out" as const, prefix: "in" as const }
 
   return (
-    <AccountingShell title={title} backHref="/accounting/production" backLabel="Production" framed={false}>
+    <AccountingShell title={title} backHref={backHref} backLabel={backLabel} framed={false}>
       <form action={saveProductionJournal} className="rounded-[2rem] border border-white/70 bg-white/85 p-5 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.08)] backdrop-blur-3xl sm:p-7">
         <input type="hidden" name="journal_type" value={journalType} />
         {initialJournal?.id ? <input type="hidden" name="journal_id" value={initialJournal.id} /> : null}
@@ -46,7 +50,7 @@ export async function ProductionJournalPage({
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm font-bold text-amber-800">
             No production items were found for the selected assembly. Use Production Inventory to create items, or switch to the assembly where the items were created.
             <div className="mt-4 flex flex-wrap gap-2">
-              <a href="/accounting/production/inventory/items" className="rounded-lg bg-amber-600 px-3 py-2 text-xs font-black text-white hover:bg-amber-700">
+              <a href="/accounting/inventory/production/inventory/items" className="rounded-lg bg-amber-600 px-3 py-2 text-xs font-black text-white hover:bg-amber-700">
                 Create Production Items
               </a>
               <a href="/select-church" className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-black text-amber-800 hover:bg-amber-100">

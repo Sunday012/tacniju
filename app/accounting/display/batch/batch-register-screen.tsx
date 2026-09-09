@@ -9,13 +9,19 @@ export async function BatchRegisterScreen({
   baseHref = "/accounting/display/batch",
   backHref = "/accounting/display/inventory-book",
   backLabel = "Inventory Book",
+  mode = "batch",
+  createLabel = "New Batch",
+  emptyMessage = "No batches yet. Create the first batch to begin.",
 }: {
   title?: string
   baseHref?: string
   backHref?: string
   backLabel?: string
+  mode?: "batch" | "takeaway"
+  createLabel?: string
+  emptyMessage?: string
 }) {
-  const batches = await getBatches()
+  const batches = await getBatches(mode)
   const items = batches.map((batch, index) => ({
     href: `${baseHref}/${batch.id}`,
     label: `${batch.batchNo || `Batch ${index + 1}`} (${batch.itemCount} items, ${batch.totalQty.toLocaleString()} qty)`,
@@ -31,14 +37,14 @@ export async function BatchRegisterScreen({
           className="inline-flex h-9 items-center gap-2 rounded-lg bg-indigo-600 px-3 text-sm font-black text-white shadow-sm hover:bg-indigo-700"
         >
           <Plus className="h-4 w-4" />
-          New Batch
+          {createLabel}
         </Link>
       </div>
       {items.length > 0 ? (
         <AccountingMenuList items={items} />
       ) : (
         <div className="rounded-lg border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm font-semibold text-slate-500">
-          No batches yet. Create the first batch to begin.
+          {emptyMessage}
         </div>
       )}
     </AccountingShell>

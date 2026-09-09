@@ -10,11 +10,13 @@ export async function BatchFormScreen({
   returnTo = "",
   backHref = "/accounting/display/batch",
   backLabel = "Batch Register",
+  mode = "batch",
 }: {
   params: { id: string }
   returnTo?: string
   backHref?: string
   backLabel?: string
+  mode?: "batch" | "takeaway"
 }) {
   const [items, batch] = await Promise.all([
     getItems(),
@@ -31,23 +33,26 @@ export async function BatchFormScreen({
     }
   })
 
+  const entryName = mode === "takeaway" ? "Takeaway" : "Batch"
+
   return (
     <AccountingShell
-      title={params.id === "new" ? "New Batch" : String(batch?.reference || "Batch")}
+      title={params.id === "new" ? `New ${entryName}` : String(batch?.reference || entryName)}
       backHref={backHref}
       backLabel={backLabel}
       framed={false}
     >
       <BatchForm>
         {returnTo ? <input type="hidden" name="return_to" value={returnTo} /> : null}
+        <input type="hidden" name="batch_mode" value={mode} />
         <input type="hidden" name="batch_id" value={params.id === "new" ? "" : params.id} />
 
         <div className="border-b border-slate-300 bg-slate-50 px-4 py-3">
           <label className="block max-w-xs">
-            <span className="mb-1 block text-xs font-black uppercase tracking-widest text-slate-500">Batch No</span>
+            <span className="mb-1 block text-xs font-black uppercase tracking-widest text-slate-500">{entryName} No</span>
             <input
               name="batch_no"
-              defaultValue={batch?.reference || `Batch ${Date.now().toString().slice(-3)}`}
+              defaultValue={batch?.reference || `${entryName} ${Date.now().toString().slice(-3)}`}
               className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-900 outline-none focus:border-indigo-400"
             />
           </label>

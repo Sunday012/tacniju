@@ -6,6 +6,7 @@ import { getRecentVouchers, getVoucherById, VoucherType } from "@/app/vouchers/a
 import { getItems } from "@/app/inventory/actions"
 import { getAccountingParties, getAccountingPrograms } from "@/app/accounting/actions"
 import { getBillPendingRows } from "@/app/accounting/display/bill-pending/actions"
+import { getBatches } from "@/app/accounting/display/batch/actions"
 import { getNextVoucherNo } from "@/lib/voucher-numbering"
 
 const typeMap: Record<string, VoucherType> = {
@@ -99,11 +100,13 @@ export default async function AccountingVoucherPage({
     : voucherType === "Receipt"
       ? Promise.all([getBillPendingRows("sales"), getBillPendingRows("income")]).then(([sales, income]) => [...sales, ...income])
       : Promise.resolve([])
-  const [ledgers, vouchers, items, programs, balances, editingVoucher, pendingBills] = await Promise.all([
+  const batchReferencesPromise = voucherType === "Purchase" ? getBatches("batch") : Promise.resolve([])
+  const [ledgers, vouchers, items, programs, batchReferences, balances, editingVoucher, pendingBills] = await Promise.all([
     getLedgers(),
     getRecentVouchers(),
     getItems(),
     getAccountingPrograms(),
+    batchReferencesPromise,
     getLedgerBalances(),
     searchParams?.edit ? getVoucherById(searchParams.edit) : Promise.resolve(null),
     pendingBillsPromise,
@@ -140,6 +143,7 @@ export default async function AccountingVoucherPage({
         items={items}
         parties={parties}
         programs={programs}
+        batchReferences={batchReferences}
         balances={balances}
         initialVoucher={editingVoucher}
         pendingBills={pendingBills}

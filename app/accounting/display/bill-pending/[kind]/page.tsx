@@ -11,6 +11,7 @@ const reportConfig: Record<BillPendingKind, { title: string; voucherSlug: string
   payment: { title: "Non Allocated Payment", voucherSlug: "payment" },
   expense: { title: "Expense Bill Pending", voucherSlug: "expense" },
   income: { title: "Income Bill Pending", voucherSlug: "income" },
+  batch: { title: "Batch Bill Pending", voucherSlug: "purchase" },
 }
 
 export function generateStaticParams() {
@@ -45,7 +46,7 @@ export default async function BillPendingPage({ params }: { params: { kind: Bill
   if (!config) notFound()
 
   const rows = await getBillPendingRows(params.kind)
-  const isInventoryReport = params.kind === "sales" || params.kind === "purchase"
+  const isInventoryReport = params.kind === "sales" || params.kind === "purchase" || params.kind === "batch"
 
   return (
     <AccountingShell title={config.title} backHref="/accounting/display/statement-of-inventory" backLabel="Statement of Inventory">

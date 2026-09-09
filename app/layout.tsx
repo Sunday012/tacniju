@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Anton } from "next/font/google";
 import "./globals.css"
@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Toaster } from "@/components/ui/sonner"
 import { Analytics } from "@vercel/analytics/next"
+import { PwaServiceWorker } from "@/components/pwa-service-worker"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -27,7 +28,29 @@ const anton = Anton({
 export const metadata: Metadata = {
   title: "Godware",
   description: "Church Accounting & Management System",
+  applicationName: "Godware",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Godware",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/icons/maskable-icon.svg", type: "image/svg+xml" },
+    ],
+  },
 };
+
+export const viewport: Viewport = {
+  themeColor: "#1e1b4b",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+}
 
 export default function RootLayout({
   children,
@@ -49,6 +72,7 @@ export default function RootLayout({
           <Analytics />
           <Toaster />
           <ThemeToggle />
+          <PwaServiceWorker />
         </ThemeProvider>
       </body>
     </html>

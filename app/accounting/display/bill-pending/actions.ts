@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/server"
 import { getAccountingOrgId } from "@/lib/accounting-org"
 
-export type BillPendingKind = "sales" | "purchase" | "payment" | "expense" | "income"
+export type BillPendingKind = "sales" | "purchase" | "payment" | "expense" | "income" | "batch"
 
 export type BillPendingRow = {
   id: string
@@ -31,6 +31,7 @@ const kindToVoucherType: Record<BillPendingKind, string> = {
   payment: "Payment",
   expense: "Expense",
   income: "Income",
+  batch: "Purchase",
 }
 
 const allocationTypes: Record<BillPendingKind, string[]> = {
@@ -39,6 +40,7 @@ const allocationTypes: Record<BillPendingKind, string[]> = {
   payment: [],
   expense: ["Payment"],
   income: ["Receipt"],
+  batch: ["Payment"],
 }
 
 function getEntryTotal(entries: any[] = []) {
@@ -144,7 +146,8 @@ export async function getBillPendingRows(kind: BillPendingKind): Promise<BillPen
     .filter((voucher: any) => {
       const voucherNo = String(voucher.voucher_no || "")
       const narration = String(voucher.narration || "")
-      return narration !== "Batch" && !voucherNo.startsWith("BAT-")
+      const isBatch = narration === "Batch" || voucherNo.startsWith("BAT-")
+      return kind === "batch" ? isBatch : !isBatch
     })
     .map((voucher: any) => {
       const itemSummary = getItemSummary(voucher.voucher_items || [])

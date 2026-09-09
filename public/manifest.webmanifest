@@ -1,0 +1,26 @@
+{
+  "name": "Godware Church Accounting",
+  "short_name": "Godware",
+  "description": "Church accounting and management system",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f4f7fa",
+  "theme_color": "#1e1b4b",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

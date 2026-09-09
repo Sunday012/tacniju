@@ -9,9 +9,11 @@ export default async function RawMaterialJournalPage({ searchParams }: { searchP
   return (
     <ProductionJournalPage
       journalType="Raw Material"
-      title="Raw Material Journal"
+      title="Kitchen"
       subtitle="Receive, issue, and consume raw materials for production."
       initialJournal={initialJournal}
+      backHref="/accounting/inventory/consumption"
+      backLabel="Consumption"
     />
   )
 }

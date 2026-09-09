@@ -77,6 +77,7 @@ export const displayMenuItems: DisplayMenuItem[] = [
       { label: "Category Summary", icon: FolderTree, href: "/accounting/stock-summary" },
       { label: "Sales Bill Pending", icon: Receipt, href: "/accounting/display/bill-pending/sales" },
       { label: "Income Bill Pending", icon: Receipt, href: "/accounting/display/bill-pending/income" },
+      { label: "Batch Bill Pending", icon: Boxes, href: "/accounting/display/bill-pending/batch" },
       { label: "Purchase Bill Pending", icon: Receipt, href: "/accounting/display/bill-pending/purchase" },
       { label: "Expense Bill Pending", icon: Receipt, href: "/accounting/display/bill-pending/expense" },
     ],

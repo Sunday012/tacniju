@@ -53,6 +53,18 @@ export type KitchenStockRow = {
   isVisible: boolean
 }
 
+export type StockJournalDiaryRow = {
+  itemId: string
+  itemName: string
+  date: string
+  voucherId: string
+  voucherNo: string
+  reference: string | null
+  narration: string
+  movementType: "IN" | "OUT"
+  qty: number
+}
+
 export async function getProductionCategories() {
   const supabase = await createClient()
   const orgId = await getOrgId()
@@ -406,6 +418,59 @@ export async function getKitchenStockRows(options: { visibleOnly?: boolean } = {
     .filter(row => row.quantity > 0)
     .filter(row => options.visibleOnly ? row.isVisible : true)
     .sort((a, b) => a.name.localeCompare(b.name))
+}
+
+export async function getStockJournalDiaryRows(options: { movementType?: "IN" | "OUT" } = {}): Promise<StockJournalDiaryRow[]> {
+  const supabase = await createClient()
+  const orgId = await getOrgId()
+
+  const { data, error } = await supabase
+    .from("voucher_items")
+    .select(`
+      item_id,
+      qty,
+      movement_type,
+      items ( name ),
+      vouchers!inner (
+        id,
+        org_id,
+        date,
+        voucher_no,
+        reference,
+        narration
+      )
+    `)
+    .eq("vouchers.org_id", orgId)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("Failed to fetch stock journal diary", error)
+    return []
+  }
+
+  return (data || [])
+    .map((row: any) => {
+      const item = Array.isArray(row.items) ? row.items[0] : row.items
+      const voucher = Array.isArray(row.vouchers) ? row.vouchers[0] : row.vouchers
+      return {
+        itemId: String(row.item_id || ""),
+        itemName: String(item?.name || "-"),
+        date: String(voucher?.date || ""),
+        voucherId: String(voucher?.id || ""),
+        voucherNo: String(voucher?.voucher_no || "-"),
+        reference: (voucher?.reference as string | null) || null,
+        narration: String(voucher?.narration || "-"),
+        movementType: row.movement_type === "OUT" ? "OUT" as const : "IN" as const,
+        qty: Number(row.qty || 0),
+      }
+    })
+    .filter(row => row.itemId && row.qty > 0)
+    .filter(row => options.movementType ? row.movementType === options.movementType : true)
+    .sort((a, b) => {
+      const itemDiff = a.itemName.localeCompare(b.itemName)
+      if (itemDiff !== 0) return itemDiff
+      return new Date(a.date).getTime() - new Date(b.date).getTime()
+    })
 }
 
 export async function toggleKitchenFoodVisibility(itemId: string, currentVisibility: boolean) {

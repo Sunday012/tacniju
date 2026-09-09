@@ -112,7 +112,6 @@ export function AccountingGateway({ orgName, dashboardHref = "/dashboard" }: { o
               <GatewayLink href="/accounting/vouchers" hotkey="V" label="Accounting Vouchers" />
               <GatewayLink href="/accounting/inventory-vouchers" hotkey="N" label="Inventory Vouchers" />
               <GatewayLink href="/accounting/programs" hotkey="G" label="Programs" />
-              <GatewayLink href="/accounting/production" hotkey="R" label="Production" />
             </GatewaySection>
 
             <GatewaySection title="Reports">
