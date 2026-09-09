@@ -140,7 +140,7 @@ function buildInitialLedgerState(voucher: any | null, type: VoucherType, ledgers
     if (type === "Expense") {
         const partyEntry = entries.find((entry: any) => (
             getPartyIdForLedger(entry.ledger_id, parties, ledgers) &&
-            Number(entry.debit_amount || 0) > 0
+            Number(entry.credit_amount || 0) > 0
         )) || entries.find((entry: any) => getPartyIdForLedger(entry.ledger_id, parties, ledgers))
         const expenseEntries = entries.filter((entry: any) => entry.ledger_id !== partyEntry?.ledger_id)
 
@@ -292,9 +292,10 @@ export function VoucherEntry({
         }
     }, [voucherType, needsItems])
 
-    // Payment credits the top cash/bank account. Expense is a levy/bill raised:
-    // it debits the selected party and credits the levy/expense ledger without touching bank/cash.
+    // Payment credits cash/bank and debits the payee. Expense credits the
+    // selected party and debits the expense ledger without touching bank/cash.
     const isExpenseLevy = voucherType === "Expense" || voucherType === "Levy"
+    const isExpenseVoucher = voucherType === "Expense"
     const isPaymentLike = voucherType === "Payment"
     const isReceiptLike = voucherType === "Receipt" || voucherType === "Income" || voucherType === "Program"
     const isSingleEntry = isPaymentLike || isExpenseLevy || isReceiptLike || voucherType === "Contra"
@@ -363,15 +364,15 @@ export function VoucherEntry({
                 const partyLedgerId = resolvedPartyLedgerId || ledgers.find(l => l.source_profile_id === selectedPartyId)?.id || selectedPartyId
                 finalLedgers.push({
                     ledger_id: partyLedgerId,
-                    debit_amount: totalAmount,
-                    credit_amount: 0,
+                    debit_amount: isExpenseVoucher ? 0 : totalAmount,
+                    credit_amount: isExpenseVoucher ? totalAmount : 0,
                     adjustment_method: "On Account",
                 })
                 validLines.forEach(line => {
                     finalLedgers.push({
                         ledger_id: line.ledger_id,
-                        debit_amount: 0,
-                        credit_amount: line.amount,
+                        debit_amount: isExpenseVoucher ? line.amount : 0,
+                        credit_amount: isExpenseVoucher ? 0 : line.amount,
                         adjustment_reference: line.adjustment_reference,
                         due_date: line.due_date,
                     })

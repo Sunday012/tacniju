@@ -53,7 +53,8 @@ function getParty(voucherType: string, entries: any[] = []) {
   const preferred = nonCash.filter(entry => {
     if (voucherType === "Sales") return Number(entry.debit_amount || 0) > 0
     if (voucherType === "Purchase") return Number(entry.credit_amount || 0) > 0
-    if (voucherType === "Payment" || voucherType === "Expense") return Number(entry.debit_amount || 0) > 0
+    if (voucherType === "Payment") return Number(entry.debit_amount || 0) > 0
+    if (voucherType === "Expense") return Number(entry.credit_amount || 0) > 0
     if (voucherType === "Income") return Number(entry.debit_amount || 0) > 0
     return true
   })
