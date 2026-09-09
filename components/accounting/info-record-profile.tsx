@@ -55,6 +55,14 @@ function getVoucherHref(voucherType: string, voucherId: string) {
 }
 
 function getTransactionDisplayAmounts(item: LedgerTransactionRow, mode: TransactionDisplayMode) {
+  if (mode === "ledger-party" && item.voucherType === "Expense") {
+    const amount = Math.max(item.debitAmount, item.creditAmount)
+    return {
+      debit: 0,
+      credit: amount,
+    }
+  }
+
   if (mode === "raw" || mode === "ledger-party" || item.voucherType === "Contra") {
     return {
       debit: item.debitAmount,
