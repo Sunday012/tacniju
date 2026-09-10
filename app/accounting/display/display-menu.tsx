@@ -7,6 +7,7 @@ import {
   LineChart,
   Package,
   Receipt,
+  Search,
   Scale,
   ScrollText,
 } from "lucide-react"
@@ -31,6 +32,11 @@ export const displayMenuItems: DisplayMenuItem[] = [
     label: "Day Book",
     icon: BookOpen,
     href: "/accounting/day-book",
+  },
+  {
+    label: "Deep Search",
+    icon: Search,
+    href: "/accounting/display/deep-search",
   },
   {
     label: "Account Book",
