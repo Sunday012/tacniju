@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { format, parseISO } from "date-fns"
-import { ArrowLeft, BookOpenText, CalendarDays, FolderTree } from "lucide-react"
+import { ArrowLeft, BookOpenText, CalendarDays, FolderTree, Printer } from "lucide-react"
 import { getContentCategories, getContentRecords, requireContentRecordType } from "@/app/actions/content-records"
 import { ContentRecordActions } from "@/components/admin/records/ContentRecordActions"
 import { contentRecordLabels } from "@/lib/content-records"
@@ -56,6 +56,10 @@ export default async function ContentRecordSummaryPage({
           <Link href={`/admin/records/${kind}/new`} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-black text-white shadow-sm hover:bg-indigo-700">
             <BookOpenText className="h-4 w-4" />
             New
+          </Link>
+          <Link href={`/admin/records/${kind}/print`} className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 hover:bg-slate-50">
+            <Printer className="h-4 w-4" />
+            Print / PDF
           </Link>
         </div>
       </div>

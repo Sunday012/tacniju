@@ -97,6 +97,16 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
         ],
       },
       {
+        name: "Memos",
+        href: "/admin/records/memos",
+        icon: FileText,
+        children: [
+          { name: "New", href: "/admin/records/memos/new", icon: FileText },
+          { name: "Category", href: "/admin/records/memos/category", icon: BookMarked },
+          { name: "Summary", href: "/admin/records/memos/summary", icon: FileText },
+        ],
+      },
+      {
         name: "Teachings",
         href: "/admin/records/teachings",
         icon: BookMarked,

@@ -3,7 +3,7 @@
 import { useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Eye, Pencil, Trash2 } from "lucide-react"
+import { Eye, Pencil, Printer, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { setPresentationState } from "@/app/actions/presentation"
 import { deleteContentRecord } from "@/app/actions/content-records"
@@ -65,6 +65,13 @@ export function ContentRecordActions({
         title="Edit record"
       >
         <Pencil className="h-4 w-4" />
+      </Link>
+      <Link
+        href={`/admin/records/${recordType}/${recordId}/print`}
+        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+        title="Print or save as PDF"
+      >
+        <Printer className="h-4 w-4" />
       </Link>
       <button
         type="button"

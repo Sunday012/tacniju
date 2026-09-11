@@ -1,9 +1,10 @@
 import Link from "next/link"
-import { Award, BookMarked, Mic2, Music, ScrollText } from "lucide-react"
+import { Award, BookMarked, FileText, Mic2, Music, ScrollText } from "lucide-react"
 
 const recordsItems = [
   { label: "Dreams", href: "/admin/records/dreams", icon: BookMarked },
   { label: "Lyrics", href: "/admin/records/lyrics", icon: Music },
+  { label: "Memos", href: "/admin/records/memos", icon: FileText },
   { label: "Teachings", href: "/admin/records/teachings", icon: ScrollText },
   { label: "Prophecies", href: "/admin/records/prophecies", icon: Mic2 },
   { label: "Points", href: "/admin/points", icon: Award },

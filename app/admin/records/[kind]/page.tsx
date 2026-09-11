@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { BookOpenText, FolderTree, MicVocal, ReceiptText } from "lucide-react"
+import { BookOpenText, FolderTree, MicVocal, Printer, ReceiptText } from "lucide-react"
 import { requireContentRecordType } from "@/app/actions/content-records"
 import { contentRecordLabels } from "@/lib/content-records"
 
@@ -11,6 +11,7 @@ export default async function ContentRecordsPage({ params }: { params: { kind: s
     ...(kind === "teachings" ? [{ label: "Transcribe", href: "/admin/records/teachings/transcribe", icon: MicVocal }] : []),
     { label: "Category", href: `/admin/records/${kind}/category`, icon: FolderTree },
     { label: "Summary", href: `/admin/records/${kind}/summary`, icon: ReceiptText },
+    { label: "Print / Save PDF", href: `/admin/records/${kind}/print`, icon: Printer },
   ]
 
   return (

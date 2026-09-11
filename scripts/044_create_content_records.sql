@@ -2,7 +2,7 @@
 
 CREATE TABLE IF NOT EXISTS public.content_record_categories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    record_type TEXT NOT NULL CHECK (record_type IN ('lyrics', 'teachings', 'prophecies')),
+    record_type TEXT NOT NULL CHECK (record_type IN ('lyrics', 'teachings', 'prophecies', 'memos')),
     name TEXT NOT NULL,
     description TEXT,
     is_active BOOLEAN NOT NULL DEFAULT true,
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS public.content_record_categories (
 
 CREATE TABLE IF NOT EXISTS public.content_records (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    record_type TEXT NOT NULL CHECK (record_type IN ('lyrics', 'teachings', 'prophecies')),
+    record_type TEXT NOT NULL CHECK (record_type IN ('lyrics', 'teachings', 'prophecies', 'memos')),
     record_date DATE NOT NULL,
     profile_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
     category_id UUID REFERENCES public.content_record_categories(id) ON DELETE SET NULL,

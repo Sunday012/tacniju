@@ -23,7 +23,7 @@ function Lines({ lines, side }: { lines: StockReportLine[]; side: "in" | "out" }
         </tr>
       ) : lines.map(line => (
         <tr key={line.itemId} className="border-b border-slate-100 text-sm last:border-b-0">
-          <td className="min-w-[180px] px-3 py-3 font-semibold text-slate-800">{line.itemName}</td>
+          <td className="min-w-[220px] px-3 py-3 font-semibold text-slate-800">{line.itemName}</td>
           <td className={`px-3 py-3 text-right font-mono font-semibold ${color}`}>{qty(line.qty)}</td>
           <td className="px-3 py-3 text-right font-mono text-xs font-semibold text-slate-500">{line.entries.toLocaleString()}</td>
         </tr>
@@ -42,7 +42,7 @@ function ReportSide({
   side: "in" | "out"
 }) {
   return (
-    <table className="w-full min-w-[360px] text-left">
+    <table className="w-full text-left">
       <thead>
         <tr className="border-b border-slate-300 bg-slate-50">
           <th colSpan={3} className="px-3 py-2 text-xs font-black uppercase tracking-widest text-slate-700">
@@ -99,25 +99,27 @@ export default async function InventoryReportsPage() {
 
   return (
     <AccountingShell title="Inventory Reports" backHref="/accounting/inventory" backLabel="Inventory Info">
-      <div className="overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
-        <div className="grid md:min-h-[520px] md:grid-cols-2">
-          <div className="overflow-x-auto border-b border-slate-300 md:border-b-0 md:border-r">
-            <ReportSide title="Stock In" lines={stockIn} side="in" />
+      <div className="overflow-x-auto rounded-xl border border-slate-300 bg-white shadow-sm">
+        <div className="min-w-[760px]">
+          <div className="grid min-h-[520px] grid-cols-2">
+            <div className="border-r border-slate-300">
+              <ReportSide title="Stock In" lines={stockIn} side="in" />
+            </div>
+            <div>
+              <ReportSide title="Stock Out" lines={stockOut} side="out" />
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <ReportSide title="Stock Out" lines={stockOut} side="out" />
-          </div>
-        </div>
-        <div className="grid border-t border-slate-300 bg-slate-50 text-sm font-black md:grid-cols-2">
-          <div className="grid grid-cols-[minmax(0,1fr)_96px_80px] border-b border-slate-300 px-3 py-3 md:border-b-0 md:border-r">
-            <span>Total</span>
-            <span className="text-right font-mono">{qty(totalIn)}</span>
-            <span />
-          </div>
-          <div className="grid grid-cols-[minmax(0,1fr)_96px_80px] px-3 py-3">
-            <span>Total</span>
-            <span className="text-right font-mono">{qty(totalOut)}</span>
-            <span />
+          <div className="grid grid-cols-2 border-t border-slate-300 bg-slate-50 text-sm font-black">
+            <div className="grid grid-cols-[minmax(0,1fr)_96px_80px] border-r border-slate-300 px-3 py-3">
+              <span>Total</span>
+              <span className="text-right font-mono">{qty(totalIn)}</span>
+              <span />
+            </div>
+            <div className="grid grid-cols-[minmax(0,1fr)_96px_80px] px-3 py-3">
+              <span>Total</span>
+              <span className="text-right font-mono">{qty(totalOut)}</span>
+              <span />
+            </div>
           </div>
         </div>
       </div>
