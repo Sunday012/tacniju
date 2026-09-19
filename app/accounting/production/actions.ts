@@ -13,6 +13,7 @@ export type ProductionCategory = {
   id: string
   name: string
   description: string | null
+  tracking_number: string | null
   active: boolean
 }
 
@@ -70,7 +71,7 @@ export async function getProductionCategories() {
   const orgId = await getOrgId()
   const { data, error } = await supabase
     .from("production_categories")
-    .select("id, name, description, active")
+    .select("id, name, description, tracking_number, active")
     .eq("org_id", orgId)
     .order("name", { ascending: true })
 
@@ -84,6 +85,7 @@ export async function createProductionCategory(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   const name = String(formData.get("name") || "").trim()
   const description = String(formData.get("description") || "").trim()
+  const trackingNumber = String(formData.get("tracking_number") || "").trim()
 
   if (!name) return
 
@@ -91,6 +93,7 @@ export async function createProductionCategory(formData: FormData) {
     org_id: orgId,
     name,
     description: description || null,
+    tracking_number: trackingNumber || null,
     created_by: user?.id || null,
   })
 
@@ -108,6 +111,7 @@ export async function updateProductionCategory(formData: FormData) {
   const id = String(formData.get("id") || "").trim()
   const name = String(formData.get("name") || "").trim()
   const description = String(formData.get("description") || "").trim()
+  const trackingNumber = String(formData.get("tracking_number") || "").trim()
   const active = String(formData.get("active") || "true") === "true"
 
   if (!id) return { error: "Category ID is required." }
@@ -118,6 +122,7 @@ export async function updateProductionCategory(formData: FormData) {
     .update({
       name,
       description: description || null,
+      tracking_number: trackingNumber || null,
       active,
       updated_at: new Date().toISOString(),
     })

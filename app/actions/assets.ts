@@ -23,6 +23,7 @@ export async function createAsset(formData: FormData) {
   const name = formData.get("name") as string;
   const category = formData.get("category") as string;
   const is_gift = formData.get("is_gift") === "on";
+  const gift_number = String(formData.get("gift_number") || "").trim() || null;
   const is_stall_item = formData.get("is_stall_item") === "on";
   const money_price = parseFloat(formData.get("money_price") as string) || 0;
   const point_price = parseInt(formData.get("point_price") as string, 10) || 0;
@@ -36,6 +37,7 @@ export async function createAsset(formData: FormData) {
     name,
     category,
     is_gift,
+    gift_number,
     is_stall_item,
     money_price,
     point_price,
@@ -85,7 +87,8 @@ export async function getAllAssetAssignments() {
       profile_id,
       asset:assets!asset_id(
         name,
-        category
+        category,
+        gift_number
       ),
       profile:profiles!profile_id(
         full_name,
@@ -224,6 +227,7 @@ export async function editAsset(assetId: string, formData: FormData) {
   const name = formData.get("name") as string;
   const category = formData.get("category") as string;
   const is_gift = formData.get("is_gift") === "on";
+  const gift_number = String(formData.get("gift_number") || "").trim() || null;
   const is_stall_item = formData.get("is_stall_item") === "on";
   const money_price = parseFloat(formData.get("money_price") as string) || 0;
   const point_price = parseInt(formData.get("point_price") as string, 10) || 0;
@@ -253,6 +257,7 @@ export async function editAsset(assetId: string, formData: FormData) {
       name,
       category,
       is_gift,
+      gift_number,
       is_stall_item,
       money_price,
       point_price,

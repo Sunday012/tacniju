@@ -25,7 +25,7 @@ export default async function ProductionCategoriesPage() {
           </div>
         ) : (
           <>
-            <form action={createProductionCategory} className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+            <form action={createProductionCategory} className="grid gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
               <label className="grid gap-1.5 text-sm font-bold text-slate-600">
                 Category name
                 <input name="name" required className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" placeholder="Raw Materials" />
@@ -33,6 +33,10 @@ export default async function ProductionCategoriesPage() {
               <label className="grid gap-1.5 text-sm font-bold text-slate-600">
                 Description
                 <input name="description" className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" placeholder="Optional" />
+              </label>
+              <label className="grid gap-1.5 text-sm font-bold text-slate-600">
+                Stock group number
+                <input name="tracking_number" className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 font-mono outline-none focus:border-indigo-300 focus:bg-white" placeholder="SGR-00001" />
               </label>
               <button className="mt-auto h-11 rounded-xl bg-indigo-600 px-5 font-black text-white shadow-sm hover:bg-indigo-700">
                 Save Category
@@ -45,17 +49,19 @@ export default async function ProductionCategoriesPage() {
                   <tr>
                     <th className="px-5 py-3">Category</th>
                     <th className="px-5 py-3">Description</th>
+                    <th className="px-5 py-3">Group No.</th>
                     <th className="px-5 py-3">Status</th>
                     <th className="px-5 py-3 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {rows.length === 0 ? (
-                    <tr><td colSpan={4} className="px-5 py-8 text-center font-medium text-slate-500">No categories have been created yet.</td></tr>
+                    <tr><td colSpan={5} className="px-5 py-8 text-center font-medium text-slate-500">No categories have been created yet.</td></tr>
                   ) : rows.map(category => (
                     <tr key={category.id}>
                       <td className="px-5 py-4 font-bold text-slate-800">{category.name}</td>
                       <td className="px-5 py-4 text-slate-500">{category.description || "-"}</td>
+                      <td className="px-5 py-4 font-mono text-xs text-indigo-600">{category.tracking_number || "-"}</td>
                       <td className="px-5 py-4 font-bold text-emerald-600">{category.active ? "Active" : "Inactive"}</td>
                       <td className="px-5 py-4 text-right">
                         <CategoryActions category={category} />

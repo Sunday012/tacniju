@@ -28,6 +28,7 @@ export type Item = {
     secondary_per_primary?: number | null
     no_stock_alert_enabled?: boolean
     no_stock_quantity?: number
+    tracking_number?: string | null
 }
 
 export async function getItems() {

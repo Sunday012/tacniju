@@ -83,6 +83,7 @@ export default async function StockPage() {
                       {asset.category}
                     </span>
                   </div>
+                  {asset.gift_number && <p className="mt-1 truncate font-mono text-[10px] font-bold text-indigo-600">{asset.gift_number}</p>}
                 </div>
               </div>
 

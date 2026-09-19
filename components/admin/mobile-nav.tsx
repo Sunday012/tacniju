@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Menu, Scan, Calendar, BookOpen, LayoutDashboard, LogOut, Shield, Users, Package, Trophy, Ticket, ChevronDown, MonitorPlay, Hash, ShoppingBag, Settings, Award, Swords, FileText, Megaphone, Utensils, BookMarked, BookOpenText, Building2, Mic2, MicVocal, Music } from "lucide-react"
+import { Menu, Scan, Calendar, BookOpen, LayoutDashboard, LogOut, Shield, Users, Package, Trophy, Ticket, ChevronDown, MonitorPlay, Hash, ShoppingBag, Settings, Award, Swords, FileText, Megaphone, Utensils, BookMarked, BookOpenText, Building2, Mic2, MicVocal, Music, MapPin, Cake } from "lucide-react"
 
 type NavItem = {
   name: string
@@ -24,7 +24,7 @@ import { useRouter } from "next/navigation"
 
 const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
-    title: "Overview",
+    title: "Admin Office",
     items: [
       { name: "Admin Home", href: "/admin", icon: LayoutDashboard },
       { name: "Awards", href: "/admin/awards", icon: Award },
@@ -32,18 +32,27 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
     ]
   },
   {
-    title: "Operations",
+    title: "Secretariat",
     items: [
       { name: "Events", href: "/admin/events", icon: Calendar },
       { name: "Reservations", href: "/admin/reservations", icon: Hash },
       { name: "Meal Tickets", href: "/admin/meal-tickets", icon: Ticket },
       { name: "Dining Hall", href: "/admin/dining-hall", icon: Utensils },
+      {
+        name: "Diary",
+        href: "/admin/diary",
+        icon: BookOpen,
+        children: [
+          { name: "Locations", href: "/admin/diary/locations", icon: MapPin },
+          { name: "Birthdays", href: "/admin/diary/birthdays", icon: Cake },
+        ],
+      },
       { name: "Families", href: "/admin/families", icon: Users },
       { name: "Departments", href: "/admin/departments", icon: Building2 },
     ]
   },
   {
-    title: "Finance & Assets",
+    title: "Financial Secretary",
     items: [
       {
         name: "Gifts",
@@ -55,11 +64,12 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
       },
       { name: "Stall Orders", href: "/admin/stalls", icon: ShoppingBag },
       { name: "Accounting", href: "/accounting", icon: BookOpen },
+      { name: "Programs", href: "/accounting/programs", icon: Calendar },
       { name: "New Creation", href: "/admin/new-creation", icon: FileText },
     ]
   },
   {
-    title: "Media & Tech",
+    title: "Technology & Media",
     items: [
       { name: "Announcements", href: "/admin/announcements", icon: Megaphone },
       { name: "Presentation Suite", href: "/admin/presenter", icon: MonitorPlay },
@@ -67,14 +77,14 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
     ]
   },
   {
-    title: "Engagement",
+    title: "Assistants",
     items: [
       { name: "Competitions", href: "/admin/competitions", icon: Trophy },
       { name: "Battles", href: "/admin/battles", icon: Swords },
     ]
   },
   {
-    title: "Records",
+    title: "Assistant Records",
     items: [
       {
         name: "Dreams",
@@ -148,7 +158,7 @@ export function AdminMobileNav() {
     })
 
     if (!foundActive) {
-      initialState["Overview"] = true
+      initialState["Admin Office"] = true
     }
     return initialState
   })

@@ -9,6 +9,7 @@ const fields: Array<{ value: DeepSearchField; label: string }> = [
   { value: "ledger", label: "Ledger" },
   { value: "narration", label: "Narration" },
   { value: "stock_item", label: "Stock Item" },
+  { value: "tracking_number", label: "Tracking Number" },
   { value: "voucher_type", label: "Voucher Type" },
   { value: "voucher_number", label: "Voucher Number" },
   { value: "amount", label: "Amount" },

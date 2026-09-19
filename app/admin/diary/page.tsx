@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { ProfileImagePreview } from "@/components/profile-image-preview"
 import Link from "next/link"
 import { isGuestProfile } from "@/lib/profile-kind"
+import { Cake, MapPin } from "lucide-react"
 
 export default async function AdminDiaryPage() {
   const supabase = await createClient()
@@ -63,14 +64,22 @@ export default async function AdminDiaryPage() {
   return (
     <div className="p-6 md:p-10 relative">
       <main className="max-w-7xl mx-auto z-10 relative">
-        <div className="mb-8 flex justify-between items-center">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
             <div>
                 <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Admin Diary View</h1>
                 <p className="text-slate-500 mt-2 font-medium">Complete directory including transferred and terminated members.</p>
             </div>
-            <Link href="/admin" className="px-4 py-2 bg-white border border-slate-200 rounded-xl shadow-sm text-sm font-medium hover:bg-slate-50 transition-colors">
-                Back to Admin Dashboard
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/admin/diary/locations" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg shadow-sm text-sm font-medium hover:bg-slate-50 transition-colors">
+                <MapPin className="h-4 w-4" /> Locations
+              </Link>
+              <Link href="/admin/diary/birthdays" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg shadow-sm text-sm font-medium hover:bg-slate-50 transition-colors">
+                <Cake className="h-4 w-4" /> Birthdays
+              </Link>
+              <Link href="/admin" className="px-4 py-2 bg-white border border-slate-200 rounded-lg shadow-sm text-sm font-medium hover:bg-slate-50 transition-colors">
+                  Back to Admin
+              </Link>
+            </div>
         </div>
         
         <div className="space-y-12">

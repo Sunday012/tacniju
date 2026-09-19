@@ -23,6 +23,7 @@ interface EditAssetModalProps {
     money_price?: number;
     point_price?: number;
     total_quantity: number;
+    gift_number?: string | null;
   };
 }
 
@@ -102,6 +103,20 @@ export function EditAssetModal({ asset }: EditAssetModalProps) {
               <label htmlFor="is_gift" className="text-sm font-bold text-slate-700 cursor-pointer select-none">
                 This is a gift <span className="font-medium text-slate-500">(can be distributed)</span>
               </label>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="gift_number" className="text-sm font-bold text-slate-700">
+                Gift Tracking Number
+              </label>
+              <input
+                id="gift_number"
+                name="gift_number"
+                type="text"
+                defaultValue={asset.gift_number || ""}
+                className="w-full bg-white border border-slate-200 shadow-sm rounded-xl px-4 py-2.5 font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                placeholder="GFT-00001"
+              />
             </div>
 
             <div className="flex flex-col gap-4 py-3 bg-amber-50/50 px-4 rounded-xl border border-amber-100/50">

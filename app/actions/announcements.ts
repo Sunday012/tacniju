@@ -150,6 +150,39 @@ export async function updateAnnouncementStatus(
   return { success: true };
 }
 
+export async function updateAnnouncement(id: string, formData: FormData) {
+  const { supabase, error } = await requireAdmin();
+  if (error) return { error };
+
+  const title = String(formData.get("title") || "").trim();
+  const body = String(formData.get("body") || "").trim();
+  const isPinned = formData.get("isPinned") === "on";
+  const isPublished = formData.get("isPublished") !== "off";
+
+  if (!title) return { error: "Title is required." };
+  if (!body) return { error: "Announcement body is required." };
+
+  const { error: updateError } = await supabase
+    .from("announcements")
+    .update({
+      title,
+      body,
+      is_pinned: isPinned,
+      is_published: isPublished,
+    })
+    .eq("id", id);
+
+  if (updateError) {
+    console.error("Error updating announcement:", updateError);
+    return { error: updateError.message };
+  }
+
+  revalidatePath("/admin/announcements");
+  revalidatePath("/dashboard/announcements");
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
 export async function deleteAnnouncement(id: string) {
   const { supabase, error } = await requireAdmin();
   if (error) return { error };

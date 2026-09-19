@@ -29,7 +29,9 @@ import {
   Building2,
   Mic2,
   MicVocal,
-  Music
+  Music,
+  MapPin,
+  Cake
 } from "lucide-react"
 
 type NavItem = {
@@ -41,7 +43,7 @@ type NavItem = {
 
 const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
-    title: "Overview",
+    title: "Admin Office",
     items: [
       { name: "Admin Home", href: "/admin", icon: LayoutDashboard },
       { name: "Awards", href: "/admin/awards", icon: Award },
@@ -49,18 +51,27 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
     ]
   },
   {
-    title: "Operations",
+    title: "Secretariat",
     items: [
       { name: "Events", href: "/admin/events", icon: Calendar },
       { name: "Reservations", href: "/admin/reservations", icon: Hash },
       { name: "Meal Tickets", href: "/admin/meal-tickets", icon: Ticket },
       { name: "Dining Hall", href: "/admin/dining-hall", icon: Utensils },
+      {
+        name: "Diary",
+        href: "/admin/diary",
+        icon: BookOpen,
+        children: [
+          { name: "Locations", href: "/admin/diary/locations", icon: MapPin },
+          { name: "Birthdays", href: "/admin/diary/birthdays", icon: Cake },
+        ],
+      },
       { name: "Families", href: "/admin/families", icon: Users },
       { name: "Departments", href: "/admin/departments", icon: Building2 },
     ]
   },
   {
-    title: "Finance & Assets",
+    title: "Financial Secretary",
     items: [
       {
         name: "Gifts",
@@ -72,11 +83,12 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
       },
       { name: "Stall Orders", href: "/admin/stalls", icon: ShoppingBag },
       { name: "Accounting", href: "/accounting", icon: BookOpen },
+      { name: "Programs", href: "/accounting/programs", icon: Calendar },
       { name: "New Creation", href: "/admin/new-creation", icon: FileText },
     ]
   },
   {
-    title: "Media & Tech",
+    title: "Technology & Media",
     items: [
       { name: "Announcements", href: "/admin/announcements", icon: Megaphone },
       { name: "Presentation Suite", href: "/admin/presenter", icon: MonitorPlay },
@@ -84,14 +96,14 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
     ]
   },
   {
-    title: "Engagement",
+    title: "Assistants",
     items: [
       { name: "Competitions", href: "/admin/competitions", icon: Trophy },
       { name: "Battles", href: "/admin/battles", icon: Swords },
     ]
   },
   {
-    title: "Records",
+    title: "Assistant Records",
     items: [
       {
         name: "Dreams",
@@ -169,7 +181,7 @@ export function AdminSidebarNav() {
     })
 
     if (!foundActive) {
-      initialState["Overview"] = true
+      initialState["Admin Office"] = true
     }
     return initialState
   })
@@ -217,7 +229,7 @@ export function AdminSidebarNav() {
         </div>
         <div>
           <h2 className="text-xl font-extrabold text-slate-900 tracking-tight leading-tight dark:text-slate-100">Admin</h2>
-          <p className="text-[11px] text-slate-500 font-bold uppercase tracking-widest mt-0.5 dark:text-slate-400">Management</p>
+          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5 dark:text-slate-400">Divine | Accounts | Tech</p>
         </div>
       </div>
 

@@ -19,6 +19,7 @@ type Category = {
   id: string
   name: string
   description: string | null
+  tracking_number: string | null
   active: boolean
 }
 
@@ -112,6 +113,10 @@ export function CategoryActions({ category }: { category: Category }) {
             <label className="grid gap-1.5 text-sm font-bold text-slate-600">
               Description
               <input name="description" defaultValue={category.description || ""} className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 outline-none focus:border-indigo-300 focus:bg-white" />
+            </label>
+            <label className="grid gap-1.5 text-sm font-bold text-slate-600">
+              Stock group tracking number
+              <input name="tracking_number" defaultValue={category.tracking_number || ""} className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 font-mono outline-none focus:border-indigo-300 focus:bg-white" placeholder="SGR-00001" />
             </label>
             <label className="grid gap-1.5 text-sm font-bold text-slate-600">
               Status

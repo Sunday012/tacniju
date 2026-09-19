@@ -18,7 +18,7 @@ export function AdminTopBar() {
           </div>
           <div>
             <h1 className="text-[17px] font-extrabold text-slate-800 leading-tight tracking-tight dark:text-slate-100">Admin Portal</h1>
-            <p className="text-[11px] text-slate-500 font-bold uppercase tracking-widest mt-0.5 dark:text-slate-400">Church Management</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-0.5 dark:text-slate-400">Divine | Accounts | Technology</p>
           </div>
         </div>
 

@@ -31,6 +31,7 @@ export default async function GiftRecordsPage() {
                 <tr className="bg-slate-50 border-b border-slate-200">
                   <th className="px-4 py-3 font-bold text-slate-700 text-xs tracking-wider uppercase">Date</th>
                   <th className="px-4 py-3 font-bold text-slate-700 text-xs tracking-wider uppercase">Gift</th>
+                  <th className="px-4 py-3 font-bold text-slate-700 text-xs tracking-wider uppercase">Gift No.</th>
                   <th className="px-4 py-3 font-bold text-slate-700 text-xs tracking-wider uppercase">Recipient</th>
                   <th className="px-4 py-3 font-bold text-slate-700 text-xs tracking-wider uppercase">Distributed By</th>
                   <th className="px-4 py-3 font-bold text-slate-700 text-xs tracking-wider uppercase text-right print:hidden">Actions</th>
@@ -39,7 +40,7 @@ export default async function GiftRecordsPage() {
               <tbody className="divide-y divide-slate-100">
                 {(!allAssignments || allAssignments.length === 0) ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-slate-500 font-medium text-sm">
+                    <td colSpan={6} className="px-4 py-8 text-center text-slate-500 font-medium text-sm">
                       No gifts have been distributed yet.
                     </td>
                   </tr>
@@ -55,6 +56,7 @@ export default async function GiftRecordsPage() {
                           {assignment.asset?.category}
                         </span>
                       </td>
+                      <td className="px-4 py-3 font-mono text-xs font-semibold text-indigo-600">{assignment.asset?.gift_number || "-"}</td>
                       <td className="px-4 py-3">
                         <p className="text-sm font-bold text-indigo-600">{assignment.profile?.full_name}</p>
                         <p className="text-[10px] text-slate-500 font-mono mt-0.5">{assignment.profile?.reservation_number || "No Res. #"}</p>

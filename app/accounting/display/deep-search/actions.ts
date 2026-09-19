@@ -10,6 +10,7 @@ export type DeepSearchField =
   | "ledger"
   | "narration"
   | "stock_item"
+  | "tracking_number"
   | "voucher_type"
   | "voucher_number"
   | "amount"
@@ -107,6 +108,7 @@ function voucherValues(voucher: any, amount: number): Record<DeepSearchField, Ar
     ledger: ledgerNames,
     narration: [voucher.narration],
     stock_item: stockItems,
+    tracking_number: [],
     voucher_type: [voucher.voucher_type],
     voucher_number: [voucher.voucher_no],
     amount: [amount],
@@ -131,7 +133,7 @@ export async function getDeepSearchResults(criteria: DeepSearchCriterion[]): Pro
   const supabase = await createClient()
   const orgId = await getAccountingOrgId()
 
-  const [{ data: vouchers }, { data: attendance }] = await Promise.all([
+  const [{ data: vouchers }, { data: attendance }, { data: receiptNotes }] = await Promise.all([
     supabase
       .from("vouchers")
       .select(`
@@ -159,6 +161,26 @@ export async function getDeepSearchResults(criteria: DeepSearchCriterion[]): Pro
       .select("id, date, service_name, men_count, women_count, children_count, total_count, notes")
       .eq("org_id", orgId)
       .order("date", { ascending: false })
+      .limit(500),
+    supabase
+      .from("receipt_notes")
+      .select(`
+        id,
+        receipt_no,
+        received_date,
+        supplier,
+        bill_reference,
+        narration,
+        receipt_note_items (
+          item_name,
+          stock_tracking_number,
+          stock_group_tracking_number,
+          gift_number,
+          quantity
+        )
+      `)
+      .eq("org_id", orgId)
+      .order("received_date", { ascending: false })
       .limit(500),
   ])
 
@@ -192,6 +214,7 @@ export async function getDeepSearchResults(criteria: DeepSearchCriterion[]): Pro
       ledger: [],
       narration: [row.notes],
       stock_item: [],
+      tracking_number: [],
       voucher_type: ["Attendance"],
       voucher_number: [],
       amount: [total],
@@ -211,7 +234,43 @@ export async function getDeepSearchResults(criteria: DeepSearchCriterion[]): Pro
     }]
   })
 
-  return [...voucherResults, ...attendanceResults]
+  const receiptNoteResults = (receiptNotes || []).flatMap((note: any): DeepSearchResult[] => {
+    const items = note.receipt_note_items || []
+    const quantity = items.reduce((sum: number, item: any) => sum + Number(item.quantity || 0), 0)
+    const trackingNumbers = items.flatMap((item: any) => [
+      item.stock_tracking_number,
+      item.stock_group_tracking_number,
+      item.gift_number,
+    ]).filter(Boolean)
+    const values: Record<DeepSearchField, Array<string | number>> = {
+      attendance_type: [],
+      batch_number: [note.bill_reference],
+      party_name: [note.supplier],
+      ledger: [],
+      narration: [note.narration],
+      stock_item: items.map((item: any) => item.item_name).filter(Boolean),
+      tracking_number: trackingNumbers,
+      voucher_type: ["Receipt Note"],
+      voucher_number: [note.receipt_no],
+      amount: [],
+    }
+    if (!matchesAllCriteria(values, activeCriteria)) return []
+
+    const itemSummary = items.map((item: any) => `${item.item_name} (${Number(item.quantity || 0).toLocaleString()})`)
+    return [{
+      id: note.id,
+      date: note.received_date,
+      recordType: "Receipt Note",
+      title: note.supplier || note.narration || note.receipt_no,
+      voucherNo: note.receipt_no || "-",
+      voucherType: "Receipt Note",
+      details: [note.bill_reference, itemSummary.join(", "), trackingNumbers.join(", "), `Total quantity: ${quantity.toLocaleString()}`].filter(Boolean).join(" | ") || "-",
+      amount: 0,
+      href: "/accounting/vouchers/receipt-note",
+    }]
+  })
+
+  return [...voucherResults, ...attendanceResults, ...receiptNoteResults]
     .sort((a, b) => new Date(b.date || "").getTime() - new Date(a.date || "").getTime())
     .slice(0, 300)
 }

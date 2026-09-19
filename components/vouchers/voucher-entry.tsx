@@ -830,7 +830,6 @@ export function VoucherEntry({
                                     <SelectItem value="Sales">Sales (Alt+S)</SelectItem>
                                     <SelectItem value="Purchase">Purchase (Alt+U)</SelectItem>
                                     <SelectItem value="Expense">Expense (Alt+E)</SelectItem>
-                                    <SelectItem value="Levy">Levy</SelectItem>
                                     <SelectItem value="Income">Income (Alt+I)</SelectItem>
                                     <SelectItem value="Contra">Contra (Alt+C)</SelectItem>
                                     <SelectItem value="Program">Program (Alt+G)</SelectItem>

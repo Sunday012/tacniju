@@ -3,11 +3,12 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
-import { Megaphone, Pin, PinOff, Send, Trash2, Loader2, Eye, EyeOff } from "lucide-react";
+import { Megaphone, Pin, PinOff, Send, Trash2, Loader2, Eye, EyeOff, Pencil, X } from "lucide-react";
 import {
   Announcement,
   createAnnouncement,
   deleteAnnouncement,
+  updateAnnouncement,
   updateAnnouncementStatus,
 } from "@/app/actions/announcements";
 import { Button } from "@/components/ui/button";
@@ -22,13 +23,22 @@ export function AnnouncementsNotepad({ initialAnnouncements }: { initialAnnounce
   const [body, setBody] = useState("");
   const [isPinned, setIsPinned] = useState(false);
   const [isPublished, setIsPublished] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const refreshFromServer = async () => {
     window.location.reload();
   };
 
-  const handleCreate = () => {
+  const resetEditor = () => {
+    setTitle("");
+    setBody("");
+    setIsPinned(false);
+    setIsPublished(true);
+    setEditingId(null);
+  };
+
+  const handleSave = () => {
     const formData = new FormData();
     formData.set("title", title);
     formData.set("body", body);
@@ -36,19 +46,27 @@ export function AnnouncementsNotepad({ initialAnnouncements }: { initialAnnounce
     if (!isPublished) formData.set("isPublished", "off");
 
     startTransition(async () => {
-      const result = await createAnnouncement(formData);
+      const result = editingId
+        ? await updateAnnouncement(editingId, formData)
+        : await createAnnouncement(formData);
       if (result?.error) {
         toast.error(result.error);
         return;
       }
 
-      toast.success("Announcement added.");
-      setTitle("");
-      setBody("");
-      setIsPinned(false);
-      setIsPublished(true);
+      toast.success(editingId ? "Announcement updated." : "Announcement added.");
+      resetEditor();
       refreshFromServer();
     });
+  };
+
+  const startEditing = (announcement: Announcement) => {
+    setEditingId(announcement.id);
+    setTitle(announcement.title);
+    setBody(announcement.body);
+    setIsPinned(announcement.is_pinned);
+    setIsPublished(announcement.is_published);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleStatus = (announcement: Announcement, updates: { is_pinned?: boolean; is_published?: boolean }) => {
@@ -89,7 +107,19 @@ export function AnnouncementsNotepad({ initialAnnouncements }: { initialAnnounce
           <span className="h-3 w-3 rounded-full bg-rose-300" />
           <span className="h-3 w-3 rounded-full bg-amber-300" />
           <span className="h-3 w-3 rounded-full bg-emerald-300" />
-          <p className="ml-2 text-xs font-extrabold uppercase tracking-widest text-amber-800">Notepad</p>
+          <p className="ml-2 text-xs font-extrabold uppercase tracking-widest text-amber-800">
+            {editingId ? "Edit announcement" : "Notepad"}
+          </p>
+          {editingId && (
+            <button
+              type="button"
+              onClick={resetEditor}
+              className="ml-auto rounded p-1 text-amber-800 hover:bg-amber-200"
+              title="Cancel editing"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         <div className="p-6 bg-[linear-gradient(to_bottom,transparent_31px,rgba(245,158,11,0.18)_32px)] bg-[length:100%_32px]">
@@ -129,12 +159,12 @@ export function AnnouncementsNotepad({ initialAnnouncements }: { initialAnnounce
             </div>
 
             <Button
-              onClick={handleCreate}
+              onClick={handleSave}
               disabled={isPending}
               className="w-full bg-slate-900 hover:bg-slate-800 text-white gap-2"
             >
               {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              Post Announcement
+              {editingId ? "Save Changes" : "Post Announcement"}
             </Button>
           </div>
         </div>
@@ -175,6 +205,14 @@ export function AnnouncementsNotepad({ initialAnnouncements }: { initialAnnounce
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    title="Edit"
+                    onClick={() => startEditing(announcement)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                   <Button
                     variant="outline"
                     size="icon"

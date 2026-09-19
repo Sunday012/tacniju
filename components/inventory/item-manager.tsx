@@ -27,6 +27,7 @@ export function ItemManager({
     const [isOpen, setIsOpen] = useState(false)
     const [name, setName] = useState("")
     const [code, setCode] = useState("")
+    const [trackingNumber, setTrackingNumber] = useState("")
     const [unit, setUnit] = useState("Pieces")
     const [secondaryUnit, setSecondaryUnit] = useState("")
     const [secondaryPerPrimary, setSecondaryPerPrimary] = useState("1")
@@ -43,6 +44,7 @@ export function ItemManager({
     const [activeItem, setActiveItem] = useState<Item | null>(null)
     const [isEditing, setIsEditing] = useState(false)
     const [editName, setEditName] = useState("")
+    const [editTrackingNumber, setEditTrackingNumber] = useState("")
     const [editCategory, setEditCategory] = useState("")
     const [editUnit, setEditUnit] = useState("")
     const [editSecondaryUnit, setEditSecondaryUnit] = useState("")
@@ -68,6 +70,7 @@ export function ItemManager({
             await createItem({
                 name,
                 code: code || null,
+                tracking_number: trackingNumber || null,
                 category: category || null,
                 unit,
                 primary_unit: unit,
@@ -87,6 +90,7 @@ export function ItemManager({
             // Reset
             setName("")
             setCode("")
+            setTrackingNumber("")
             setPurchaseRate("0")
             setSellingRate("0")
             setOpeningQty("0")
@@ -124,6 +128,7 @@ export function ItemManager({
         setActiveItem(item)
         setIsEditing(false)
         setEditName(item.name || "")
+        setEditTrackingNumber(item.tracking_number || "")
         setEditCategory(item.category || "")
         setEditUnit(item.primary_unit || item.unit || "")
         setEditSecondaryUnit(item.secondary_unit || "")
@@ -146,6 +151,7 @@ export function ItemManager({
             await updateItem(activeItem.id, {
                 name: editName,
                 code: activeItem.code || null,
+                tracking_number: editTrackingNumber || null,
                 category: editCategory || null,
                 unit: editUnit,
                 primary_unit: editUnit,
@@ -207,6 +213,11 @@ export function ItemManager({
                                         <Input value={category} onChange={e => setCategory(e.target.value)} className="bg-white border-slate-300" placeholder="Books, Beverage..." />
                                     )}
                                 </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Stock Tracking Number</Label>
+                                <Input value={trackingNumber} onChange={e => setTrackingNumber(e.target.value)} className="bg-white border-slate-300" placeholder="STK-00001" />
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
@@ -296,6 +307,7 @@ export function ItemManager({
                     <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600 [&_tr]:border-b [&_tr]:border-slate-200">
                         <TableRow className="border-slate-200">
                             <TableHead className="text-slate-500">Name</TableHead>
+                            <TableHead className="text-slate-500">Stock No.</TableHead>
                             <TableHead className="text-slate-500">Category</TableHead>
                             <TableHead className="text-slate-500 text-center">Unit</TableHead>
                             <TableHead className="text-slate-500 text-right">Qty</TableHead>
@@ -304,7 +316,7 @@ export function ItemManager({
                     <TableBody className="divide-y divide-slate-100 [&_td]:px-5 [&_td]:py-3.5 [&_tr:hover]:bg-slate-50/60">
                         {items.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={4} className="text-center text-slate-500 py-6">No items in inventory.</TableCell>
+                                <TableCell colSpan={5} className="text-center text-slate-500 py-6">No items in inventory.</TableCell>
                             </TableRow>
                         ) : (
                             items.map(item => (
@@ -314,6 +326,7 @@ export function ItemManager({
                                             {item.name}
                                         </button>
                                     </TableCell>
+                                    <TableCell className="font-mono text-xs text-indigo-600">{item.tracking_number || "-"}</TableCell>
                                     <TableCell className="text-slate-500">{item.category || "-"}</TableCell>
                                     <TableCell className="text-center text-slate-500">{item.primary_unit || item.unit}</TableCell>
                                     <TableCell className="text-right font-bold text-slate-800">
@@ -369,6 +382,11 @@ export function ItemManager({
                                             <Input value={editCategory} onChange={e => setEditCategory(e.target.value)} className="bg-white border-slate-300" />
                                         )}
                                     </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>Stock Tracking Number</Label>
+                                    <Input value={editTrackingNumber} onChange={e => setEditTrackingNumber(e.target.value)} className="bg-white border-slate-300" placeholder="STK-00001" />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
@@ -439,6 +457,7 @@ export function ItemManager({
                             </form>
                         ) : (
                             <div className="space-y-4 p-6">
+                                <DetailRow label="Stock Tracking Number" value={activeItem.tracking_number || "-"} />
                                 <DetailRow label="Category" value={activeItem.category || "-"} />
                                 <DetailRow label="Unit" value={activeItem.primary_unit || activeItem.unit || "-"} />
                                 <DetailRow label="Secondary" value={activeItem.secondary_unit ? `${activeItem.secondary_per_primary || 1} ${activeItem.secondary_unit}` : "-"} />
