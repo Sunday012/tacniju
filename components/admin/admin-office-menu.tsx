@@ -2,17 +2,28 @@ import Image from "next/image"
 import Link from "next/link"
 import type { LucideIcon } from "lucide-react"
 import {
+  Archive,
+  ArrowLeft,
+  Award,
+  BarChart3,
   CalendarDays,
   ClipboardList,
+  FileText,
+  FolderCheck,
   HeartHandshake,
+  KeyRound,
   Landmark,
+  MapPin,
   Mic2,
   Music2,
   Presentation,
   ScanLine,
-  ShieldCheck,
+  Settings,
+  Trophy,
+  UserPlus,
   UsersRound,
   UtensilsCrossed,
+  WalletCards,
 } from "lucide-react"
 
 export type AdminOfficeSlug =
@@ -23,11 +34,12 @@ export type AdminOfficeSlug =
   | "ushering-director"
   | "media-unit"
 
-type OfficeTool = {
+export type OfficeTool = {
   href: string
   label: string
   description: string
   icon: LucideIcon
+  section?: string
 }
 
 export type AdminOffice = {
@@ -45,10 +57,10 @@ export const adminOffices: AdminOffice[] = [
     description: "Head office, system records, and administration.",
     icon: Landmark,
     tools: [
-      { href: "/accounting/programs/budget", label: "Budget", description: "Create and manage event budgets.", icon: ClipboardList },
-      { href: "/admin/awards", label: "Awards", description: "Manage recognition and awards.", icon: ShieldCheck },
-      { href: "/admin/diary", label: "Records & Reports", description: "Open the member diary and records.", icon: UsersRound },
-      { href: "/admin/system", label: "System", description: "Open system settings and archive tools.", icon: ShieldCheck },
+      { href: "/admin/office/admin-office/desk", label: "Desk", description: "Budget, reports, awards, family, and files.", icon: ClipboardList },
+      { href: "/admin/office/admin-office/records", label: "Record", description: "Population, locations, treasury, and reports.", icon: FolderCheck },
+      { href: "/admin/office/admin-office/system", label: "System", description: "System controls, archive, and login details.", icon: Settings },
+      { href: "/admin/office/admin-office/appointments", label: "Appointment", description: "Create, change, or terminate appointments.", icon: UserPlus },
     ],
   },
   {
@@ -113,6 +125,31 @@ export const adminOffices: AdminOffice[] = [
   },
 ]
 
+export const adminOfficeDeskTools: OfficeTool[] = [
+  { href: "/accounting/programs/budget", label: "Budget", description: "Create and manage event budgets.", icon: ClipboardList },
+  { href: "/accounting/display", label: "Reports", description: "Open administrative and financial reports.", icon: BarChart3 },
+  { href: "/admin/awards", label: "Awards", description: "Manage recognition and awards.", icon: Award },
+  { href: "/admin/families", label: "Family", description: "Manage family records.", icon: UsersRound },
+  { href: "/admin/office/admin-office/files", label: "Files", description: "New, approved, rejected, and sent-back files.", icon: FolderCheck },
+]
+
+export const adminOfficeRecordTools: OfficeTool[] = [
+  { href: "/admin/diary", label: "Member Records", description: "Open the member diary and population records.", icon: UsersRound },
+  { href: "/admin/diary/locations", label: "Locations", description: "Review districts and assemblies.", icon: MapPin },
+  { href: "/accounting/programs/reports/events", label: "Programs", description: "Review event and program reports.", icon: CalendarDays },
+  { href: "/accounting/balance-sheet", label: "Treasury", description: "Review balances and treasury position.", icon: WalletCards },
+  { href: "/accounting/programs/reports/creditors", label: "Creditors", description: "Review event-linked creditors.", icon: FileText },
+  { href: "/accounting/programs/reports/debtors", label: "Debtors", description: "Review event-linked debtors.", icon: FileText },
+  { href: "/admin/points", label: "Top Points", description: "Open points and ranking records.", icon: Trophy },
+  { href: "/admin/announcements", label: "News & Pending", description: "Review announcements and pending notices.", icon: Mic2 },
+]
+
+export const adminOfficeSystemTools: OfficeTool[] = [
+  { href: "/admin/system", label: "System Control", description: "Open system administration.", icon: Settings },
+  { href: "/admin/system/archive", label: "Archive", description: "Review yearly archived records.", icon: Archive },
+  { href: "/admin/system/login-details", label: "Login Details", description: "Manage system login records.", icon: KeyRound },
+]
+
 export function getAdminOffice(slug: string) {
   return adminOffices.find((office) => office.slug === slug)
 }
@@ -161,9 +198,12 @@ export function AdminOfficeMainMenu() {
 }
 
 export function AdminOfficeDesk({ office }: { office: AdminOffice }) {
+  const defaultSection = office.slug === "admin-office" ? "Office Sections" : "Desk"
+  const sections = Array.from(new Set(office.tools.map((tool) => tool.section || defaultSection)))
+
   return (
     <main className="flex-1 p-5 sm:p-8 lg:p-10">
-      <div className="mx-auto max-w-6xl">
+      <div className="w-full">
         <Link href="/admin" className="inline-flex items-center text-sm font-bold text-slate-600 hover:text-indigo-700">
           Back to Main Menu
         </Link>
@@ -173,14 +213,71 @@ export function AdminOfficeDesk({ office }: { office: AdminOffice }) {
           <p className="mt-2 max-w-2xl text-slate-500">{office.description}</p>
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {office.tools.map((tool) => {
+        <div className="mt-6 space-y-6">
+          {sections.map((section) => (
+            <section key={section}>
+              <h2 className="mb-2 text-xs font-black uppercase tracking-widest text-slate-500">{section}</h2>
+              <div className="grid w-full gap-2">
+                {office.tools.filter((tool) => (tool.section || defaultSection) === section).map((tool) => {
+                  const Icon = tool.icon
+                  return (
+                    <Link key={tool.href} href={tool.href} title={tool.description} className="flex min-h-14 items-center gap-3 border border-slate-200 bg-white px-3 py-2 shadow-sm transition hover:border-indigo-300 hover:bg-slate-50 hover:shadow-md">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-slate-200 bg-slate-50 text-slate-600">
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <span className="text-sm font-bold text-slate-800 sm:text-base">{tool.label}</span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
+    </main>
+  )
+}
+
+export function AdminOfficeSubmenu({
+  title,
+  description,
+  tools,
+}: {
+  title: string
+  description: string
+  tools: OfficeTool[]
+}) {
+  return (
+    <main className="flex-1 p-5 sm:p-8 lg:p-10">
+      <div className="w-full">
+        <Link
+          href="/admin/office/admin-office"
+          className="inline-flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-indigo-700"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Admin Office
+        </Link>
+
+        <div className="mt-6 border-b border-slate-200 pb-6">
+          <p className="text-xs font-black uppercase tracking-widest text-indigo-600">Admin Office</p>
+          <h1 className="mt-2 text-3xl font-extrabold text-slate-900">{title}</h1>
+          <p className="mt-2 max-w-2xl text-slate-500">{description}</p>
+        </div>
+
+        <div className="mt-6 grid w-full gap-2">
+          {tools.map((tool) => {
             const Icon = tool.icon
             return (
-              <Link key={tool.href} href={tool.href} className="flex min-h-32 flex-col border border-slate-200 bg-white p-4 shadow-sm transition hover:border-indigo-300 hover:shadow-md">
-                <Icon className="h-5 w-5 text-indigo-600" />
-                <h2 className="mt-5 text-base font-extrabold text-slate-900">{tool.label}</h2>
-                <p className="mt-1 text-sm leading-5 text-slate-500">{tool.description}</p>
+              <Link
+                key={tool.href}
+                href={tool.href}
+                title={tool.description}
+                className="flex min-h-14 items-center gap-3 border border-slate-200 bg-white px-3 py-2 shadow-sm transition hover:border-indigo-300 hover:bg-slate-50 hover:shadow-md"
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-slate-200 bg-slate-50 text-slate-600">
+                  <Icon className="h-4 w-4" />
+                </span>
+                <span className="text-sm font-bold text-slate-800 sm:text-base">{tool.label}</span>
               </Link>
             )
           })}
