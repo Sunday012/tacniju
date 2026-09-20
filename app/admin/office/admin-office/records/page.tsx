@@ -4,7 +4,7 @@ export default function AdminOfficeRecordsPage() {
   return (
     <AdminOfficeSubmenu
       title="Records & Reports"
-      description="Open member, location, finance, program, and pending records."
+      description="Open the overview, location, treasury, and pending records."
       tools={adminOfficeRecordTools}
     />
   )

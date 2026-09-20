@@ -4,7 +4,7 @@ export default function AdminOfficeSystemPage() {
   return (
     <AdminOfficeSubmenu
       title="System"
-      description="Open system control, archive, and login administration."
+      description="Open system administration controls."
       tools={adminOfficeSystemTools}
     />
   )
