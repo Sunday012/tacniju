@@ -5,7 +5,6 @@ import {
   Archive,
   ArrowLeft,
   Award,
-  BarChart3,
   CalendarDays,
   ClipboardList,
   FileText,
@@ -58,7 +57,7 @@ export const adminOffices: AdminOffice[] = [
     icon: Landmark,
     tools: [
       { href: "/admin/office/admin-office/desk", label: "Desk", description: "Budget, reports, awards, family, and files.", icon: ClipboardList },
-      { href: "/admin/office/admin-office/records", label: "Record", description: "Population, locations, treasury, and reports.", icon: FolderCheck },
+      { href: "/admin/office/admin-office/records", label: "Records & Reports", description: "Population, locations, treasury, and reports.", icon: FolderCheck },
       { href: "/admin/office/admin-office/system", label: "System", description: "System controls, archive, and login details.", icon: Settings },
       { href: "/admin/office/admin-office/appointments", label: "Appointment", description: "Create, change, or terminate appointments.", icon: UserPlus },
     ],
@@ -127,7 +126,6 @@ export const adminOffices: AdminOffice[] = [
 
 export const adminOfficeDeskTools: OfficeTool[] = [
   { href: "/accounting/programs/budget", label: "Budget", description: "Create and manage event budgets.", icon: ClipboardList },
-  { href: "/accounting/display", label: "Reports", description: "Open administrative and financial reports.", icon: BarChart3 },
   { href: "/admin/awards", label: "Awards", description: "Manage recognition and awards.", icon: Award },
   { href: "/admin/families", label: "Family", description: "Manage family records.", icon: UsersRound },
   { href: "/admin/office/admin-office/files", label: "Files", description: "New, approved, rejected, and sent-back files.", icon: FolderCheck },

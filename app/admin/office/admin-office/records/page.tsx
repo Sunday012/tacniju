@@ -3,7 +3,7 @@ import { AdminOfficeSubmenu, adminOfficeRecordTools } from "@/components/admin/a
 export default function AdminOfficeRecordsPage() {
   return (
     <AdminOfficeSubmenu
-      title="Record"
+      title="Records & Reports"
       description="Open member, location, finance, program, and pending records."
       tools={adminOfficeRecordTools}
     />
