@@ -26,7 +26,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
     title: "Admin Office",
     items: [
-      { name: "Admin Home", href: "/admin", icon: LayoutDashboard },
+      { name: "Main Menu", href: "/admin", icon: LayoutDashboard },
       { name: "Awards", href: "/admin/awards", icon: Award },
       { name: "System", href: "/admin/system", icon: Settings },
     ]
