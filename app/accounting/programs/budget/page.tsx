@@ -1,10 +1,11 @@
-import { CalendarDays, ReceiptText } from "lucide-react"
+import { CalendarDays, LayoutList, ReceiptText } from "lucide-react"
 import { AccountingShell } from "@/components/accounting/accounting-shell"
 import { AccountingMenuList } from "@/components/accounting/accounting-menu-list"
 
 const budgetItems = [
-  { href: "/accounting/programs/events", label: "Event", icon: CalendarDays },
-  { href: "/accounting/vouchers/levy", label: "Levy", icon: ReceiptText },
+  { href: "/accounting/programs/budget/monthly", label: "Monthly Budget", icon: CalendarDays },
+  { href: "/accounting/programs/budget/list", label: "List Budget", icon: LayoutList },
+  { href: "/accounting/programs/budget/box", label: "Box Budget", icon: ReceiptText },
 ]
 
 export default function ProgramBudgetPage() {

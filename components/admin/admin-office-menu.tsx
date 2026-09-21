@@ -94,7 +94,7 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
             description: "Program proposals, invitation letters, and files.",
             icon: ClipboardList,
             children: [
-              { slug: "program-proposal", href: "/accounting/programs", label: "Program Proposal", description: "Prepare an event program proposal.", icon: ClipboardList },
+              { slug: "program-proposal", href: fileQueue("Secretaries"), label: "Program Proposals", description: "Review directors' program proposal memos.", icon: ClipboardList },
               { slug: "invitation-letter", href: "/admin/announcements", label: "Invitation Letter", description: "Prepare and publish an invitation letter.", icon: FileText },
               { slug: "files", href: fileQueue("Secretaries"), label: "Files", description: "Review files sent to the Secretaries desk.", icon: FolderCheck },
             ],
@@ -201,7 +201,7 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
             description: "Program proposal, awards, lyrics, and events.",
             icon: Music2,
             children: [
-              { slug: "program-proposal", href: "/accounting/programs", label: "Program Proposal", description: "Open program planning.", icon: ClipboardList },
+              { slug: "program-proposal", href: "/admin/office/directors/program-proposal?director=Music", label: "Program Proposal", description: "Send a proposal memo to the Secretariat.", icon: ClipboardList },
               { slug: "award-creation", href: "/admin/awards", label: "Award Creation", description: "Create awards.", icon: Award },
               { slug: "lyrics", href: "/admin/records/lyrics", label: "Lyrics", description: "Open lyrics.", icon: Music2 },
               { slug: "event", href: "/admin/events", label: "Event", description: "Open events.", icon: CalendarDays },
@@ -223,7 +223,7 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
             description: "Welfare operational tools.",
             icon: HeartHandshake,
             children: [
-              { slug: "program-proposal", href: "/accounting/programs", label: "Program Proposal", description: "Open program planning.", icon: ClipboardList },
+              { slug: "program-proposal", href: "/admin/office/directors/program-proposal?director=Welfare", label: "Program Proposal", description: "Send a proposal memo to the Secretariat.", icon: ClipboardList },
               { slug: "members", href: "/admin/diary", label: "List of Members", description: "Open the member list.", icon: UsersRound },
               { slug: "meal-ticket", href: "/admin/meal-tickets", label: "Meal Ticket", description: "Open meal tickets.", icon: UtensilsCrossed },
               { slug: "dining-hall", href: "/admin/dining-hall", label: "Dining Hall", description: "Open dining hall records.", icon: UtensilsCrossed },
@@ -258,7 +258,7 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
             description: "Program, scanner, events, and member list.",
             icon: ScanLine,
             children: [
-              { slug: "program-proposal", href: "/accounting/programs", label: "Program Proposal", description: "Open program planning.", icon: ClipboardList },
+              { slug: "program-proposal", href: "/admin/office/directors/program-proposal?director=Ushering", label: "Program Proposal", description: "Send a proposal memo to the Secretariat.", icon: ClipboardList },
               { slug: "scanner", href: "/admin/scanner", label: "Scanner", description: "Open attendance scanner.", icon: ScanLine },
               { slug: "event", href: "/admin/events", label: "Event", description: "Open events.", icon: CalendarDays },
               { slug: "members", href: "/admin/diary", label: "List of Members", description: "Open the member list.", icon: UsersRound },

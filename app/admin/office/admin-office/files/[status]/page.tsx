@@ -32,7 +32,7 @@ export default async function AdminOfficeFileStatusPage({ params, searchParams }
   const orgId = await getAccountingOrgId()
   const { data, error } = await supabase
     .from("admin_office_files")
-    .select("id, title, description, status, created_at")
+    .select("id, title, description, status, file_type, submitted_from, created_at")
     .eq("org_id", orgId)
     .eq("office_unit", unit)
     .eq("status", status)

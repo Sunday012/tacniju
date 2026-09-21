@@ -2,7 +2,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Home, Calendar, Receipt, Settings, Users, MonitorPlay, Shield, Megaphone, Utensils, BookOpenText, Music } from "lucide-react"
+import { Home, Calendar, Receipt, Settings, Users, MonitorPlay, Shield, Megaphone, Utensils, BookOpenText, Music, Landmark } from "lucide-react"
 import { Scan, BookOpen } from "lucide-react"
 
 export function SidebarNav({ profile }: { profile?: { is_admin?: boolean | null; department?: string | null } | null }) {
@@ -14,6 +14,7 @@ export function SidebarNav({ profile }: { profile?: { is_admin?: boolean | null;
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Attendance", href: "/dashboard/attendance", icon: Calendar },
     { name: "Diary", href: "/dashboard/diary", icon: Users },
+    { name: "Account", href: "/dashboard/account", icon: Landmark },
     { name: "Lounge", href: "/dashboard/lounge", icon: Shield },
     { name: "Announcements", href: "/dashboard/announcements", icon: Megaphone },
     { name: "Dreams", href: "/dashboard/dreams", icon: BookOpenText },

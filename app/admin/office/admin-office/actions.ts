@@ -33,6 +33,32 @@ export async function updateAdminOfficeFileStatus(id: string, status: string) {
   return { success: true }
 }
 
+export async function submitDirectorProgramProposal(formData: FormData) {
+  const { supabase, user, orgId, error } = await requireAdmin()
+  if (error || !user || !orgId) return { error }
+
+  const director = String(formData.get("director") || "").trim()
+  const title = String(formData.get("title") || "").trim()
+  const eventName = String(formData.get("event_name") || "").trim()
+  const memo = String(formData.get("memo") || "").trim()
+  if (!director || !title || !eventName || !memo) return { error: "Director, title, event, and memo are required." }
+
+  const { error: insertError } = await supabase.from("admin_office_files").insert({
+    org_id: orgId,
+    office_unit: "Secretaries",
+    title,
+    description: `Event: ${eventName}\n\n${memo}`,
+    file_type: "Program Proposal",
+    submitted_from: `${director} Director`,
+    created_by: user.id,
+  })
+  if (insertError) return { error: insertError.message }
+
+  revalidatePath("/admin/office/admin-office/files", "layout")
+  revalidatePath("/admin/office/secretariat/secretaries/desk")
+  return { success: true }
+}
+
 export async function saveAdminAppointment(formData: FormData) {
   const { supabase, user, orgId, error } = await requireAdmin()
   if (error || !user || !orgId) return { error }

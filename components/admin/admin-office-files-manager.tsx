@@ -12,6 +12,8 @@ export type AdminOfficeFile = {
   title: string
   description: string | null
   status: "New" | "Approved" | "Rejected" | "Sent Back"
+  file_type?: string
+  submitted_from?: string | null
   created_at: string
 }
 
@@ -56,6 +58,7 @@ export function AdminOfficeFilesManager({ files, allowReview = false }: { files:
                 <td className="whitespace-nowrap px-4 py-3 text-slate-500">{new Date(file.created_at).toLocaleDateString("en-GB")}</td>
                 <td className="px-4 py-3">
                   <p className="font-bold text-slate-900">{file.title}</p>
+                  {((file.file_type && file.file_type !== "General") || file.submitted_from) && <p className="mt-0.5 text-xs font-semibold text-indigo-700">{file.file_type || "File"}{file.submitted_from ? ` from ${file.submitted_from}` : ""}</p>}
                   <p className="mt-0.5 text-xs text-slate-500">{file.description || "-"}</p>
                 </td>
                 <td className="px-4 py-3">
