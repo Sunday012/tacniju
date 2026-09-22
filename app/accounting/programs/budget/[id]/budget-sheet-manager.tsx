@@ -2,9 +2,9 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2, Plus, Trash2 } from "lucide-react"
+import { Check, Pencil, Plus, Trash2, X } from "lucide-react"
 import { toast } from "sonner"
-import { createBudgetGroup, createBudgetItem, deleteBudgetGroup, deleteBudgetItem, updateBudgetItem, type BudgetGroup, type BudgetItem, type BudgetSheet } from "../actions"
+import { createBudgetGroup, createBudgetItem, deleteBudgetGroup, deleteBudgetItem, updateBudgetItem, updateBudgetSheetAmount, type BudgetGroup, type BudgetItem, type BudgetSheet } from "../actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,26 +18,87 @@ export function BudgetSheetManager({ sheet, groups, items }: { sheet: BudgetShee
   const [groupName, setGroupName] = useState("")
   const [groupSection, setGroupSection] = useState<BudgetGroup["section"]>("Expense")
   const [itemNames, setItemNames] = useState<Record<string, string>>({})
+  const [isEditingApprovedBudget, setIsEditingApprovedBudget] = useState(false)
+  const [approvedBudgetInput, setApprovedBudgetInput] = useState(String(sheet.budget_amount || 0))
   const byGroup = new Map(groups.map((group) => [group.id, items.filter((item) => item.budget_group_id === group.id)]))
-  const allBudget = items.reduce((sum, item) => sum + Number(item.budget_amount || 0), 0)
+  const approvedBudget = Number(sheet.budget_amount || 0)
+  const allocatedBudget = items.reduce((sum, item) => sum + Number(item.budget_amount || 0), 0)
   const allActual = items.reduce((sum, item) => sum + Number(item.actual_amount || 0), 0)
 
-  const run = (action: () => Promise<{ error?: string; success?: boolean }>, message: string) => startTransition(async () => {
+  const run = (action: () => Promise<{ error?: string; success?: boolean }>, message: string, onSuccess?: () => void) => startTransition(async () => {
     const result = await action()
     if (result.error) {
       toast.error(result.error)
       return
     }
     toast.success(message)
+    onSuccess?.()
     router.refresh()
   })
 
+  const saveApprovedBudget = () => {
+    const nextAmount = Number(approvedBudgetInput)
+    if (!Number.isFinite(nextAmount) || nextAmount <= 0) {
+      toast.error("Enter an approved budget greater than zero.")
+      return
+    }
+    run(
+      () => updateBudgetSheetAmount(sheet.id, nextAmount),
+      "Approved budget updated.",
+      () => setIsEditingApprovedBudget(false),
+    )
+  }
+
+  const cancelApprovedBudgetEdit = () => {
+    setApprovedBudgetInput(String(sheet.budget_amount || 0))
+    setIsEditingApprovedBudget(false)
+  }
+
   return (
     <div className="space-y-6">
-      <section className="grid gap-px overflow-hidden border border-slate-200 bg-slate-200 sm:grid-cols-3">
-        <div className="bg-white px-5 py-4"><p className="text-xs font-bold uppercase text-slate-500">Budget Amount</p><p className="mt-1 font-mono text-xl font-extrabold text-slate-900">NGN {money(allBudget)}</p></div>
+      <section className="grid gap-px overflow-hidden border border-slate-200 bg-slate-200 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="bg-white px-5 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-bold uppercase text-slate-500">Approved Budget</p>
+            {!isEditingApprovedBudget && (
+              <Button variant="ghost" size="icon" title="Edit approved budget" disabled={isPending} className="h-8 w-8 text-slate-500" onClick={() => setIsEditingApprovedBudget(true)}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          {isEditingApprovedBudget ? (
+            <div className="mt-2 flex items-center gap-2">
+              <div className="relative min-w-0 flex-1">
+                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-xs font-bold text-slate-500">NGN</span>
+                <Input
+                  autoFocus
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={approvedBudgetInput}
+                  onChange={(event) => setApprovedBudgetInput(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") saveApprovedBudget()
+                    if (event.key === "Escape") cancelApprovedBudgetEdit()
+                  }}
+                  className="pl-12 text-right font-mono font-bold"
+                  aria-label="Approved budget amount"
+                />
+              </div>
+              <Button size="icon" title="Save approved budget" disabled={isPending} className="h-9 w-9 shrink-0 bg-indigo-600 hover:bg-indigo-700" onClick={saveApprovedBudget}>
+                <Check className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" title="Cancel editing" disabled={isPending} className="h-9 w-9 shrink-0" onClick={cancelApprovedBudgetEdit}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <p className="mt-1 font-mono text-xl font-extrabold text-slate-900">NGN {money(approvedBudget)}</p>
+          )}
+        </div>
+        <div className="bg-white px-5 py-4"><p className="text-xs font-bold uppercase text-slate-500">Allocated to Items</p><p className="mt-1 font-mono text-xl font-extrabold text-slate-900">NGN {money(allocatedBudget)}</p></div>
         <div className="bg-white px-5 py-4"><p className="text-xs font-bold uppercase text-slate-500">Actual Amount</p><p className="mt-1 font-mono text-xl font-extrabold text-slate-900">NGN {money(allActual)}</p></div>
-        <div className="bg-white px-5 py-4"><p className="text-xs font-bold uppercase text-slate-500">Difference</p><p className={`mt-1 font-mono text-xl font-extrabold ${allBudget - allActual >= 0 ? "text-emerald-700" : "text-rose-700"}`}>NGN {money(allBudget - allActual)}</p></div>
+        <div className="bg-white px-5 py-4"><p className="text-xs font-bold uppercase text-slate-500">Remaining</p><p className={`mt-1 font-mono text-xl font-extrabold ${approvedBudget - allActual >= 0 ? "text-emerald-700" : "text-rose-700"}`}>NGN {money(approvedBudget - allActual)}</p></div>
       </section>
 
       <section className="border border-slate-200 bg-white p-5 shadow-sm">

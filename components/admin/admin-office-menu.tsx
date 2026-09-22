@@ -281,7 +281,7 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
 ]
 
 export const adminOfficeDeskTools: OfficeTool[] = [
-  { href: "/accounting/programs/budget", label: "Budget", description: "Create, edit, and delete event budgets.", icon: ClipboardList },
+  { href: officePath("admin-office", "budget"), label: "Budget", description: "Create, edit, and delete event budgets.", icon: ClipboardList },
   { href: "/admin/awards", label: "Awards", description: "Manage recognition and awards.", icon: Award },
   { href: fileQueue("Head Office"), label: "Files", description: "New, approved, and rejected Head Office files.", icon: FolderCheck },
   { href: officePath("admin-office", "appointments"), label: "Appointments", description: "Create, change, and review appointments.", icon: UserPlus },
