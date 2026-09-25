@@ -63,7 +63,7 @@ export default async function AdminDiaryPage() {
 
   return (
     <div className="p-6 md:p-10 relative">
-      <main className="max-w-7xl mx-auto z-10 relative">
+      <main className="relative z-10 w-full">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
             <div>
                 <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Admin Diary View</h1>

@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export default function PresenterDashboard() {
   return (
     <div className="p-6 md:p-10 relative">
-      <div className="max-w-6xl mx-auto w-full space-y-8 relative z-10">
+      <div className="relative z-10 w-full space-y-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center">

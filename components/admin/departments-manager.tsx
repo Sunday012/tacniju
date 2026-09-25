@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { setMemberDepartmentHeadAction, setMemberDepartmentMembershipAction } from "@/app/actions/departments"
 
 type DepartmentMember = {
@@ -28,6 +30,7 @@ export function DepartmentsManager({ profiles }: { profiles: DepartmentMember[] 
     return Array.from(new Set([...defaultDepartments, ...existing])).sort()
   })
   const [newDepartmentName, setNewDepartmentName] = useState("")
+  const [createOpen, setCreateOpen] = useState(false)
   const [isAssigning, setIsAssigning] = useState<string | null>(null)
   const [isSettingHead, setIsSettingHead] = useState<string | null>(null)
 
@@ -49,6 +52,7 @@ export function DepartmentsManager({ profiles }: { profiles: DepartmentMember[] 
     }
     setDepartmentNames(previous => [...previous, name].sort())
     setNewDepartmentName("")
+    setCreateOpen(false)
     toast.success("Department added. Assign a member to save it.")
   }
 
@@ -76,6 +80,10 @@ export function DepartmentsManager({ profiles }: { profiles: DepartmentMember[] 
 
   return (
     <div className="space-y-8">
+      <div className="flex justify-end"><Button onClick={() => setCreateOpen(true)} className="bg-indigo-600 font-bold text-white hover:bg-indigo-700"><Plus className="mr-1 h-4 w-4" />New Department</Button></div>
+
+      <Sheet open={createOpen} onOpenChange={setCreateOpen}><SheetContent className="w-full p-0 sm:max-w-xl"><SheetHeader className="border-b border-slate-200 px-6 py-5 text-left"><SheetTitle>Create Department</SheetTitle><SheetDescription>Add a department before assigning its members and head.</SheetDescription></SheetHeader><div className="space-y-5 p-6"><label className="grid gap-2"><Label>Department name</Label><Input value={newDepartmentName} onChange={event => setNewDepartmentName(event.target.value)} placeholder="Enter department name" /></label><Button onClick={handleCreate} disabled={!newDepartmentName.trim()} className="h-11 w-full bg-indigo-600 font-bold text-white hover:bg-indigo-700"><Plus className="mr-1 h-4 w-4" />Create Department</Button></div></SheetContent></Sheet>
+
       <Card className="border-indigo-100 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <CardHeader className="border-b border-indigo-50 bg-indigo-50/50 pb-4 dark:border-slate-800 dark:bg-slate-900">
           <CardTitle className="flex items-center gap-2 text-lg font-bold text-slate-800 dark:text-slate-100">
@@ -84,18 +92,8 @@ export function DepartmentsManager({ profiles }: { profiles: DepartmentMember[] 
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="mb-6 flex flex-wrap items-center gap-2">
-            <Input
-              value={newDepartmentName}
-              onChange={event => setNewDepartmentName(event.target.value)}
-              placeholder="New department name..."
-              className="max-w-xs"
-            />
-            <Button onClick={handleCreate} disabled={!newDepartmentName.trim()} className="bg-indigo-600 hover:bg-indigo-700">
-              <Plus className="mr-1 h-4 w-4" />
-              Add Department
-            </Button>
-            <Badge variant="outline" className="ml-auto border-slate-200 px-3 py-1.5 text-slate-500 dark:border-slate-700 dark:text-slate-300">
+          <div className="mb-6 flex justify-end">
+            <Badge variant="outline" className="border-slate-200 px-3 py-1.5 text-slate-500 dark:border-slate-700 dark:text-slate-300">
               {unassignedCount} unassigned
             </Badge>
           </div>

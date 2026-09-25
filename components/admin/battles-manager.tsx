@@ -9,6 +9,7 @@ import { setPresentationState } from "@/app/actions/presentation"
 import { toast } from "sonner"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
 type CompetitionOption = { id: string; name: string }
 type CompetitionEntryOption = {
@@ -36,6 +37,7 @@ export function BattlesManager({
   const [player1Id, setPlayer1Id] = useState("")
   const [player2Id, setPlayer2Id] = useState("")
   const [isCreating, setIsCreating] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
   const [processingId, setProcessingId] = useState<string | null>(null)
   const profiles = entries
     .filter(entry => entry.competitionId === competitionId)
@@ -62,6 +64,7 @@ export function BattlesManager({
       setTitle("")
       setPlayer1Id("")
       setPlayer2Id("")
+      setCreateOpen(false)
     } else {
       toast.error(res.error || "Failed to create battle")
     }
@@ -115,16 +118,20 @@ export function BattlesManager({
 
   return (
     <div className="space-y-8">
-      {/* Create Battle */}
-      <Card className="border-indigo-100 shadow-sm">
-        <CardHeader className="bg-indigo-50/50 pb-4 border-b border-indigo-50">
-          <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <Swords className="w-5 h-5 text-indigo-600" />
-            Create Match-Up
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="flex justify-end">
+        <Button onClick={() => setCreateOpen(true)} className="bg-indigo-600 hover:bg-indigo-700">
+          <Plus className="mr-2 h-4 w-4" />
+          New Match-Up
+        </Button>
+      </div>
+
+      <Sheet open={createOpen} onOpenChange={setCreateOpen}>
+        <SheetContent className="w-full overflow-y-auto sm:max-w-2xl">
+          <SheetHeader>
+            <SheetTitle>Create Match-Up</SheetTitle>
+            <SheetDescription>Select a competition and pair two entrants for a battle.</SheetDescription>
+          </SheetHeader>
+          <div className="grid grid-cols-1 gap-6 px-6 py-6 md:grid-cols-2">
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-semibold text-slate-700 mb-1 block">Competition</label>
@@ -157,7 +164,7 @@ export function BattlesManager({
               </div>
             </div>
             
-            <div className="space-y-4 bg-slate-50 p-4 rounded-xl border border-slate-100 relative">
+            <div className="relative space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
               <div className="absolute -left-3 top-1/2 -translate-y-1/2 bg-white rounded-full p-1 border border-slate-200 shadow-sm z-10 hidden md:block">
                 <span className="text-[10px] font-black text-slate-400">VS</span>
               </div>
@@ -181,20 +188,20 @@ export function BattlesManager({
                 </Select>
               </div>
               
-              <div className="flex gap-2 pt-2">
+              <div className="flex flex-col gap-2 pt-2 sm:flex-row">
                 <Button onClick={handleRandomize} variant="outline" className="flex-1 text-slate-600">
                   <Shuffle className="w-4 h-4 mr-2" />
                   Random Pair
                 </Button>
                 <Button onClick={handleCreate} disabled={isCreating || !competitionId} className="flex-1 bg-indigo-600 hover:bg-indigo-700">
-                  <Swords className="w-4 h-4 mr-2" />
+                  {isCreating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Swords className="mr-2 h-4 w-4" />}
                   Start Battle
                 </Button>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </SheetContent>
+      </Sheet>
 
       {/* Battles List */}
       <Card className="border-slate-200 shadow-sm">

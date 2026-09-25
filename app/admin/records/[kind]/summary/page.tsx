@@ -40,7 +40,7 @@ export default async function ContentRecordSummaryPage({
     .map(([, value]) => value)
 
   return (
-    <main className="mx-auto w-full max-w-[1600px] flex-1 p-5 sm:p-8 lg:p-10">
+    <main className="w-full flex-1 p-5 sm:p-8 lg:p-10">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <Link href={`/admin/records/${kind}`} className="mb-5 inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 shadow-sm hover:bg-slate-50">

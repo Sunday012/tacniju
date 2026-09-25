@@ -77,7 +77,7 @@ export default async function EventAttendancePage({ params }: { params: { id: st
 
   return (
     <div className="min-h-screen bg-slate-50 print:bg-white p-6 sm:p-10">
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="w-full space-y-6">
         <div className="flex items-center justify-between print:hidden">
           <Link href="/admin/events">
             <Button variant="ghost" size="sm" className="text-slate-500 hover:text-slate-800 -ml-2">

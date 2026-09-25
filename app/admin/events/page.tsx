@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 export default async function AdminEventsPage() {
   return (
     <div className="p-6 md:p-10 relative">
-      <div className="max-w-5xl mx-auto space-y-8">
+      <div className="w-full space-y-8">
         <EventsManager />
       </div>
     </div>

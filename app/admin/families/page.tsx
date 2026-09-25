@@ -25,7 +25,7 @@ export default async function FamiliesPage() {
 
   return (
     <div className="p-6 md:p-10 relative">
-      <div className="max-w-7xl mx-auto z-10 relative space-y-8">
+      <div className="relative z-10 w-full space-y-8">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-800">Families Management</h1>
           <p className="text-slate-600 mt-2">Create family groups and assign members to them.</p>

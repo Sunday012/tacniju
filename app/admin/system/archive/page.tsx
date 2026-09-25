@@ -66,7 +66,7 @@ export default async function SystemArchivePage({ searchParams }: { searchParams
 
   return (
     <div className="p-6 md:p-10">
-      <div className="mx-auto max-w-7xl space-y-8">
+      <div className="w-full space-y-8">
         <div>
           <Link href="/admin/system" className="mb-5 inline-flex h-10 items-center gap-2 rounded-xl border border-indigo-200 bg-white px-4 text-sm font-black text-indigo-700 shadow-sm hover:bg-indigo-50">
             <ArrowLeft className="h-4 w-4" />

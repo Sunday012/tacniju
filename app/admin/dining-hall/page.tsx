@@ -38,7 +38,7 @@ export default async function DiningHallAdminPage() {
 
   return (
     <div className="p-6 md:p-10">
-      <div className="mx-auto max-w-7xl space-y-8">
+      <div className="w-full space-y-8">
         <div className="flex flex-col gap-4 rounded-[2rem] border border-white/60 bg-white/75 p-6 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] backdrop-blur-xl sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-4">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">

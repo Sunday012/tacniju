@@ -16,7 +16,7 @@ export default async function NewContentRecordPage({ params }: { params: { kind:
   }
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 p-5 sm:p-8 lg:p-10">
+    <main className="w-full flex-1 p-5 sm:p-8 lg:p-10">
       <Link href={`/admin/records/${kind}`} className="mb-5 inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 shadow-sm hover:bg-slate-50">
         <ArrowLeft className="h-4 w-4" />
         Back to {labels.plural}

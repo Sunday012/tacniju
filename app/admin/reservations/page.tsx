@@ -16,7 +16,7 @@ export default async function ReservationsPage() {
 
   return (
     <div className="p-6 md:p-10 relative">
-      <main className="max-w-7xl mx-auto z-10 relative print:py-0 print:px-0">
+      <main className="relative z-10 w-full print:px-0 print:py-0">
         <div className="bg-white/70 backdrop-blur-3xl border border-white/60 rounded-[2rem] p-6 sm:p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.1)] transition-all print:shadow-none print:border-none print:bg-white print:p-0">
           <div className="mb-8 border-b border-slate-100/80 pb-6">
             <h3 className="text-[22px] text-slate-800 font-extrabold tracking-tight flex items-center gap-3">

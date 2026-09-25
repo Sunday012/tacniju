@@ -18,7 +18,7 @@ export default async function DreamMonthSummaryPage({ params }: { params: { mont
   const title = format(parseISO(`${params.month}-01`), "MMMM yyyy")
 
   return (
-    <main className="flex-1 p-5 sm:p-8 lg:p-10 max-w-[1100px] mx-auto w-full">
+    <main className="w-full flex-1 p-5 sm:p-8 lg:p-10">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <Link href="/admin/records/dreams/summary?sort=month" className="mb-5 inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 shadow-sm hover:bg-slate-50">

@@ -26,7 +26,7 @@ export default async function LoginDetailsPage() {
 
   return (
     <div className="p-6 md:p-10">
-      <div className="mx-auto max-w-7xl space-y-8">
+      <div className="w-full space-y-8">
         <div>
           <Link
             href="/admin/system"

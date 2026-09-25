@@ -28,7 +28,7 @@ export default async function DiaryBirthdaysPage({ searchParams }: { searchParam
 
   return (
     <main className="flex-1 p-5 sm:p-8 lg:p-10">
-      <div className="mx-auto max-w-6xl">
+      <div className="w-full">
         <Link href={searchParams.from === "assistants" ? "/admin/office/secretariat/assistants" : "/admin/diary"} className="inline-flex items-center gap-2 text-sm font-bold text-slate-600 hover:text-indigo-700"><ArrowLeft className="h-4 w-4" />Back</Link>
         <h1 className="text-3xl font-extrabold text-slate-900">Birthdays</h1>
         <p className="mt-2 text-slate-500">Birthday diary generated automatically from active member profiles.</p>

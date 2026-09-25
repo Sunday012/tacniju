@@ -12,7 +12,7 @@ const recordsItems = [
 
 export default function AdminRecordsPage() {
   return (
-    <main className="flex-1 p-5 sm:p-8 lg:p-10 max-w-[1600px] mx-auto w-full">
+    <main className="w-full flex-1 p-5 sm:p-8 lg:p-10">
       <div className="mb-8">
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Records</h1>
         <p className="mt-2 font-medium text-slate-500">Keep protected member records, dreams, and points in one place.</p>

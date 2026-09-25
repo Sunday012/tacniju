@@ -11,7 +11,9 @@ import {
 } from "@/app/actions/diary-locations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 type Location = { id: string; name: string };
 type Assembly = { id: string; location_id: string; name: string };
@@ -29,6 +31,8 @@ export function DiaryLocationsManager({
   const [districtName, setDistrictName] = useState("");
   const [assemblyName, setAssemblyName] = useState("");
   const [locationId, setLocationId] = useState(locations[0]?.id || "");
+  const [districtOpen, setDistrictOpen] = useState(false);
+  const [assemblyOpen, setAssemblyOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const run = (action: () => Promise<{ error?: string | null; success?: boolean }>, success: string, reset?: () => void) => {
@@ -45,47 +49,14 @@ export function DiaryLocationsManager({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className="border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center gap-2">
-            <MapPin className="h-5 w-5 text-indigo-600" />
-            <h2 className="font-bold text-slate-900">Create District</h2>
-          </div>
-          <div className="flex gap-2">
-            <Input value={districtName} onChange={(event) => setDistrictName(event.target.value)} placeholder="District name" />
-            <Button
-              disabled={isPending || !districtName.trim()}
-              onClick={() => run(() => createDiaryLocation(districtName), "District created.", () => setDistrictName(""))}
-              title="Add district"
-            >
-              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            </Button>
-          </div>
-        </div>
-
-        <div className="border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-indigo-600" />
-            <h2 className="font-bold text-slate-900">Create Assembly</h2>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
-            <Select value={locationId} onValueChange={setLocationId}>
-              <SelectTrigger><SelectValue placeholder="Select district" /></SelectTrigger>
-              <SelectContent>
-                {locations.map((location) => <SelectItem key={location.id} value={location.id}>{location.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Input value={assemblyName} onChange={(event) => setAssemblyName(event.target.value)} placeholder="Assembly name" />
-            <Button
-              disabled={isPending || !locationId || !assemblyName.trim()}
-              onClick={() => run(() => createDiaryAssembly(locationId, assemblyName), "Assembly created.", () => setAssemblyName(""))}
-              title="Add assembly"
-            >
-              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            </Button>
-          </div>
-        </div>
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button variant="outline" className="gap-2 border-indigo-200 font-bold text-indigo-700 hover:bg-indigo-50" onClick={() => setDistrictOpen(true)}><MapPin className="h-4 w-4" />New District</Button>
+        <Button className="gap-2 bg-indigo-600 font-bold text-white hover:bg-indigo-700" onClick={() => setAssemblyOpen(true)}><Building2 className="h-4 w-4" />New Assembly</Button>
       </div>
+
+      <Sheet open={districtOpen} onOpenChange={setDistrictOpen}><SheetContent className="w-full p-0 sm:max-w-xl"><SheetHeader className="border-b border-slate-200 px-6 py-5 text-left"><SheetTitle>Create District</SheetTitle><SheetDescription>Add a district to the location directory.</SheetDescription></SheetHeader><div className="space-y-5 p-6"><label className="grid gap-2"><Label>District name</Label><Input value={districtName} onChange={(event) => setDistrictName(event.target.value)} placeholder="Enter district name" /></label><Button className="h-11 w-full bg-indigo-600 font-bold text-white hover:bg-indigo-700" disabled={isPending || !districtName.trim()} onClick={() => run(() => createDiaryLocation(districtName), "District created.", () => { setDistrictName(""); setDistrictOpen(false); })}>{isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}Create District</Button></div></SheetContent></Sheet>
+
+      <Sheet open={assemblyOpen} onOpenChange={setAssemblyOpen}><SheetContent className="w-full p-0 sm:max-w-xl"><SheetHeader className="border-b border-slate-200 px-6 py-5 text-left"><SheetTitle>Create Assembly</SheetTitle><SheetDescription>Add an assembly under a district.</SheetDescription></SheetHeader><div className="space-y-5 p-6"><label className="grid gap-2"><Label>District</Label><Select value={locationId} onValueChange={setLocationId}><SelectTrigger><SelectValue placeholder="Select district" /></SelectTrigger><SelectContent>{locations.map((location) => <SelectItem key={location.id} value={location.id}>{location.name}</SelectItem>)}</SelectContent></Select></label><label className="grid gap-2"><Label>Assembly name</Label><Input value={assemblyName} onChange={(event) => setAssemblyName(event.target.value)} placeholder="Enter assembly name" /></label><Button className="h-11 w-full bg-indigo-600 font-bold text-white hover:bg-indigo-700" disabled={isPending || !locationId || !assemblyName.trim()} onClick={() => run(() => createDiaryAssembly(locationId, assemblyName), "Assembly created.", () => { setAssemblyName(""); setAssemblyOpen(false); })}>{isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}Create Assembly</Button></div></SheetContent></Sheet>
 
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         {locations.map((location) => {

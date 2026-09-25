@@ -18,7 +18,7 @@ export default async function DiaryLocationsPage() {
 
   return (
     <main className="flex-1 p-5 sm:p-8 lg:p-10">
-      <div className="mx-auto max-w-7xl space-y-7">
+      <div className="w-full space-y-7">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900">Diary Locations</h1>
           <p className="mt-2 text-slate-500">Create districts and their assemblies. Members are placed automatically from their profile selection.</p>

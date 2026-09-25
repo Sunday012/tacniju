@@ -15,7 +15,7 @@ export default async function MealTicketsAdminPage() {
 
   return (
     <div className="p-6 md:p-10 relative">
-      <div className="max-w-6xl mx-auto w-full space-y-8 relative z-10">
+      <div className="relative z-10 w-full space-y-8">
 
         {/* Header - Hidden when printing */}
         <div className="print:hidden flex flex-col sm:flex-row sm:items-start justify-between gap-4 bg-white/70 backdrop-blur-xl border border-white/60 rounded-[2rem] p-6 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)]">

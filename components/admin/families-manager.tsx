@@ -6,12 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Label } from "@/components/ui/label"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { createFamilyAction, deleteFamilyAction, assignMemberToFamilyAction, distributeUnassignedMembersAction } from "@/app/actions/families"
 import { toast } from "sonner"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function FamiliesManager({ families, profiles }: { families: any[], profiles: any[] }) {
   const [newFamilyName, setNewFamilyName] = useState("")
+  const [createOpen, setCreateOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
   const [isAssigning, setIsAssigning] = useState<string | null>(null)
@@ -27,6 +30,7 @@ export function FamiliesManager({ families, profiles }: { families: any[], profi
     if (res.success) {
       toast.success("Family created successfully!")
       setNewFamilyName("")
+      setCreateOpen(false)
     } else {
       toast.error(res.error || "Failed to create family")
     }
@@ -72,6 +76,22 @@ export function FamiliesManager({ families, profiles }: { families: any[], profi
 
   return (
     <div className="space-y-8">
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button
+          onClick={handleDistribute}
+          disabled={isDistributing || families.length === 0 || unassignedCount === 0}
+          variant="outline"
+          className="border-indigo-200 font-bold text-indigo-700 hover:bg-indigo-50"
+          title={families.length === 0 ? "Create at least one family first" : unassignedCount === 0 ? "Every member is already assigned" : `Randomly assigns ${unassignedCount} unassigned member${unassignedCount === 1 ? "" : "s"} across the existing families`}
+        >
+          {isDistributing ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Shuffle className="mr-1 h-4 w-4" />}
+          Random Distribute{unassignedCount > 0 ? ` (${unassignedCount})` : ""}
+        </Button>
+        <Button onClick={() => setCreateOpen(true)} className="bg-indigo-600 font-bold text-white hover:bg-indigo-700"><Plus className="mr-1 h-4 w-4" />New Family</Button>
+      </div>
+
+      <Sheet open={createOpen} onOpenChange={setCreateOpen}><SheetContent className="w-full p-0 sm:max-w-xl"><SheetHeader className="border-b border-slate-200 px-6 py-5 text-left"><SheetTitle>Create Family</SheetTitle><SheetDescription>Add a new family group.</SheetDescription></SheetHeader><div className="space-y-5 p-6"><label className="grid gap-2"><Label>Family name</Label><Input value={newFamilyName} onChange={e => setNewFamilyName(e.target.value)} placeholder="Enter family name" /></label><Button onClick={handleCreate} disabled={isCreating || !newFamilyName.trim()} className="h-11 w-full bg-indigo-600 font-bold text-white hover:bg-indigo-700">{isCreating ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Plus className="mr-1 h-4 w-4" />}Create Family</Button></div></SheetContent></Sheet>
+
       {/* Families List */}
       <Card className="border-indigo-100 shadow-sm">
         <CardHeader className="bg-indigo-50/50 pb-4 border-b border-indigo-50">
@@ -81,35 +101,6 @@ export function FamiliesManager({ families, profiles }: { families: any[], profi
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="flex flex-wrap gap-2 mb-6 items-center">
-            <Input
-              value={newFamilyName}
-              onChange={e => setNewFamilyName(e.target.value)}
-              placeholder="New family name..."
-              className="max-w-xs"
-            />
-            <Button onClick={handleCreate} disabled={isCreating || !newFamilyName.trim()} className="bg-indigo-600 hover:bg-indigo-700">
-              <Plus className="w-4 h-4 mr-1" />
-              Add Family
-            </Button>
-            <Button
-              onClick={handleDistribute}
-              disabled={isDistributing || families.length === 0 || unassignedCount === 0}
-              variant="outline"
-              className="ml-auto border-indigo-200 text-indigo-700 hover:bg-indigo-50"
-              title={
-                families.length === 0
-                  ? "Create at least one family first"
-                  : unassignedCount === 0
-                    ? "Every member is already assigned"
-                    : `Randomly assigns ${unassignedCount} unassigned member${unassignedCount === 1 ? "" : "s"} across the existing families`
-              }
-            >
-              {isDistributing ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Shuffle className="w-4 h-4 mr-1" />}
-              Random Distribute{unassignedCount > 0 ? ` (${unassignedCount})` : ""}
-            </Button>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {families.length === 0 ? (
               <p className="text-slate-500 text-sm italic col-span-full">No families created yet.</p>

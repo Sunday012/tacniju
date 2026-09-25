@@ -20,7 +20,7 @@ export default async function FamilyLoungePage({ params }: { params: { id: strin
 
   return (
     <div className="p-6 md:p-10 relative">
-      <div className="max-w-6xl mx-auto z-10 relative space-y-6">
+      <div className="relative z-10 w-full space-y-6">
         <Link
           href="/admin/families"
           className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-indigo-700 transition-colors"

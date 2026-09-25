@@ -35,7 +35,7 @@ export default async function DiningHallSummaryPage() {
 
   return (
     <div className="p-6 md:p-10">
-      <div className="mx-auto max-w-7xl space-y-8">
+      <div className="w-full space-y-8">
         <div className="flex items-center justify-between gap-4">
           <div>
             <Link

@@ -17,7 +17,7 @@ export default async function AdminGuestsPage() {
 
   return (
     <div className="p-6 md:p-10 relative">
-      <main className="max-w-7xl mx-auto z-10 relative">
+      <main className="relative z-10 w-full">
         <div className="mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div>
             <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Guest Directory</h1>
