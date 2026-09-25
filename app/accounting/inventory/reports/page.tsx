@@ -1,5 +1,6 @@
 import { AccountingShell } from "@/components/accounting/accounting-shell"
 import { getStockJournalDiaryRows } from "@/app/accounting/production/actions"
+import { ReportSheet } from "@/components/reports/report-sheet"
 
 function qty(value: number) {
   return value ? value.toLocaleString(undefined, { maximumFractionDigits: 2 }) : "-"
@@ -98,9 +99,9 @@ export default async function InventoryReportsPage() {
   const totalOut = stockOut.reduce((sum, row) => sum + row.qty, 0)
 
   return (
-    <AccountingShell title="Inventory Reports" backHref="/accounting/inventory" backLabel="Inventory Info">
-      <div className="overflow-x-auto rounded-xl border border-slate-300 bg-white shadow-sm">
-        <div className="min-w-[760px]">
+    <AccountingShell title="Inventory Reports" backHref="/accounting/inventory" backLabel="Inventory Info" framed={false}>
+      <ReportSheet title="Inventory Movement Report" subtitle="Stock inward and outward quantities">
+        <div className="min-w-[760px] print:min-w-0">
           <div className="grid min-h-[520px] grid-cols-2">
             <div className="border-r border-slate-300">
               <ReportSide title="Stock In" lines={stockIn} side="in" />
@@ -122,7 +123,7 @@ export default async function InventoryReportsPage() {
             </div>
           </div>
         </div>
-      </div>
+      </ReportSheet>
     </AccountingShell>
   )
 }

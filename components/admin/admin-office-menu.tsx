@@ -240,9 +240,8 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
                 slug: "medical-unit",
                 href: officePath("directors", "welfare", "desk", "medical-unit"),
                 label: "Medical Unit",
-                description: "Medical unit workspace.",
+                description: "Record visits, treatment, and follow-up care.",
                 icon: Stethoscope,
-                emptyMessage: "No medical unit tools have been added yet.",
               },
               { slug: "report", href: "/accounting/inventory/reports", label: "Report", description: "Open welfare inventory reports.", icon: FileText },
             ],
@@ -316,9 +315,9 @@ export const adminOfficeDeskTools: OfficeTool[] = [
 ]
 
 export const adminOfficeRecordTools: OfficeTool[] = [
-  { href: "/admin/diary", label: "Overview", description: "Open the membership overview.", icon: UsersRound },
+  { href: "/admin", label: "Overview", description: "Return to the Admin opening page.", icon: UsersRound },
   { href: "/admin/diary/locations", label: "Location", description: "Review districts and assemblies.", icon: MapPin },
-  { href: "/accounting/balance-sheet", label: "Treasury", description: "Review balances and treasury position.", icon: WalletCards },
+  { href: officePath("admin-office", "records", "treasury"), label: "Treasury", description: "See every bank and its current balance.", icon: WalletCards },
   { href: "/admin/announcements", label: "Pending", description: "Review pending announcements and notices.", icon: Mic2 },
 ]
 

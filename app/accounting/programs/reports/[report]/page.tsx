@@ -6,6 +6,7 @@ import { getAccountingPrograms } from "@/app/accounting/actions"
 import { getBillPendingRows } from "@/app/accounting/display/bill-pending/actions"
 import { createClient } from "@/lib/server"
 import { getAccountingOrgId } from "@/lib/accounting-org"
+import { ReportSheet } from "@/components/reports/report-sheet"
 
 const reportTitles: Record<string, string> = {
   events: "Events Reports",
@@ -221,8 +222,10 @@ async function getOutstandingRows(kind: "debtors" | "creditors") {
 
 function ReportFrame({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <AccountingShell title={title} backHref="/accounting/programs/reports" backLabel="Reports">
-      {children}
+    <AccountingShell title={title} backHref="/accounting/programs/reports" backLabel="Reports" framed={false}>
+      <ReportSheet title={title} subtitle="Event-linked records and totals">
+        {children}
+      </ReportSheet>
     </AccountingShell>
   )
 }
@@ -262,8 +265,8 @@ export default async function ProgramReportPage({ params }: { params: { report: 
 
     return (
       <ReportFrame title={title}>
-        <div className="space-y-5">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
+        <div>
+          <div className="grid border-b border-slate-300 sm:grid-cols-2 lg:grid-cols-6">
             {[
               ["Events", programs.length.toLocaleString()],
               ["Total People", totalAttendance.toLocaleString()],
@@ -272,14 +275,14 @@ export default async function ProgramReportPage({ params }: { params: { report: 
               ["Expenses", money(totalExpenses)],
               ["Outstanding", money(totalDebtors - totalCreditors)],
             ].map(([label, value]) => (
-              <div key={label} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div key={label} className="border-b border-r border-slate-200 bg-white px-4 py-3 last:border-r-0 lg:border-b-0">
                 <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">{label}</p>
                 <p className="mt-1 text-lg font-black text-slate-900">{value}</p>
               </div>
             ))}
           </div>
 
-          <Table>
+          <Table className="border-b border-slate-300">
             <TableHeader>
               <TableRow>
                 <TableHead>Event</TableHead>
@@ -332,6 +335,7 @@ export default async function ProgramReportPage({ params }: { params: { report: 
             </TableBody>
           </Table>
 
+          <div className="border-t-8 border-slate-100 px-4 py-3 text-xs font-black uppercase tracking-widest text-slate-700">Levy Details</div>
           <Table>
             <TableHeader>
               <TableRow>

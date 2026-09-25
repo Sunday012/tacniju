@@ -1,19 +1,14 @@
 import { AccountingShell } from "@/components/accounting/accounting-shell"
 import { getItems } from "@/app/inventory/actions"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { ReportSheet } from "@/components/reports/report-sheet"
 
 export default async function ProductionStockReportsPage() {
   const items = await getItems()
 
   return (
     <AccountingShell title="Stock Reports" backHref="/accounting/production/reports" backLabel="Production Reports" showTitle={false}>
-      <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xl">Stock Reports</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
+      <ReportSheet title="Stock Reports" subtitle="Opening, inward, outward, and closing quantities">
             <Table>
               <TableHeader className="bg-slate-50 [&_th]:px-5 [&_th]:py-3.5 [&_th]:text-[11px] [&_th]:font-bold [&_th]:uppercase [&_th]:tracking-wider [&_th]:text-slate-600">
                 <TableRow className="border-slate-200">
@@ -54,9 +49,7 @@ export default async function ProductionStockReportsPage() {
                 )}
               </TableBody>
             </Table>
-          </div>
-        </CardContent>
-      </Card>
+      </ReportSheet>
     </AccountingShell>
   )
 }
