@@ -10,7 +10,6 @@ export function ReportSheet({ title, subtitle, children }: { title: string; subt
           {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
         </div>
         <div className="flex items-center gap-4">
-          <p className="text-xs font-semibold text-slate-500">Prepared {new Date().toLocaleDateString("en-GB")}</p>
           <div className="print:hidden"><PrintButton /></div>
         </div>
       </header>

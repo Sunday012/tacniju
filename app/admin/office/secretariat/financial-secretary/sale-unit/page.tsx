@@ -24,8 +24,7 @@ function money(value: number) {
 }
 
 export default async function SaleUnitPage() {
-  const supabase = await createClient()
-  const orgId = await getAccountingOrgId()
+  const [supabase, orgId] = await Promise.all([createClient(), getAccountingOrgId()])
   const [{ data: salesData }, stallResult, ticketResult] = await Promise.all([
     supabase.from("vouchers").select("id, voucher_no, date, voucher_entries(debit_amount, credit_amount, ledgers(name))").eq("org_id", orgId).eq("voucher_type", "Sales").order("date", { ascending: false }).limit(10),
     getAdminStallOrders(),

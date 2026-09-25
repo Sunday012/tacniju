@@ -7,8 +7,7 @@ import { MedicalVisitsManager, type MedicalVisit } from "./medical-visits-manage
 export const dynamic = "force-dynamic"
 
 export default async function MedicalUnitPage() {
-  const supabase = await createClient()
-  const orgId = await getAccountingOrgId()
+  const [supabase, orgId] = await Promise.all([createClient(), getAccountingOrgId()])
   const { data, error } = await supabase.from("medical_visits").select("id, patient_name, visit_date, complaint, treatment, status, notes").eq("org_id", orgId).order("visit_date", { ascending: false })
 
   return (

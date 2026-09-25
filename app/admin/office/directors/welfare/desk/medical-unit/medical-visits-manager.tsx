@@ -31,6 +31,11 @@ const emptyForm = {
   notes: "",
 }
 
+function formatDate(value: string) {
+  const [year, month, day] = value.split("-")
+  return year && month && day ? `${day}/${month}/${year}` : value
+}
+
 export function MedicalVisitsManager({ visits }: { visits: MedicalVisit[] }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
@@ -94,7 +99,7 @@ export function MedicalVisitsManager({ visits }: { visits: MedicalVisit[] }) {
                 <tr><td colSpan={6} className="px-4 py-12 text-center font-semibold text-slate-500">{visits.length ? "No medical records match your search." : "No medical visits have been recorded."}</td></tr>
               ) : filtered.map((visit) => (
                 <tr key={visit.id} className="odd:bg-white even:bg-slate-50/60">
-                  <td className="whitespace-nowrap px-4 py-3 text-slate-600">{new Date(`${visit.visit_date}T00:00:00`).toLocaleDateString()}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-slate-600">{formatDate(visit.visit_date)}</td>
                   <td className="px-4 py-3 font-bold text-slate-900">{visit.patient_name}</td>
                   <td className="max-w-xs px-4 py-3 text-slate-700">{visit.complaint}</td>
                   <td className="max-w-xs px-4 py-3 text-slate-600">{visit.treatment || "-"}</td>
