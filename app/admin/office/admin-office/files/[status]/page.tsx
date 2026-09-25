@@ -52,7 +52,11 @@ export default async function AdminOfficeFileStatusPage({ params, searchParams }
         {error ? (
           <div className="border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">File storage is not ready. Apply migrations 055 and 056 in Supabase.</div>
         ) : (
-          <AdminOfficeFilesManager files={(data || []) as AdminOfficeFile[]} allowReview={status === "New"} />
+          <AdminOfficeFilesManager
+            files={(data || []) as AdminOfficeFile[]}
+            allowReview={status === "New"}
+            allowSendToHeadOffice={unit === "Secretaries" && status === "Approved"}
+          />
         )}
       </div>
     </main>

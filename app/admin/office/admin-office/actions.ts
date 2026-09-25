@@ -33,6 +33,26 @@ export async function updateAdminOfficeFileStatus(id: string, status: string) {
   return { success: true }
 }
 
+export async function sendApprovedFileToHeadOffice(id: string) {
+  const { supabase, orgId, error } = await requireAdmin()
+  if (error || !orgId) return { error }
+
+  const { data, error: updateError } = await supabase
+    .from("admin_office_files")
+    .update({ office_unit: "Head Office", status: "New", updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("org_id", orgId)
+    .eq("office_unit", "Secretaries")
+    .eq("status", "Approved")
+    .select("id")
+    .maybeSingle()
+  if (updateError) return { error: updateError.message }
+  if (!data) return { error: "Only approved Secretariat files can be sent to Head Office." }
+
+  revalidatePath("/admin/office/admin-office/files", "layout")
+  return { success: true }
+}
+
 export async function submitDirectorProgramProposal(formData: FormData) {
   const { supabase, user, orgId, error } = await requireAdmin()
   if (error || !user || !orgId) return { error }
@@ -43,7 +63,7 @@ export async function submitDirectorProgramProposal(formData: FormData) {
   const memo = String(formData.get("memo") || "").trim()
   const recipient = String(formData.get("recipient") || "Secretaries").trim()
   if (!director || !title || !eventName || !memo) return { error: "Director, title, event, and memo are required." }
-  if (!["Secretaries", "Finance Officer"].includes(recipient)) return { error: "Select a valid recipient." }
+  if (recipient !== "Secretaries") return { error: "Directors can only send proposals to the Secretariat." }
 
   const { error: insertError } = await supabase.from("admin_office_files").insert({
     org_id: orgId,
@@ -72,12 +92,18 @@ export async function submitAdminOfficeMemo(formData: FormData) {
   const fileType = String(formData.get("file_type") || "Memo").trim()
   const submittedFrom = String(formData.get("submitted_from") || "Secretaries").trim()
   const recipient = String(formData.get("recipient") || "Secretaries").trim()
-  const allowedRecipients = ["Secretaries", "Finance Officer"]
-  const allowedTypes = ["Memo", "Meeting Note", "Invitation Letter", "Received Letter", "Transport Report"]
+  const allowedRecipients = ["Secretaries", "Finance Officer", "Head Office"]
+  const allowedTypes = ["Memo", "Meeting Note", "Invitation Letter", "Received Letter", "Transport Report", "Announcement Memo", "Program Proposal"]
 
   if (!title || !body) return { error: "Title and memo content are required." }
   if (!allowedRecipients.includes(recipient)) return { error: "Select a valid recipient." }
   if (!allowedTypes.includes(fileType)) return { error: "Select a valid memo type." }
+  if (fileType === "Announcement Memo" && (submittedFrom !== "Admin Control Unit" || recipient !== "Secretaries")) {
+    return { error: "Announcement memos must be sent from Admin Control Unit to the Secretariat." }
+  }
+  if (fileType === "Program Proposal" && (submittedFrom !== "Secretaries" || recipient !== "Head Office")) {
+    return { error: "Secretariat program proposals must be sent to Head Office." }
+  }
 
   const description = [subject ? `Subject: ${subject}` : "", body].filter(Boolean).join("\n\n")
   const { error: insertError } = await supabase.from("admin_office_files").insert({

@@ -12,9 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
 
-type MemoType = "Memo" | "Meeting Note" | "Invitation Letter" | "Received Letter" | "Transport Report"
+type MemoType = "Memo" | "Meeting Note" | "Invitation Letter" | "Received Letter" | "Transport Report" | "Announcement Memo" | "Program Proposal"
+type MemoRecipient = "Secretaries" | "Finance Officer" | "Head Office"
 
-export function OfficeMemoComposer({ fileType, submittedFrom, defaultRecipient = "Secretaries", allowRecipientChoice = false }: { fileType: MemoType; submittedFrom: string; defaultRecipient?: "Secretaries" | "Finance Officer"; allowRecipientChoice?: boolean }) {
+export function OfficeMemoComposer({ fileType, submittedFrom, defaultRecipient = "Secretaries", allowRecipientChoice = false }: { fileType: MemoType; submittedFrom: string; defaultRecipient?: MemoRecipient; allowRecipientChoice?: boolean }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -57,7 +58,7 @@ export function OfficeMemoComposer({ fileType, submittedFrom, defaultRecipient =
           <SheetDescription>Complete the document and send it to the appropriate office queue.</SheetDescription>
         </SheetHeader>
         <div className="space-y-5 p-6">
-          {allowRecipientChoice && <label className="grid gap-1.5"><Label>Recipient</Label><Select value={recipient} onValueChange={(value) => setRecipient(value as "Secretaries" | "Finance Officer")}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Secretaries">Secretariat</SelectItem><SelectItem value="Finance Officer">Financial Secretary</SelectItem></SelectContent></Select></label>}
+          {allowRecipientChoice && <label className="grid gap-1.5"><Label>Recipient</Label><Select value={recipient} onValueChange={(value) => setRecipient(value as MemoRecipient)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Secretaries">Secretariat</SelectItem><SelectItem value="Finance Officer">Financial Secretary</SelectItem><SelectItem value="Head Office">Head Office</SelectItem></SelectContent></Select></label>}
           <label className="grid gap-1.5"><Label>Title</Label><Input value={title} onChange={(event) => setTitle(event.target.value)} placeholder={`${fileType} title`} /></label>
           <label className="grid gap-1.5"><Label>Subject</Label><Input value={subject} onChange={(event) => setSubject(event.target.value)} placeholder="Document subject or event" /></label>
           <label className="grid gap-1.5"><Label>Content</Label><Textarea rows={18} value={body} onChange={(event) => setBody(event.target.value)} placeholder={`Write the ${fileType.toLowerCase()} here...`} /></label>

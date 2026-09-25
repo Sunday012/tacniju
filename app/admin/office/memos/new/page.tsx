@@ -2,7 +2,7 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { OfficeMemoComposer } from "@/components/admin/office-memo-composer"
 
-const memoTypes = ["Memo", "Meeting Note", "Invitation Letter", "Received Letter", "Transport Report"] as const
+const memoTypes = ["Memo", "Meeting Note", "Invitation Letter", "Received Letter", "Transport Report", "Announcement Memo", "Program Proposal"] as const
 type MemoType = typeof memoTypes[number]
 
 function validType(value?: string): MemoType {
@@ -12,7 +12,9 @@ function validType(value?: string): MemoType {
 export default function NewOfficeMemoPage({ searchParams }: { searchParams: { type?: string; from?: string; recipient?: string; chooseRecipient?: string; back?: string } }) {
   const fileType = validType(searchParams.type)
   const submittedFrom = String(searchParams.from || "Secretaries")
-  const defaultRecipient = searchParams.recipient === "Finance Officer" ? "Finance Officer" : "Secretaries"
+  const defaultRecipient = fileType === "Program Proposal"
+    ? "Head Office"
+    : searchParams.recipient === "Finance Officer" ? "Finance Officer" : "Secretaries"
   const backHref = searchParams.back?.startsWith("/admin/") ? searchParams.back : "/admin/office/secretariat/secretaries/desk"
 
   return (

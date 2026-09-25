@@ -63,16 +63,25 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
         children: [
           { slug: "desk", href: officePath("admin-office", "desk"), label: "Desk", description: "Budget, awards, files, and appointments.", icon: ClipboardList },
           { slug: "records", href: officePath("admin-office", "records"), label: "Records & Reports", description: "Overview, locations, treasury, and pending work.", icon: FolderCheck },
-          { slug: "system", href: officePath("admin-office", "system"), label: "System", description: "System administration controls.", icon: Settings },
         ],
       },
       {
         slug: "admin-control-unit",
         href: officePath("admin-office", "admin-control-unit"),
         label: "Admin Control Unit",
-        description: "Administrative control tools.",
+        description: "System control, locations, and announcements for the Secretariat.",
         icon: Settings,
-        emptyMessage: "No tools have been added to the Admin Control Unit yet.",
+        children: [
+          { slug: "system", href: "/admin/system", label: "System", description: "Open system administration controls.", icon: Settings },
+          { slug: "location", href: "/admin/diary/locations", label: "Location", description: "Manage districts and assemblies.", icon: MapPin },
+          {
+            slug: "announcement-memo",
+            href: memoPath("Announcement Memo", "Admin Control Unit", officePath("admin-office", "admin-control-unit")),
+            label: "Announcement Memo",
+            description: "Send an announcement memo to the Secretariat to pass down.",
+            icon: Mic2,
+          },
+        ],
       },
     ],
   },
@@ -97,7 +106,8 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
             description: "Program proposals, invitation letters, and files.",
             icon: ClipboardList,
             children: [
-              { slug: "program-proposal", href: fileQueue("Secretaries"), label: "Program Proposals", description: "Review directors' program proposal memos.", icon: ClipboardList },
+              { slug: "new-program-proposal", href: memoPath("Program Proposal", "Secretaries", officePath("secretariat", "secretaries", "desk")), label: "Create Program Proposal", description: "Send a Secretariat program proposal to Head Office.", icon: ClipboardList },
+              { slug: "program-proposal-files", href: fileQueue("Secretaries"), label: "Program Proposal Files", description: "Review directors' program proposal memos.", icon: FolderCheck },
               { slug: "invitation-letter", href: memoPath("Invitation Letter", "Secretaries", officePath("secretariat", "secretaries", "desk")), label: "Invitation Letter", description: "Create an invitation letter memo.", icon: FileText },
               { slug: "received-letter", href: memoPath("Received Letter", "Secretaries", officePath("secretariat", "secretaries", "desk")), label: "Received Letter", description: "Record a received letter as a memo.", icon: FileText },
               { slug: "meeting-note", href: memoPath("Meeting Note", "Secretaries", officePath("secretariat", "secretaries", "desk")), label: "Meeting Note", description: "Create a meeting note memo.", icon: FileText },

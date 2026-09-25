@@ -2,9 +2,9 @@
 
 import { useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Check, CornerUpLeft, Loader2, X } from "lucide-react"
+import { Check, CornerUpLeft, Loader2, Send, X } from "lucide-react"
 import { toast } from "sonner"
-import { updateAdminOfficeFileStatus } from "@/app/admin/office/admin-office/actions"
+import { sendApprovedFileToHeadOffice, updateAdminOfficeFileStatus } from "@/app/admin/office/admin-office/actions"
 import { Button } from "@/components/ui/button"
 
 export type AdminOfficeFile = {
@@ -24,7 +24,7 @@ const statusStyles: Record<AdminOfficeFile["status"], string> = {
   "Sent Back": "bg-amber-50 text-amber-700",
 }
 
-export function AdminOfficeFilesManager({ files, allowReview = false }: { files: AdminOfficeFile[]; allowReview?: boolean }) {
+export function AdminOfficeFilesManager({ files, allowReview = false, allowSendToHeadOffice = false }: { files: AdminOfficeFile[]; allowReview?: boolean; allowSendToHeadOffice?: boolean }) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
@@ -40,6 +40,18 @@ export function AdminOfficeFilesManager({ files, allowReview = false }: { files:
     })
   }
 
+  const sendToHeadOffice = (id: string) => {
+    startTransition(async () => {
+      const result = await sendApprovedFileToHeadOffice(id)
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+      toast.success("File sent to Head Office for final approval.")
+      router.refresh()
+    })
+  }
+
   return (
     <section className="overflow-hidden border border-slate-200 bg-white shadow-sm">
       <div className="overflow-x-auto">
@@ -49,7 +61,7 @@ export function AdminOfficeFilesManager({ files, allowReview = false }: { files:
               <th className="px-4 py-3">Created</th>
               <th className="px-4 py-3">File</th>
               <th className="px-4 py-3">Status</th>
-              {allowReview && <th className="px-4 py-3 text-right">Review</th>}
+              {(allowReview || allowSendToHeadOffice) && <th className="px-4 py-3 text-right">Actions</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -82,11 +94,19 @@ export function AdminOfficeFilesManager({ files, allowReview = false }: { files:
                     </div>
                   </td>
                 )}
+                {allowSendToHeadOffice && (
+                  <td className="px-4 py-3 text-right">
+                    <Button size="sm" className="gap-2 bg-indigo-600 text-white hover:bg-indigo-700" disabled={isPending} onClick={() => sendToHeadOffice(file.id)}>
+                      {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                      Send to Head Office
+                    </Button>
+                  </td>
+                )}
               </tr>
             ))}
             {!files.length && (
               <tr>
-                <td colSpan={allowReview ? 4 : 3} className="px-4 py-12 text-center text-slate-400">No files in this section.</td>
+                <td colSpan={allowReview || allowSendToHeadOffice ? 4 : 3} className="px-4 py-12 text-center text-slate-400">No files in this section.</td>
               </tr>
             )}
           </tbody>
