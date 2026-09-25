@@ -53,6 +53,33 @@ export async function sendApprovedFileToHeadOffice(id: string) {
   return { success: true }
 }
 
+export async function sendProgramReportToHeadOffice(report: string) {
+  const reports: Record<string, string> = {
+    events: "Events Report",
+    attendance: "Attendance Report",
+    expenses: "Expenses Report",
+    income: "Income Report",
+    debtors: "Debtor's Report",
+    creditors: "Creditor's Report",
+  }
+  const title = reports[report]
+  if (!title) return { error: "Select a valid program report." }
+  const { supabase, user, orgId, error } = await requireAdmin()
+  if (error || !user || !orgId) return { error }
+  const { error: insertError } = await supabase.from("admin_office_files").insert({
+    org_id: orgId,
+    office_unit: "Head Office",
+    title,
+    description: `Program report submitted for review. Open /accounting/programs/reports/${report} to view the live report.`,
+    file_type: "Program Report",
+    submitted_from: "Finance Officer",
+    created_by: user.id,
+  })
+  if (insertError) return { error: insertError.message }
+  revalidatePath("/admin/office/admin-office/files", "layout")
+  return { success: true }
+}
+
 export async function submitDirectorProgramProposal(formData: FormData) {
   const { supabase, user, orgId, error } = await requireAdmin()
   if (error || !user || !orgId) return { error }

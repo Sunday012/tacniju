@@ -14,6 +14,14 @@ const memberListContexts = {
     label: "Ushering Desk",
     href: "/admin/office/directors/ushering/desk",
   },
+  assistants: {
+    label: "Assistants",
+    href: "/admin/office/secretariat/assistants",
+  },
+  welfare: {
+    label: "Welfare Desk",
+    href: "/admin/office/directors/welfare/desk",
+  },
 } as const
 
 export default async function OfficeMembersPage({ searchParams }: { searchParams: { from?: string } }) {

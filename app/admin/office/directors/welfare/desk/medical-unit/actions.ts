@@ -46,3 +46,36 @@ export async function deleteMedicalVisit(id: string) {
   revalidatePath(path)
   return { success: true }
 }
+
+export async function saveMedicalDrugPurchase(formData: FormData) {
+  const { supabase, user, orgId, error } = await context()
+  if (error || !user || !orgId) return { error }
+  const id = String(formData.get("id") || "")
+  const payload = {
+    drug_name: String(formData.get("drug_name") || "").trim(),
+    purchase_date: String(formData.get("purchase_date") || ""),
+    quantity: Number(formData.get("quantity") || 0),
+    unit_cost: Number(formData.get("unit_cost") || 0),
+    supplier: String(formData.get("supplier") || "").trim() || null,
+    notes: String(formData.get("notes") || "").trim() || null,
+    updated_at: new Date().toISOString(),
+  }
+  if (!payload.drug_name || !payload.purchase_date || payload.quantity <= 0) return { error: "Drug, date, and a valid quantity are required." }
+  if (payload.unit_cost < 0) return { error: "Unit cost cannot be negative." }
+
+  const result = id
+    ? await supabase.from("medical_drug_purchases").update(payload).eq("id", id).eq("org_id", orgId)
+    : await supabase.from("medical_drug_purchases").insert({ ...payload, org_id: orgId, created_by: user.id })
+  if (result.error) return { error: result.error.message }
+  revalidatePath(path)
+  return { success: true }
+}
+
+export async function deleteMedicalDrugPurchase(id: string) {
+  const { supabase, orgId, error } = await context()
+  if (error || !orgId) return { error }
+  const result = await supabase.from("medical_drug_purchases").delete().eq("id", id).eq("org_id", orgId)
+  if (result.error) return { error: result.error.message }
+  revalidatePath(path)
+  return { success: true }
+}

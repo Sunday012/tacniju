@@ -122,6 +122,7 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
             description: "Reservations, announcements, departments, and memos.",
             icon: FolderCheck,
             children: [
+              { slug: "overview", href: officePath("overview"), label: "Overview", description: "Open the shared Admin Office and Secretariat overview.", icon: UsersRound },
               { slug: "reservation", href: "/admin/reservations", label: "Reservation", description: "Review reservations.", icon: UsersRound },
               { slug: "announcement", href: "/admin/announcements", label: "Announcement", description: "Prepare announcements.", icon: Mic2 },
               { slug: "department", href: "/admin/departments", label: "Department", description: "Manage departments.", icon: Building2 },
@@ -137,6 +138,8 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
         description: "Finance, accounting, and sales work.",
         icon: WalletCards,
         children: [
+          { slug: "diary", href: "/admin/office/members?from=assistants", label: "Diary", description: "Search and review the current member directory.", icon: UsersRound },
+          { slug: "birthdays", href: "/admin/diary/birthdays?from=assistants", label: "Birthdays", description: "Open the active-member birthday diary.", icon: CalendarDays },
           {
             slug: "finance-officer",
             href: officePath("secretariat", "financial-secretary", "finance-officer"),
@@ -239,7 +242,7 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
             icon: HeartHandshake,
             children: [
               { slug: "program-proposal", href: "/admin/office/directors/program-proposal?director=Welfare", label: "Program Proposal", description: "Send a proposal memo to the Secretariat.", icon: ClipboardList },
-              { slug: "members", href: "/admin/diary", label: "List of Members", description: "Open the member list.", icon: UsersRound },
+              { slug: "members", href: "/admin/office/members?from=welfare", label: "List of Members", description: "Search and review registered members in table or card view.", icon: UsersRound },
               { slug: "meal-ticket", href: "/admin/meal-tickets", label: "Meal Ticket", description: "Open meal tickets.", icon: UtensilsCrossed },
               { slug: "dining-hall", href: "/admin/dining-hall", label: "Dining Hall", description: "Open dining hall records.", icon: UtensilsCrossed },
               { slug: "kitchen-unit", href: "/admin/dining-hall/kitchen", label: "Kitchen Unit", description: "Open kitchen unit records.", icon: UtensilsCrossed },
@@ -287,6 +290,7 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
         description: "Transport, rooms, order of service, and member coordination.",
         icon: Truck,
         children: [
+          { slug: "transport-report", href: memoPath("Transport Report", "Logistics Director", officePath("directors", "logistics"), true), label: "Transport Report", description: "Create and send a transport report memo.", icon: FileText },
           { slug: "rooms", href: officePath("directors", "logistics", "rooms"), label: "Rooms", description: "Allocate rooms to members and guests.", icon: BedDouble },
           { slug: "order-of-service", href: "/admin/presenter", label: "Order of Service", description: "Open the order of service.", icon: Presentation },
           { slug: "members", href: "/admin/office/members?from=logistics", label: "List of Members", description: "Search and review registered members in table or card view.", icon: UsersRound },
@@ -314,7 +318,7 @@ export const adminOfficeDeskTools: OfficeTool[] = [
 ]
 
 export const adminOfficeRecordTools: OfficeTool[] = [
-  { href: "/admin", label: "Overview", description: "Return to the Admin opening page.", icon: UsersRound },
+  { href: officePath("overview"), label: "Overview", description: "Open the shared Admin Office and Secretariat overview.", icon: UsersRound },
   { href: "/admin/diary/locations", label: "Location", description: "Review districts and assemblies.", icon: MapPin },
   { href: officePath("admin-office", "records", "treasury"), label: "Treasury", description: "See every bank and its current balance.", icon: WalletCards },
   { href: "/admin/announcements", label: "Pending", description: "Review pending announcements and notices.", icon: Mic2 },

@@ -1,6 +1,6 @@
 import { PrintButton } from "@/components/ui/print-button"
 
-export function ReportSheet({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+export function ReportSheet({ title, subtitle, actions, children }: { title: string; subtitle?: string; actions?: React.ReactNode; children: React.ReactNode }) {
   return (
     <section className="overflow-hidden border border-slate-300 bg-white shadow-sm print:border-black print:shadow-none">
       <header className="flex flex-col gap-3 border-b-2 border-slate-800 px-5 py-5 sm:flex-row sm:items-end sm:justify-between print:px-0 print:pt-0">
@@ -10,6 +10,7 @@ export function ReportSheet({ title, subtitle, children }: { title: string; subt
           {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
         </div>
         <div className="flex items-center gap-4">
+          {actions && <div className="print:hidden">{actions}</div>}
           <div className="print:hidden"><PrintButton /></div>
         </div>
       </header>

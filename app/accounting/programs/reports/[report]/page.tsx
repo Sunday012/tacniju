@@ -7,6 +7,7 @@ import { getBillPendingRows } from "@/app/accounting/display/bill-pending/action
 import { createClient } from "@/lib/server"
 import { getAccountingOrgId } from "@/lib/accounting-org"
 import { ReportSheet } from "@/components/reports/report-sheet"
+import { SendProgramReportButton } from "@/components/accounting/send-program-report-button"
 
 const reportTitles: Record<string, string> = {
   events: "Events Reports",
@@ -220,10 +221,10 @@ async function getOutstandingRows(kind: "debtors" | "creditors") {
     .sort((a, b) => b.amount - a.amount || a.party.localeCompare(b.party))
 }
 
-function ReportFrame({ title, children }: { title: string; children: React.ReactNode }) {
+function ReportFrame({ title, report, children }: { title: string; report: string; children: React.ReactNode }) {
   return (
     <AccountingShell title={title} backHref="/accounting/programs/reports" backLabel="Reports" framed={false}>
-      <ReportSheet title={title} subtitle="Event-linked records and totals">
+      <ReportSheet title={title} subtitle="Event-linked records and totals" actions={<SendProgramReportButton report={report} />}>
         {children}
       </ReportSheet>
     </AccountingShell>
@@ -264,7 +265,7 @@ export default async function ProgramReportPage({ params }: { params: { report: 
     const totalCreditors = eventCreditorRows.reduce((sum, row) => sum + row.amount, 0)
 
     return (
-      <ReportFrame title={title}>
+      <ReportFrame title={title} report={params.report}>
         <div>
           <div className="grid border-b border-slate-300 sm:grid-cols-2 lg:grid-cols-6">
             {[
@@ -383,7 +384,7 @@ export default async function ProgramReportPage({ params }: { params: { report: 
     }), { men: 0, women: 0, children: 0, total: 0 })
 
     return (
-      <ReportFrame title={title}>
+      <ReportFrame title={title} report={params.report}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -432,7 +433,7 @@ export default async function ProgramReportPage({ params }: { params: { report: 
     const total = rows.reduce((sum, row) => sum + row.amount, 0)
 
     return (
-      <ReportFrame title={title}>
+      <ReportFrame title={title} report={params.report}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -486,7 +487,7 @@ export default async function ProgramReportPage({ params }: { params: { report: 
   const total = rows.reduce((sum, row) => sum + row.amount, 0)
 
   return (
-    <ReportFrame title={title}>
+    <ReportFrame title={title} report={params.report}>
       <Table>
         <TableHeader>
           <TableRow>
