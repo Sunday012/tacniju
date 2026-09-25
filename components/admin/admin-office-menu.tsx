@@ -6,6 +6,7 @@ import {
   Award,
   Banknote,
   BriefcaseBusiness,
+  BedDouble,
   Building2,
   CalendarDays,
   ClipboardList,
@@ -21,6 +22,7 @@ import {
   Settings,
   Stethoscope,
   Trophy,
+  Truck,
   UserPlus,
   UsersRound,
   UtensilsCrossed,
@@ -42,6 +44,7 @@ export type AdminMenuNode = OfficeTool & {
 
 const officePath = (...parts: string[]) => `/admin/office/${parts.join("/")}`
 const fileQueue = (unit: string) => `/admin/office/admin-office/files?unit=${encodeURIComponent(unit)}`
+const memoPath = (type: string, from: string, back: string, chooseRecipient = false) => `/admin/office/memos/new?type=${encodeURIComponent(type)}&from=${encodeURIComponent(from)}&back=${encodeURIComponent(back)}${chooseRecipient ? "&chooseRecipient=1" : ""}`
 
 export const adminOfficeMainAreas: AdminMenuNode[] = [
   {
@@ -95,7 +98,9 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
             icon: ClipboardList,
             children: [
               { slug: "program-proposal", href: fileQueue("Secretaries"), label: "Program Proposals", description: "Review directors' program proposal memos.", icon: ClipboardList },
-              { slug: "invitation-letter", href: "/admin/announcements", label: "Invitation Letter", description: "Prepare and publish an invitation letter.", icon: FileText },
+              { slug: "invitation-letter", href: memoPath("Invitation Letter", "Secretaries", officePath("secretariat", "secretaries", "desk")), label: "Invitation Letter", description: "Create an invitation letter memo.", icon: FileText },
+              { slug: "received-letter", href: memoPath("Received Letter", "Secretaries", officePath("secretariat", "secretaries", "desk")), label: "Received Letter", description: "Record a received letter as a memo.", icon: FileText },
+              { slug: "meeting-note", href: memoPath("Meeting Note", "Secretaries", officePath("secretariat", "secretaries", "desk")), label: "Meeting Note", description: "Create a meeting note memo.", icon: FileText },
               { slug: "files", href: fileQueue("Secretaries"), label: "Files", description: "Review files sent to the Secretaries desk.", icon: FolderCheck },
             ],
           },
@@ -104,13 +109,13 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
             slug: "records-reports",
             href: officePath("secretariat", "secretaries", "records-reports"),
             label: "Records & Reports",
-            description: "Reservations, announcements, departments, and order of service.",
+            description: "Reservations, announcements, departments, and memos.",
             icon: FolderCheck,
             children: [
               { slug: "reservation", href: "/admin/reservations", label: "Reservation", description: "Review reservations.", icon: UsersRound },
               { slug: "announcement", href: "/admin/announcements", label: "Announcement", description: "Prepare announcements.", icon: Mic2 },
               { slug: "department", href: "/admin/departments", label: "Department", description: "Manage departments.", icon: Building2 },
-              { slug: "order-of-service", href: "/admin/presenter", label: "Order of Service", description: "Prepare the order of service.", icon: Presentation },
+              { slug: "memo", href: memoPath("Memo", "Secretaries", officePath("secretariat", "secretaries", "records-reports")), label: "Memo", description: "Create a Secretariat memo.", icon: FileText },
             ],
           },
         ],
@@ -184,7 +189,7 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
     slug: "directors",
     href: officePath("directors"),
     label: "Directors",
-    description: "Music, Welfare, and Ushering directors.",
+    description: "Music, Welfare, Ushering, and Logistics directors.",
     icon: BriefcaseBusiness,
     children: [
       {
@@ -264,6 +269,29 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
               { slug: "members", href: "/admin/diary", label: "List of Members", description: "Open the member list.", icon: UsersRound },
             ],
           },
+        ],
+      },
+      {
+        slug: "logistics",
+        href: officePath("directors", "logistics"),
+        label: "Logistics",
+        description: "Transport, rooms, order of service, and member coordination.",
+        icon: Truck,
+        children: [
+          {
+            slug: "desk",
+            href: officePath("directors", "logistics", "desk"),
+            label: "Desk",
+            description: "Transport reports, family records, and room allocation.",
+            icon: Truck,
+            children: [
+              { slug: "transport-report", href: memoPath("Transport Report", "Logistics Director", officePath("directors", "logistics", "desk"), true), label: "Transport Report", description: "Create and send a transport report memo.", icon: FileText },
+              { slug: "family", href: "/admin/families", label: "Family", description: "Open family records.", icon: UsersRound },
+              { slug: "rooms", href: officePath("directors", "logistics", "rooms"), label: "Rooms", description: "Allocate rooms to members and guests.", icon: BedDouble },
+            ],
+          },
+          { slug: "order-of-service", href: "/admin/presenter", label: "Order of Service", description: "Open the order of service.", icon: Presentation },
+          { slug: "members", href: "/admin/diary", label: "List of Members", description: "Open the member list.", icon: UsersRound },
         ],
       },
     ],

@@ -168,6 +168,22 @@ export function ItemManager({
                 description: activeItem.description || null
             })
             toast.success("Item updated")
+            setActiveItem(current => current ? {
+                ...current,
+                name: editName,
+                tracking_number: editTrackingNumber.trim() || null,
+                category: editCategory || null,
+                unit: editUnit,
+                primary_unit: editUnit,
+                secondary_unit: editSecondaryUnit || null,
+                secondary_per_primary: parseFloat(editSecondaryPerPrimary) || 1,
+                purchase_rate: parseFloat(editPurchaseRate),
+                selling_rate: parseFloat(editSellingRate),
+                opening_qty: parseFloat(editOpeningQty),
+                reorder_level: parseFloat(editReorderLevel),
+                no_stock_alert_enabled: editNoStockAlert,
+                no_stock_quantity: parseFloat(editNoStockQuantity) || 0,
+            } : current)
             setIsEditing(false)
             router.refresh()
         } catch (error: any) {

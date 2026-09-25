@@ -41,11 +41,13 @@ export async function submitDirectorProgramProposal(formData: FormData) {
   const title = String(formData.get("title") || "").trim()
   const eventName = String(formData.get("event_name") || "").trim()
   const memo = String(formData.get("memo") || "").trim()
+  const recipient = String(formData.get("recipient") || "Secretaries").trim()
   if (!director || !title || !eventName || !memo) return { error: "Director, title, event, and memo are required." }
+  if (!["Secretaries", "Finance Officer"].includes(recipient)) return { error: "Select a valid recipient." }
 
   const { error: insertError } = await supabase.from("admin_office_files").insert({
     org_id: orgId,
-    office_unit: "Secretaries",
+    office_unit: recipient,
     title,
     description: `Event: ${eventName}\n\n${memo}`,
     file_type: "Program Proposal",
@@ -56,6 +58,40 @@ export async function submitDirectorProgramProposal(formData: FormData) {
 
   revalidatePath("/admin/office/admin-office/files", "layout")
   revalidatePath("/admin/office/secretariat/secretaries/desk")
+  revalidatePath("/admin/office/secretariat/financial-secretary/finance-officer")
+  return { success: true }
+}
+
+export async function submitAdminOfficeMemo(formData: FormData) {
+  const { supabase, user, orgId, error } = await requireAdmin()
+  if (error || !user || !orgId) return { error }
+
+  const title = String(formData.get("title") || "").trim()
+  const subject = String(formData.get("subject") || "").trim()
+  const body = String(formData.get("body") || "").trim()
+  const fileType = String(formData.get("file_type") || "Memo").trim()
+  const submittedFrom = String(formData.get("submitted_from") || "Secretaries").trim()
+  const recipient = String(formData.get("recipient") || "Secretaries").trim()
+  const allowedRecipients = ["Secretaries", "Finance Officer"]
+  const allowedTypes = ["Memo", "Meeting Note", "Invitation Letter", "Received Letter", "Transport Report"]
+
+  if (!title || !body) return { error: "Title and memo content are required." }
+  if (!allowedRecipients.includes(recipient)) return { error: "Select a valid recipient." }
+  if (!allowedTypes.includes(fileType)) return { error: "Select a valid memo type." }
+
+  const description = [subject ? `Subject: ${subject}` : "", body].filter(Boolean).join("\n\n")
+  const { error: insertError } = await supabase.from("admin_office_files").insert({
+    org_id: orgId,
+    office_unit: recipient,
+    title,
+    description,
+    file_type: fileType,
+    submitted_from: submittedFrom || "Admin Office",
+    created_by: user.id,
+  })
+  if (insertError) return { error: insertError.message }
+
+  revalidatePath("/admin/office/admin-office/files", "layout")
   return { success: true }
 }
 
