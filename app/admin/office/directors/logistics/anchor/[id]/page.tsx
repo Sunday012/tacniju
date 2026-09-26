@@ -11,7 +11,10 @@ export const dynamic = "force-dynamic"
 export default async function AnchorOrderPage({ params }: { params: { id: string } }) {
   const supabase = await createClient()
   const orgId = await getAccountingOrgId()
-  const [{ data: service }, { data: items }] = await Promise.all([supabase.from("logistics_order_services").select("id, title, status, events(name, event_date)").eq("id", params.id).eq("org_id", orgId).eq("status", "Posted").maybeSingle(), supabase.from("logistics_order_service_items").select("id, title, item_type, scheduled_time, sort_order").eq("order_service_id", params.id).order("sort_order")])
+  const [{ data: service }, { data: items }] = await Promise.all([
+    supabase.from("logistics_order_services").select("id, title, status, events(name, event_date)").eq("id", params.id).eq("org_id", orgId).maybeSingle(),
+    supabase.from("logistics_order_service_items").select("id, title, item_type, scheduled_time, handler_profile_id, handler_name, sort_order").eq("order_service_id", params.id).order("sort_order"),
+  ])
   if (!service) notFound()
 
   return (

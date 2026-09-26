@@ -9,7 +9,11 @@ export const dynamic = "force-dynamic"
 export default async function OrderServiceDetailPage({ params }: { params: { id: string } }) {
   const supabase = await createClient()
   const orgId = await getAccountingOrgId()
-  const [{ data: service, error }, { data: items }] = await Promise.all([supabase.from("logistics_order_services").select("id, title, status, sent_to_secretariat_at, events(name, event_date)").eq("id", params.id).eq("org_id", orgId).maybeSingle(), supabase.from("logistics_order_service_items").select("id, title, item_type, scheduled_time, sort_order").eq("order_service_id", params.id).order("sort_order")])
+  const [{ data: service, error }, { data: items }, { data: members }] = await Promise.all([
+    supabase.from("logistics_order_services").select("id, title, status, sent_to_secretariat_at, events(name, event_date)").eq("id", params.id).eq("org_id", orgId).maybeSingle(),
+    supabase.from("logistics_order_service_items").select("id, title, item_type, scheduled_time, handler_profile_id, handler_name, sort_order").eq("order_service_id", params.id).order("sort_order"),
+    supabase.from("profiles").select("id, full_name, reservation_number").not("full_name", "is", null).order("full_name"),
+  ])
   if (error || !service) notFound()
   return (
     <main className="flex-1 p-5 sm:p-8 lg:p-10">
@@ -18,7 +22,7 @@ export default async function OrderServiceDetailPage({ params }: { params: { id:
           <ArrowLeft className="h-4 w-4" />
           Back to Orders
         </Link>
-        <OrderServiceBuilder service={{ ...service, items: items || [] }} />
+        <OrderServiceBuilder service={{ ...service, items: items || [] }} members={members || []} />
       </div>
     </main>
   )

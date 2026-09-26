@@ -55,6 +55,36 @@ export async function createLogisticsRoom(formData: FormData) {
   return { success: true }
 }
 
+export async function updateLogisticsRoom(id: string, formData: FormData) {
+  const { supabase, orgId, error } = await context()
+  if (error || !orgId) return { error: error || "Unable to update the room." }
+  const name = String(formData.get("name") || "").trim()
+  const roomNumber = String(formData.get("room_number") || "").trim()
+  const location = String(formData.get("location") || "").trim()
+  const headOfRoom = String(formData.get("head_of_room") || "").trim()
+  const capacity = Number(formData.get("capacity") || 1)
+  if (!name || !roomNumber || !location) return { error: "Room name, number, and location are required." }
+  if (!Number.isInteger(capacity) || capacity < 1) return { error: "Capacity must be at least one." }
+  const { count } = await supabase.from("logistics_room_allocations").select("id", { count: "exact", head: true }).eq("room_id", id).eq("status", "Allocated")
+  if ((count || 0) > capacity) return { error: `Capacity cannot be below the ${count} people currently allocated.` }
+
+  const { error: updateError } = await supabase
+    .from("logistics_rooms")
+    .update({ name, room_number: roomNumber, location, head_of_room: headOfRoom || null, capacity, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("org_id", orgId)
+  if (updateError) return { error: updateError.message }
+
+  const { error: allocationError } = await supabase
+    .from("logistics_room_allocations")
+    .update({ room_name: `${name} (${roomNumber})`, capacity, updated_at: new Date().toISOString() })
+    .eq("room_id", id)
+    .eq("org_id", orgId)
+  if (allocationError) return { error: allocationError.message }
+  revalidatePath(roomsPath)
+  return { success: true }
+}
+
 export async function deleteLogisticsRoom(id: string) {
   const { supabase, orgId, error } = await context()
   if (error || !orgId) return { error: error || "Unable to delete the room." }

@@ -49,13 +49,19 @@ export async function addOrderServiceItem(serviceId: string, formData: FormData)
   const customTitle = String(formData.get("title") || "").trim()
   const title = customTitle || itemType
   const scheduledTime = String(formData.get("scheduled_time") || "")
+  const handlerProfileId = String(formData.get("handler_profile_id") || "").trim()
   if (!title) return { error: "Item title is required." }
+  const { data: handler } = handlerProfileId && handlerProfileId !== "__none__"
+    ? await supabase.from("profiles").select("id, full_name").eq("id", handlerProfileId).maybeSingle()
+    : { data: null }
   const { data: last } = await supabase.from("logistics_order_service_items").select("sort_order").eq("order_service_id", serviceId).order("sort_order", { ascending: false }).limit(1).maybeSingle()
   const { error: insertError } = await supabase.from("logistics_order_service_items").insert({
     order_service_id: serviceId,
     item_type: itemType,
     title,
     scheduled_time: scheduledTime || null,
+    handler_profile_id: handler?.id || null,
+    handler_name: handler?.full_name || null,
     sort_order: (last?.sort_order || 0) + 1
   })
   if (insertError) return { error: insertError.message }
@@ -68,6 +74,24 @@ export async function deleteOrderServiceItem(serviceId: string, itemId: string) 
   if (error) return { error }
   const { error: deleteError } = await supabase.from("logistics_order_service_items").delete().eq("id", itemId).eq("order_service_id", serviceId)
   if (deleteError) return { error: deleteError.message }
+  refresh(serviceId)
+  return { success: true }
+}
+
+export async function updateOrderServiceItemHandler(serviceId: string, itemId: string, profileId: string) {
+  const { supabase, error } = await context()
+  if (error) return { error }
+  const cleanProfileId = profileId === "__none__" ? "" : profileId
+  const { data: handler } = cleanProfileId
+    ? await supabase.from("profiles").select("id, full_name").eq("id", cleanProfileId).maybeSingle()
+    : { data: null }
+  if (cleanProfileId && !handler) return { error: "Select a valid member." }
+  const { error: updateError } = await supabase
+    .from("logistics_order_service_items")
+    .update({ handler_profile_id: handler?.id || null, handler_name: handler?.full_name || null, updated_at: new Date().toISOString() })
+    .eq("id", itemId)
+    .eq("order_service_id", serviceId)
+  if (updateError) return { error: updateError.message }
   refresh(serviceId)
   return { success: true }
 }

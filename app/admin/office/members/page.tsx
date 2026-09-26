@@ -1,9 +1,7 @@
 import Link from "next/link"
-import { ArrowLeft, UsersRound } from "lucide-react"
-import { getAllAssetAssignments } from "@/app/actions/assets"
+import { ArrowLeft, CalendarDays, ClipboardList, UserPlus, UsersRound } from "lucide-react"
 import { getAccountingOrgId } from "@/lib/accounting-org"
-import { MembersTable } from "@/components/members-table"
-import { isGuestProfile } from "@/lib/profile-kind"
+import { ProfileImagePreview } from "@/components/profile-image-preview"
 import { createClient } from "@/lib/server"
 
 const memberListContexts = {
@@ -41,16 +39,14 @@ export default async function OfficeMembersPage({ searchParams }: { searchParams
   const contextKey = (searchParams.from && searchParams.from in memberListContexts ? searchParams.from : "logistics") as keyof typeof memberListContexts
   const supabase = await createClient()
   const orgId = await getAccountingOrgId()
-  const [{ data: profiles }, { data: awards }, { data: appointments }, { assignments: gifts }] = await Promise.all([
-    supabase.from("profiles").select("*").order("full_name", { ascending: true }),
-    supabase.from("awards").select("*").order("created_at", { ascending: true }),
-    supabase.from("admin_appointments").select("profile_id, person_name, office_title, status").eq("org_id", orgId).neq("status", "Terminated"),
-    getAllAssetAssignments(),
+  const [{ data: profiles }, { data: appointments }] = await Promise.all([
+    supabase.from("profiles").select("id, full_name, reservation_number, phone, avatar_url").order("full_name", { ascending: true }),
+    supabase.from("admin_appointments").select("id, profile_id, person_name, office_title, appointed_on, status").eq("org_id", orgId).neq("status", "Terminated").order("appointed_on", { ascending: false }),
   ])
   const matchingAppointments = (appointments || []).filter((appointment) => officeTerms[contextKey].some((term) => normalized(appointment.office_title).includes(term)))
-  const appointedIds = new Set(matchingAppointments.map((appointment) => appointment.profile_id).filter(Boolean))
-  const appointedNames = new Set(matchingAppointments.map((appointment) => normalized(appointment.person_name)).filter(Boolean))
-  const members = (profiles || []).filter((profile) => !isGuestProfile(profile) && profile.member_status !== "Transferred" && (appointedIds.has(profile.id) || appointedNames.has(normalized(profile.full_name))))
+  const profileById = new Map((profiles || []).map((profile) => [profile.id, profile]))
+  const profileByName = new Map((profiles || []).map((profile) => [normalized(profile.full_name), profile]))
+  const roster = matchingAppointments.map((appointment) => ({ appointment, profile: (appointment.profile_id ? profileById.get(appointment.profile_id) : null) || profileByName.get(normalized(appointment.person_name)) }))
 
   return (
     <main className="flex-1 p-5 sm:p-8 lg:p-10">
@@ -71,7 +67,37 @@ export default async function OfficeMembersPage({ searchParams }: { searchParams
         </div>
 
         <section className="mt-6 overflow-hidden border border-slate-200 bg-white shadow-sm">
-          <MembersTable members={members} availableAwards={awards || []} gifts={gifts || []} />
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+            <div>
+              <h2 className="font-extrabold text-slate-900">Appointed Members</h2>
+              <p className="mt-1 text-sm text-slate-500">{roster.length} active {roster.length === 1 ? "appointment" : "appointments"} in this unit.</p>
+            </div>
+            <Link href="/admin/office/admin-office/appointments" className="inline-flex h-10 items-center gap-2 border border-indigo-600 bg-indigo-600 px-4 text-sm font-bold text-white shadow-sm hover:bg-indigo-700">
+              <UserPlus className="h-4 w-4" />Manage Appointments
+            </Link>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {roster.map(({ appointment, profile }) => (
+              <article key={appointment.id} className="grid gap-4 px-5 py-4 sm:grid-cols-[minmax(0,1fr)_minmax(12rem,0.7fr)_auto] sm:items-center">
+                <div className="flex min-w-0 items-center gap-3">
+                  <ProfileImagePreview imageUrl={profile?.avatar_url} name={profile?.full_name || appointment.person_name} />
+                  <div className="min-w-0">
+                    <p className="truncate font-extrabold text-slate-900">{profile?.full_name || appointment.person_name}</p>
+                    <p className="mt-1 text-sm text-slate-500">{profile?.reservation_number || "No reservation number"}{profile?.phone ? ` · ${profile.phone}` : ""}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2 text-sm text-slate-600">
+                  <ClipboardList className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" />
+                  <span className="font-semibold">{appointment.office_title}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-slate-500 sm:justify-end">
+                  <CalendarDays className="h-4 w-4" />
+                  {new Date(`${appointment.appointed_on}T00:00:00`).toLocaleDateString("en-GB")}
+                </div>
+              </article>
+            ))}
+            {!roster.length && <div className="px-6 py-14 text-center"><UsersRound className="mx-auto h-8 w-8 text-slate-300" /><p className="mt-3 font-bold text-slate-700">No members appointed to this unit</p><p className="mt-1 text-sm text-slate-500">Use Appointments to add members to {context.label}.</p></div>}
+          </div>
         </section>
       </div>
     </main>

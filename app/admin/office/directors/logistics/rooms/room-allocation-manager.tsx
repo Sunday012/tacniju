@@ -2,9 +2,9 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { BedDouble, Building2, Check, Loader2, Plus, RotateCcw, Trash2, UsersRound } from "lucide-react"
+import { BedDouble, Building2, Check, Loader2, Pencil, Plus, RotateCcw, Trash2, UsersRound } from "lucide-react"
 import { toast } from "sonner"
-import { createLogisticsRoom, createRoomAllocation, deleteLogisticsRoom, deleteRoomAllocation, setRoomAllocationStatus } from "./actions"
+import { createLogisticsRoom, createRoomAllocation, deleteLogisticsRoom, deleteRoomAllocation, setRoomAllocationStatus, updateLogisticsRoom } from "./actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -20,6 +20,7 @@ const floors = ["Ground Floor", "First Floor", "Second Floor", "Third Floor", "F
 export function RoomAllocationManager({ rooms, allocations }: { rooms: LogisticsRoom[]; allocations: RoomAllocation[] }) {
   const router = useRouter()
   const [roomOpen, setRoomOpen] = useState(false)
+  const [editingRoom, setEditingRoom] = useState<LogisticsRoom | null>(null)
   const [allocationOpen, setAllocationOpen] = useState(false)
   const [selectedRoom, setSelectedRoom] = useState("")
   const [isPending, startTransition] = useTransition()
@@ -39,11 +40,19 @@ export function RoomAllocationManager({ rooms, allocations }: { rooms: Logistics
     setSelectedRoom(roomId)
     setAllocationOpen(true)
   }
+  const openNewRoom = () => {
+    setEditingRoom(null)
+    setRoomOpen(true)
+  }
+  const openEditRoom = (room: LogisticsRoom) => {
+    setEditingRoom(room)
+    setRoomOpen(true)
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap justify-end gap-2">
-        <Button variant="outline" className="border-indigo-200 font-bold text-indigo-700" onClick={() => setRoomOpen(true)}>
+        <Button variant="outline" className="border-indigo-200 font-bold text-indigo-700" onClick={openNewRoom}>
           <Building2 className="mr-2 h-4 w-4" />
           Create Room
         </Button>
@@ -53,17 +62,17 @@ export function RoomAllocationManager({ rooms, allocations }: { rooms: Logistics
         </Button>
       </div>
 
-      <Sheet open={roomOpen} onOpenChange={setRoomOpen}>
-        <SheetContent className="w-full overflow-y-auto p-0 sm:max-w-xl">
+      <Sheet open={roomOpen} onOpenChange={(open) => { setRoomOpen(open); if (!open) setEditingRoom(null) }}>
+        <SheetContent key={editingRoom?.id || "new-room"} className="w-full overflow-y-auto p-0 sm:max-w-xl">
           <SheetHeader className="border-b px-6 py-5 text-left">
-            <SheetTitle>Create Room</SheetTitle>
-            <SheetDescription>Add the room before allocating people to it.</SheetDescription>
+            <SheetTitle>{editingRoom ? "Edit Room" : "Create Room"}</SheetTitle>
+            <SheetDescription>{editingRoom ? "Update the room details and capacity." : "Add the room before allocating people to it."}</SheetDescription>
           </SheetHeader>
           <form
             action={(data) =>
               run(
-                () => createLogisticsRoom(data),
-                "Room created.",
+                () => editingRoom ? updateLogisticsRoom(editingRoom.id, data) : createLogisticsRoom(data),
+                editingRoom ? "Room updated." : "Room created.",
                 () => setRoomOpen(false),
               )
             }
@@ -72,16 +81,16 @@ export function RoomAllocationManager({ rooms, allocations }: { rooms: Logistics
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-1.5">
                 <Label>Room name</Label>
-                <Input name="name" placeholder="e.g. Deborah Room" required />
+                <Input name="name" defaultValue={editingRoom?.name} placeholder="e.g. Deborah Room" required />
               </label>
               <label className="grid gap-1.5">
                 <Label>Room number</Label>
-                <Input name="room_number" placeholder="e.g. G-04" required />
+                <Input name="room_number" defaultValue={editingRoom?.room_number} placeholder="e.g. G-04" required />
               </label>
             </div>
             <label className="grid gap-1.5">
               <Label>Floor / location</Label>
-              <Select name="location" required>
+              <Select name="location" defaultValue={editingRoom?.location} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Select floor" />
                 </SelectTrigger>
@@ -96,15 +105,15 @@ export function RoomAllocationManager({ rooms, allocations }: { rooms: Logistics
             </label>
             <label className="grid gap-1.5">
               <Label>Head of room</Label>
-              <Input name="head_of_room" placeholder="Name of room head" />
+              <Input name="head_of_room" defaultValue={editingRoom?.head_of_room || ""} placeholder="Name of room head" />
             </label>
             <label className="grid gap-1.5">
               <Label>Capacity</Label>
-              <Input name="capacity" type="number" min="1" defaultValue="1" required />
+              <Input name="capacity" type="number" min="1" defaultValue={editingRoom?.capacity || 1} required />
             </label>
             <Button type="submit" disabled={isPending} className="h-11 w-full bg-indigo-600 font-bold text-white hover:bg-indigo-700">
               {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Building2 className="mr-2 h-4 w-4" />}
-              Save Room
+              {editingRoom ? "Save Changes" : "Save Room"}
             </Button>
           </form>
         </SheetContent>
@@ -213,14 +222,15 @@ export function RoomAllocationManager({ rooms, allocations }: { rooms: Logistics
                         {!occupants.length && <p className="px-5 py-7 text-center text-sm text-slate-400">No one is allocated to this room.</p>}
                       </div>
                       <footer className="flex justify-between border-t px-5 py-3">
-                        <Button variant="ghost" size="sm" className="text-rose-600" onClick={() => run(() => deleteLogisticsRoom(room.id), "Room deleted.")}>
-                          <Trash2 className="mr-1 h-4 w-4" />
-                          Delete
-                        </Button>
-                        <Button size="sm" variant="outline" disabled={!available} onClick={() => openAllocation(room.id)}>
-                          <UsersRound className="mr-1 h-4 w-4" />
-                          Add Person
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button variant="outline" size="sm" onClick={() => openEditRoom(room)}>
+                            <Pencil className="mr-1 h-4 w-4" />Edit
+                          </Button>
+                          <Button variant="ghost" size="sm" className="text-rose-600" onClick={() => run(() => deleteLogisticsRoom(room.id), "Room deleted.")}>
+                            <Trash2 className="mr-1 h-4 w-4" />Delete
+                          </Button>
+                        </div>
+                        <Button size="sm" variant="outline" disabled={!available} onClick={() => openAllocation(room.id)}><UsersRound className="mr-1 h-4 w-4" />Add Person</Button>
                       </footer>
                     </article>
                   )

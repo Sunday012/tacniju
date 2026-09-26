@@ -9,6 +9,8 @@ export type OrderServiceDocumentData = {
     title: string
     item_type: string
     scheduled_time: string | null
+    handler_profile_id?: string | null
+    handler_name?: string | null
     sort_order: number
   }>
 }
@@ -31,6 +33,7 @@ export function OrderServiceDocument({ service }: { service: OrderServiceDocumen
             <div>
               <p className="font-extrabold">{item.title}</p>
               <p className="text-xs font-bold uppercase text-slate-500">{item.item_type}</p>
+              {item.handler_name && <p className="mt-1 text-sm font-semibold text-indigo-700 print:text-black">Handled by {item.handler_name}</p>}
             </div>
             <span className="flex items-center gap-1 font-mono text-sm font-bold text-slate-600">
               {item.scheduled_time && (

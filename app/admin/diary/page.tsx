@@ -6,7 +6,7 @@ import Link from "next/link"
 import { isGuestProfile } from "@/lib/profile-kind"
 import { Cake, MapPin } from "lucide-react"
 
-export default async function AdminDiaryPage() {
+export default async function AdminDiaryPage({ searchParams }: { searchParams: { from?: string } }) {
   const supabase = await createClient()
 
   // Get all members for admin
@@ -18,6 +18,7 @@ export default async function AdminDiaryPage() {
   const members = (profiles || []).filter(profile => !isGuestProfile(profile))
   const transferred = members.filter(m => m.member_status === 'Transferred')
   const terminated = members.filter(m => m.member_status === 'Terminated')
+  const fromSecretaries = searchParams.from === "secretaries"
 
   const AdminMemberCard = ({ member }: { member: any }) => (
     <Card className="bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300">
@@ -76,8 +77,8 @@ export default async function AdminDiaryPage() {
               <Link href="/admin/diary/birthdays" className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg shadow-sm text-sm font-medium hover:bg-slate-50 transition-colors">
                 <Cake className="h-4 w-4" /> Birthdays
               </Link>
-              <Link href="/admin" className="px-4 py-2 bg-white border border-slate-200 rounded-lg shadow-sm text-sm font-medium hover:bg-slate-50 transition-colors">
-                  Back to Admin
+              <Link href={fromSecretaries ? "/admin/office/secretariat/secretaries/records-reports" : "/admin"} className="px-4 py-2 bg-white border border-slate-200 rounded-lg shadow-sm text-sm font-medium hover:bg-slate-50 transition-colors">
+                  {fromSecretaries ? "Back to Records & Reports" : "Back to Admin"}
               </Link>
             </div>
         </div>
