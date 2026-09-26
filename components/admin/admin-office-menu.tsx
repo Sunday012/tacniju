@@ -34,11 +34,10 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
         slug: "admin-control-unit",
         href: officePath("admin-office", "admin-control-unit"),
         label: "Admin Control Unit",
-        description: "System control and announcements for the Secretariat.",
+        description: "System administration controls.",
         icon: Settings,
         children: [
           { slug: "system", href: "/admin/system", label: "System", description: "Open system administration controls.", icon: Settings },
-          { slug: "announcement-memo", href: memoPath("Announcement Memo", "Admin Control Unit", officePath("admin-office", "admin-control-unit")), label: "Announcement Memo", description: "Send an announcement memo to the Secretariat to pass down.", icon: Mic2 },
         ],
       },
     ],
@@ -273,8 +272,9 @@ export const adminOfficeDeskTools: OfficeTool[] = [
 export const adminOfficeRecordTools: OfficeTool[] = [
   { href: officePath("overview"), label: "Overview", description: "Open the shared Admin Office and Secretariat overview.", icon: UsersRound },
   { href: "/admin/diary/locations", label: "Location", description: "Review districts and assemblies.", icon: MapPin },
+  { href: memoPath("Announcement Memo", "Admin Control Unit", officePath("admin-office", "records")), label: "Announcement Memo", description: "Send an announcement memo to the Secretariat to pass down.", icon: Mic2 },
   { href: officePath("admin-office", "records", "treasury"), label: "Treasury", description: "See every bank and its current balance.", icon: WalletCards },
-  { href: "/admin/announcements", label: "Pending", description: "Review pending announcements and notices.", icon: Mic2 },
+  { href: `/admin/office/admin-office/files/new?unit=${encodeURIComponent("Head Office")}`, label: "Pending", description: "Review unattended memos and files sent to Head Office.", icon: FolderCheck },
 ]
 
 export const adminOfficeSystemTools: OfficeTool[] = [{ href: "/admin/system", label: "System Control", description: "Open system administration.", icon: Settings }]

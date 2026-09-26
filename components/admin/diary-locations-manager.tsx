@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Building2, Loader2, MapPin, Pencil, Plus, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -30,6 +31,7 @@ export function DiaryLocationsManager({
   assemblies: Assembly[];
   members: Member[];
 }) {
+  const router = useRouter();
   const [districtName, setDistrictName] = useState("");
   const [assemblyName, setAssemblyName] = useState("");
   const [locationId, setLocationId] = useState(locations[0]?.id || "");
@@ -48,6 +50,7 @@ export function DiaryLocationsManager({
       }
       reset?.();
       toast.success(success);
+      router.refresh();
     });
   };
 
