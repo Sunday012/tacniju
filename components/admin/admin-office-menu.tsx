@@ -1,46 +1,11 @@
 import Image from "next/image"
 import Link from "next/link"
 import type { LucideIcon } from "lucide-react"
-import {
-  ArrowLeft,
-  Award,
-  Banknote,
-  BriefcaseBusiness,
-  BedDouble,
-  Building2,
-  CalendarDays,
-  ClipboardList,
-  FileText,
-  FolderCheck,
-  HeartHandshake,
-  Landmark,
-  MapPin,
-  Mic2,
-  Music2,
-  Presentation,
-  ScanLine,
-  Settings,
-  Stethoscope,
-  Trophy,
-  Truck,
-  UserPlus,
-  UsersRound,
-  UtensilsCrossed,
-  WalletCards,
-} from "lucide-react"
+import { ArrowLeft, Award, Banknote, BriefcaseBusiness, BedDouble, Building2, CalendarDays, ClipboardList, FileText, FolderCheck, HeartHandshake, Landmark, MapPin, Mic2, Music2, Presentation, ScanLine, Settings, Stethoscope, Trophy, Truck, UserPlus, UsersRound, UtensilsCrossed, WalletCards } from "lucide-react"
 
-export type OfficeTool = {
-  href: string
-  label: string
-  description: string
-  icon: LucideIcon
-}
+export type OfficeTool = { href: string; label: string; description: string; icon: LucideIcon }
 
-export type AdminMenuNode = OfficeTool & {
-  slug: string
-  children?: AdminMenuNode[]
-  emptyMessage?: string
-}
+export type AdminMenuNode = OfficeTool & { slug: string; children?: AdminMenuNode[]; emptyMessage?: string }
 
 const officePath = (...parts: string[]) => `/admin/office/${parts.join("/")}`
 const fileQueue = (unit: string) => `/admin/office/admin-office/files?unit=${encodeURIComponent(unit)}`
@@ -74,13 +39,7 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
         children: [
           { slug: "system", href: "/admin/system", label: "System", description: "Open system administration controls.", icon: Settings },
           { slug: "location", href: "/admin/diary/locations", label: "Location", description: "Manage districts and assemblies.", icon: MapPin },
-          {
-            slug: "announcement-memo",
-            href: memoPath("Announcement Memo", "Admin Control Unit", officePath("admin-office", "admin-control-unit")),
-            label: "Announcement Memo",
-            description: "Send an announcement memo to the Secretariat to pass down.",
-            icon: Mic2,
-          },
+          { slug: "announcement-memo", href: memoPath("Announcement Memo", "Admin Control Unit", officePath("admin-office", "admin-control-unit")), label: "Announcement Memo", description: "Send an announcement memo to the Secretariat to pass down.", icon: Mic2 },
         ],
       },
     ],
@@ -249,13 +208,7 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
               { slug: "kitchen", href: "/accounting/inventory/consumption/kitchen", label: "Kitchen", description: "Open kitchen consumption.", icon: UtensilsCrossed },
               { slug: "batch", href: "/accounting/inventory/production/batch-summary", label: "Batch", description: "Open stock batches.", icon: ClipboardList },
               { slug: "inventory-report", href: "/accounting/inventory/reports", label: "Inventory Report", description: "Open inventory reports.", icon: FileText },
-              {
-                slug: "medical-unit",
-                href: officePath("directors", "welfare", "desk", "medical-unit"),
-                label: "Medical Unit",
-                description: "Record visits, treatment, and follow-up care.",
-                icon: Stethoscope,
-              },
+              { slug: "medical-unit", href: officePath("directors", "welfare", "desk", "medical-unit"), label: "Medical Unit", description: "Record visits, treatment, and follow-up care.", icon: Stethoscope },
               { slug: "report", href: "/accounting/inventory/reports", label: "Report", description: "Open welfare inventory reports.", icon: FileText },
             ],
           },
@@ -290,24 +243,25 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
         description: "Transport, rooms, order of service, and member coordination.",
         icon: Truck,
         children: [
-          { slug: "transport-report", href: memoPath("Transport Report", "Logistics Director", officePath("directors", "logistics"), true), label: "Transport Report", description: "Create and send a transport report memo.", icon: FileText },
-          { slug: "rooms", href: officePath("directors", "logistics", "rooms"), label: "Rooms", description: "Allocate rooms to members and guests.", icon: BedDouble },
-          { slug: "order-of-service", href: "/admin/presenter", label: "Order of Service", description: "Open the order of service.", icon: Presentation },
-          { slug: "members", href: "/admin/office/members?from=logistics", label: "List of Members", description: "Search and review registered members in table or card view.", icon: UsersRound },
+          {
+            slug: "desk",
+            href: officePath("directors", "logistics", "desk"),
+            label: "Desk",
+            description: "Rooms, service planning, transport, and members.",
+            icon: Truck,
+            children: [
+              { slug: "transport-report", href: memoPath("Transport Report", "Logistics Director", officePath("directors", "logistics", "desk"), true), label: "Transport Report", description: "Create and send a transport report memo.", icon: FileText },
+              { slug: "rooms", href: officePath("directors", "logistics", "rooms"), label: "Rooms", description: "Create rooms and allocate members and guests by floor.", icon: BedDouble },
+              { slug: "order-of-service", href: officePath("directors", "logistics", "order-of-service"), label: "Order of Service", description: "Create, post, and send event orders of service.", icon: Presentation },
+              { slug: "members", href: "/admin/office/members?from=logistics", label: "List of Members", description: "Search and review registered members in table or card view.", icon: UsersRound },
+            ],
+          },
+          { slug: "anchor", href: officePath("directors", "logistics", "anchor"), label: "Anchor Unit", description: "View and print completed event orders.", icon: Presentation },
         ],
       },
     ],
   },
-  {
-    slug: "media-unit",
-    href: officePath("media-unit"),
-    label: "Media Unit",
-    description: "Presentation tools.",
-    icon: Presentation,
-    children: [
-      { slug: "presentation", href: "/admin/presenter", label: "Presentation", description: "Open the presentation suite.", icon: Presentation },
-    ],
-  },
+  { slug: "media-unit", href: officePath("media-unit"), label: "Media Unit", description: "Presentation tools.", icon: Presentation, children: [{ slug: "presentation", href: "/admin/presenter", label: "Presentation", description: "Open the presentation suite.", icon: Presentation }] },
 ]
 
 export const adminOfficeDeskTools: OfficeTool[] = [
@@ -324,9 +278,7 @@ export const adminOfficeRecordTools: OfficeTool[] = [
   { href: "/admin/announcements", label: "Pending", description: "Review pending announcements and notices.", icon: Mic2 },
 ]
 
-export const adminOfficeSystemTools: OfficeTool[] = [
-  { href: "/admin/system", label: "System Control", description: "Open system administration.", icon: Settings },
-]
+export const adminOfficeSystemTools: OfficeTool[] = [{ href: "/admin/system", label: "System Control", description: "Open system administration.", icon: Settings }]
 
 export function resolveAdminMenuNode(office: string, sections: string[] = []) {
   let node = adminOfficeMainAreas.find((area) => area.slug === office)
@@ -389,7 +341,9 @@ export function AdminOfficeDirectory({ node, backHref }: { node: AdminMenuNode; 
               const Icon = child.icon
               return (
                 <Link key={child.slug} href={child.href} title={child.description} className="flex min-h-14 items-center gap-3 border border-slate-200 bg-white px-3 py-2 shadow-sm transition hover:border-indigo-300 hover:bg-slate-50 hover:shadow-md">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-slate-200 bg-slate-50 text-slate-600"><Icon className="h-4 w-4" /></span>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-slate-200 bg-slate-50 text-slate-600">
+                    <Icon className="h-4 w-4" />
+                  </span>
                   <span className="text-sm font-bold text-slate-800 sm:text-base">{child.label}</span>
                 </Link>
               )
@@ -421,7 +375,9 @@ export function AdminOfficeSubmenu({ title, description, tools }: { title: strin
             const Icon = tool.icon
             return (
               <Link key={tool.href} href={tool.href} title={tool.description} className="flex min-h-14 items-center gap-3 border border-slate-200 bg-white px-3 py-2 shadow-sm transition hover:border-indigo-300 hover:bg-slate-50 hover:shadow-md">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-slate-200 bg-slate-50 text-slate-600"><Icon className="h-4 w-4" /></span>
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-slate-200 bg-slate-50 text-slate-600">
+                  <Icon className="h-4 w-4" />
+                </span>
                 <span className="text-sm font-bold text-slate-800 sm:text-base">{tool.label}</span>
               </Link>
             )

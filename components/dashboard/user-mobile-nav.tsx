@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Menu, Home, Calendar, Settings, LogOut, ShieldCheck, Users, Receipt, MonitorPlay, Shield, Megaphone, Utensils, BookOpenText, Music, Landmark } from "lucide-react"
+import { Menu, Home, Calendar, Settings, LogOut, ShieldCheck, Users, Receipt, MonitorPlay, Shield, Megaphone, Utensils, BookOpenText, Music, Landmark, ListOrdered } from "lucide-react"
 import { createClient } from "@/lib/client"
 import { useRouter } from "next/navigation"
 
@@ -23,6 +23,7 @@ const navItems = [
   { label: "Dreams", href: "/dashboard/dreams", icon: BookOpenText },
   { label: "Lyrics", href: "/dashboard/lyrics", icon: Music },
   { label: "Dining Hall", href: "/dashboard/dining-hall", icon: Utensils },
+  { label: "Order of Service", href: "/dashboard/order-of-service", icon: ListOrdered },
   { label: "Stall", href: "/dashboard/stall", icon: Receipt },
   { label: "Live Screen", href: "/present", icon: MonitorPlay },
   { label: "Profile Settings", href: "/dashboard/settings", icon: Settings },
@@ -43,12 +44,7 @@ export function UserMobileNav({ isAdmin }: UserMobileNavProps) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="lg:hidden h-10 w-10 rounded-lg text-slate-500 hover:bg-indigo-50 hover:text-indigo-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-indigo-300"
-          aria-label="Open menu"
-        >
+        <Button variant="ghost" size="icon" className="lg:hidden h-10 w-10 rounded-lg text-slate-500 hover:bg-indigo-50 hover:text-indigo-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-indigo-300" aria-label="Open menu">
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
@@ -76,11 +72,7 @@ export function UserMobileNav({ isAdmin }: UserMobileNavProps) {
             const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href))
             return (
               <Link key={href} href={href} onClick={() => setOpen(false)}>
-                <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-colors ${
-                  isActive
-                    ? "bg-indigo-600/10 text-indigo-700 border border-indigo-100 dark:border-indigo-900 dark:bg-indigo-500/15 dark:text-indigo-300"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100"
-                }`}>
+                <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-colors ${isActive ? "bg-indigo-600/10 text-indigo-700 border border-indigo-100 dark:border-indigo-900 dark:bg-indigo-500/15 dark:text-indigo-300" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100"}`}>
                   <Icon className={`w-[18px] h-[18px] ${isActive ? "text-indigo-600 dark:text-indigo-300" : "text-slate-400 dark:text-slate-500"}`} />
                   {label}
                 </div>
@@ -93,11 +85,7 @@ export function UserMobileNav({ isAdmin }: UserMobileNavProps) {
               <div className="my-3 border-t border-slate-100 dark:border-slate-800" />
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-2 dark:text-slate-500">Admin</p>
               <Link href="/admin" onClick={() => setOpen(false)}>
-                <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-colors ${
-                  pathname.startsWith("/admin")
-                    ? "bg-indigo-600/10 text-indigo-700 border border-indigo-100 dark:border-indigo-900 dark:bg-indigo-500/15 dark:text-indigo-300"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100"
-                }`}>
+                <div className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-colors ${pathname.startsWith("/admin") ? "bg-indigo-600/10 text-indigo-700 border border-indigo-100 dark:border-indigo-900 dark:bg-indigo-500/15 dark:text-indigo-300" : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100"}`}>
                   <ShieldCheck className="w-[18px] h-[18px] text-slate-400 dark:text-slate-500" />
                   Admin Portal
                 </div>
@@ -108,10 +96,7 @@ export function UserMobileNav({ isAdmin }: UserMobileNavProps) {
 
         {/* Sign out */}
         <div className="shrink-0 p-4 border-t border-slate-100 dark:border-slate-800">
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-sm font-semibold text-rose-500 hover:bg-rose-50 transition-colors dark:text-rose-300 dark:hover:bg-rose-950/30"
-          >
+          <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-sm font-semibold text-rose-500 hover:bg-rose-50 transition-colors dark:text-rose-300 dark:hover:bg-rose-950/30">
             <LogOut className="w-4 h-4" />
             Sign Out
           </button>
