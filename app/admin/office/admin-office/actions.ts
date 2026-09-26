@@ -33,6 +33,38 @@ export async function updateAdminOfficeFileStatus(id: string, status: string) {
   return { success: true }
 }
 
+export async function updateAdminOfficeFile(id: string, title: string, description: string) {
+  const { supabase, orgId, error } = await requireAdmin()
+  if (error || !orgId) return { error }
+  const cleanTitle = title.trim()
+  if (!cleanTitle) return { error: "File title is required." }
+
+  const { error: updateError } = await supabase
+    .from("admin_office_files")
+    .update({ title: cleanTitle, description: description.trim() || null, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("org_id", orgId)
+  if (updateError) return { error: updateError.message }
+
+  revalidatePath("/admin/office/admin-office/files", "layout")
+  return { success: true }
+}
+
+export async function deleteAdminOfficeFile(id: string) {
+  const { supabase, orgId, error } = await requireAdmin()
+  if (error || !orgId) return { error }
+
+  const { error: deleteError } = await supabase
+    .from("admin_office_files")
+    .delete()
+    .eq("id", id)
+    .eq("org_id", orgId)
+  if (deleteError) return { error: deleteError.message }
+
+  revalidatePath("/admin/office/admin-office/files", "layout")
+  return { success: true }
+}
+
 export async function sendApprovedFileToHeadOffice(id: string) {
   const { supabase, orgId, error } = await requireAdmin()
   if (error || !orgId) return { error }
@@ -157,6 +189,7 @@ export async function saveAdminAppointment(formData: FormData) {
   const officeTitle = String(formData.get("office_title") || "").trim()
   const appointedOn = String(formData.get("appointed_on") || "")
   const notes = String(formData.get("notes") || "").trim()
+  const profileId = String(formData.get("profile_id") || "").trim()
   if (!personName || !officeTitle || !appointedOn) return { error: "Name, office, and appointment date are required." }
 
   if (id) {
@@ -167,6 +200,7 @@ export async function saveAdminAppointment(formData: FormData) {
         office_title: officeTitle,
         appointed_on: appointedOn,
         notes: notes || null,
+        profile_id: profileId || null,
         status: "Changed",
         updated_at: new Date().toISOString(),
       })
@@ -180,12 +214,32 @@ export async function saveAdminAppointment(formData: FormData) {
       office_title: officeTitle,
       appointed_on: appointedOn,
       notes: notes || null,
+      profile_id: profileId || null,
       created_by: user.id,
     })
     if (insertError) return { error: insertError.message }
   }
 
   revalidatePath("/admin/office/admin-office/appointments")
+  revalidatePath("/admin/office/members")
+  revalidatePath("/admin/office/overview")
+  return { success: true }
+}
+
+export async function deleteAdminAppointment(id: string) {
+  const { supabase, orgId, error } = await requireAdmin()
+  if (error || !orgId) return { error }
+
+  const { error: deleteError } = await supabase
+    .from("admin_appointments")
+    .delete()
+    .eq("id", id)
+    .eq("org_id", orgId)
+  if (deleteError) return { error: deleteError.message }
+
+  revalidatePath("/admin/office/admin-office/appointments")
+  revalidatePath("/admin/office/members")
+  revalidatePath("/admin/office/overview")
   return { success: true }
 }
 
@@ -201,5 +255,7 @@ export async function terminateAdminAppointment(id: string) {
   if (updateError) return { error: updateError.message }
 
   revalidatePath("/admin/office/admin-office/appointments")
+  revalidatePath("/admin/office/members")
+  revalidatePath("/admin/office/overview")
   return { success: true }
 }

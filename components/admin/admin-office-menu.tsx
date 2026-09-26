@@ -23,7 +23,7 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
         slug: "head-office",
         href: officePath("admin-office", "head-office"),
         label: "Head Office",
-        description: "Office desk, records and reports, and system tools.",
+        description: "Office desk plus records and reports.",
         icon: Building2,
         children: [
           { slug: "desk", href: officePath("admin-office", "desk"), label: "Desk", description: "Budget, awards, files, and appointments.", icon: ClipboardList },
@@ -34,11 +34,10 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
         slug: "admin-control-unit",
         href: officePath("admin-office", "admin-control-unit"),
         label: "Admin Control Unit",
-        description: "System control, locations, and announcements for the Secretariat.",
+        description: "System control and announcements for the Secretariat.",
         icon: Settings,
         children: [
           { slug: "system", href: "/admin/system", label: "System", description: "Open system administration controls.", icon: Settings },
-          { slug: "location", href: "/admin/diary/locations", label: "Location", description: "Manage districts and assemblies.", icon: MapPin },
           { slug: "announcement-memo", href: memoPath("Announcement Memo", "Admin Control Unit", officePath("admin-office", "admin-control-unit")), label: "Announcement Memo", description: "Send an announcement memo to the Secretariat to pass down.", icon: Mic2 },
         ],
       },
@@ -82,6 +81,8 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
             icon: FolderCheck,
             children: [
               { slug: "overview", href: officePath("overview"), label: "Overview", description: "Open the shared Admin Office and Secretariat overview.", icon: UsersRound },
+              { slug: "diary", href: "/admin/office/overview", label: "Diary", description: "Open the complete active-member directory.", icon: UsersRound },
+              { slug: "birthdays", href: "/admin/diary/birthdays?from=secretaries", label: "Birthdays", description: "Browse birthdays by month or view every birthday.", icon: CalendarDays },
               { slug: "reservation", href: "/admin/reservations", label: "Reservation", description: "Review reservations.", icon: UsersRound },
               { slug: "announcement", href: "/admin/announcements", label: "Announcement", description: "Prepare announcements.", icon: Mic2 },
               { slug: "department", href: "/admin/departments", label: "Department", description: "Manage departments.", icon: Building2 },
@@ -97,8 +98,6 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
         description: "Finance, accounting, and sales work.",
         icon: WalletCards,
         children: [
-          { slug: "diary", href: "/admin/office/members?from=assistants", label: "Diary", description: "Search and review the current member directory.", icon: UsersRound },
-          { slug: "birthdays", href: "/admin/diary/birthdays?from=assistants", label: "Birthdays", description: "Open the active-member birthday diary.", icon: CalendarDays },
           {
             slug: "finance-officer",
             href: officePath("secretariat", "financial-secretary", "finance-officer"),

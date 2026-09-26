@@ -54,6 +54,29 @@ export async function createDiaryAssembly(locationId: string, name: string) {
   return { success: true };
 }
 
+export async function updateDiaryLocation(id: string, name: string) {
+  const { supabase, error } = await requireAdmin();
+  if (error) return { error };
+  const cleanName = name.trim();
+  if (!cleanName) return { error: "District name is required." };
+  const { error: updateError } = await supabase.from("diary_locations").update({ name: cleanName }).eq("id", id);
+  if (updateError) return { error: updateError.message };
+  revalidateDiary();
+  return { success: true };
+}
+
+export async function updateDiaryAssembly(id: string, locationId: string, name: string) {
+  const { supabase, error } = await requireAdmin();
+  if (error) return { error };
+  const cleanName = name.trim();
+  if (!locationId) return { error: "Select a district." };
+  if (!cleanName) return { error: "Assembly name is required." };
+  const { error: updateError } = await supabase.from("diary_assemblies").update({ location_id: locationId, name: cleanName }).eq("id", id);
+  if (updateError) return { error: updateError.message };
+  revalidateDiary();
+  return { success: true };
+}
+
 export async function deleteDiaryLocation(id: string) {
   const { supabase, error } = await requireAdmin();
   if (error) return { error };

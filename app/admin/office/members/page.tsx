@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { ArrowLeft, UsersRound } from "lucide-react"
 import { getAllAssetAssignments } from "@/app/actions/assets"
+import { getAccountingOrgId } from "@/lib/accounting-org"
 import { MembersTable } from "@/components/members-table"
 import { isGuestProfile } from "@/lib/profile-kind"
 import { createClient } from "@/lib/server"
@@ -24,15 +25,32 @@ const memberListContexts = {
   },
 } as const
 
+const officeTerms: Record<keyof typeof memberListContexts, string[]> = {
+  logistics: ["logistic"],
+  ushering: ["usher"],
+  assistants: ["assistant"],
+  welfare: ["welfare"],
+}
+
+function normalized(value: string | null | undefined) {
+  return (value || "").trim().toLowerCase()
+}
+
 export default async function OfficeMembersPage({ searchParams }: { searchParams: { from?: string } }) {
   const context = memberListContexts[searchParams.from as keyof typeof memberListContexts] || memberListContexts.logistics
+  const contextKey = (searchParams.from && searchParams.from in memberListContexts ? searchParams.from : "logistics") as keyof typeof memberListContexts
   const supabase = await createClient()
-  const [{ data: profiles }, { data: awards }, { assignments: gifts }] = await Promise.all([
+  const orgId = await getAccountingOrgId()
+  const [{ data: profiles }, { data: awards }, { data: appointments }, { assignments: gifts }] = await Promise.all([
     supabase.from("profiles").select("*").order("full_name", { ascending: true }),
     supabase.from("awards").select("*").order("created_at", { ascending: true }),
+    supabase.from("admin_appointments").select("profile_id, person_name, office_title, status").eq("org_id", orgId).neq("status", "Terminated"),
     getAllAssetAssignments(),
   ])
-  const members = (profiles || []).filter((profile) => !isGuestProfile(profile) && profile.member_status !== "Transferred")
+  const matchingAppointments = (appointments || []).filter((appointment) => officeTerms[contextKey].some((term) => normalized(appointment.office_title).includes(term)))
+  const appointedIds = new Set(matchingAppointments.map((appointment) => appointment.profile_id).filter(Boolean))
+  const appointedNames = new Set(matchingAppointments.map((appointment) => normalized(appointment.person_name)).filter(Boolean))
+  const members = (profiles || []).filter((profile) => !isGuestProfile(profile) && profile.member_status !== "Transferred" && (appointedIds.has(profile.id) || appointedNames.has(normalized(profile.full_name))))
 
   return (
     <main className="flex-1 p-5 sm:p-8 lg:p-10">
@@ -49,7 +67,7 @@ export default async function OfficeMembersPage({ searchParams }: { searchParams
             </span>
             <h1 className="text-3xl font-extrabold text-slate-900">List of Members</h1>
           </div>
-          <p className="mt-2 text-slate-500">Search, filter, and switch between the familiar table and card views.</p>
+          <p className="mt-2 text-slate-500">Members appear here when their active appointment belongs to this office.</p>
         </div>
 
         <section className="mt-6 overflow-hidden border border-slate-200 bg-white shadow-sm">
