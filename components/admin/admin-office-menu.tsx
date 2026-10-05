@@ -106,7 +106,7 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
             children: [
               { slug: "program", href: "/accounting/programs", label: "Program", description: "Open program planning.", icon: ClipboardList },
               { slug: "files", href: fileQueue("Finance Officer"), label: "Files", description: "Review finance files.", icon: FolderCheck },
-              { slug: "records", href: "/accounting", label: "Records", description: "Open financial records.", icon: FileText },
+              { slug: "records", href: officePath("secretariat", "financial-secretary", "finance-officer", "records"), label: "Records", description: "Monthly and yearly finance activity summaries.", icon: FileText },
             ],
           },
           { slug: "account-officer", href: "/accounting", label: "Account Officer", description: "Open Accounting.", icon: Landmark },
@@ -286,7 +286,11 @@ export function resolveAdminMenuNode(office: string, sections: string[] = []) {
   return node
 }
 
-export function AdminOfficeMainMenu() {
+export function AdminOfficeMainMenu({ allowedOfficeSlugs }: { allowedOfficeSlugs?: string[] }) {
+  const areas = allowedOfficeSlugs
+    ? adminOfficeMainAreas.filter((area) => allowedOfficeSlugs.includes(area.slug))
+    : adminOfficeMainAreas
+
   return (
     <main className="flex-1 p-5 sm:p-8 lg:p-10">
       <div className="mx-auto max-w-6xl">
@@ -297,7 +301,7 @@ export function AdminOfficeMainMenu() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {adminOfficeMainAreas.map((area) => {
+          {areas.map((area) => {
             const Icon = area.icon
             return (
               <Link key={area.slug} href={area.href} className="group border border-slate-200 bg-white p-5 shadow-sm transition hover:border-indigo-300 hover:shadow-md">
@@ -313,6 +317,11 @@ export function AdminOfficeMainMenu() {
               </Link>
             )
           })}
+          {!areas.length && (
+            <div className="col-span-full border border-slate-200 bg-white px-5 py-12 text-center text-sm font-bold text-slate-400">
+              No office has been assigned to this account yet.
+            </div>
+          )}
         </div>
       </div>
     </main>

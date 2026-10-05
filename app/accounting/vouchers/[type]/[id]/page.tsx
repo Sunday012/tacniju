@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { getVoucherById, VoucherType } from "@/app/vouchers/actions"
 import { getAccountingPrograms } from "@/app/accounting/actions"
 import Link from "next/link"
+import { PrintButton } from "@/components/print-button"
 
 const typeMap: Record<string, VoucherType> = {
   payment: "Payment",
@@ -76,8 +77,15 @@ export default async function AccountingVoucherDetailPage({
         compact: true,
       }}
     >
-      <div className="space-y-6">
-        <div className="flex justify-end">
+      <div className="space-y-6 print:space-y-4">
+        <div className="hidden border-b-2 border-black pb-5 print:block">
+          <p className="text-center text-sm font-black uppercase">The Apostolic Church Nigeria</p>
+          <p className="text-center text-sm font-bold uppercase">Iju Area Youth</p>
+          <h1 className="mt-5 text-center text-2xl font-black">{voucherType} Voucher</h1>
+          <div className="mt-4 flex justify-between text-sm font-bold"><span>No: {voucher.voucher_no}</span><span>Date: {formatIsoDate(voucher.date)}</span></div>
+        </div>
+        <div className="flex justify-end gap-3 print:hidden">
+          <PrintButton label="Print / Save PDF" />
           <Link
             href={`/accounting/vouchers/${params.type}?edit=${voucher.id}`}
             className="inline-flex h-10 items-center rounded-xl bg-indigo-600 px-4 text-sm font-black text-white shadow-sm hover:bg-indigo-700"
@@ -86,7 +94,7 @@ export default async function AccountingVoucherDetailPage({
           </Link>
         </div>
 
-        <Card className="rounded-xl border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <Card className="rounded-xl border-slate-200 bg-white shadow-sm print:rounded-none print:border-black print:shadow-none dark:border-slate-800 dark:bg-slate-900">
           <CardHeader>
             <CardTitle className="text-xl text-slate-900 dark:text-slate-100">Voucher Summary</CardTitle>
           </CardHeader>
@@ -118,7 +126,7 @@ export default async function AccountingVoucherDetailPage({
           </CardContent>
         </Card>
 
-        <Card className="rounded-xl border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <Card className="rounded-xl border-slate-200 bg-white shadow-sm print:rounded-none print:border-black print:shadow-none dark:border-slate-800 dark:bg-slate-900">
           <CardHeader>
             <CardTitle className="text-xl text-slate-900 dark:text-slate-100">Ledger Entries</CardTitle>
           </CardHeader>
@@ -183,6 +191,10 @@ export default async function AccountingVoucherDetailPage({
             </CardContent>
           </Card>
         ) : null}
+        <div className="hidden grid-cols-2 gap-16 pt-16 text-sm print:grid">
+          <div className="border-t border-black pt-2 text-center">Receiver&apos;s Signature</div>
+          <div className="border-t border-black pt-2 text-center">Authorised Signatory</div>
+        </div>
       </div>
     </AccountingShell>
   )

@@ -10,8 +10,7 @@ export const dynamic = "force-dynamic"
 export default async function MemberOrderOfServicePage({ searchParams }: { searchParams?: { id?: string } }) {
   const supabase = await createClient()
   const orgId = await getAccountingOrgId()
-  const today = new Date().toISOString().slice(0, 10)
-  const { data: services } = await supabase.from("logistics_order_services").select("id, title, events!inner(name, event_date)").eq("org_id", orgId).eq("status", "Posted").gte("events.event_date", today).order("event_date", { referencedTable: "events", ascending: true })
+  const { data: services } = await supabase.from("logistics_order_services").select("id, title, events(name, event_date)").eq("org_id", orgId).eq("status", "Posted").order("updated_at", { ascending: false })
   const selectedId = searchParams?.id && services?.some((service) => service.id === searchParams.id) ? searchParams.id : services?.[0]?.id
   const selected = services?.find((service) => service.id === selectedId)
   const { data: items } = selectedId ? await supabase.from("logistics_order_service_items").select("id, title, item_type, scheduled_time, sort_order").eq("order_service_id", selectedId).order("sort_order") : { data: [] }
@@ -21,7 +20,7 @@ export default async function MemberOrderOfServicePage({ searchParams }: { searc
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-950 dark:text-white">Order of Service</h1>
-          <p className="mt-1 text-slate-500 dark:text-slate-400">Posted orders for current and upcoming events.</p>
+          <p className="mt-1 text-slate-500 dark:text-slate-400">Posted orders available to members.</p>
         </div>
         {selected && <PrintOrderButton />}
       </header>

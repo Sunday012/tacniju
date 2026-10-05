@@ -787,6 +787,14 @@ export function VoucherEntry({
     const selectedManagedReferenceLabel = managedReferenceOptions.find(option => option.value === managedLedger?.adjustment_reference)?.label
     const selectedManagedReferenceBalance = managedLedger?.adjustment_reference ? balances[managedLedger.adjustment_reference] : null
     const selectedManagedReferenceName = selectedManagedReferenceLabel?.replace(/\s+-\s+.*$/, "")
+    const adjustmentReferenceLabel = (line: typeof selectedLedgers[number]) => {
+        if (!line.adjustment_reference) return ""
+        if (line.adjustment_method === "Against Reference" || line.adjustment_method === "Advance") {
+            const bill = pendingBills.find(option => option.voucherNo === line.adjustment_reference)
+            return bill ? `${bill.party} (${bill.voucherNo})` : line.adjustment_reference
+        }
+        return throughReferenceOptions.find(option => option.value === line.adjustment_reference)?.label || line.adjustment_reference
+    }
 
     // Recent vouchers of this type, shown below the form so users can edit or delete past entries.
     const voucherSlug = voucherType.toLowerCase()
@@ -1071,10 +1079,8 @@ export function VoucherEntry({
                                                                     {sl.adjustment_method && (
                                                                         <span className="ml-2 inline-flex max-w-[260px] flex-col align-middle text-xs font-semibold text-slate-400">
                                                                             <span>{sl.adjustment_method}</span>
-                                                                            {managedLedgerIndex === index && selectedManagedReferenceLabel ? (
-                                                                                <span className="truncate text-slate-600">{selectedManagedReferenceLabel}</span>
-                                                                            ) : sl.adjustment_reference ? (
-                                                                                <span className="truncate text-slate-600">{sl.adjustment_reference}</span>
+                                                                            {sl.adjustment_reference ? (
+                                                                                <span className="truncate text-slate-600">{adjustmentReferenceLabel(sl)}</span>
                                                                             ) : null}
                                                                         </span>
                                                                     )}

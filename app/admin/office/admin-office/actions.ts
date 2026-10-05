@@ -22,12 +22,31 @@ export async function updateAdminOfficeFileStatus(id: string, status: string) {
 
   const { supabase, orgId, error } = await requireAdmin()
   if (error || !orgId) return { error }
+  const { data: file } = await supabase
+    .from("admin_office_files")
+    .select("file_type, description")
+    .eq("id", id)
+    .eq("org_id", orgId)
+    .maybeSingle()
   const { error: updateError } = await supabase
     .from("admin_office_files")
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id)
     .eq("org_id", orgId)
   if (updateError) return { error: updateError.message }
+
+  if (status === "Sent Back" && file?.file_type === "Order of Service") {
+    const linkedServiceId = file.description?.match(/\/order-of-service\/([0-9a-f-]{36})/i)?.[1]
+    if (linkedServiceId) {
+      const { error: serviceError } = await supabase
+        .from("logistics_order_services")
+        .update({ sent_to_secretariat_at: null, updated_at: new Date().toISOString() })
+        .eq("id", linkedServiceId)
+        .eq("org_id", orgId)
+      if (serviceError) return { error: serviceError.message }
+      revalidatePath("/admin/office/directors/logistics/order-of-service", "layout")
+    }
+  }
 
   revalidatePath("/admin/office/admin-office/files", "layout")
   return { success: true }
@@ -104,6 +123,28 @@ export async function sendProgramReportToHeadOffice(report: string) {
     title,
     description: `Program report submitted for review. Open /accounting/programs/reports/${report} to view the live report.`,
     file_type: "Program Report",
+    submitted_from: "Finance Officer",
+    created_by: user.id,
+  })
+  if (insertError) return { error: insertError.message }
+  revalidatePath("/admin/office/admin-office/files", "layout")
+  return { success: true }
+}
+
+export async function sendFinanceRecordsReportToHeadOffice(period: string, date: string, label: string) {
+  const normalizedPeriod = period === "yearly" ? "yearly" : "monthly"
+  const cleanDate = date.trim()
+  const cleanLabel = label.trim() || (normalizedPeriod === "yearly" ? "Yearly" : "Monthly")
+  const { supabase, user, orgId, error } = await requireAdmin()
+  if (error || !user || !orgId) return { error }
+
+  const href = `/admin/office/secretariat/financial-secretary/finance-officer/records?period=${encodeURIComponent(normalizedPeriod)}&date=${encodeURIComponent(cleanDate)}`
+  const { error: insertError } = await supabase.from("admin_office_files").insert({
+    org_id: orgId,
+    office_unit: "Head Office",
+    title: `Finance Records Report - ${cleanLabel}`,
+    description: `Finance Officer submitted the ${cleanLabel} records report for review. Open ${href} to view the live report.`,
+    file_type: "Finance Report",
     submitted_from: "Finance Officer",
     created_by: user.id,
   })

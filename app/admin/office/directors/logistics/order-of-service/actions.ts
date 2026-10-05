@@ -42,6 +42,19 @@ export async function createOrderService(formData: FormData) {
   return { success: true, id: data.id as string }
 }
 
+export async function deleteOrderService(id: string) {
+  const { supabase, orgId, error } = await context()
+  if (error || !orgId) return { error }
+  const { error: deleteError } = await supabase
+    .from("logistics_order_services")
+    .delete()
+    .eq("id", id)
+    .eq("org_id", orgId)
+  if (deleteError) return { error: deleteError.message }
+  refresh()
+  return { success: true }
+}
+
 export async function addOrderServiceItem(serviceId: string, formData: FormData) {
   const { supabase, error } = await context()
   if (error) return { error }

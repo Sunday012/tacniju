@@ -72,3 +72,45 @@ export async function deleteEvent(eventId: string) {
     revalidatePath("/admin/events")
     return { success: true }
 }
+
+export async function markManualEventAttendance(eventId: string, profileId: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, message: "Unauthorized" }
+
+    const { data: adminProfile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
+    if (!adminProfile?.is_admin) return { success: false, message: "Admin access is required." }
+
+    const adminSupabase = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const [{ data: event }, { data: member }] = await Promise.all([
+        adminSupabase.from("events").select("id, name, event_date").eq("id", eventId).maybeSingle(),
+        adminSupabase.from("profiles").select("id, full_name").eq("id", profileId).maybeSingle(),
+    ])
+    if (!event) return { success: false, message: "Event not found." }
+    if (!member) return { success: false, message: "Select a valid member." }
+
+    const { data: existing } = await adminSupabase
+        .from("member_attendance")
+        .select("id")
+        .eq("event_id", eventId)
+        .eq("user_id", profileId)
+        .maybeSingle()
+    if (existing) return { success: false, message: `${member.full_name || "This member"} is already marked present.` }
+
+    const { error } = await adminSupabase.from("member_attendance").insert({
+        user_id: profileId,
+        event_id: event.id,
+        event_name: event.name,
+        event_date: event.event_date,
+        attended: true,
+        marked_by: user.id,
+    })
+    if (error) return { success: false, message: error.message }
+
+    revalidatePath(`/admin/events/${eventId}`)
+    revalidatePath("/admin/events")
+    return { success: true }
+}

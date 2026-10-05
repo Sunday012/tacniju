@@ -2,9 +2,9 @@
 import { useState, useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { CalendarDays, FilePlus2, Loader2, Plus } from "lucide-react"
+import { CalendarDays, FilePlus2, Loader2, Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
-import { createOrderService } from "./actions"
+import { createOrderService, deleteOrderService } from "./actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -34,6 +34,18 @@ export function OrderServiceManager({ events, services }: { events: Event[]; ser
       setOpen(false)
       router.push(`/admin/office/directors/logistics/order-of-service/${result.id}`)
     })
+  const remove = (id: string) => {
+    if (!window.confirm("Delete this order of service?")) return
+    startTransition(async () => {
+      const result = await deleteOrderService(id)
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+      toast.success("Order of service deleted.")
+      router.refresh()
+    })
+  }
   return (
     <div className="space-y-5">
       <div className="flex justify-end">
@@ -84,6 +96,7 @@ export function OrderServiceManager({ events, services }: { events: Event[]; ser
               <th className="px-5 py-3">Date</th>
               <th className="px-5 py-3">Status</th>
               <th className="px-5 py-3">Secretariat</th>
+              <th className="px-5 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -102,12 +115,17 @@ export function OrderServiceManager({ events, services }: { events: Event[]; ser
                     <span className="bg-slate-100 px-2 py-1 text-xs font-bold">{service.status}</span>
                   </td>
                   <td className="px-5 py-4">{service.sent_to_secretariat_at ? "Sent" : "Not sent"}</td>
+                  <td className="px-5 py-4 text-right">
+                    <Button size="icon" variant="ghost" className="text-rose-600 hover:bg-rose-50 hover:text-rose-700" disabled={pending} onClick={() => remove(service.id)} aria-label={`Delete ${service.title}`}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </td>
                 </tr>
               )
             })}
             {!services.length && (
               <tr>
-                <td colSpan={5} className="px-5 py-14 text-center text-slate-400">
+                <td colSpan={6} className="px-5 py-14 text-center text-slate-400">
                   <CalendarDays className="mx-auto mb-2 h-7 w-7" />
                   No orders of service created.
                 </td>

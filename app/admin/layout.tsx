@@ -1,4 +1,5 @@
 import { AdminTopBar } from "@/components/admin/top-bar"
+import { getAdminOfficeAccess } from "@/lib/access"
 import { createClient } from "@/lib/server"
 import { redirect } from "next/navigation"
 
@@ -19,11 +20,13 @@ export default async function AdminLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("is_admin")
+    .select("id, is_admin, department, member_role, email, full_name")
     .eq("id", user.id)
     .single()
 
-  if (!profile?.is_admin) {
+  const access = await getAdminOfficeAccess({ ...profile, email: profile?.email || user.email })
+
+  if (!access.canEnterAdmin) {
     redirect("/dashboard")
   }
 

@@ -18,6 +18,7 @@ export type StatementRow = {
   particulars: string
   debit: number
   credit: number
+  balance: number
 }
 
 export type StatementReport = {
@@ -98,6 +99,7 @@ export async function getLedgerStatement(ledgerId?: string, startDate?: string, 
   const { data, error } = await query
   if (error || !data) return { rows: [], totalDebit: 0, totalCredit: 0 }
 
+  let runningBalance = 0
   const rows = (data as any[]).map(entry => {
     const voucher = entry.vouchers
     const otherEntries = (voucher?.voucher_entries || []).filter((line: any) => line.ledger_id !== ledgerId)
@@ -107,6 +109,10 @@ export async function getLedgerStatement(ledgerId?: string, startDate?: string, 
       .filter((name: string, index: number, names: string[]) => names.indexOf(name) === index)
       .join(", ")
 
+    const debit = Number(entry.debit_amount || 0)
+    const credit = Number(entry.credit_amount || 0)
+    runningBalance += debit - credit
+
     return {
       id: entry.id as string,
       voucherId: voucher?.id || "",
@@ -115,8 +121,9 @@ export async function getLedgerStatement(ledgerId?: string, startDate?: string, 
       voucherType: voucher?.voucher_type || "-",
       narration: voucher?.narration || "",
       particulars: particulars || "-",
-      debit: Number(entry.debit_amount || 0),
-      credit: Number(entry.credit_amount || 0),
+      debit,
+      credit,
+      balance: runningBalance,
     }
   })
 

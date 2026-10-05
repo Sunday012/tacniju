@@ -5,6 +5,7 @@ import Link from "next/link"
 import { ArrowLeft, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PrintButton } from "@/components/admin/print-button"
+import { ManualEventAttendance } from "@/components/admin/manual-event-attendance"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -75,6 +76,13 @@ export default async function EventAttendancePage({ params }: { params: { id: st
     profile: profiles[record.user_id] || { full_name: "Unknown User", email: "N/A" }
   })) || []
 
+  const attendedIds = new Set(userIds)
+  const { data: memberOptions } = await adminSupabase
+    .from("profiles")
+    .select("id, full_name, reservation_number")
+    .order("full_name", { ascending: true })
+  const availableMembers = (memberOptions || []).filter((member) => !attendedIds.has(member.id))
+
   return (
     <div className="min-h-screen bg-slate-50 print:bg-white p-6 sm:p-10">
       <div className="w-full space-y-6">
@@ -85,7 +93,10 @@ export default async function EventAttendancePage({ params }: { params: { id: st
               Back to Events
             </Button>
           </Link>
-          <PrintButton />
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <ManualEventAttendance eventId={event.id} members={availableMembers} />
+            <PrintButton />
+          </div>
         </div>
 
         <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 print:shadow-none print:border-none print:p-0">

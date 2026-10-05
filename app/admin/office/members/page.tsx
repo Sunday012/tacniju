@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowLeft, CalendarDays, ClipboardList, UserPlus, UsersRound } from "lucide-react"
+import { ArrowLeft, CalendarDays, ClipboardList, UsersRound } from "lucide-react"
 import { getAccountingOrgId } from "@/lib/accounting-org"
 import { ProfileImagePreview } from "@/components/profile-image-preview"
 import { createClient } from "@/lib/server"
@@ -67,14 +67,11 @@ export default async function OfficeMembersPage({ searchParams }: { searchParams
         </div>
 
         <section className="mt-6 overflow-hidden border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
+          <div className="border-b border-slate-200 px-5 py-4">
             <div>
               <h2 className="font-extrabold text-slate-900">Appointed Members</h2>
               <p className="mt-1 text-sm text-slate-500">{roster.length} active {roster.length === 1 ? "appointment" : "appointments"} in this unit.</p>
             </div>
-            <Link href="/admin/office/admin-office/appointments" className="inline-flex h-10 items-center gap-2 border border-indigo-600 bg-indigo-600 px-4 text-sm font-bold text-white shadow-sm hover:bg-indigo-700">
-              <UserPlus className="h-4 w-4" />Manage Appointments
-            </Link>
           </div>
           <div className="divide-y divide-slate-100">
             {roster.map(({ appointment, profile }) => (
@@ -96,7 +93,7 @@ export default async function OfficeMembersPage({ searchParams }: { searchParams
                 </div>
               </article>
             ))}
-            {!roster.length && <div className="px-6 py-14 text-center"><UsersRound className="mx-auto h-8 w-8 text-slate-300" /><p className="mt-3 font-bold text-slate-700">No members appointed to this unit</p><p className="mt-1 text-sm text-slate-500">Use Appointments to add members to {context.label}.</p></div>}
+            {!roster.length && <div className="px-6 py-14 text-center"><UsersRound className="mx-auto h-8 w-8 text-slate-300" /><p className="mt-3 font-bold text-slate-700">No members appointed to this unit</p><p className="mt-1 text-sm text-slate-500">Appointments are managed from the Admin Office.</p></div>}
           </div>
         </section>
       </div>
