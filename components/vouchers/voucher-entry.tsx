@@ -791,7 +791,8 @@ export function VoucherEntry({
         if (!line.adjustment_reference) return ""
         if (line.adjustment_method === "Against Reference" || line.adjustment_method === "Advance") {
             const bill = pendingBills.find(option => option.voucherNo === line.adjustment_reference)
-            return bill ? `${bill.party} (${bill.voucherNo})` : line.adjustment_reference
+            const ledgerName = line.display_label || ledgers.find(ledger => ledger.id === line.ledger_id)?.name
+            return bill?.party || ledgerName || line.adjustment_reference
         }
         return throughReferenceOptions.find(option => option.value === line.adjustment_reference)?.label || line.adjustment_reference
     }

@@ -8,6 +8,11 @@ function money(value: number) {
   return value ? value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"
 }
 
+function signedMoney(value: number) {
+  if (!value) return "-"
+  return `${value < 0 ? "-" : ""}${money(Math.abs(value))}`
+}
+
 function formatDate(value: string) {
   return value ? new Date(value).toLocaleDateString("en-GB") : "-"
 }
@@ -50,59 +55,64 @@ export async function StatementReportPage({
         </form>
 
         <div className="grid gap-3 print:hidden sm:grid-cols-3">
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <p className="text-xs font-black uppercase tracking-widest text-slate-500">Account</p>
             <p className="mt-1 text-lg font-black text-slate-900 dark:text-slate-100">{selectedLedger?.name || "-"}</p>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <p className="text-xs font-black uppercase tracking-widest text-slate-500">Total Money In</p>
+          <div className="border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-xs font-black uppercase tracking-widest text-slate-500">Total Debit Amount</p>
             <p className="mt-1 font-mono text-lg font-black text-emerald-600">₦{money(report.totalDebit)}</p>
           </div>
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <p className="text-xs font-black uppercase tracking-widest text-slate-500">Total Money Out</p>
+          <div className="border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-xs font-black uppercase tracking-widest text-slate-500">Total Credit Amount</p>
             <p className="mt-1 font-mono text-lg font-black text-red-600">₦{money(report.totalCredit)}</p>
           </div>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm print:overflow-visible print:rounded-none print:border-black print:shadow-none dark:border-slate-800 dark:bg-slate-900">
-          <Table>
+        <div className="overflow-x-auto border border-slate-200 bg-white shadow-sm print:overflow-visible print:border-black print:shadow-none dark:border-slate-800 dark:bg-slate-900">
+          <Table className="min-w-[760px]">
             <TableHeader>
+              <TableRow className="border-b border-slate-300">
+                <TableHead colSpan={5} className="h-12 text-center text-base font-black uppercase tracking-wide text-slate-900 dark:text-slate-100">
+                  {selectedLedger?.name || title} Statement Layout
+                </TableHead>
+              </TableRow>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Voucher</TableHead>
-                <TableHead>Particulars</TableHead>
-                <TableHead>Narration</TableHead>
-                <TableHead className="text-right">Money In</TableHead>
-                <TableHead className="text-right">Money Out</TableHead>
+                <TableHead className="w-[130px]">Date</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="text-right">Debit Amount</TableHead>
+                <TableHead className="text-right">Credit Amount</TableHead>
                 <TableHead className="text-right">Balance</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {report.rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-8 text-center text-slate-500">No transactions found.</TableCell>
+                  <TableCell colSpan={5} className="py-8 text-center text-slate-500">No transactions found.</TableCell>
                 </TableRow>
               ) : report.rows.map(row => (
                 <TableRow key={row.id}>
                   <TableCell className="font-medium text-slate-700 dark:text-slate-300">{formatDate(row.date)}</TableCell>
-                  <TableCell>
-                    <Link href={`/accounting/vouchers/${row.voucherType.toLowerCase()}/${row.voucherId}`} className="font-bold text-indigo-700 hover:underline dark:text-indigo-300">
-                      {row.voucherNo}
-                    </Link>
-                    <span className="ml-2 text-xs font-semibold text-slate-400">{row.voucherType}</span>
+                  <TableCell className="min-w-[280px] text-slate-700 dark:text-slate-300">
+                    <div className="flex flex-col gap-1">
+                      <Link href={`/accounting/vouchers/${row.voucherType.toLowerCase()}/${row.voucherId}`} className="font-bold text-indigo-700 hover:underline dark:text-indigo-300">
+                        {row.particulars || row.narration || row.voucherNo}
+                      </Link>
+                      <span className="text-xs font-semibold text-slate-500">
+                        {row.voucherNo} · {row.voucherType}{row.narration ? ` · ${row.narration}` : ""}
+                      </span>
+                    </div>
                   </TableCell>
-                  <TableCell className="max-w-[260px] truncate text-slate-700 dark:text-slate-300">{row.particulars}</TableCell>
-                  <TableCell className="max-w-[320px] truncate text-slate-500">{row.narration || "-"}</TableCell>
                   <TableCell className="text-right font-mono font-semibold text-emerald-600">{money(row.debit)}</TableCell>
                   <TableCell className="text-right font-mono font-semibold text-red-600">{money(row.credit)}</TableCell>
-                  <TableCell className="text-right font-mono font-black text-slate-900 dark:text-slate-100">{row.balance < 0 ? "-" : ""}{money(Math.abs(row.balance))}</TableCell>
+                  <TableCell className="text-right font-mono font-black text-slate-900 dark:text-slate-100">{signedMoney(row.balance)}</TableCell>
                 </TableRow>
               ))}
               <TableRow className="bg-slate-50 font-black dark:bg-slate-950">
-                <TableCell colSpan={4} className="text-right">Total</TableCell>
+                <TableCell colSpan={2} className="text-right">Total</TableCell>
                 <TableCell className="text-right font-mono text-emerald-600">{money(report.totalDebit)}</TableCell>
                 <TableCell className="text-right font-mono text-red-600">{money(report.totalCredit)}</TableCell>
-                <TableCell className="text-right font-mono">{report.totalDebit - report.totalCredit < 0 ? "-" : ""}{money(Math.abs(report.totalDebit - report.totalCredit))}</TableCell>
+                <TableCell className="text-right font-mono">{signedMoney(report.totalDebit - report.totalCredit)}</TableCell>
               </TableRow>
             </TableBody>
           </Table>

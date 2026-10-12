@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/server"
 
+const SUPER_ADMIN_EMAILS = new Set(["sundayfavour997@gmail.com"])
+
 export type AccessProfile = {
   id?: string | null
   is_admin?: boolean | null
@@ -11,13 +13,62 @@ export type AccessProfile = {
 
 export type AdminOfficeAccess = {
   isAdmin: boolean
+  isSuperAdmin: boolean
+  roleKeys: string[]
+  permissions: string[]
   appointments: string[]
   offices: string[]
   canEnterAdmin: boolean
+  canManagePermissions: boolean
+  canPerformActions: boolean
+}
+
+type AssignedAdminRole = {
+  id: string
+  key: string
+  is_wildcard: boolean | null
+  can_manage_permissions: boolean | null
+}
+
+const ALL_ADMIN_OFFICES = ["admin-office", "secretariat", "directors", "media-unit"]
+
+const ROLE_OFFICE_ACCESS: Record<string, string[]> = {
+  admin: ALL_ADMIN_OFFICES,
+  "admin-office": ["admin-office"],
+  "head-office": ["admin-office"],
+  "admin-control-unit": ["admin-office"],
+  secretariat: ["secretariat"],
+  secretaries: ["secretariat"],
+  "financial-secretary": ["secretariat"],
+  "finance-officer": ["secretariat"],
+  "account-officer": ["secretariat"],
+  "sale-unit": ["secretariat"],
+  assistants: ["secretariat"],
+  directors: ["directors"],
+  "music-director": ["directors"],
+  "welfare-director": ["directors"],
+  "ushering-director": ["directors"],
+  "logistics-director": ["directors"],
+  "media-unit": ["media-unit"],
+}
+
+const PERMISSION_OFFICE_ACCESS: Record<string, string> = {
+  "admin.office.admin-office.view": "admin-office",
+  "admin.office.secretariat.view": "secretariat",
+  "admin.office.directors.view": "directors",
+  "admin.office.media-unit.view": "media-unit",
+}
+
+function unique<T>(items: T[]) {
+  return Array.from(new Set(items))
+}
+
+export function isSuperAdminProfile(profile?: AccessProfile | null) {
+  return !!profile?.email && SUPER_ADMIN_EMAILS.has(profile.email)
 }
 
 export function isMainAdmin(profile?: AccessProfile | null) {
-  return !!profile?.is_admin || profile?.email === "sundayfavour997@gmail.com"
+  return !!profile?.is_admin || isSuperAdminProfile(profile)
 }
 
 export function isUshering(profile?: AccessProfile | null) {
@@ -37,7 +88,7 @@ export function officeKeysFromAppointmentTitle(title?: string | null) {
   const keys = new Set<string>()
 
   if (!normalized) return []
-  if (normalized.includes("admin control")) keys.add("admin-control-unit")
+  if (normalized.includes("admin control")) keys.add("admin-office")
   if (normalized.includes("head office") || normalized.includes("admin office")) keys.add("admin-office")
   if (normalized.includes("secretar")) keys.add("secretariat")
   if (normalized.includes("financial") || normalized.includes("finance") || normalized.includes("account officer") || normalized.includes("sale unit")) keys.add("secretariat")
@@ -49,15 +100,68 @@ export function officeKeysFromAppointmentTitle(title?: string | null) {
 }
 
 export function canOpenAdminOfficeSlug(access: AdminOfficeAccess, officeSlug: string) {
-  return access.isAdmin || access.offices.includes(officeSlug)
+  return access.isSuperAdmin || access.offices.includes(officeSlug)
+}
+
+export function canPerformAdminAction(access: AdminOfficeAccess, permissionKey?: string) {
+  if (access.isSuperAdmin) return true
+  if (permissionKey) return access.permissions.includes(permissionKey)
+  return access.canPerformActions
+}
+
+async function getAssignedAdminRoles(profileId: string) {
+  const supabase = await createClient()
+  const { data: roleLinks, error: roleLinksError } = await supabase
+    .from("admin_user_roles")
+    .select("role_id")
+    .eq("profile_id", profileId)
+    .eq("active", true)
+
+  if (roleLinksError || !roleLinks?.length) {
+    return { roles: [] as AssignedAdminRole[], permissions: [] as string[], tableReady: !roleLinksError }
+  }
+
+  const roleIds = unique(roleLinks.map((roleLink) => roleLink.role_id).filter(Boolean))
+  if (!roleIds.length) return { roles: [] as AssignedAdminRole[], permissions: [] as string[], tableReady: true }
+
+  const [{ data: roles }, { data: rolePermissions }] = await Promise.all([
+    supabase
+      .from("admin_roles")
+      .select("id, key, is_wildcard, can_manage_permissions")
+      .in("id", roleIds),
+    supabase
+      .from("admin_role_permissions")
+      .select("role_id, permission_key")
+      .in("role_id", roleIds),
+  ])
+
+  return {
+    roles: (roles || []) as AssignedAdminRole[],
+    permissions: unique((rolePermissions || []).map((permission) => permission.permission_key).filter(Boolean)),
+    tableReady: true,
+  }
 }
 
 export async function getAdminOfficeAccess(profile?: AccessProfile | null): Promise<AdminOfficeAccess> {
-  if (isMainAdmin(profile)) {
-    return { isAdmin: true, appointments: [], offices: ["admin-office", "secretariat", "directors", "media-unit"], canEnterAdmin: true }
+  const emptyAccess: AdminOfficeAccess = {
+    isAdmin: false,
+    isSuperAdmin: false,
+    roleKeys: [],
+    permissions: [],
+    appointments: [],
+    offices: [],
+    canEnterAdmin: false,
+    canManagePermissions: false,
+    canPerformActions: false,
   }
 
-  if (!profile?.id) return { isAdmin: false, appointments: [], offices: [], canEnterAdmin: false }
+  if (!profile?.id) return emptyAccess
+
+  const isEmailSuperAdmin = isSuperAdminProfile(profile)
+  const { roles, permissions } = await getAssignedAdminRoles(profile.id)
+  const roleKeys = unique(roles.map((role) => role.key).filter(Boolean))
+  const hasWildcardRole = roles.some((role) => role.is_wildcard)
+  const isSuperAdmin = isEmailSuperAdmin || hasWildcardRole || roleKeys.includes("super-admin")
 
   const supabase = await createClient()
   const { data: appointments } = await supabase
@@ -67,13 +171,24 @@ export async function getAdminOfficeAccess(profile?: AccessProfile | null): Prom
     .neq("status", "Terminated")
 
   const appointmentTitles = (appointments || []).map((appointment) => appointment.office_title).filter(Boolean)
-  const offices = Array.from(new Set(appointmentTitles.flatMap((title) => officeKeysFromAppointmentTitle(title))))
+  const appointmentOffices = appointmentTitles.flatMap((title) => officeKeysFromAppointmentTitle(title))
+  const roleOffices = roleKeys.flatMap((roleKey) => ROLE_OFFICE_ACCESS[roleKey] || [])
+  const permissionOffices = permissions.map((permission) => PERMISSION_OFFICE_ACCESS[permission]).filter(Boolean)
+  const legacyAdminOffices = profile.is_admin ? ALL_ADMIN_OFFICES : []
+  const offices = isSuperAdmin ? ALL_ADMIN_OFFICES : unique([...legacyAdminOffices, ...roleOffices, ...permissionOffices, ...appointmentOffices])
+  const canManagePermissions = isSuperAdmin || roles.some((role) => role.can_manage_permissions) || permissions.includes("admin.permissions.manage")
+  const canPerformActions = isSuperAdmin || permissions.includes("admin.actions.manage")
 
   return {
-    isAdmin: false,
+    isAdmin: isSuperAdmin,
+    isSuperAdmin,
+    roleKeys,
+    permissions,
     appointments: appointmentTitles,
     offices,
-    canEnterAdmin: offices.length > 0,
+    canEnterAdmin: isSuperAdmin || offices.length > 0 || permissions.includes("admin.enter"),
+    canManagePermissions,
+    canPerformActions,
   }
 }
 

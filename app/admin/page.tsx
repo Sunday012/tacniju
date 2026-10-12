@@ -12,5 +12,5 @@ export default async function AdminPage() {
     : { data: null }
   const access = await getAdminOfficeAccess(profile ? { ...profile, email: profile.email || user?.email } : null)
 
-  return <AdminOfficeMainMenu allowedOfficeSlugs={access.isAdmin ? undefined : access.offices} />
+  return <AdminOfficeMainMenu allowedOfficeSlugs={access.isSuperAdmin ? undefined : access.offices} />
 }

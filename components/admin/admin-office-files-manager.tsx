@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Check, CornerUpLeft, Loader2, Pencil, Send, Trash2, X } from "lucide-react"
+import { Check, CornerUpLeft, Eye, Loader2, Pencil, Send, Trash2, X } from "lucide-react"
 import { toast } from "sonner"
 import { deleteAdminOfficeFile, sendApprovedFileToHeadOffice, updateAdminOfficeFile, updateAdminOfficeFileStatus } from "@/app/admin/office/admin-office/actions"
 import { Button } from "@/components/ui/button"
@@ -83,13 +84,18 @@ export function AdminOfficeFilesManager({ files, allowReview = false, allowSendT
                 <tr key={file.id}>
                   <td className="whitespace-nowrap px-4 py-3 text-slate-500">{new Date(file.created_at).toLocaleDateString("en-GB")}</td>
                   <td className="px-4 py-3">
-                    <p className="font-bold text-slate-900">{file.title}</p>
+                    <Link href={`/admin/office/admin-office/files/view/${file.id}`} className="inline-flex font-bold text-slate-900 hover:text-indigo-700 hover:underline">
+                      {file.title}
+                    </Link>
                     {((file.file_type && file.file_type !== "General") || file.submitted_from) && <p className="mt-0.5 text-xs font-semibold text-indigo-700">{file.file_type || "File"}{file.submitted_from ? ` from ${file.submitted_from}` : ""}</p>}
                     <p className="mt-0.5 whitespace-pre-wrap text-xs text-slate-500">{file.description || "-"}</p>
                   </td>
                   <td className="px-4 py-3"><span className={`inline-flex px-2 py-1 text-xs font-bold ${statusStyles[file.status]}`}>{file.status}</span></td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap justify-end gap-1">
+                      <Button asChild size="sm" variant="outline" className="gap-2">
+                        <Link href={`/admin/office/admin-office/files/view/${file.id}`}><Eye className="h-4 w-4" />View</Link>
+                      </Button>
                       {allowReview && <>
                         <Button size="sm" variant="outline" className="gap-2" disabled={isPending} onClick={() => run(() => updateAdminOfficeFileStatus(file.id, "Approved"), "File approved.")}><Check className="h-4 w-4 text-emerald-600" />Approve</Button>
                         <Button size="sm" variant="outline" className="gap-2" disabled={isPending} onClick={() => run(() => updateAdminOfficeFileStatus(file.id, "Rejected"), "File rejected.")}><X className="h-4 w-4 text-rose-600" />Reject</Button>
