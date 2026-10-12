@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { getAdminOfficeAccess } from "@/lib/access"
 import { createClient } from "@/lib/server"
 import { SidebarNav } from "@/components/dashboard/sidebar-nav"
 import { Topbar } from "@/components/dashboard/topbar"
@@ -17,11 +18,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
     name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
 
   const initials = getInitials(profile?.full_name || "User")
+  const adminAccess = await getAdminOfficeAccess({ ...profile, email: profile?.email || user.email })
 
   return (
     <div className="flat-dashboard min-h-screen bg-[#F4F7FA] flex flex-col lg:flex-row font-sans selection:bg-indigo-500/30 dark:bg-slate-950">
       {/* Sidebar Navigation */}
-      <SidebarNav profile={profile || null} />
+      <SidebarNav profile={profile || null} canEnterAdmin={adminAccess.canEnterAdmin} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden relative">
@@ -30,7 +32,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <Topbar
           userInitial={initials}
           avatarUrl={profile?.avatar_url || undefined}
-          isAdmin={!!profile?.is_admin}
+          isAdmin={adminAccess.canEnterAdmin}
         />
 
         {/* Page Content */}

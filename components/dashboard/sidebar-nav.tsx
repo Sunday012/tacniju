@@ -2,10 +2,10 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Home, Calendar, Receipt, Settings, Users, MonitorPlay, Shield, Megaphone, Utensils, BookOpenText, Music, Landmark, ListOrdered } from "lucide-react"
+import { Home, Calendar, Receipt, Settings, Users, MonitorPlay, Shield, Megaphone, Utensils, BookOpenText, Music, Landmark, ListOrdered, ShieldCheck } from "lucide-react"
 import { Scan, BookOpen } from "lucide-react"
 
-export function SidebarNav({ profile }: { profile?: { is_admin?: boolean | null; department?: string | null } | null }) {
+export function SidebarNav({ profile, canEnterAdmin = false }: { profile?: { is_admin?: boolean | null; department?: string | null } | null; canEnterAdmin?: boolean }) {
   const pathname = usePathname()
   const canScan = !!profile?.is_admin || profile?.department === "Ushering"
   const canAccount = !!profile?.is_admin || profile?.department === "Account Unit"
@@ -45,6 +45,14 @@ export function SidebarNav({ profile }: { profile?: { is_admin?: boolean | null;
       <div className="mt-auto pt-6 border-t border-slate-200/50 dark:border-slate-800/70">
         <p className="text-xs font-bold text-slate-400/80 uppercase tracking-widest mb-4 px-3 dark:text-slate-500">Settings</p>
         <nav className="space-y-1.5">
+          {canEnterAdmin && (
+            <Link href="/admin">
+              <span className={`flex items-center gap-3.5 px-4 py-3.5 rounded-lg transition-all duration-300 group ${pathname.startsWith("/admin") ? "bg-indigo-600/10 text-indigo-700 font-semibold dark:bg-indigo-500/15 dark:text-indigo-300" : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-900 font-medium dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100"}`}>
+                <ShieldCheck className={`w-[22px] h-[22px] transition-colors ${pathname.startsWith("/admin") ? "text-indigo-600 dark:text-indigo-300" : "text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300"}`} />
+                <span className="text-sm tracking-wide">Admin Portal</span>
+              </span>
+            </Link>
+          )}
           <Link href="/dashboard/settings">
             <span className={`flex items-center gap-3.5 px-4 py-3.5 rounded-lg transition-all duration-300 group ${pathname === "/dashboard/settings" ? "bg-indigo-600/10 text-indigo-700 font-semibold dark:bg-indigo-500/15 dark:text-indigo-300" : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-900 font-medium dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-slate-100"}`}>
               <Settings className={`w-[22px] h-[22px] transition-colors ${pathname === "/dashboard/settings" ? "text-indigo-600 dark:text-indigo-300" : "text-slate-400 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300"}`} />
