@@ -1,9 +1,9 @@
 "use client"
 
 import { useTransition } from "react"
-import { ShieldCheck, UserPlus, XCircle } from "lucide-react"
+import { RefreshCw, ShieldCheck, UserPlus, XCircle } from "lucide-react"
 import { toast } from "sonner"
-import { assignAdminRole, revokeAdminRole } from "@/app/admin/system/roles/actions"
+import { assignAdminRole, revokeAdminRole, updateAdminRole } from "@/app/admin/system/roles/actions"
 
 type MemberRow = {
   id: string
@@ -57,6 +57,14 @@ export function AdminRoleManager({
     })
   }
 
+  function handleUpdate(formData: FormData) {
+    startTransition(async () => {
+      const result = await updateAdminRole(formData)
+      if (result?.error) toast.error(result.error)
+      else toast.success("Admin role updated.")
+    })
+  }
+
   return (
     <div className="space-y-6">
       <form action={handleAssign} className="border border-slate-200 bg-white p-4 shadow-sm">
@@ -106,7 +114,7 @@ export function AdminRoleManager({
                 <th className="px-4 py-3">Member</th>
                 <th className="px-4 py-3">Role</th>
                 <th className="px-4 py-3">Access</th>
-                <th className="px-4 py-3 text-right">Action</th>
+                <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -123,14 +131,35 @@ export function AdminRoleManager({
                     <td className="px-4 py-3 text-slate-500">
                       {role?.is_wildcard ? "All admin areas and actions" : role?.can_manage_permissions ? "Can manage permissions" : role?.description || "Area access"}
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <form action={handleRevoke}>
-                        <input type="hidden" name="assignment_id" value={assignment.id} />
-                        <button disabled={isPending} className="inline-flex h-9 items-center justify-center gap-2 border border-red-200 bg-red-50 px-3 text-xs font-black text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60">
-                          <XCircle className="h-4 w-4" />
-                          Revoke
-                        </button>
-                      </form>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                        <form action={handleUpdate} className="flex gap-2">
+                          <input type="hidden" name="assignment_id" value={assignment.id} />
+                          <select
+                            aria-label={`Change role for ${member?.full_name || member?.email || "member"}`}
+                            name="role_id"
+                            defaultValue={assignment.role_id}
+                            className="h-9 min-w-40 border border-slate-200 bg-white px-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-400"
+                          >
+                            {roles.map((availableRole) => (
+                              <option key={availableRole.id} value={availableRole.id}>
+                                {availableRole.name}
+                              </option>
+                            ))}
+                          </select>
+                          <button type="submit" disabled={isPending} className="inline-flex h-9 items-center justify-center gap-2 bg-indigo-600 px-3 text-xs font-black text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60">
+                            <RefreshCw className="h-4 w-4" />
+                            Update
+                          </button>
+                        </form>
+                        <form action={handleRevoke}>
+                          <input type="hidden" name="assignment_id" value={assignment.id} />
+                          <button type="submit" disabled={isPending} className="inline-flex h-9 items-center justify-center gap-2 border border-red-200 bg-red-50 px-3 text-xs font-black text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60">
+                            <XCircle className="h-4 w-4" />
+                            Revoke
+                          </button>
+                        </form>
+                      </div>
                     </td>
                   </tr>
                 )
