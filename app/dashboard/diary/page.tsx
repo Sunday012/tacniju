@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ProfileImagePreview } from "@/components/profile-image-preview"
 import { isGuestProfile } from "@/lib/profile-kind"
+import { Cake, MapPin, UsersRound } from "lucide-react"
 
 export default async function DiaryPage() {
   const adminSupabase = createSupabaseClient(
@@ -62,9 +63,15 @@ export default async function DiaryPage() {
         <h1 className="text-4xl font-black text-slate-800 tracking-tight">Organization Diary</h1>
         <p className="text-slate-500 mt-2 font-medium">Directory of all active executives, workers, and members.</p>
       </div>
+
+      <div className="mb-12 grid gap-3 sm:grid-cols-3">
+        <a href="#members" className="flex items-center justify-between border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-700 shadow-sm hover:border-indigo-300"><span className="flex items-center gap-2"><UsersRound className="h-5 w-5 text-indigo-600" />Members</span><span>{members.length}</span></a>
+        <a href="#locations" className="flex items-center justify-between border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-700 shadow-sm hover:border-indigo-300"><span className="flex items-center gap-2"><MapPin className="h-5 w-5 text-indigo-600" />Locations</span><span>{locations.length}</span></a>
+        <a href="#birthdays" className="flex items-center justify-between border border-slate-200 bg-white px-5 py-4 text-sm font-bold text-slate-700 shadow-sm hover:border-indigo-300"><span className="flex items-center gap-2"><Cake className="h-5 w-5 text-rose-600" />Birthdays</span><span>{birthdays.length}</span></a>
+      </div>
       
       <div className="space-y-16">
-        <section>
+        <section id="locations">
           <div className="flex items-center gap-3 mb-6 border-b border-violet-100 pb-3">
             <div className="p-2.5 bg-violet-50 rounded-lg border border-violet-100"><span className="text-xl">📍</span></div>
             <h2 className="text-2xl font-extrabold text-slate-800">Locations</h2>
@@ -100,7 +107,7 @@ export default async function DiaryPage() {
           </div>
         </section>
 
-        <section>
+        <section id="birthdays">
           <div className="flex items-center gap-3 mb-6 border-b border-rose-100 pb-3">
             <div className="p-2.5 bg-rose-50 rounded-lg border border-rose-100"><span className="text-xl">🎂</span></div>
             <h2 className="text-2xl font-extrabold text-slate-800">Birthdays</h2>
@@ -119,7 +126,7 @@ export default async function DiaryPage() {
         </section>
 
         {/* Executives Section */}
-        <section>
+        <section id="members">
           <div className="flex items-center gap-3 mb-6 border-b border-indigo-100 pb-3">
             <div className="p-2.5 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl shadow-sm border border-indigo-100">
               <span className="text-xl">👑</span>

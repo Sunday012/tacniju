@@ -100,7 +100,8 @@ export function officeKeysFromAppointmentTitle(title?: string | null) {
 }
 
 export function canOpenAdminOfficeSlug(access: AdminOfficeAccess, officeSlug: string) {
-  return access.isSuperAdmin || access.offices.includes(officeSlug)
+  const normalizedOfficeSlug = officeSlug === "admin-control-unit" ? "admin-office" : officeSlug
+  return access.isSuperAdmin || access.offices.includes(normalizedOfficeSlug)
 }
 
 export function canPerformAdminAction(access: AdminOfficeAccess, permissionKey?: string) {

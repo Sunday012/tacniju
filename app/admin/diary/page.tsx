@@ -4,20 +4,26 @@ import { Badge } from "@/components/ui/badge"
 import { ProfileImagePreview } from "@/components/profile-image-preview"
 import Link from "next/link"
 import { isGuestProfile } from "@/lib/profile-kind"
-import { Cake, MapPin } from "lucide-react"
+import { Cake, MapPin, ArrowRight, UsersRound, Plane, Ban } from "lucide-react"
 
 export default async function AdminDiaryPage({ searchParams }: { searchParams: { from?: string } }) {
   const supabase = await createClient()
 
   // Get all members for admin
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("full_name", { ascending: true })
+  const [{ data: profiles }, { data: locations }, { data: assemblies }] = await Promise.all([
+    supabase.from("profiles").select("*").order("full_name", { ascending: true }),
+    supabase.from("diary_locations").select("id, name").order("name"),
+    supabase.from("diary_assemblies").select("id, location_id, name").order("name"),
+  ])
     
   const members = (profiles || []).filter(profile => !isGuestProfile(profile))
   const transferred = members.filter(m => m.member_status === 'Transferred')
   const terminated = members.filter(m => m.member_status === 'Terminated')
+  const activeMembers = members.filter(m => !['Transferred', 'Terminated'].includes(m.member_status || ''))
+  const birthdays = activeMembers
+    .filter(m => m.date_of_birth)
+    .map(m => ({ ...m, date: new Date(`${m.date_of_birth}T00:00:00`) }))
+    .sort((a, b) => a.date.getMonth() - b.date.getMonth() || a.date.getDate() - b.date.getDate())
   const fromSecretaries = searchParams.from === "secretaries"
 
   const AdminMemberCard = ({ member }: { member: any }) => (
@@ -83,12 +89,43 @@ export default async function AdminDiaryPage({ searchParams }: { searchParams: {
             </div>
         </div>
         
-        <div className="space-y-12">
+        <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { label: "Members", count: activeMembers.length, href: "/admin/office/members", icon: UsersRound },
+            { label: "Birthdays", count: birthdays.length, href: "/admin/diary/birthdays", icon: Cake },
+            { label: "Locations", count: locations?.length || 0, href: "/admin/diary/locations", icon: MapPin },
+            { label: "Transferred / Terminated", count: transferred.length + terminated.length, href: "#status-history", icon: ArrowRight },
+          ].map(({ label, count, href, icon: Icon }) => (
+            <Link key={label} href={href} className="group flex items-center justify-between border border-slate-200 bg-white px-5 py-4 shadow-sm transition hover:border-indigo-300 hover:shadow-md">
+              <span className="flex items-center gap-3 text-sm font-bold text-slate-700"><Icon className="h-5 w-5 text-indigo-600" />{label}</span>
+              <span className="text-xl font-black text-slate-900 group-hover:text-indigo-700">{count}</span>
+            </Link>
+          ))}
+        </div>
+
+        <div className="grid gap-8 lg:grid-cols-2">
+          <section className="border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4"><h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-800"><Cake className="h-5 w-5 text-rose-600" />Birthdays</h2><Link href="/admin/diary/birthdays" className="text-sm font-bold text-indigo-700">Open full list</Link></div>
+            <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
+              {birthdays.slice(0, 12).map(member => <div key={member.id} className="flex items-center justify-between px-5 py-3 text-sm"><span className="font-semibold text-slate-800">{member.full_name}</span><span className="text-slate-500">{member.date.toLocaleDateString("en-NG", { month: "short", day: "numeric" })}</span></div>)}
+              {!birthdays.length && <p className="px-5 py-8 text-center text-sm text-slate-400">No birthdays are available.</p>}
+            </div>
+          </section>
+          <section className="border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4"><h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-800"><MapPin className="h-5 w-5 text-indigo-600" />Locations</h2><Link href="/admin/diary/locations" className="text-sm font-bold text-indigo-700">Manage locations</Link></div>
+            <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
+              {(locations || []).map(location => { const locationAssemblies = (assemblies || []).filter(assembly => assembly.location_id === location.id); return <div key={location.id} className="flex items-center justify-between px-5 py-3 text-sm"><span className="font-semibold text-slate-800">{location.name}</span><span className="text-slate-500">{locationAssemblies.length} assemblies</span></div> })}
+              {!locations?.length && <p className="px-5 py-8 text-center text-sm text-slate-400">No locations have been added.</p>}
+            </div>
+          </section>
+        </div>
+
+        <div id="status-history" className="space-y-12">
             {/* Transferred Section */}
             <section className="bg-white/70 backdrop-blur-3xl border border-white/60 rounded-[2rem] p-6 sm:p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.1)] transition-all">
                 <div className="flex items-center gap-3 mb-6 border-b border-blue-100 pb-3">
                     <div className="p-2.5 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl shadow-sm border border-blue-100">
-                    <span className="text-xl">✈️</span>
+                    <Plane className="h-5 w-5 text-blue-600" />
                     </div>
                     <h2 className="text-2xl font-extrabold text-slate-800">Transferred Members</h2>
                 </div>
@@ -107,7 +144,7 @@ export default async function AdminDiaryPage({ searchParams }: { searchParams: {
             <section className="bg-white/70 backdrop-blur-3xl border border-white/60 rounded-[2rem] p-6 sm:p-8 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.1)] transition-all">
                 <div className="flex items-center gap-3 mb-6 border-b border-red-100 pb-3">
                     <div className="p-2.5 bg-gradient-to-br from-red-50 to-rose-50 rounded-xl shadow-sm border border-red-100">
-                    <span className="text-xl">🛑</span>
+                    <Ban className="h-5 w-5 text-red-600" />
                     </div>
                     <h2 className="text-2xl font-extrabold text-slate-800">Terminated Members</h2>
                 </div>

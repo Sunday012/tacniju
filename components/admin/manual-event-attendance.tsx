@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState, useTransition } from "react"
+import { useRouter } from "next/navigation"
 import { Loader2, Search, UserPlus } from "lucide-react"
 import { toast } from "sonner"
 import { markManualEventAttendance } from "@/app/admin/events/actions"
@@ -18,6 +19,7 @@ export function ManualEventAttendance({ eventId, members }: { eventId: string; m
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const [pending, startTransition] = useTransition()
+  const router = useRouter()
   const visibleMembers = useMemo(() => {
     const term = query.trim().toLowerCase()
     if (!term) return members
@@ -34,6 +36,7 @@ export function ManualEventAttendance({ eventId, members }: { eventId: string; m
       toast.success("Member marked present.")
       setOpen(false)
       setQuery("")
+      router.refresh()
     })
   }
 
@@ -54,7 +57,7 @@ export function ManualEventAttendance({ eventId, members }: { eventId: string; m
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search name or reservation number" className="pl-9" autoFocus />
             </div>
-            <div className="mt-4 max-h-[calc(100dvh-13rem)] divide-y overflow-y-auto border">
+            <div className="mt-4 h-[min(60dvh,32rem)] divide-y overflow-y-auto overscroll-contain border">
               {visibleMembers.map((member) => (
                 <button key={member.id} type="button" disabled={pending} onClick={() => markPresent(member.id)} className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left hover:bg-indigo-50 disabled:opacity-50">
                   <span className="font-bold text-slate-900">{member.full_name || "Unnamed member"}</span>

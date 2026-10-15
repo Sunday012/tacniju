@@ -29,9 +29,7 @@ import {
   Building2,
   Mic2,
   MicVocal,
-  Music,
-  MapPin,
-  Cake
+  Music
 } from "lucide-react"
 
 type NavItem = {
@@ -61,10 +59,6 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
         name: "Diary",
         href: "/admin/diary",
         icon: BookOpen,
-        children: [
-          { name: "Locations", href: "/admin/diary/locations", icon: MapPin },
-          { name: "Birthdays", href: "/admin/diary/birthdays", icon: Cake },
-        ],
       },
       { name: "Families", href: "/admin/families", icon: Users },
       { name: "Departments", href: "/admin/departments", icon: Building2 },

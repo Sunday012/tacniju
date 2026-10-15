@@ -34,9 +34,12 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
         slug: "admin-control-unit",
         href: officePath("admin-office", "admin-control-unit"),
         label: "Admin Control Unit",
-        description: "System administration controls.",
+        description: "Locations, announcements, pending files, and system controls.",
         icon: Settings,
         children: [
+          { slug: "location", href: "/admin/diary/locations", label: "Location", description: "Create and manage districts and assemblies.", icon: MapPin },
+          { slug: "announcement-memo", href: memoPath("Announcement Memo", "Admin Control Unit", officePath("admin-office", "admin-control-unit")), label: "Announcement Memo", description: "Send an announcement memo to the Secretariat.", icon: Mic2 },
+          { slug: "pending", href: `/admin/office/admin-office/files/new?unit=${encodeURIComponent("Head Office")}`, label: "Pending", description: "Review unattended files and memos sent to Head Office.", icon: FolderCheck },
           { slug: "system", href: "/admin/system", label: "System", description: "Open system administration controls.", icon: Settings },
         ],
       },
@@ -279,8 +282,12 @@ export const adminOfficeRecordTools: OfficeTool[] = [
 export const adminOfficeSystemTools: OfficeTool[] = [{ href: "/admin/system", label: "System Control", description: "Open system administration.", icon: Settings }]
 
 export function resolveAdminMenuNode(office: string, sections: string[] = []) {
-  let node = adminOfficeMainAreas.find((area) => area.slug === office)
-  for (const section of sections) {
+  const isControlUnitAlias = office === "admin-control-unit"
+  let node = isControlUnitAlias
+    ? adminOfficeMainAreas.find((area) => area.slug === "admin-office")?.children?.find((child) => child.slug === "admin-control-unit")
+    : adminOfficeMainAreas.find((area) => area.slug === office)
+  const remainingSections = isControlUnitAlias ? sections : sections
+  for (const section of remainingSections) {
     node = node?.children?.find((child) => child.slug === section)
   }
   return node

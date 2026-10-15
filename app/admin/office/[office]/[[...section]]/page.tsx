@@ -22,7 +22,9 @@ export default async function AdminOfficePage({ params }: { params: { office: st
 
   const backHref = sections.length
     ? `/admin/office/${[params.office, ...sections.slice(0, -1)].join("/")}`
-    : "/admin"
+    : params.office === "admin-control-unit"
+      ? "/admin/office/admin-office"
+      : "/admin"
 
   return <AdminOfficeDirectory node={node} backHref={backHref} />
 }
