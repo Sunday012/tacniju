@@ -70,7 +70,7 @@ export function ItemManager({
             await createItem({
                 name,
                 code: code || null,
-                tracking_number: trackingNumber || null,
+                tracking_number: trackingNumber.trim() || null,
                 category: category || null,
                 unit,
                 primary_unit: unit,
@@ -102,6 +102,7 @@ export function ItemManager({
             setNoStockQuantity("0")
             router.refresh()
         } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Failed to create item")
             console.error("Failed to create item", error)
         } finally {
             setIsSubmitting(false)

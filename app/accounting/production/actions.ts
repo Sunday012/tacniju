@@ -57,6 +57,7 @@ export type KitchenStockRow = {
 export type StockJournalDiaryRow = {
   itemId: string
   itemName: string
+  trackingNumber: string | null
   date: string
   voucherId: string
   voucherNo: string
@@ -435,7 +436,7 @@ export async function getStockJournalDiaryRows(options: { movementType?: "IN" | 
       item_id,
       qty,
       movement_type,
-      items ( name ),
+      items ( name, tracking_number ),
       vouchers!inner (
         id,
         org_id,
@@ -460,6 +461,7 @@ export async function getStockJournalDiaryRows(options: { movementType?: "IN" | 
       return {
         itemId: String(row.item_id || ""),
         itemName: String(item?.name || "-"),
+        trackingNumber: item?.tracking_number ? String(item.tracking_number) : null,
         date: String(voucher?.date || ""),
         voucherId: String(voucher?.id || ""),
         voucherNo: String(voucher?.voucher_no || "-"),

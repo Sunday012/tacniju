@@ -38,6 +38,7 @@ export async function StockJournalDiary({
           <section key={itemId} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
               <h2 className="text-base font-black text-slate-900">{itemRows[0]?.itemName || "Stock Item"}</h2>
+              <p className="mt-1 font-mono text-xs font-bold text-slate-500">Stock no.: {itemRows[0]?.trackingNumber || "Not assigned"}</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
@@ -46,6 +47,7 @@ export async function StockJournalDiary({
                     <th className="px-4 py-3">Date</th>
                     <th className="px-4 py-3">Voucher</th>
                     <th className="px-4 py-3">Reference</th>
+                    <th className="px-4 py-3">Stock no.</th>
                     <th className="px-4 py-3">Narration</th>
                     <th className="px-4 py-3 text-right">In</th>
                     <th className="px-4 py-3 text-right">Out</th>
@@ -61,6 +63,7 @@ export async function StockJournalDiary({
                         </Link>
                       </td>
                       <td className="px-4 py-3">{row.reference || "-"}</td>
+                      <td className="whitespace-nowrap px-4 py-3 font-mono text-xs">{row.trackingNumber || "-"}</td>
                       <td className="px-4 py-3">{row.narration}</td>
                       <td className="px-4 py-3 text-right font-mono font-black text-emerald-600">
                         {row.movementType === "IN" ? row.qty.toLocaleString() : "-"}

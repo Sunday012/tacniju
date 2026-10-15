@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/server"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import Link from "next/link"
 import { ArrowLeft, Users } from "lucide-react"
@@ -16,16 +15,14 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { getAdminOfficeAccess, getCurrentAccessProfile } from "@/lib/access"
 
 export default async function EventAttendancePage({ params }: { params: { id: string } }) {
-  const supabase = await createClient()
-
-  // Verify Admin
-  const { data: { user } } = await supabase.auth.getUser()
+  const { supabase, user, profile } = await getCurrentAccessProfile()
   if (!user) redirect("/auth/login")
 
-  const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
-  if (!profile?.is_admin) redirect("/dashboard")
+  const access = await getAdminOfficeAccess(profile)
+  if (!access.canEnterAdmin) redirect("/dashboard")
 
   // Fetch Event
   const { data: event, error: eventError } = await supabase

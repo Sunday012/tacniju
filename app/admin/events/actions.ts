@@ -4,6 +4,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { createClient } from "@/lib/server"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { getAdminOfficeAccess, getCurrentAccessProfile } from "@/lib/access"
 
 export async function getEventsWithAttendance() {
     const supabase = await createClient()
@@ -74,12 +75,11 @@ export async function deleteEvent(eventId: string) {
 }
 
 export async function markManualEventAttendance(eventId: string, profileId: string) {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { supabase, user, profile } = await getCurrentAccessProfile()
     if (!user) return { success: false, message: "Unauthorized" }
 
-    const { data: adminProfile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).maybeSingle()
-    if (!adminProfile?.is_admin) return { success: false, message: "Admin access is required." }
+    const access = await getAdminOfficeAccess(profile)
+    if (!access.canEnterAdmin) return { success: false, message: "Admin access is required." }
 
     const adminSupabase = createSupabaseClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,

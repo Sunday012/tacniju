@@ -77,6 +77,19 @@ export async function getItems() {
 export async function createItem(payload: Omit<Item, "id" | "current_stock" | "active">) {
     const supabase = await createClient()
     const orgId = await getOrgId()
+    const trackingNumber = payload.tracking_number?.trim() || null
+
+    if (trackingNumber) {
+        const { data: existing, error: lookupError } = await supabase
+            .from("items")
+            .select("id, name")
+            .eq("org_id", orgId)
+            .eq("tracking_number", trackingNumber)
+            .maybeSingle()
+
+        if (lookupError) throw new Error(lookupError.message)
+        if (existing) throw new Error(`Tracking number ${trackingNumber} is already assigned to ${existing.name}.`)
+    }
 
     const { error } = await supabase
         .from("items")
@@ -84,10 +97,14 @@ export async function createItem(payload: Omit<Item, "id" | "current_stock" | "a
             org_id: orgId,
             source_context: "accounting",
             ...payload,
+            tracking_number: trackingNumber,
             unit: payload.primary_unit || payload.unit,
         })
 
-    if (error) throw error
+    if (error) {
+        if (error.code === "23505") throw new Error(`Tracking number ${trackingNumber} is already in use.`)
+        throw new Error(error.message)
+    }
     revalidatePath("/inventory")
     revalidatePath("/accounting")
     revalidatePath("/accounting/production")

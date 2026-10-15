@@ -12,17 +12,23 @@ export default async function DiaryPage() {
 
   // Get all active members securely using admin client
   // Only selecting necessary public fields to avoid exposing sensitive data
-  const { data: profiles } = await adminSupabase
-    .from("profiles")
-    .select("id, full_name, member_role, office_position, department, awards, avatar_url, rank, district, assembly, date_of_birth, email")
-    .eq("member_status", "Active")
-    .order("full_name", { ascending: true })
+  const [{ data: profiles }, { data: directoryLocations }, { data: directoryAssemblies }] = await Promise.all([
+    adminSupabase
+      .from("profiles")
+      .select("id, full_name, member_role, office_position, department, awards, avatar_url, rank, district, assembly, date_of_birth, email")
+      .eq("member_status", "Active")
+      .order("full_name", { ascending: true }),
+    adminSupabase.from("diary_locations").select("id, name").order("name"),
+    adminSupabase.from("diary_assemblies").select("id, location_id, name").order("name"),
+  ])
     
   const members = (profiles || []).filter(profile => !isGuestProfile(profile))
   const executives = members.filter(m => m.member_role === 'Executive')
   const workers = members.filter(m => m.member_role === 'Worker')
   const generalMembers = members.filter(m => !m.member_role || m.member_role === 'Member')
-  const locations = Array.from(new Set(members.map(member => member.district?.trim()).filter(Boolean) as string[])).sort()
+  const locations = (directoryLocations?.length
+    ? directoryLocations.map(location => location.name)
+    : Array.from(new Set(members.map(member => member.district?.trim()).filter(Boolean) as string[])).sort())
   const birthdays = members
     .filter(member => member.date_of_birth)
     .map(member => ({ ...member, birthday: new Date(`${member.date_of_birth}T00:00:00`) }))
@@ -64,13 +70,18 @@ export default async function DiaryPage() {
             <h2 className="text-2xl font-extrabold text-slate-800">Locations</h2>
           </div>
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {locations.map(location => {
-              const districtMembers = members.filter(member => member.district?.trim() === location)
-              const assemblies = Array.from(new Set(districtMembers.map(member => member.assembly?.trim()).filter(Boolean) as string[])).sort()
+            {locations.map(locationName => {
+              const districtMembers = members.filter(member => member.district?.trim() === locationName)
+              const directoryLocation = directoryLocations?.find(location => location.name.trim().toLowerCase() === locationName.trim().toLowerCase())
+              const assemblies = directoryLocation
+                ? (directoryAssemblies || [])
+                    .filter(assembly => assembly.location_id === directoryLocation.id)
+                    .map(assembly => assembly.name)
+                : Array.from(new Set(districtMembers.map(member => member.assembly?.trim()).filter(Boolean) as string[])).sort()
               return (
-                <div key={location} className="border border-slate-200 bg-white shadow-sm">
+                <div key={locationName} className="border border-slate-200 bg-white shadow-sm">
                   <div className="border-b border-slate-200 bg-slate-50 px-5 py-4">
-                    <h3 className="font-extrabold text-slate-900">{location}</h3>
+                    <h3 className="font-extrabold text-slate-900">{locationName}</h3>
                     <p className="text-xs text-slate-500">{districtMembers.length} members</p>
                   </div>
                   <div className="divide-y divide-slate-100">

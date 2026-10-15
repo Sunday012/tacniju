@@ -4,6 +4,7 @@ import { ArrowLeft, CalendarCheck, ClipboardList } from "lucide-react"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { createClient } from "@/lib/server"
 import { AttendanceEventMembersSheet } from "@/components/admin/points/AttendanceEventMembersSheet"
+import { ManualEventAttendance } from "@/components/admin/manual-event-attendance"
 import { CreatePointWorkSheet } from "@/components/admin/points/CreatePointWorkSheet"
 import { DeletePointWorkButton } from "@/components/admin/points/DeletePointWorkButton"
 import { EditPointWorkSheet } from "@/components/admin/points/EditPointWorkSheet"
@@ -45,6 +46,11 @@ export default async function PointWorksPage({ params }: { params: { category: s
         .in("id", userIds)
       : { data: [] as any[] }
 
+    const { data: allMembers } = await adminSupabase
+      .from("profiles")
+      .select("id, full_name, reservation_number")
+      .order("full_name", { ascending: true })
+
     const profilesById = new Map(((profiles || []) as any[]).map(profile => [profile.id, profile]))
     const membersByEvent = new Map<string, any[]>()
     ;((attendanceRecords || []) as any[]).forEach(record => {
@@ -60,6 +66,13 @@ export default async function PointWorksPage({ params }: { params: { category: s
           marked_at: record.created_at,
         },
       ])
+    })
+
+    const attendedIdsByEvent = new Map<string, Set<string>>()
+    ;((attendanceRecords || []) as any[]).forEach(record => {
+      const ids = attendedIdsByEvent.get(record.event_id) || new Set<string>()
+      ids.add(record.user_id)
+      attendedIdsByEvent.set(record.event_id, ids)
     })
 
     return (
@@ -124,9 +137,15 @@ export default async function PointWorksPage({ params }: { params: { category: s
                         <td className="px-6 py-4">{new Date(event.event_date).toLocaleDateString()}</td>
                         <td className="px-6 py-4 text-right font-black">{membersByEvent.get(event.id)?.length || 0}</td>
                         <td className="px-6 py-4 text-right">
-                          <Link href={`/admin/events/${event.id}`} className="text-sm font-black text-indigo-600 hover:text-indigo-700">
-                            View
-                          </Link>
+                          <div className="flex flex-wrap items-center justify-end gap-2">
+                            <ManualEventAttendance
+                              eventId={event.id}
+                              members={(allMembers || []).filter(member => !attendedIdsByEvent.get(event.id)?.has(member.id))}
+                            />
+                            <Link href={`/admin/events/${event.id}`} className="inline-flex h-10 items-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-black text-indigo-600 shadow-sm hover:bg-indigo-50">
+                              View
+                            </Link>
+                          </div>
                         </td>
                       </tr>
                     ))}
