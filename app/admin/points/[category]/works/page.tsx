@@ -128,10 +128,12 @@ export default async function PointWorksPage({ params }: { params: { category: s
                       <tr key={event.id} className="font-medium text-slate-600">
                         <td className="px-4 py-3">
                           <AttendanceEventMembersSheet
+                            eventId={event.id}
                             name={event.name}
                             eventDate={event.event_date}
                             description={event.description}
                             members={membersByEvent.get(event.id) || []}
+                            availableMembers={(allMembers || []).filter(member => !attendedIdsByEvent.get(event.id)?.has(member.id))}
                           />
                         </td>
                         <td className="px-6 py-4">{new Date(event.event_date).toLocaleDateString()}</td>

@@ -5,6 +5,7 @@ import { CalendarCheck, Loader2, Plus, Users } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { addAttendancePoints } from "@/app/admin/points/actions"
+import { ManualEventAttendance } from "@/components/admin/manual-event-attendance"
 import {
   Sheet,
   SheetContent,
@@ -23,16 +24,26 @@ type AttendanceMember = {
   marked_at: string | null
 }
 
+type AvailableMember = {
+  id: string
+  full_name: string | null
+  reservation_number: string | null
+}
+
 export function AttendanceEventMembersSheet({
   name,
   eventDate,
   description,
   members,
+  eventId,
+  availableMembers,
 }: {
   name: string
   eventDate: string
   description?: string | null
   members: AttendanceMember[]
+  eventId: string
+  availableMembers: AvailableMember[]
 }) {
   const router = useRouter()
   const [allPoints, setAllPoints] = useState("")
@@ -92,6 +103,9 @@ export function AttendanceEventMembersSheet({
           <SheetDescription className="text-sm font-medium text-slate-500">
             {new Date(eventDate).toLocaleDateString()} · {members.length} attendee{members.length === 1 ? "" : "s"}
           </SheetDescription>
+          <div className="pt-3">
+            <ManualEventAttendance eventId={eventId} members={availableMembers} />
+          </div>
         </SheetHeader>
 
         {members.length > 0 ? (
