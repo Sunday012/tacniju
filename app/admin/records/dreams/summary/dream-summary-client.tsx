@@ -16,6 +16,7 @@ type CategorySummary = {
   count: number
   latestDate: string | null
   searchText: string
+  dreams: DreamRecord[]
 }
 
 type MonthlySummary = {
@@ -63,7 +64,7 @@ export function DreamSummaryClient({
   const query = debouncedSearch.trim().toLowerCase()
 
   const { categorySummaries, monthlySummaries } = useMemo(() => {
-    const dreamTextByCategory = new Map<string, string[]>()
+    const dreamsByCategory = new Map<string, DreamRecord[]>()
     const dreamCounts = new Map<string, { count: number; latestDate: string | null }>()
 
     for (const dream of dreams) {
@@ -73,7 +74,7 @@ export function DreamSummaryClient({
         count: current.count + 1,
         latestDate: !current.latestDate || dream.dream_date > current.latestDate ? dream.dream_date : current.latestDate,
       })
-      dreamTextByCategory.set(key, [...(dreamTextByCategory.get(key) || []), dreamSearchText(dream)])
+      dreamsByCategory.set(key, [...(dreamsByCategory.get(key) || []), dream])
     }
 
     const nextCategorySummaries: CategorySummary[] = categories
@@ -90,8 +91,9 @@ export function DreamSummaryClient({
           category.is_active ? "active" : "inactive",
           dreamCounts.get(category.id)?.count,
           dreamCounts.get(category.id)?.latestDate,
-          ...(dreamTextByCategory.get(category.id) || []),
+          ...(dreamsByCategory.get(category.id) || []).map(dreamSearchText),
         ].map(normalize).join(" "),
+        dreams: dreamsByCategory.get(category.id) || [],
       }))
       .filter(category => category.count > 0 || category.isActive)
 
@@ -109,8 +111,9 @@ export function DreamSummaryClient({
           "dream records that have not been assigned to a category",
           uncategorized.count,
           uncategorized.latestDate,
-          ...(dreamTextByCategory.get("uncategorized") || []),
+          ...(dreamsByCategory.get("uncategorized") || []).map(dreamSearchText),
         ].map(normalize).join(" "),
+        dreams: dreamsByCategory.get("uncategorized") || [],
       })
     }
 
@@ -138,12 +141,18 @@ export function DreamSummaryClient({
   }, [categories, dreams])
 
   const visibleCategorySummaries = query
-    ? categorySummaries.filter(category => category.searchText.includes(query))
+    ? categorySummaries
+      .map(category => ({
+        ...category,
+        dreams: category.dreams.filter(dream => dreamSearchText(dream).includes(query)),
+      }))
+      .filter(category => category.searchText.includes(query))
     : categorySummaries
   const visibleMonthlySummaries = query
     ? monthlySummaries.filter(month => month.searchText.includes(query))
     : monthlySummaries
   const resultCount = sort === "month" ? visibleMonthlySummaries.length : visibleCategorySummaries.length
+  const visibleDreamCount = visibleCategorySummaries.reduce((total, category) => total + category.dreams.length, 0)
 
   return (
     <>
@@ -224,30 +233,40 @@ export function DreamSummaryClient({
           visibleCategorySummaries.length === 0 ? (
             <EmptySearchState />
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {visibleCategorySummaries.map(category => (
-                <Link key={category.id} href={`/admin/records/dreams/summary/category/${category.id}`} className="block rounded-lg border border-slate-200 bg-white/85 p-4 shadow-sm transition hover:border-indigo-200 hover:bg-white hover:shadow-md">
-                  <article className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-                      <FolderTree className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-3">
-                        <h2 className="truncate text-base font-extrabold text-slate-900">{category.name}</h2>
-                        <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700">
-                          {category.count} {category.count === 1 ? "dream" : "dreams"}
-                        </span>
-                      </div>
-                      {category.description && <p className="mt-1 line-clamp-1 text-xs font-medium text-slate-500">{category.description}</p>}
-                      <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-slate-400">
-                        <CalendarDays className="h-3.5 w-3.5" />
-                        {category.latestDate ? `Latest: ${format(parseISO(category.latestDate), "MMM d, yyyy")}` : "No records yet"}
-                      </p>
-                    </div>
-                  </article>
-                </Link>
-              ))}
-            </div>
+            <section className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+              <div className="min-w-[720px]">
+                <div className="grid grid-cols-[minmax(240px,1fr)_minmax(190px,0.8fr)_150px_120px] border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-black uppercase tracking-wide text-slate-500">
+                  <span>Group / Dream</span>
+                  <span>Member</span>
+                  <span>Date</span>
+                  <span className="text-right">Group Total</span>
+                </div>
+                {visibleCategorySummaries.map(category => (
+                  <div key={category.id}>
+                    <Link href={`/admin/records/dreams/summary/category/${category.id}`} className="grid grid-cols-[minmax(240px,1fr)_minmax(190px,0.8fr)_150px_120px] items-center border-b border-slate-200 bg-slate-100/80 px-4 py-3 transition hover:bg-indigo-50">
+                      <span className="flex items-center gap-2 font-extrabold text-slate-900"><FolderTree className="h-4 w-4 text-indigo-600" />{category.name}</span>
+                      <span className="text-sm font-semibold text-slate-500">{category.description || "Dream records"}</span>
+                      <span className="text-sm font-semibold text-slate-500">{category.latestDate ? format(parseISO(category.latestDate), "MMM d, yyyy") : "-"}</span>
+                      <span className="text-right font-mono text-sm font-black text-slate-800">{category.dreams.length}</span>
+                    </Link>
+                    {category.dreams.map(dream => (
+                      <Link key={dream.id} href={`/admin/records/dreams/summary/${dream.id}`} className="grid grid-cols-[minmax(240px,1fr)_minmax(190px,0.8fr)_150px_120px] items-center border-b border-slate-100 px-4 py-3 text-sm transition hover:bg-slate-50">
+                        <span className="truncate pl-6 font-semibold text-slate-800">{dream.title}</span>
+                        <span className="truncate text-slate-600">{dream.owner?.full_name || "Unnamed member"}</span>
+                        <span className="text-slate-500">{format(parseISO(dream.dream_date), "MMM d, yyyy")}</span>
+                        <span className="text-right text-slate-400">-</span>
+                      </Link>
+                    ))}
+                  </div>
+                ))}
+                <div className="grid grid-cols-[minmax(240px,1fr)_minmax(190px,0.8fr)_150px_120px] bg-slate-50 px-4 py-3 font-extrabold text-slate-900">
+                  <span>Overall Total</span>
+                  <span />
+                  <span />
+                  <span className="text-right font-mono">{visibleDreamCount}</span>
+                </div>
+              </div>
+            </section>
           )
         )}
       </section>
