@@ -21,7 +21,7 @@ export default async function ProductionUnitsPage() {
 
         {error ? (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm font-bold text-amber-700">
-            Production unit tables are not ready yet. Run `scripts/031_production_access_and_lookup_tables.sql` in Supabase.
+            Production unit tables are not ready yet. Run `scripts/070_repair_production_inventory.sql` in Supabase.
           </div>
         ) : (
           <>
