@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Home, LogOut, UserRound } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { NotificationBell } from "@/components/notifications/notification-bell"
 
 export function AdminTopBar() {
   return (
@@ -33,6 +34,8 @@ export function AdminTopBar() {
               Main Menu
             </Button>
           </Link>
+
+          <NotificationBell />
 
           <Popover>
             <PopoverTrigger asChild>

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/server";
+import { notifyAllMembers } from "@/app/actions/notifications";
 
 export type Announcement = {
   id: string;
@@ -12,6 +13,19 @@ export type Announcement = {
   created_at: string;
   updated_at: string;
 };
+
+async function notifyPublishedAnnouncement(
+  id: string,
+  title: string,
+  body: string,
+) {
+  await notifyAllMembers({
+    title: "New announcement",
+    message: title || body.slice(0, 120),
+    href: `/dashboard/announcements/${id}`,
+    kind: "announcement",
+  });
+}
 
 async function requireAdmin() {
   const supabase = await createClient();
@@ -100,7 +114,7 @@ export async function createAnnouncement(formData: FormData) {
   if (!title) return { error: "Title is required." };
   if (!body) return { error: "Announcement body is required." };
 
-  const { error: insertError } = await supabase.from("announcements").insert([
+  const { data: announcement, error: insertError } = await supabase.from("announcements").insert([
     {
       title,
       body,
@@ -108,11 +122,15 @@ export async function createAnnouncement(formData: FormData) {
       is_published: isPublished,
       created_by: user.id,
     },
-  ]);
+  ]).select("id").single();
 
   if (insertError) {
     console.error("Error creating announcement:", insertError);
     return { error: insertError.message };
+  }
+
+  if (isPublished && announcement?.id) {
+    await notifyPublishedAnnouncement(announcement.id, title, body);
   }
 
   revalidatePath("/admin/announcements");
@@ -127,6 +145,12 @@ export async function updateAnnouncementStatus(
 ) {
   const { supabase, error } = await requireAdmin();
   if (error) return { error };
+
+  const { data: currentAnnouncement } = await supabase
+    .from("announcements")
+    .select("id, title, body, is_published")
+    .eq("id", id)
+    .maybeSingle();
 
   const payload: Record<string, boolean> = {};
   if (typeof updates.is_pinned === "boolean") payload.is_pinned = updates.is_pinned;
@@ -144,6 +168,10 @@ export async function updateAnnouncementStatus(
     return { error: updateError.message };
   }
 
+  if (updates.is_published === true && !currentAnnouncement?.is_published && currentAnnouncement) {
+    await notifyPublishedAnnouncement(currentAnnouncement.id, currentAnnouncement.title, currentAnnouncement.body);
+  }
+
   revalidatePath("/admin/announcements");
   revalidatePath("/dashboard/announcements");
   revalidatePath("/dashboard");
@@ -153,6 +181,12 @@ export async function updateAnnouncementStatus(
 export async function updateAnnouncement(id: string, formData: FormData) {
   const { supabase, error } = await requireAdmin();
   if (error) return { error };
+
+  const { data: currentAnnouncement } = await supabase
+    .from("announcements")
+    .select("id, title, body, is_published")
+    .eq("id", id)
+    .maybeSingle();
 
   const title = String(formData.get("title") || "").trim();
   const body = String(formData.get("body") || "").trim();
@@ -175,6 +209,10 @@ export async function updateAnnouncement(id: string, formData: FormData) {
   if (updateError) {
     console.error("Error updating announcement:", updateError);
     return { error: updateError.message };
+  }
+
+  if (isPublished && !currentAnnouncement?.is_published && currentAnnouncement) {
+    await notifyPublishedAnnouncement(currentAnnouncement.id, title, body);
   }
 
   revalidatePath("/admin/announcements");

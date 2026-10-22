@@ -1,11 +1,12 @@
 "use client"
-import { Bell, Search } from "lucide-react"
+import { Search } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/client"
 import { UserMobileNav } from "@/components/dashboard/user-mobile-nav"
+import { NotificationBell } from "@/components/notifications/notification-bell"
 
 interface TopbarProps {
   userInitial: string
@@ -48,10 +49,7 @@ export function Topbar({ userInitial, avatarUrl, isAdmin }: TopbarProps) {
           </Link>
         )}
         
-        <button className="relative p-2.5 text-slate-400 hover:text-indigo-600 bg-white shadow-sm border border-slate-200/60 rounded-lg hover:bg-slate-50 transition-all dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-indigo-300">
-          <Bell className="w-[18px] h-[18px]" />
-          <span className="absolute top-2 right-2.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white dark:ring-slate-900"></span>
-        </button>
+        <NotificationBell />
 
         <div className="h-8 w-[1px] bg-slate-200 hidden sm:block dark:bg-slate-800"></div>
         
