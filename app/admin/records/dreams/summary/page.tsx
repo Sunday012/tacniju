@@ -1,17 +1,24 @@
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import { getAdminDreams, getDreamCategories } from "@/app/actions/dreams"
+import { createDreamHeader, getAdminDreams, getDreamCategories, getDreamOwners } from "@/app/actions/dreams"
+import NewDreamSheet from "@/components/admin/dreams/NewDreamSheet"
 import { DreamSummaryClient } from "./dream-summary-client"
 
 export const dynamic = "force-dynamic"
 
 export default async function DreamSummaryPage({ searchParams }: { searchParams: { sort?: string } }) {
   const sort = searchParams.sort === "month" ? "month" : "topic"
-  const [{ dreams, error: dreamsError }, { categories, error: categoriesError }] = await Promise.all([
+  const [{ dreams, error: dreamsError }, { categories, error: categoriesError }, { owners }] = await Promise.all([
     getAdminDreams(),
     getDreamCategories(true),
+    getDreamOwners(),
   ])
   const error = dreamsError || categoriesError
+
+  async function createDreamHeaderAction(formData: FormData) {
+    "use server"
+    await createDreamHeader(formData)
+  }
 
   return (
     <main className="w-full flex-1 p-5 sm:p-8 lg:p-10">
@@ -19,7 +26,7 @@ export default async function DreamSummaryPage({ searchParams }: { searchParams:
         <ArrowLeft className="h-4 w-4" />
         Back to Dreams
       </Link>
-      <DreamSummaryClient sort={sort} dreams={dreams} categories={categories} error={error} />
+      <DreamSummaryClient sort={sort} dreams={dreams} categories={categories} error={error} owners={owners} createDreamAction={createDreamHeaderAction} />
     </main>
   )
 }

@@ -21,6 +21,17 @@ export type DreamOwner = {
   reservation_number: string | null
 }
 
+export type DreamScene = {
+  id: string
+  dream_id: string
+  category_id: string | null
+  scene_order: number
+  body: string
+  created_at: string
+  updated_at: string
+  category?: DreamCategory | null
+}
+
 export type DreamRecord = {
   id: string
   dream_date: string
@@ -32,6 +43,7 @@ export type DreamRecord = {
   updated_at: string
   category?: DreamCategory | null
   owner?: DreamOwner | null
+  scenes?: DreamScene[]
 }
 
 function firstRelation<T>(value: T | T[] | null | undefined): T | null {
@@ -44,6 +56,12 @@ function normalizeDreamRecord(row: any): DreamRecord {
     ...row,
     category: firstRelation<DreamCategory>(row.category),
     owner: firstRelation<DreamOwner>(row.owner),
+    scenes: Array.isArray(row.scenes)
+      ? row.scenes.map((scene: any) => ({
+          ...scene,
+          category: firstRelation<DreamCategory>(scene.category),
+        }))
+      : undefined,
   } as DreamRecord
 }
 
@@ -166,7 +184,20 @@ export async function getAdminDream(id: string) {
     return { error: fetchError.message, dream: null }
   }
 
-  return { dream: data ? normalizeDreamRecord(data) : null }
+  if (!data) return { dream: null }
+
+  const { data: scenes, error: scenesError } = await supabase
+    .from("dream_scenes")
+    .select("id, dream_id, category_id, scene_order, body, created_at, updated_at, category:dream_categories(id, parent_id, name, description, is_active, created_at)")
+    .eq("dream_id", id)
+    .order("scene_order", { ascending: true })
+
+  if (scenesError && !scenesError.message.includes("dream_scenes")) {
+    console.error("Error fetching dream scenes:", scenesError)
+    return { error: scenesError.message, dream: null }
+  }
+
+  return { dream: normalizeDreamRecord({ ...data, scenes: scenes || [] }) }
 }
 
 export async function getMyDreams() {
@@ -378,6 +409,105 @@ export async function createDream(formData: FormData) {
   revalidatePath("/admin/records/dreams/summary")
   revalidatePath("/dashboard/dreams")
   redirect("/admin/records/dreams/summary")
+}
+
+export async function createDreamHeader(formData: FormData) {
+  const { supabase, user, error } = await requireAdmin()
+  if (error || !user) return { error }
+
+  const dreamDate = String(formData.get("dream_date") || "").trim()
+  const profileId = String(formData.get("profile_id") || "").trim()
+  const title = String(formData.get("title") || "").trim()
+
+  if (!dreamDate) return { error: "Dream date is required." }
+  if (!profileId) return { error: "Select the owner of this dream." }
+  if (!title) return { error: "Dream title is required." }
+
+  const { data, error: insertError } = await supabase
+    .from("dreams")
+    .insert({
+      dream_date: dreamDate,
+      profile_id: profileId,
+      category_id: null,
+      title,
+      body: "",
+      created_by: user.id,
+    })
+    .select("id")
+    .single()
+
+  if (insertError || !data) {
+    console.error("Error creating dream header:", insertError)
+    return { error: insertError?.message || "Dream could not be created." }
+  }
+
+  revalidatePath("/admin/records/dreams")
+  revalidatePath("/admin/records/dreams/summary")
+  redirect(`/admin/records/dreams/${data.id}/edit`)
+}
+
+export async function saveDreamScenes(id: string, formData: FormData) {
+  const { supabase, error } = await requireAdmin()
+  if (error) return { error }
+
+  const dreamId = id.trim()
+  const dreamDate = String(formData.get("dream_date") || "").trim()
+  const profileId = String(formData.get("profile_id") || "").trim()
+  const title = String(formData.get("title") || "").trim()
+  const scenesValue = String(formData.get("scenes") || "[]")
+
+  if (!dreamId || !dreamDate || !profileId || !title) return { error: "Complete the dream details first." }
+
+  let parsedScenes: Array<{ category_id: string | null; body: string }> = []
+  try {
+    const value = JSON.parse(scenesValue)
+    if (!Array.isArray(value)) throw new Error("Scenes must be a list.")
+    parsedScenes = value
+      .map((scene) => ({
+        category_id: typeof scene?.category_id === "string" && scene.category_id ? scene.category_id : null,
+        body: typeof scene?.body === "string" ? scene.body.trim() : "",
+      }))
+      .filter((scene) => scene.body)
+  } catch {
+    return { error: "The dream scenes could not be read. Please try again." }
+  }
+
+  if (!parsedScenes.length) return { error: "Add at least one dream scene." }
+
+  const firstScene = parsedScenes[0]
+  const { error: updateError } = await supabase
+    .from("dreams")
+    .update({
+      dream_date: dreamDate,
+      profile_id: profileId,
+      title,
+      category_id: firstScene.category_id,
+      body: firstScene.body,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", dreamId)
+
+  if (updateError) return { error: updateError.message }
+
+  const { error: deleteError } = await supabase.from("dream_scenes").delete().eq("dream_id", dreamId)
+  if (deleteError) return { error: deleteError.message }
+
+  const { error: insertError } = await supabase.from("dream_scenes").insert(
+    parsedScenes.map((scene, index) => ({
+      dream_id: dreamId,
+      category_id: scene.category_id,
+      scene_order: index + 1,
+      body: scene.body,
+    })),
+  )
+  if (insertError) return { error: insertError.message }
+
+  revalidatePath("/admin/records/dreams")
+  revalidatePath("/admin/records/dreams/summary")
+  revalidatePath(`/admin/records/dreams/summary/${dreamId}`)
+  revalidatePath(`/admin/records/dreams/${dreamId}/edit`)
+  revalidatePath("/dashboard/dreams")
+  redirect(`/admin/records/dreams/summary/${dreamId}`)
 }
 
 export async function updateDream(id: string, formData: FormData) {

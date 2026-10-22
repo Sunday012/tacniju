@@ -100,7 +100,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
     title: "Assistant Records",
     items: [
       {
-        name: "Dreams",
+        name: "Dream Book",
         href: "/admin/records/dreams",
         icon: BookOpenText,
         children: [

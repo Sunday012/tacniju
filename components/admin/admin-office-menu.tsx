@@ -141,7 +141,7 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
             description: "Open the shared records collection.",
             icon: FolderCheck,
             children: [
-              { slug: "dreams", href: "/admin/records/dreams", label: "Dreams", description: "Dream records.", icon: FileText },
+              { slug: "dreams", href: "/admin/records/dreams", label: "Dream Book", description: "Dream records.", icon: FileText },
               { slug: "teachings", href: "/admin/records/teachings", label: "Teachings", description: "Teaching records.", icon: FileText },
               { slug: "prophecy", href: "/admin/records/prophecies", label: "Prophecy", description: "Prophecy records.", icon: FileText },
               { slug: "lyrics", href: "/admin/records/lyrics", label: "Lyrics", description: "Lyrics records.", icon: Music2 },

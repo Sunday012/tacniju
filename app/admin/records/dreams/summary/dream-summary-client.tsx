@@ -3,8 +3,9 @@
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { format, parseISO } from "date-fns"
-import { BookOpenText, CalendarDays, FolderTree, Search } from "lucide-react"
+import { CalendarDays, FolderTree, Search } from "lucide-react"
 import type { DreamCategory, DreamRecord } from "@/app/actions/dreams"
+import NewDreamSheet from "@/components/admin/dreams/NewDreamSheet"
 
 type SortMode = "topic" | "month"
 
@@ -47,11 +48,15 @@ export function DreamSummaryClient({
   dreams,
   categories,
   error,
+  owners,
+  createDreamAction,
 }: {
   sort: SortMode
   dreams: DreamRecord[]
   categories: DreamCategory[]
   error: string | null | undefined
+  owners: { id: string; full_name: string | null; reservation_number: string | null }[]
+  createDreamAction: (formData: FormData) => void | Promise<void>
 }) {
   const [search, setSearch] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
@@ -164,10 +169,7 @@ export function DreamSummaryClient({
         <div className="flex flex-wrap gap-2">
           <Link href="/admin/records/dreams/summary?sort=topic" className={`inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-black ${sort === "topic" ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}>Topic</Link>
           <Link href="/admin/records/dreams/summary?sort=month" className={`inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-black ${sort === "month" ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}>Monthly</Link>
-          <Link href="/admin/records/dreams/new" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-black text-white shadow-sm hover:bg-indigo-700">
-            <BookOpenText className="h-4 w-4" />
-            New Dream
-          </Link>
+          <NewDreamSheet owners={owners} action={createDreamAction} embedded />
         </div>
       </div>
 
