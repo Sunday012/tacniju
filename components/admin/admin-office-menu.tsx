@@ -1,7 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import type { LucideIcon } from "lucide-react"
-import { ArrowLeft, Award, Banknote, BriefcaseBusiness, BedDouble, Building2, CalendarDays, ClipboardList, FileText, FolderCheck, HeartHandshake, Landmark, MapPin, Mic2, Music2, Presentation, ScanLine, Settings, Stethoscope, Trophy, Truck, UserPlus, UsersRound, UtensilsCrossed, WalletCards } from "lucide-react"
+import { ArrowLeft, Award, Banknote, BriefcaseBusiness, BedDouble, Building2, CalendarDays, ClipboardList, FileBarChart, FileText, FolderCheck, HeartHandshake, Landmark, MapPin, Mic2, Music2, Presentation, ScanLine, Settings, Stethoscope, TrendingDown, TrendingUp, Trophy, Truck, UserPlus, UsersRound, UtensilsCrossed, WalletCards } from "lucide-react"
 
 export type OfficeTool = { href: string; label: string; description: string; icon: LucideIcon }
 
@@ -108,6 +108,21 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
             icon: WalletCards,
             children: [
               { slug: "financial-report", href: officePath("secretariat", "financial-secretary", "finance-officer", "financial-report"), label: "Financial Report", description: "Prepare event-based financial reports.", icon: ClipboardList },
+              {
+                slug: "reports",
+                href: officePath("secretariat", "financial-secretary", "finance-officer", "reports"),
+                label: "Reports",
+                description: "Review event, attendance, income, expense, debtor, and creditor reports.",
+                icon: FileBarChart,
+                children: [
+                  { slug: "events", href: officePath("secretariat", "financial-secretary", "finance-officer", "reports", "events"), label: "Events Reports", description: "Review event-linked reports.", icon: ClipboardList },
+                  { slug: "attendance", href: officePath("secretariat", "financial-secretary", "finance-officer", "reports", "attendance"), label: "Attendance Report", description: "Review event attendance totals.", icon: UsersRound },
+                  { slug: "expenses", href: officePath("secretariat", "financial-secretary", "finance-officer", "reports", "expenses"), label: "Expenses Report", description: "Review event-linked expenses.", icon: TrendingDown },
+                  { slug: "income", href: officePath("secretariat", "financial-secretary", "finance-officer", "reports", "income"), label: "Income Report", description: "Review event-linked income.", icon: TrendingUp },
+                  { slug: "debtors", href: officePath("secretariat", "financial-secretary", "finance-officer", "reports", "debtors"), label: "Debtor's Report", description: "Review event-linked debtor balances.", icon: FileBarChart },
+                  { slug: "creditors", href: officePath("secretariat", "financial-secretary", "finance-officer", "reports", "creditors"), label: "Creditor's Report", description: "Review event-linked creditor balances.", icon: Landmark },
+                ],
+              },
               { slug: "files", href: fileQueue("Finance Officer"), label: "Files", description: "Review finance files.", icon: FolderCheck },
               { slug: "records", href: officePath("secretariat", "financial-secretary", "finance-officer", "records"), label: "Records", description: "Monthly and yearly finance activity summaries.", icon: FileText },
             ],

@@ -223,7 +223,7 @@ async function getOutstandingRows(kind: "debtors" | "creditors") {
 
 function ReportFrame({ title, report, children }: { title: string; report: string; children: React.ReactNode }) {
   return (
-    <AccountingShell title={title} backHref="/accounting/programs/reports" backLabel="Reports" framed={false}>
+    <AccountingShell title={title} backHref="/admin/office/secretariat/financial-secretary/finance-officer/reports" backLabel="Finance Reports" framed={false}>
       <ReportSheet title={title} subtitle="Event-linked records and totals" actions={<SendProgramReportButton report={report} />}>
         {children}
       </ReportSheet>

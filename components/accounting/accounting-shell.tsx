@@ -6,7 +6,6 @@ const navItems = [
   { href: "/accounting/vouchers", label: "Vouchers" },
   { href: "/accounting/voucher-designer", label: "New Creation" },
   { href: "/accounting/inventory-vouchers", label: "Inventory Vouchers" },
-  { href: "/accounting/programs", label: "Programs" },
   { href: "/accounting/inventory", label: "Inventory Info" },
   { href: "/accounting/statements", label: "Statements" },
   { href: "/accounting/display", label: "Display" },
