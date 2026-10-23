@@ -502,6 +502,39 @@ export async function getAccountingPrograms() {
   })
 }
 
+export async function getVoucherProgramOptions() {
+  const supabase = await createClient()
+  const orgId = await getOrgId()
+
+  const [{ data: accountingPrograms, error: accountingError }, { data: events, error: eventsError }] = await Promise.all([
+    supabase
+      .from("accounting_programs")
+      .select("id, name")
+      .eq("org_id", orgId)
+      .order("name", { ascending: true }),
+    supabase
+      .from("events")
+      .select("id, name, event_date")
+      .order("event_date", { ascending: false }),
+  ])
+
+  if (accountingError) console.error("Error fetching voucher accounting programs:", accountingError)
+  if (eventsError) console.error("Error fetching voucher events:", eventsError)
+
+  const options = [
+    ...(accountingPrograms || []).map(program => ({
+      id: program.id,
+      name: program.name,
+    })),
+    ...(events || []).map(event => ({
+      id: event.id,
+      name: event.name,
+    })),
+  ]
+
+  return options
+}
+
 export async function getAccountingProgramWithVouchers(id: string) {
   const supabase = await createClient()
   const orgId = await getOrgId()

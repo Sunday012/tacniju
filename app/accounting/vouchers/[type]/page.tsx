@@ -4,7 +4,7 @@ import { VoucherEntry } from "@/components/vouchers/voucher-entry"
 import { getLedgers, getLedgerBalances } from "@/app/management/actions"
 import { getRecentVouchers, getVoucherById, VoucherType } from "@/app/vouchers/actions"
 import { getItems } from "@/app/inventory/actions"
-import { getAccountingParties, getAccountingPrograms } from "@/app/accounting/actions"
+import { getAccountingParties, getVoucherProgramOptions } from "@/app/accounting/actions"
 import { getBillPendingRows } from "@/app/accounting/display/bill-pending/actions"
 import { getBatches } from "@/app/accounting/display/batch/actions"
 import { getNextVoucherNo } from "@/lib/voucher-numbering"
@@ -105,7 +105,7 @@ export default async function AccountingVoucherPage({
     getLedgers(),
     getRecentVouchers(),
     getItems(),
-    getAccountingPrograms(),
+    getVoucherProgramOptions(),
     batchReferencesPromise,
     getLedgerBalances(),
     searchParams?.edit ? getVoucherById(searchParams.edit) : Promise.resolve(null),
