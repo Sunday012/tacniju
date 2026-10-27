@@ -107,7 +107,7 @@ export const adminOfficeMainAreas: AdminMenuNode[] = [
             description: "Program, files, and records.",
             icon: WalletCards,
             children: [
-              { slug: "financial-report", href: officePath("secretariat", "financial-secretary", "finance-officer", "financial-report"), label: "Financial Report", description: "Prepare event-based financial reports.", icon: ClipboardList },
+              { slug: "program", href: officePath("secretariat", "financial-secretary", "finance-officer", "program"), label: "Financial Report", description: "Review event program finances.", icon: ClipboardList },
               {
                 slug: "reports",
                 href: officePath("secretariat", "financial-secretary", "finance-officer", "reports"),
